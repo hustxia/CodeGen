@@ -233,3 +233,39 @@ export function syncGenColumns(id, removeMissing = false) {
     params: { removeMissing }
   })
 }
+
+/* ---------- P2-3：字典自动识别 ---------- */
+
+// 识别某张表里可转成字典的列（只读，不落库）
+export function detectGenDict(tableId) {
+  return request({ url: '/gen/dict/detect', method: 'get', params: { tableId } })
+}
+
+// DDL 内联识别：导入前就能预览这张表会带出哪些字典
+export function detectGenDictFromDdl(ddl, tableName) {
+  return request({ url: '/gen/dict/detect-ddl', method: 'post', data: { ddl, tableName } })
+}
+
+// 落库：建字典类型 + 字典项，并回填 gen_table_column.dict_type
+export function applyGenDict(tableId, dictCodes) {
+  return request({ url: '/gen/dict/apply', method: 'post', data: { tableId, dictCodes } })
+}
+
+/* ---------- P2-5：接口目录 ---------- */
+
+// 按表聚合接口清单（权限码、前端方法名与真实生成物一致）
+export function getApiCatalog(keyword) {
+  return request({ url: '/gen/api-catalog', method: 'get', params: { keyword } })
+}
+
+/* ---------- P3-2：多对多中间表 ---------- */
+
+// 扫描候选中间表（只读）：两个外键 + 联合唯一键 + 命名匹配
+export function detectRelation(schema) {
+  return request({ url: '/gen/relation/detect', method: 'get', params: { schema } })
+}
+
+// 标记为中间表：relation_type=middle，两个外键列 relation_key=1 并转成关联下拉
+export function applyRelation(schema, middleTables) {
+  return request({ url: '/gen/relation/apply', method: 'post', data: { schema, middleTables } })
+}

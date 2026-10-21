@@ -43,6 +43,7 @@
           <el-button icon="el-icon-view" :loading="previewing" @click="handlePreview">生成预览</el-button>
           <el-button icon="el-icon-document-copy" @click="openDiffDialog">差异预览</el-button>
           <el-button icon="el-icon-menu" :loading="registering" @click="openMenuDialog()">注册菜单</el-button>
+          <el-button icon="el-icon-connection" @click="openRelationDialog">多对多识别</el-button>
           <el-button icon="el-icon-download" :loading="generating" @click="handleGenerate">下载 ZIP</el-button>
         </div>
       </div>
@@ -110,9 +111,10 @@
             <span v-else class="muted">未注册</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="330" fixed="right">
+        <el-table-column label="操作" width="380" fixed="right">
           <template slot-scope="{ row }">
             <el-button type="text" @click="openColumnDialog(row)">字段配置</el-button>
+            <el-button type="text" style="color: #409eff" @click="openDictDetect(row)">字典识别</el-button>
             <el-button type="text" style="color: #67c23a" @click="openApplyDialog(row)">一键生成</el-button>
             <el-button type="text" style="color: #e6a23c" @click="doSelfCheck([row.id])">自检</el-button>
             <el-button type="text" @click="doPreview([row.id])">预览</el-button>
@@ -524,6 +526,12 @@
     <!-- 弹窗：生成自检（V2.0 拆到 GenCheckDialog，纯展示） -->
     <gen-check-dialog :visible.sync="checkVisible" :result="checkResult" />
 
+    <!-- 弹窗：P2-3 字典自动识别 -->
+    <dict-detect-dialog ref="dictDetect" @applied="onDictApplied" />
+
+    <!-- 弹窗：P3-2 多对多识别 -->
+    <relation-dialog ref="relation" @applied="fetchList" />
+
     <!-- 弹窗：注册菜单 -->
     <el-dialog title="注册菜单与按钮权限" :visible.sync="menuVisible" width="820px" top="6vh">
       <el-form label-width="120px" size="small">
@@ -696,6 +704,8 @@ import {
 import { listDictTypes } from '@/api/dict'
 import GenDiffDialog from './GenDiffDialog.vue'
 import GenCheckDialog from './GenCheckDialog.vue'
+import DictDetectDialog from './DictDetectDialog.vue'
+import RelationDialog from './RelationDialog.vue'
 
 const defaultTableConfig = () => ({
   id: undefined,
@@ -723,7 +733,7 @@ const defaultTableConfig = () => ({
 
 export default {
   name: 'SystemGen',
-  components: { GenDiffDialog, GenCheckDialog },
+  components: { GenDiffDialog, GenCheckDialog, DictDetectDialog, RelationDialog },
   data() {
     return {
       loading: false,
@@ -1319,6 +1329,18 @@ export default {
         return
       }
       this.saving = false
+    },
+
+    /* ---------- P2-3 字典自动识别 ---------- */
+    openDictDetect(row) {
+      this.$refs.dictDetect.open(String(row.id))
+    },
+    openRelationDialog() {
+      this.$refs.relation.open()
+    },
+    // 落库后会改 dict_type，字典下拉也刷新一下，避免字段配置里看不到新编码
+    onDictApplied() {
+      this.loadDictTypes()
     },
 
     /* ---------- 字段配置 ---------- */
