@@ -102,6 +102,26 @@
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
+            <!-- 必须保留 -parameters：Spring MVC 通过参数名绑定 @RequestParam / @PathVariable，
+                 本 POM 无父工程继承，不显式声明会导致运行时
+                 "Name for argument of type [X] not specified" 500 错误 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <!-- Maven 3.6.3 默认绑定 jar-plugin 2.4，老版本对 JDK 21 的 class 文件不友好，显式升到 3.4.1 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
