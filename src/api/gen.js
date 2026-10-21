@@ -88,11 +88,11 @@ export function listDbTables(schema) {
 }
 
 // 批量导入数据库表，返回 [{ tableName, status, message }]
-export function importDbTables(schema, tables) {
+export function importDbTables(schema, tables, projectId) {
   return request({
     url: '/gen/db/import',
     method: 'post',
-    data: { schema, tableNames: tables }
+    data: { schema, tableNames: tables, projectId }
   })
 }
 
@@ -268,4 +268,37 @@ export function detectRelation(schema) {
 // 标记为中间表：relation_type=middle，两个外键列 relation_key=1 并转成关联下拉
 export function applyRelation(schema, middleTables) {
   return request({ url: '/gen/relation/apply', method: 'post', data: { schema, middleTables } })
+}
+
+/* ---------- V3.0：多系统台账 ---------- */
+
+// 全部系统（含停用），管理页用
+export function listProject() {
+  return request({ url: '/project/list', method: 'get' })
+}
+
+// 启用中的系统，新建表的下拉用
+export function listProjectOptions() {
+  return request({ url: '/project/options', method: 'get' })
+}
+
+// 默认系统（新建表时预选）
+export function getDefaultProject() {
+  return request({ url: '/project/default', method: 'get' })
+}
+
+export function createProject(data) {
+  return request({ url: '/project', method: 'post', data })
+}
+
+export function updateProject(data) {
+  return request({ url: '/project', method: 'put', data })
+}
+
+export function deleteProject(id) {
+  return request({ url: `/project/${id}`, method: 'delete' })
+}
+
+export function setDefaultProject(id) {
+  return request({ url: `/project/${id}/default`, method: 'put' })
 }

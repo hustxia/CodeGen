@@ -1,6 +1,9 @@
 # 依赖
 node_modules/
+# 构建产物。带后缀的目录（dist-v3、dist-bak 等）多为绕过本机删除失败
+# 而临时指定的输出目录，同样不该进仓库
 dist/
+dist-*/
 
 # 本地环境
 .env.local

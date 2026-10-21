@@ -24,6 +24,18 @@
             <el-option label="已注册菜单" value="menu" />
           </el-select>
         </el-form-item>
+        <el-form-item label="所属系统">
+          <el-select v-model="query.projectId" clearable placeholder="全部" style="width: 160px" @change="handleSearch">
+            <el-option
+              v-for="p in projectOptions"
+              :key="p.id"
+              :label="p.projectName"
+              :value="Number(p.id)"
+            />
+            <!-- -1 是后端约定的「未绑定」哨兵值，用来捞出迁移前的存量表 -->
+            <el-option label="未绑定系统" :value="-1" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
           <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
@@ -34,17 +46,49 @@
     <!-- 列表 -->
     <el-card shadow="never">
       <div slot="header" class="card-header">
-        <span>表配置列表</span>
-        <div>
-          <el-button type="primary" icon="el-icon-upload2" @click="openDbDialog">从数据库导入</el-button>
-          <el-button type="primary" icon="el-icon-document-add" @click="openImportDialog">粘贴 DDL</el-button>
-          <el-button type="success" icon="el-icon-magic-stick" :loading="applying" @click="openApplyDialog()">一键生成</el-button>
-          <el-button type="warning" icon="el-icon-circle-check" :loading="checking" @click="handleSelfCheck">生成自检</el-button>
-          <el-button icon="el-icon-view" :loading="previewing" @click="handlePreview">生成预览</el-button>
-          <el-button icon="el-icon-document-copy" @click="openDiffDialog">差异预览</el-button>
-          <el-button icon="el-icon-menu" :loading="registering" @click="openMenuDialog()">注册菜单</el-button>
-          <el-button icon="el-icon-connection" @click="openRelationDialog">多对多识别</el-button>
-          <el-button icon="el-icon-download" :loading="generating" @click="handleGenerate">下载 ZIP</el-button>
+        <span class="card-title">表配置列表</span>
+        <!--
+          按钮分三组，按「用户在什么时候会用到」排，而不是按功能清单排：
+          1) 入口组（左侧）：把表弄进系统的方式——导入、DDL
+          2) 主操作组（中间）：日常真正反复点的——一键生成、自检
+          3) 更多组（右侧）：低频的预览/差异/菜单/下载，收进下拉避免横向铺满
+          定稿前试过平铺 10 个按钮，1366 宽屏下会换行并把「下载 ZIP」挤到第二行。
+        -->
+        <div class="header-actions">
+          <div class="action-group">
+            <el-button icon="el-icon-upload2" @click="openDbDialog">从数据库导入</el-button>
+            <el-button icon="el-icon-document-add" @click="openImportDialog">粘贴 DDL</el-button>
+          </div>
+
+          <div class="group-divider"></div>
+
+          <div class="action-group">
+            <el-button
+              type="primary"
+              icon="el-icon-magic-stick"
+              :loading="applying"
+              @click="openApplyDialog()"
+            >一键生成</el-button>
+            <el-button
+              type="warning"
+              icon="el-icon-circle-check"
+              :loading="checking"
+              @click="handleSelfCheck"
+            >生成自检</el-button>
+          </div>
+
+          <div class="group-divider"></div>
+
+          <el-dropdown trigger="click" @command="onMoreCommand">
+            <el-button icon="el-icon-more" class="more-btn">更多<i class="el-icon-arrow-down el-icon--right"></i></el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item command="preview" icon="el-icon-view">生成预览</el-dropdown-item>
+              <el-dropdown-item command="diff" icon="el-icon-document-copy">差异预览</el-dropdown-item>
+              <el-dropdown-item command="menu" icon="el-icon-menu">注册菜单</el-dropdown-item>
+              <el-dropdown-item command="relation" icon="el-icon-connection">多对多识别</el-dropdown-item>
+              <el-dropdown-item command="generate" icon="el-icon-download" divided>下载 ZIP</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </div>
       </div>
 
@@ -143,7 +187,18 @@
         <el-select v-model="dbSchema" size="small" style="width: 200px" placeholder="请选择数据库">
           <el-option v-for="s in schemas" :key="s" :label="s" :value="s" />
         </el-select>
+        <span>导入到</span>
+        <el-select v-model="dbProjectId" size="small" style="width: 220px" placeholder="不绑定系统" clearable>
+          <el-option
+            v-for="p in projectOptions"
+            :key="p.id"
+            :label="p.projectName + '（' + p.projectCode + '）'"
+            :value="p.id"
+          />
+        </el-select>
         <el-button type="primary" size="small" :loading="dbLoading" @click="loadDbTables">加载表</el-button>
+      </div>
+      <div class="query-row">
         <span style="flex:1"></span>
         <el-input v-model="dbFilter" size="small" style="width: 180px" placeholder="表名过滤" clearable />
         <el-button size="small" @click="handleSelectAllDb">全选</el-button>
@@ -173,7 +228,7 @@
           <span class="res-msg">{{ r.message }}</span>
         </div>
       </div>
-      <div class="form-tip">列信息直接读取 information_schema.columns 自动推断（跳过 id/deleted/审计字段）；已存在的表自动跳过。</div>
+      <div class="form-tip">列信息直接读取 information_schema.columns 自动推断（跳过 id/deleted/审计字段）；已存在的表自动跳过。包名 / 网关前缀 / 输出路径留空，由所选系统提供，不在这里逐表填写。</div>
       <div slot="footer">
         <el-button @click="dbVisible = false">关 闭</el-button>
         <el-button type="primary" :loading="importing" :disabled="!dbSelection.length" @click="handleImportDb">
@@ -322,9 +377,36 @@
       top="3vh"
     >
       <el-form :model="currentTable" label-width="100px" inline>
+        <el-form-item label="所属系统">
+          <el-select
+            v-model="currentTable.projectId"
+            clearable
+            placeholder="未绑定（回落全局默认）"
+            style="width: 200px"
+          >
+            <el-option
+              v-for="p in projectOptions"
+              :key="p.id"
+              :label="p.projectName + '（' + p.projectCode + '）'"
+              :value="p.id"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="前端模块名"><el-input v-model="currentTable.moduleName" style="width: 160px" /></el-form-item>
-        <el-form-item label="Java 包名"><el-input v-model="currentTable.packageName" style="width: 200px" /></el-form-item>
-        <el-form-item label="网关前缀"><el-input v-model="currentTable.gatewayPrefix" style="width: 100px" /></el-form-item>
+        <el-form-item label="Java 包名">
+          <el-input
+            v-model="currentTable.packageName"
+            style="width: 200px"
+            :placeholder="projectPlaceholder('packageName')"
+          />
+        </el-form-item>
+        <el-form-item label="网关前缀">
+          <el-input
+            v-model="currentTable.gatewayPrefix"
+            style="width: 100px"
+            :placeholder="projectPlaceholder('gatewayPrefix')"
+          />
+        </el-form-item>
         <el-form-item label="后端根目录">
           <el-input v-model="currentTable.backendRoot" style="width: 280px" :placeholder="rootPlaceholder('backendRoot')" />
         </el-form-item>
@@ -333,7 +415,8 @@
         </el-form-item>
       </el-form>
       <div class="form-tip">
-        两个根目录留空即使用全局配置（application.yml 的 gen.output）：后端 {{ outputConfig.backendRoot || '未配置' }}，前端 {{ outputConfig.frontendRoot || '未配置' }}。仅当某张表要写到别的仓库时才需要单独填。
+        V3.0 起配置分三层回落：本表字段 → 所属系统 → 全局默认（application.yml 的 gen.output：后端 {{ outputConfig.backendRoot || '未配置' }}，前端 {{ outputConfig.frontendRoot || '未配置' }}）。
+        只有本表要偏离所属系统时才需要单独填，留空即继承。
       </div>
 
       <el-divider content-position="left">目标模块与表结构形态（V1.4）</el-divider>
@@ -699,7 +782,7 @@ import {
   listDbSchemas, listDbTables, importDbTables, previewGenCode, writeGenCode,
   getGenOutputConfig, selfCheckGenCode, registerGenMenu,
   applyGenCode, rollbackGenBatch, batchUpdateGenTables, batchDeleteGenTables,
-  syncGenColumns
+  syncGenColumns, listProjectOptions
 } from '@/api/gen'
 import { listDictTypes } from '@/api/dict'
 import GenDiffDialog from './GenDiffDialog.vue'
@@ -707,17 +790,22 @@ import GenCheckDialog from './GenCheckDialog.vue'
 import DictDetectDialog from './DictDetectDialog.vue'
 import RelationDialog from './RelationDialog.vue'
 
+// V3.0：包名 / 网关前缀 / 输出路径不再硬编码具体系统。
+// 原先写死 'com.shop.admin' 在多系统下会把新表填进旧系统的包，
+// 用户得逐字段改回来。现在留空 = 继承所属系统，只在需要偏离时才填。
 const defaultTableConfig = () => ({
   id: undefined,
   tableName: '',
   tableComment: '',
   className: '',
   moduleName: '',
-  packageName: 'com.shop.admin',
-  backendPath: 'shop-service-admin/src/main/java/com/shop/admin',
+  packageName: '',
+  backendPath: '',
   backendRoot: '',
   frontendRoot: '',
-  gatewayPrefix: 'admin',
+  gatewayPrefix: '',
+  // 所属系统：新建时由调用方从 projectOptions 里取默认系统填入
+  projectId: undefined,
   genEntity: 1, genMapper: 1, genService: 1, genController: 1,
   genPageApi: 1, genDetailApi: 1, genAddApi: 1, genEditApi: 1, genDeleteApi: 1,
   genFrontend: 1, genApiJs: 1, genVuePage: 1,
@@ -745,7 +833,9 @@ export default {
       importing: false,
       list: [],
       total: 0,
-      query: { page: 1, size: 10, tableName: '', tableComment: '', genStatus: '' },
+      query: { page: 1, size: 10, tableName: '', tableComment: '', genStatus: '', projectId: undefined },
+      // V3.0 系统下拉：表列表按系统筛选，新建表时预选默认系统
+      projectOptions: [],
       selected: [],
       // 数据库导入
       dbVisible: false,
@@ -753,6 +843,8 @@ export default {
       schemas: [],
       dbTables: [],
       dbFilter: '',
+      // 导入后归属的系统：批量导入的一批表通常属于同一个系统，在这里统一指定
+      dbProjectId: undefined,
       dbLoading: false,
       dbSelection: [],
       importResults: [],
@@ -893,8 +985,37 @@ export default {
     this.fetchList()
     this.loadOutputConfig()
     this.loadDictTypes()
+    this.loadProjectOptions()
   },
   methods: {
+    /**
+     * 「更多」下拉的派发。
+     *
+     * 这几个动作都保留了各自的 loading 状态（previewing / registering / generating），
+     * 所以不能用 el-dropdown-item 的 disabled 简单禁用；统一在这里先判一次
+     * 是否正在进行，避免用户连点两次弹出两个弹窗。
+     */
+    onMoreCommand(cmd) {
+      switch (cmd) {
+        case 'preview':
+          if (!this.previewing) this.handlePreview()
+          break
+        case 'diff':
+          this.openDiffDialog()
+          break
+        case 'menu':
+          if (!this.registering) this.openMenuDialog()
+          break
+        case 'relation':
+          this.openRelationDialog()
+          break
+        case 'generate':
+          if (!this.generating) this.handleGenerate()
+          break
+        default:
+          break
+      }
+    },
     async loadOutputConfig() {
       try {
         const res = await getGenOutputConfig()
@@ -904,6 +1025,26 @@ export default {
     rootPlaceholder(key) {
       const v = this.outputConfig[key]
       return v ? `留空=全局：${v}` : '留空=全局配置（application.yml 的 gen.output）'
+    },
+    /**
+     * 新建表时的预选系统：取默认系统，没有默认就取第一个启用的。
+     *
+     * <p>不预选的话，用户忘了选就会落成「未绑定」，生成时静默回落到全局配置，
+     * 产物写到了想不到的仓库里。宁可替用户选中，让他能看见并改掉。
+     */
+    defaultProjectId() {
+      const d = this.projectOptions.find(p => p.isDefault === 1)
+      if (d) return d.id
+      return this.projectOptions.length ? this.projectOptions[0].id : undefined
+    },
+    /**
+     * 包名/网关前缀的占位提示：提示的是所属系统会给出什么值，
+     * 而不是全局值——因为这块最常被误填，用户需要看到「留空会继承到哪」。
+     */
+    projectPlaceholder(key) {
+      const p = this.projectOptions.find(o => String(o.id) === String(this.currentTable.projectId))
+      if (p && p[key]) return `留空=系统：${p[key]}`
+      return '留空=跟随所属系统'
     },
     async fetchList() {
       this.loading = true
@@ -944,6 +1085,18 @@ export default {
         this.dictTypes = res.data || []
       } catch (e) {
         this.dictTypes = []
+      }
+    },
+    /**
+     * V3.0 系统下拉。系统数量在几十量级，一次拉全量给筛选和弹窗共用，
+     * 不做分页也不在切 tab 时重拉。
+     */
+    async loadProjectOptions() {
+      try {
+        const res = await listProjectOptions()
+        this.projectOptions = res.data || []
+      } catch (e) {
+        this.projectOptions = []
       }
     },
 
@@ -1077,6 +1230,8 @@ export default {
     async openDbDialog() {
       this.dbVisible = true
       this.importResults = []
+      // 每次打开都重设：上次导到别的系统，这次不该沿用
+      this.dbProjectId = this.defaultProjectId()
       if (!this.schemas.length) {
         try {
           const res = await listDbSchemas()
@@ -1122,7 +1277,7 @@ export default {
       if (!this.dbSelection.length) return
       this.importing = true
       try {
-        const res = await importDbTables(this.dbSchema, this.dbSelection.map(r => r.name))
+        const res = await importDbTables(this.dbSchema, this.dbSelection.map(r => r.name), this.dbProjectId)
         this.importResults = res.data || []
         const saved = this.importResults.filter(r => r.status === 'SAVED').length
         this.$message.success(`导入完成：成功 ${saved}，跳过 ${this.importResults.filter(r => r.status === 'EXISTS').length}`)
@@ -1291,7 +1446,7 @@ export default {
       this.parsing = true
       try {
         const res = await parseDdl(this.ddlText)
-        this.parsed = { ...defaultTableConfig(), ...res.data, overwrite: false }
+        this.parsed = { ...defaultTableConfig(), projectId: this.defaultProjectId(), ...res.data, overwrite: false }
         this.$message.success('解析成功，请核对后保存')
       } catch (e) { /* 拦截器已提示 */ } finally {
         this.parsing = false
@@ -1495,11 +1650,42 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
+  /* 窄屏下按钮组换行而不是被压缩变形 */
+  flex-wrap: wrap;
 }
 
-.card-header > div {
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+  white-space: nowrap;
+}
+
+.header-actions {
   display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.action-group {
+  display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+/* 用一条竖线把「导入」「生成」「更多」三类动作分开，
+   比纯靠间距更容易一眼看出哪些按钮是一组的 */
+.group-divider {
+  width: 1px;
+  height: 20px;
+  background: #dcdfe6;
+}
+
+.more-btn {
+  padding-left: 12px;
+  padding-right: 10px;
 }
 
 .pagination {
