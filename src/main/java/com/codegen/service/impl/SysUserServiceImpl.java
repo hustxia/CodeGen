@@ -1,0 +1,139 @@
+package com.codegen.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.codegen.dto.LoginDTO;
+import com.codegen.dto.SysUserSaveDTO;
+import com.codegen.entity.SysUser;
+import com.codegen.entity.SysUserRole;
+import com.codegen.mapper.SysUserMapper;
+import com.codegen.service.PermissionService;
+import com.codegen.service.SysUserRoleService;
+import com.codegen.service.SysUserService;
+import com.codegen.util.JwtUtil;
+import com.codegen.vo.LoginVO;
+import com.codegen.vo.SysUserVO;
+import com.codegen.common.exception.BusinessException;
+import com.codegen.common.result.ResultCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * 平台用户 Service 实现
+ */
+@Service
+public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
+
+    private static final Logger log = LoggerFactory.getLogger(SysUserServiceImpl.class);
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private SysUserRoleService userRoleService;
+
+    @Autowired
+    private PermissionService permissionService;
+
+    @Override
+    public LoginVO login(LoginDTO dto) {
+        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysUser::getUsername, dto.getUsername());
+        SysUser user = getOne(wrapper);
+        if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户名或密码错误");
+        }
+        if (user.getStatus() == null || user.getStatus() != 1) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "账号已禁用");
+        }
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername());
+        LoginVO vo = new LoginVO();
+        vo.setToken(token);
+        vo.setUserId(user.getId());
+        vo.setUsername(user.getUsername());
+        vo.setNickname(user.getNickname());
+        return vo;
+    }
+
+    @Override
+    public SysUserVO getByToken(String token) {
+        try {
+            Long userId = jwtUtil.userIdOf(token);
+            if (userId == null) {
+                throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "token 缺少用户标识");
+            }
+            SysUser user = getById(userId);
+            if (user == null) {
+                throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户不存在");
+            }
+            SysUserVO vo = new SysUserVO();
+            BeanUtils.copyProperties(user, vo);
+            // 权限码随用户信息一起下发：前端按钮级控制不再依赖硬编码角色。
+            // 权限查询失败不能连累登录态——降级为空集合 + 告警，用户信息照常返回。
+            try {
+                vo.setPermissions(new ArrayList<>(permissionService.permissionsOf(user.getId())));
+            } catch (Exception e) {
+                log.warn("查询权限码失败（userId={}）：{} {}", user.getId(), e.getClass().getSimpleName(), e.getMessage());
+                vo.setPermissions(new ArrayList<>());
+            }
+            return vo;
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("解析 token 失败：{} {}", e.getClass().getSimpleName(), e.getMessage());
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "token无效或已过期");
+        }
+    }
+
+    @Override
+    public void saveUser(SysUserSaveDTO dto) {
+        SysUser entity = new SysUser();
+        BeanUtils.copyProperties(dto, entity);
+        if (StringUtils.hasText(dto.getPassword())) {
+            entity.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        save(entity);
+    }
+
+    @Override
+    public void updateUser(SysUserSaveDTO dto) {
+        SysUser entity = new SysUser();
+        BeanUtils.copyProperties(dto, entity);
+        if (StringUtils.hasText(dto.getPassword())) {
+            entity.setPassword(passwordEncoder.encode(dto.getPassword()));
+        } else {
+            entity.setPassword(null);
+        }
+        updateById(entity);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void assignRoles(Long userId, List<Long> roleIds) {
+        LambdaQueryWrapper<SysUserRole> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysUserRole::getUserId, userId);
+        userRoleService.remove(wrapper);
+        if (roleIds != null && !roleIds.isEmpty()) {
+            List<SysUserRole> list = roleIds.stream().map(roleId -> {
+                SysUserRole ur = new SysUserRole();
+                ur.setUserId(userId);
+                ur.setRoleId(roleId);
+                return ur;
+            }).collect(Collectors.toList());
+            userRoleService.saveBatch(list);
+        }
+    }
+}

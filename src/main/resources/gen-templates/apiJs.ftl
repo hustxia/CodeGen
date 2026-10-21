@@ -1,0 +1,99 @@
+import request, { toPageData } from '@/utils/request'
+
+// ${comment}接口：${tableName}（经网关 /api/${gatewayPrefix}）
+// <gen:begin key="api-fns">
+<#if genPageApi>function toPageQuery(params) {
+  const { page, size, ...query } = params || {}
+  return { pageNum: page || 1, pageSize: size || 10, ...query }
+}
+</#if>
+<#if genPageApi>export function get${className}List(params) {
+  return request({
+    url: '${apiBase}/page',
+    method: 'post',
+    data: toPageQuery(params)
+  }).then(toPageData)
+}
+</#if>
+<#if genTree>export function get${className}Tree() {
+  return request({
+    url: '${apiBase}/tree',
+    method: 'get'
+  })
+}
+</#if>
+<#if hasRef>export function get${className}Options(refTable, label, keyword) {
+  return request({
+    url: '${apiBase}/options',
+    method: 'get',
+    params: { refTable, label, keyword }
+  })
+}
+</#if>
+<#if hasChild>export function get${className}WithChildren(id) {
+  return request({
+    url: `${apiBase}/${'$'}{id}/with-children`,
+    method: 'get'
+  })
+}
+
+export function save${className}WithChildren(master, children) {
+  return request({
+    url: '${apiBase}/save-with-children',
+    method: 'post',
+    data: { master, children }
+  })
+}
+</#if>
+<#if hasExcelExport>export function export${className}(params) {
+  return request({
+    url: '${apiBase}/export',
+    method: 'get',
+    params,
+    responseType: 'blob'
+  })
+}
+</#if>
+<#if hasExcelImport>export function import${className}(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request({
+    url: '${apiBase}/import',
+    method: 'post',
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+</#if>
+<#if genDetailApi>export function get${className}Detail(id) {
+  return request({
+    url: `${apiBase}/${'$'}{id}`,
+    method: 'get'
+  })
+}
+</#if>
+<#if genAddApi>export function create${className}(data) {
+  return request({
+    url: '${apiBase}',
+    method: 'post',
+    data
+  })
+}
+</#if>
+<#if genEditApi>export function update${className}(id, data) {
+  return request({
+    url: '${apiBase}',
+    method: 'put',
+    data: { ...data, id }
+  })
+}
+</#if>
+<#if genDeleteApi>export function delete${className}(id) {
+  return request({
+    url: `${apiBase}/${'$'}{id}`,
+    method: 'delete'
+  })
+}
+</#if>
+// <gen:end key="api-fns">
+// ===== 以下为手写区：自定义请求写在这里，重新生成不会被覆盖 =====
