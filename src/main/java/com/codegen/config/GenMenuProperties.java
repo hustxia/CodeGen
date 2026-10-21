@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 public class GenMenuProperties {
 
     /**
-     * 菜单出口：artifact / internal
+     * 菜单出口：artifact / internal（direct 为 internal 的别名）
      */
     private String outlet = "artifact";
 
@@ -32,9 +32,12 @@ public class GenMenuProperties {
     private String artifactDir = ".gen-artifacts";
 
     /**
-     * 是否走「写入平台自身菜单表」的老路径
+     * 是否走「写入平台自身菜单表」的老路径。
+     *
+     * <p>{@code direct} 与 {@code internal} 等价：平台与目标共用同一个库时，
+     * 直接写 sys_menu + sys_role_menu 并回写 gen_table.menu_id，省去手工执行 SQL。
      */
     public boolean isInternal() {
-        return "internal".equalsIgnoreCase(outlet);
+        return "internal".equalsIgnoreCase(outlet) || "direct".equalsIgnoreCase(outlet);
     }
 }

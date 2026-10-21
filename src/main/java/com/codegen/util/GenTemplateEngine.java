@@ -109,14 +109,23 @@ public class GenTemplateEngine {
     }
 
     /**
-     * 加载子表配置：{@code gen_table.master_table_id = 当前表id} 的第一张表
+     * 加载子表配置：{@code gen_table.master_table_id = 当前表id} 的第一张表。
+     *
+     * <p>P3-1 起递归一层：子表自己的子表也会带出来，最多三层（订单→明细→批次）。
+     * 再深就不递归了：更深的层级在真实业务里通常需要独立页面，
+     * 强行塞进一个抽屉里反而难用，而且生成的代码量会翻倍。
      */
     private GenTemplateModel.ChildInfo loadChild(GenTable table) {
-        if (table == null || table.getId() == null) {
+        return loadChild(table, 1);
+    }
+
+    private GenTemplateModel.ChildInfo loadChild(GenTable table, int depth) {
+        if (table == null || table.getId() == null || depth > 2) {
             return null;
         }
         LambdaQueryWrapper<GenTable> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(GenTable::getMasterTableId, table.getId());
+        wrapper.orderByAsc(GenTable::getId);
         wrapper.last("LIMIT 1");
         GenTable childTable = genTableMapper.selectOne(wrapper);
         if (childTable == null) {
@@ -125,7 +134,8 @@ public class GenTemplateEngine {
         LambdaQueryWrapper<GenTableColumn> colWrapper = new LambdaQueryWrapper<>();
         colWrapper.eq(GenTableColumn::getTableId, childTable.getId());
         colWrapper.orderByAsc(GenTableColumn::getSort);
-        return new GenTemplateModel.ChildInfo(childTable, genTableColumnMapper.selectList(colWrapper));
+        List<GenTableColumn> childCols = genTableColumnMapper.selectList(colWrapper);
+        return new GenTemplateModel.ChildInfo(childTable, childCols, loadChild(childTable, depth + 1));
     }
 
     /**

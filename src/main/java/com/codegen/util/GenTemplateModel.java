@@ -58,9 +58,21 @@ public final class GenTemplateModel {
     }
 
     /**
-     * 主子表：子表配置（表 + 字段）
+     * 主子表：子表配置（表 + 字段 + 它自己的子表）。
+     *
+     * <p>P3-1 起支持三级以上：{@code grandChild} 非空即表示这一层还有下一级。
+     * 模板里仍然只用 {@code child.*} 这一套键，通过 {@code hasGrandChild} 判断要不要
+     * 渲染下层。这样单层（订单→明细）与多层（订单→明细→批次）共用同一份模板，
+     * 不会因为多一级就生成两套代码。
+     *
+     * @param grandChild 子表的子表，可为 null
      */
-    public record ChildInfo(GenTable table, List<GenTableColumn> cols) {
+    public record ChildInfo(GenTable table, List<GenTableColumn> cols, ChildInfo grandChild) {
+
+        /** 兼容单层构造：老调用方只关心一层 */
+        public ChildInfo(GenTable table, List<GenTableColumn> cols) {
+            this(table, cols, null);
+        }
     }
 
     /**
@@ -120,6 +132,8 @@ public final class GenTemplateModel {
         m.put("genController", on(table.getGenController()));
         m.put("genPageApi", genPageApi);
         m.put("genDetailApi", genDetailApi);
+        // P2-2 操作日志：默认开启（null 视为开），显式设 0 才关
+        m.put("genLog", table.getGenLog() == null || table.getGenLog() == 1);
         m.put("genAddApi", genAddApi);
         m.put("genEditApi", genEditApi);
         m.put("genDeleteApi", genDeleteApi);
@@ -271,6 +285,33 @@ public final class GenTemplateModel {
                     .filter(c -> c.getColumnName() == null
                             || !c.getColumnName().equalsIgnoreCase(fkColumn))
                     .toList()));
+
+            // P3-1 三级以上：子表自己还有子表时，把它的子表也铺进来。
+            // 键名沿用 child.xxx，这样模板里只要判断 hasGrandChild 就看能渲染几层。
+            ChildInfo gc = child.grandChild();
+            boolean hasGrandChild = gc != null && gc.table() != null;
+            cm.put("hasGrandChild", hasGrandChild);
+            if (hasGrandChild) {
+                GenTable gct = gc.table();
+                String gFk = orDefault(gct.getMasterForeignKey(), "");
+                List<GenTableColumn> gBiz = bizColumns(gc.cols() == null ? List.of() : gc.cols());
+                Map<String, Object> gcm = new HashMap<>();
+                gcm.put("className", gct.getClassName());
+                gcm.put("varName", decap(gct.getClassName()));
+                gcm.put("tableName", gct.getTableName());
+                gcm.put("comment", orDefault(gct.getTableComment(), gct.getClassName()));
+                gcm.put("pkg", orDefault(gct.getPackageName(), childPkg));
+                gcm.put("fkColumn", gFk);
+                gcm.put("fkField", GenUtils.toCamel(gFk));
+                gcm.put("fkCapField", capitalize(GenUtils.toCamel(gFk)));
+                gcm.put("listColumns", toModel(gBiz.stream().filter(c -> on(c.getIsList())).toList()));
+                gcm.put("formColumns", toModel(gBiz.stream()
+                        .filter(c -> on(c.getIsForm()))
+                        .filter(c -> c.getColumnName() == null || !c.getColumnName().equalsIgnoreCase(gFk))
+                        .toList()));
+                // 只支持到三层：再深的业务几乎都会拆成独立页面，强行递归收益不大
+                cm.put("grandChild", gcm);
+            }
             m.put("child", cm);
         }
 
@@ -299,7 +340,147 @@ public final class GenTemplateModel {
 
         // 详情抽屉：有详情接口才生成
         m.put("hasDetail", genFrontend && genDetailApi);
+
+        // ===== P3-2 多对多 =====
+        // 中间表本身不需要一整套 CRUD 页面：它是关系，不是实体。
+        // 这里给出标记，由模板决定「中间表只生成只读接口 + 双侧主表挂多选」。
+        boolean isMiddle = "middle".equalsIgnoreCase(orDefault(table.getRelationType(), ""));
+        m.put("isMiddle", isMiddle);
+        List<Map<String, Object>> relKeys = new ArrayList<>();
+        if (isMiddle) {
+            for (Map<String, Object> cm : toModel(biz)) {
+                Object rk = cm.get("relationKey");
+                if (rk instanceof Integer i && i == 1) {
+                    relKeys.add(cm);
+                }
+            }
+        }
+        m.put("relationKeys", relKeys);
+
+        // ===== P3-3 审批流 =====
+        // 绑定了流程编码的表，列表操作列多出「提交/审批/驳回」，页面多出「审批记录」抽屉。
+        // 状态列约定用 status 字段（流程定义里 status_col 也是它），值 0 草稿 / 1 待审批 / 2 已通过 / 3 已驳回。
+        String flowCode = orDefault(table.getFlowCode(), "").trim();
+        boolean hasFlow = !flowCode.isEmpty();
+        m.put("flowCode", flowCode);
+        m.put("hasFlow", hasFlow);
+        if (hasFlow) {
+            // 流程按钮需要知道状态字段的 Java 属性名，默认 status
+            GenTableColumn statusCol = biz.stream()
+                    .filter(c -> c.getColumnName() != null && "status".equalsIgnoreCase(c.getColumnName()))
+                    .findFirst().orElse(null);
+            m.put("flowStatusField", statusCol == null ? "status" : statusCol.getJavaField());
+            m.put("flowStatusInList", statusCol != null
+                    && listCols.stream().anyMatch(c -> "status".equalsIgnoreCase(c.getColumnName())));
+        }
+
+        // ===== P1 字段级增强的派生标记 =====
+        // P1-2 操作列宽度：按按钮数算，2 字按钮约 62px，避免按钮被挤换行
+        int btnCount = (genEditBtn ? 1 : 0) + (genDeleteBtn ? 1 : 0) + (genFrontend && genDetailApi ? 1 : 0);
+        // P3-3 审批流在操作列最多再塞 3 个按钮（提交/审批/驳回 + 记录），
+        // 不预留宽度的话 el-table 会把「删除」挤成两行。
+        if (hasFlow) {
+            btnCount += 3;
+        }
+        m.put("opColWidth", Math.max(120, btnCount * 62 + 30));
+        // ID 列：19 位雪花号需要约 180px 才能完整显示
+        m.put("idColWidth", 180);
+
+        // 脱敏：任意列配了 maskType 就需要 vo.ftl 输出脱敏 getter
+        m.put("hasMask", cols.stream().anyMatch(c -> c.getMaskType() != null && !c.getMaskType().isBlank()));
+        List<GenTableColumn> maskCols = cols.stream()
+                .filter(c -> c.getMaskType() != null && !c.getMaskType().isBlank()).toList();
+        m.put("maskColumns", toModel(maskCols));
+
+        // 表单联动：任意列配了 linkRule，页面就要生成联动逻辑
+        m.put("hasLink", cols.stream().anyMatch(c -> c.getLinkRule() != null && !c.getLinkRule().isBlank()));
+        m.put("linkCount", (int) cols.stream()
+                .filter(c -> c.getLinkRule() != null && !c.getLinkRule().isBlank()).count());
+
+        // 唯一性校验：至少一列 unique_flag=1
+        List<GenTableColumn> uniqueCols = cols.stream()
+                .filter(c -> c.getUniqueFlag() != null && c.getUniqueFlag() == 1).toList();
+        m.put("hasUnique", !uniqueCols.isEmpty());
+        m.put("uniqueColumns", toModel(uniqueCols));
+        // 单列唯一时才做前端异步查重（联合唯一不适合逐字段实时校验）
+        m.put("hasSingleUnique", uniqueCols.size() == 1);
+
+        // 数据权限：任意列配了 dataScope，启动时要向拦截器登记这张表
+        List<GenTableColumn> scopeCols = cols.stream()
+                .filter(c -> c.getDataScope() != null && !c.getDataScope().isBlank()).toList();
+        m.put("hasDataScope", !scopeCols.isEmpty());
+        m.put("scopeColumns", toModel(scopeCols));
+        // 一张表只登记一列（多列会让拦截器拼出 AND a=? AND b=? 这种过严条件），
+        // 取 sort 最小的一列作为该表的权限列，行为可预期
+        GenTableColumn scopeCol = scopeCols.stream()
+                .min(java.util.Comparator.comparing(c -> c.getSort() == null ? 0 : c.getSort()))
+                .orElse(null);
+        m.put("scopeColumn", scopeCol == null ? "" : scopeCol.getColumnName());
+        m.put("scopeType", scopeCol == null ? "" : scopeCol.getDataScope().trim());
         return m;
+    }
+
+    /**
+     * 列宽推导：让表格第一眼就能看全，不用手动拖。
+     *
+     * <p>规则按「内容天然宽度」给：
+     * 开关/日期/数字这类定长内容用窄固定宽，长文本给更宽的最小宽；
+     * 再叠加列注释长度兜底（注释长的列，表头本身就需要空间）。
+     */
+    /**
+     * 字符串最大长度：优先取校验规则里的 maxlen=，其次按 varchar(n) / char(n) 的 n 推断。
+     * 取不到返回 0，模板里按「不校验长度」处理。
+     */
+    private static int resolveMaxLen(GenTableColumn c) {
+        String rule = c.getValidateRule();
+        if (rule != null) {
+            for (String token : rule.split(",")) {
+                String t = token.trim().toLowerCase(java.util.Locale.ROOT);
+                if (t.startsWith("maxlen=")) {
+                    try {
+                        return Integer.parseInt(t.substring(7).trim());
+                    } catch (NumberFormatException ignore) {
+                        // 规则写错时退化为按列类型推断
+                    }
+                }
+            }
+        }
+        String type = c.getColumnType();
+        if (type == null) {
+            return 0;
+        }
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(?i)\\b(?:var)?char\\s*\\(\\s*(\\d+)\\s*\\)")
+                .matcher(type);
+        return m.find() ? Integer.parseInt(m.group(1)) : 0;
+    }
+
+    private static int columnWidth(GenTableColumn c, String htmlType, String javaType) {
+        int base;
+        if ("switch".equals(htmlType)) {
+            base = 90;
+        } else if ("date".equals(htmlType)) {
+            base = 120;
+        } else if ("datetime".equals(htmlType)) {
+            base = 170;
+        } else if ("number".equals(htmlType)) {
+            base = 110;
+        } else if ("textarea".equals(htmlType)) {
+            base = 220;
+        } else if ("select".equals(htmlType) || "radio".equals(htmlType)) {
+            base = 130;
+        } else if ("Integer".equals(javaType) || "Long".equals(javaType) || "BigDecimal".equals(javaType)) {
+            base = 110;
+        } else {
+            base = 140;
+        }
+        // 表头文字长的（如「商品分类名称（二级）」）至少留出字宽，按每字 14px 估
+        String comment = c.getColumnComment();
+        if (comment != null && !comment.isBlank()) {
+            int need = comment.length() * 14 + 40;
+            base = Math.max(base, Math.min(need, 260));
+        }
+        return base;
     }
 
     /**
@@ -318,6 +499,8 @@ public final class GenTemplateModel {
             boolean hasDict = dictType != null && !dictType.isBlank();
             cm.put("javaField", c.getJavaField());
             cm.put("capField", capitalize(c.getJavaField()));
+            // 数据库列名：查重、导出表头映射等需要按真实列名拼 SQL
+            cm.put("dbField", c.getColumnName());
             cm.put("javaType", javaType);
             cm.put("columnComment", c.getColumnComment());
             cm.put("columnType", c.getColumnType());
@@ -343,8 +526,16 @@ public final class GenTemplateModel {
             cm.put("isDate", "date".equals(htmlType));
             cm.put("isDatetime", "datetime".equals(htmlType));
             cm.put("isPick", GenValidateUtils.isPick(htmlType));
+            // P1-2 列宽自适应：按控件类型与宽度语义给默认值，避免所有列等宽
+            cm.put("colWidth", columnWidth(c, htmlType, javaType));
             cm.put("dictType", hasDict ? dictType.trim() : "");
             cm.put("hasDict", hasDict);
+            // P3-2 中间表外键列标记
+            cm.put("relationKey", c.getRelationKey() == null ? 0 : c.getRelationKey());
+            // getXxx / Xxx::getXxx 用的属性名（首字母大写），避免模板里做大小写转换
+            cm.put("capProp", capitalize(c.getJavaField()));
+            // P1-5 导入逐行校验用：从 validate_rule 里取 maxlen，取不到再从列类型 varchar(n) 推
+            cm.put("maxLen", resolveMaxLen(c));
             // 关联下拉：ref_table 非空时渲染远程搜索 el-select
             String refTable = c.getRefTable();
             boolean hasRef = refTable != null && !refTable.isBlank();
@@ -355,6 +546,28 @@ public final class GenTemplateModel {
             cm.put("hasRef", hasRef);
             cm.put("excelExport", c.getExcelExport() == null || c.getExcelExport() == 1);
             cm.put("excelImport", c.getExcelImport() != null && c.getExcelImport() == 1);
+
+            // P1-1 脱敏：maskType 非空时，VO 的 getter 与列表渲染都走脱敏
+            String maskType = c.getMaskType();
+            boolean hasMask = maskType != null && !maskType.isBlank();
+            cm.put("maskType", hasMask ? maskType.trim() : "");
+            cm.put("hasMask", hasMask);
+
+            // P1-3 唯一性校验
+            cm.put("uniqueFlag", c.getUniqueFlag() != null && c.getUniqueFlag() == 1);
+
+            // P1-4 表单联动：linkRule 是 JSON 字符串，模板里原样输出给前端解析
+            String linkRule = c.getLinkRule();
+            boolean hasLink = linkRule != null && !linkRule.isBlank();
+            cm.put("linkRule", hasLink ? linkRule.trim() : "");
+            cm.put("hasLink", hasLink);
+
+            // P2-1 数据权限
+            String dataScope = c.getDataScope();
+            boolean hasScope = dataScope != null && !dataScope.isBlank();
+            cm.put("dataScope", hasScope ? dataScope.trim() : "");
+            cm.put("hasDataScope", hasScope);
+
             // 校验：后端注解 + 前端 rules
             String rule = c.getValidateRule();
             cm.put("validateRule", rule == null ? "" : rule);

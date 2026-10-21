@@ -31,6 +31,17 @@ public class GenMenuRegisterDTO implements Serializable {
     private Long roleId;
 
     /**
+     * 授权角色 ID 列表（direct 出口用）。与 roleId 同时存在时合并去重。
+     * 留空则只授权管理员角色。
+     */
+    private List<Long> roleIds;
+
+    /**
+     * 是否授权给全部启用角色（direct 出口用）。默认 false，避免新菜单默认全员可见。
+     */
+    private Boolean grantAllRoles;
+
+    /**
      * 是否同步前端路由文件（默认是）
      */
     private Boolean syncRoute;

@@ -37,6 +37,10 @@ public class ${className}ServiceImpl extends ServiceImpl<${className}Mapper, ${c
 <#if hasChild>
     @Autowired
     private ${child.className}Mapper ${child.varName}Mapper;
+<#if child.hasGrandChild>
+    @Autowired
+    private ${child.grandChild.className}Mapper ${child.grandChild.varName}Mapper;
+</#if>
 </#if>
 <#if genTree>
     @Override
@@ -88,9 +92,41 @@ public class ${className}ServiceImpl extends ServiceImpl<${className}Mapper, ${c
                 child.setUpdateBy(null);
                 child.set${child.fkCapField}(entity.getId());
                 childMapper.insert(child);
+<#if child.hasGrandChild>
+                // P3-1 三级：这一行的下级也要跟着落库，外键指向刚插入的这行
+                save${child.grandChild.className}Rows(child.getId(), dto.get${child.grandChild.className}s());
+</#if>
             }
         }
     }
+<#if child.hasGrandChild>
+    /**
+     * 第三级全量替换。抽成独立方法，避免 {@code saveWithChildren} 里出现三层嵌套循环。
+     */
+    private void save${child.grandChild.className}Rows(Long parentId,
+                                                  List<${child.grandChild.className}SaveDTO> rows) {
+        ${child.grandChild.className}Mapper mapper = ${child.grandChild.varName}Mapper;
+        if (parentId == null) {
+            return;
+        }
+        mapper.delete(new LambdaQueryWrapper<${child.grandChild.className}>()
+                .eq(${child.grandChild.className}::get${child.grandChild.fkCapField}, parentId));
+        if (rows == null) {
+            return;
+        }
+        for (${child.grandChild.className}SaveDTO dto : rows) {
+            ${child.grandChild.className} row = new ${child.grandChild.className}();
+            BeanUtils.copyProperties(dto, row);
+            row.setId(null);
+            row.setCreateTime(null);
+            row.setUpdateTime(null);
+            row.setCreateBy(null);
+            row.setUpdateBy(null);
+            row.set${child.grandChild.fkCapField}(parentId);
+            mapper.insert(row);
+        }
+    }
+</#if>
 </#if>
     // <gen:end key="service-body">
     // ===== 以下为手写区：自定义方法写在这里，重新生成不会被覆盖 =====

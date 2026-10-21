@@ -11,6 +11,9 @@ import java.time.LocalDateTime;
 <#if genTree>import java.util.ArrayList;
 import java.util.List;
 </#if>
+<#if hasChild && child.hasGrandChild>import java.util.List;
+import ${child.grandChild.pkg}.vo.${child.grandChild.className}VO;
+</#if>
 
 /**
  * ${comment} VO
@@ -37,6 +40,24 @@ public class ${className}VO implements Serializable {
      */
     private List<${className}VO> children = new ArrayList<>();
 </#if>
+<#if hasChild && child.hasGrandChild>
+    /**
+     * P3-1 第三级明细：详情接口一次性带出来，前端不用逐行再查
+     */
+    private List<${child.grandChild.className}VO> ${child.grandChild.varName}s;
+</#if>
     // <gen:end key="vo-fields">
+<#if hasMask>
+    // ===== 脱敏 getter（P1-1）：@Data 生成的 getter 被这里同名覆盖，序列化时自动脱敏 =====
+<#list maskColumns as c>
+    /**
+     * ${c.columnComment} 脱敏（${c.maskType}）
+     */
+    public ${c.javaType} get${c.capField}() {
+        return ${rootPkg}.common.util.MaskUtils.mask(this.${c.javaField}, "${c.maskType}");
+    }
+
+</#list>
+</#if>
     // ===== 以下为手写区：写在 gen:end 之后的内容，重新生成不会被覆盖 =====
 }

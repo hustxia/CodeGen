@@ -112,4 +112,35 @@ public class GenTableColumn extends BaseEntity {
      * 显示顺序
      */
     private Integer sort;
+
+    /**
+     * 脱敏类型：phone/idcard/email/name/bankcard，空为不脱敏
+     */
+    private String maskType;
+
+    /**
+     * 是否参与唯一性校验:0否1是（多列 unique_flag=1 组成联合唯一）
+     */
+    private Integer uniqueFlag;
+
+    /**
+     * 表单联动规则 JSON（单条规则，作用于本字段自身）：
+     * <pre>
+     * {"when":"status","op":"eq","value":"1","effect":"required","else":"optional"}
+     * </pre>
+     * when 缺省为字段自身；op 取 eq/ne/in/notIn/notEmpty/empty；
+     * value 在 in/notIn 时为数组；effect 取 show/hide/enable/disable/required/optional。
+     * 该 JSON 在生成期被原样内联进 Vue 页面的 linkRules 数组。
+     */
+    private String linkRule;
+
+    /**
+     * 数据权限标记：dept 按部门 / self 按本人，空为不参与
+     */
+    private String dataScope;
+
+    /**
+     * 是否中间表外键列:0否1是（P3-2 多对多识别）
+     */
+    private Integer relationKey;
 }

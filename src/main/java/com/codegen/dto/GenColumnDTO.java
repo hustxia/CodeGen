@@ -108,4 +108,29 @@ public class GenColumnDTO implements Serializable {
      * 显示顺序
      */
     private Integer sort;
+
+    /**
+     * P1-1 脱敏类型：phone/idcard/email/name/bankcard，空为不脱敏
+     */
+    private String maskType;
+
+    /**
+     * P1-3 是否参与唯一性校验:0否1是（多列同置1则联合唯一）
+     */
+    private Integer uniqueFlag;
+
+    /**
+     * P1-4 表单联动规则 JSON，格式见 GenTableColumn#linkRule
+     */
+    private String linkRule;
+
+    /**
+     * P2-1 数据权限标记：dept 按部门 / self 按本人
+     */
+    private String dataScope;
+
+    /**
+     * P3-2 中间表外键列标记:0否1是
+     */
+    private Integer relationKey;
 }

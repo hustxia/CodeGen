@@ -1,8 +1,10 @@
 package ${pkg}.controller;
 
-<#if ctrlPageApi || hasChild>import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+<#if ctrlPageApi || hasChild || hasExcelExport>import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 </#if>
-<#if ctrlPageApi>import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+<#if hasFlow>import ${rootPkg}.common.flow.FlowService;
+</#if>
+<#if ctrlPageApi || hasExcelExport>import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import ${pkg}.dto.${className}PageDTO;
 </#if>
 <#if ctrlAddApi || ctrlEditApi || hasChild>import ${pkg}.dto.${className}SaveDTO;
@@ -12,13 +14,15 @@ import ${pkg}.entity.${child.className};
 import ${pkg}.service.${child.className}Service;
 import ${pkg}.vo.${child.className}VO;
 </#if>
-<#if ctrlAnyApi || genTree || hasChild>import ${pkg}.service.${className}Service;
+<#if ctrlAnyApi || genTree || hasChild || hasUnique>import ${pkg}.service.${className}Service;
 import ${pkg}.entity.${className};
 </#if>
 import ${pkg}.vo.${className}VO;
-<#if ctrlAnyApi || genTree || hasChild>import ${rootPkg}.common.result.Result;
+<#if ctrlAnyApi || genTree || hasChild || hasUnique>import ${rootPkg}.common.result.Result;
 </#if>
-<#if hasRef || hasExcelImport>import ${rootPkg}.common.exception.BusinessException;
+<#if hasRef || hasExcelImport || hasUnique>import ${rootPkg}.common.exception.BusinessException;
+</#if>
+<#if genLog>import ${rootPkg}.common.log.Log;
 </#if>
 <#if hasRef>import org.springframework.jdbc.core.JdbcTemplate;
 </#if>
@@ -27,12 +31,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 <#if ctrlValid>import jakarta.validation.Valid;
 </#if>
 <#if ctrlAnyApi || genTree || hasChild>import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-<#if ctrlPageApi>import org.springframework.util.StringUtils;
+</#if>
+<#if ctrlAnyApi || genTree || hasChild || hasUnique || hasFlow>import org.springframework.beans.factory.annotation.Autowired;
+</#if>
+<#if (ctrlAnyApi || genTree || hasChild) && ctrlPageApi>import org.springframework.util.StringUtils;
+</#if>
+<#if hasExcelExport && !ctrlPageApi>import org.springframework.util.StringUtils;
 </#if>
 <#if ctrlDeleteApi>import org.springframework.web.bind.annotation.DeleteMapping;
 </#if>
-<#if ctrlDetailApi || genTree || hasRef || hasExcelExport>import org.springframework.web.bind.annotation.GetMapping;
+<#if ctrlDetailApi || genTree || hasRef || hasExcelExport || hasUnique>import org.springframework.web.bind.annotation.GetMapping;
 </#if>
 import org.springframework.web.bind.annotation.PathVariable;
 <#if ctrlPageApi || ctrlAddApi || hasChild>import org.springframework.web.bind.annotation.PostMapping;
@@ -42,7 +50,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 <#if ctrlPageApi || ctrlAddApi || ctrlEditApi || hasChild>import org.springframework.web.bind.annotation.RequestBody;
 </#if>
 import org.springframework.web.bind.annotation.RequestMapping;
-<#if genTree || hasRef || hasExcelImport>import org.springframework.web.bind.annotation.RequestParam;
+<#if genTree || hasRef || hasExcelImport || hasUnique>import org.springframework.web.bind.annotation.RequestParam;
 </#if>
 import org.springframework.web.bind.annotation.RestController;
 <#if ctrlPageApi || genTree || hasChild || hasExcelImport>import java.util.ArrayList;
@@ -70,7 +78,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 </#if>
-</#if>
 <#if hasExcelImport && !(ctrlAnyApi || genTree || hasChild)>import org.springframework.jdbc.core.JdbcTemplate;
 </#if>
 
@@ -82,17 +89,48 @@ import java.time.LocalDateTime;
 @RequestMapping("/${moduleName}")
 public class ${className}Controller {
 ${''}
-<#if ctrlAnyApi || genTree || hasChild>    @Autowired
+<#if ctrlAnyApi || genTree || hasChild || hasUnique>    @Autowired
     private ${className}Service ${varName}Service;
 </#if>
 <#if hasChild>    @Autowired
     private ${child.className}Service ${child.varName}Service;
+</#if>
+<#if hasFlow>    @Autowired
+    private FlowService flowService;
 </#if>
 <#if hasRef>
     @Autowired
     private JdbcTemplate jdbcTemplate;
 </#if>
     // <gen:begin key="controller-body">
+<#if isMiddle && relationKeys?size gte 2>${''}
+@Operation(summary = "${comment}：按一个外键取另一侧的全部值（多选回显用）")
+@GetMapping("/bind-values")
+public Result<List<Long>> bindValues(@RequestParam("column") String column,
+                                     @RequestParam("id") Long id) {
+    // column 只接受本表的两个外键列，其余一律拒绝，杜绝把任意列拼进 SQL
+    boolean left = "${relationKeys[0].dbField}".equalsIgnoreCase(column);
+    boolean right = "${relationKeys[1].dbField}".equalsIgnoreCase(column);
+    if (!left && !right) {
+        throw new BusinessException(400, "不是合法的关联列：" + column);
+    }
+    // 传入的是左键就返右键的集合，反之亦然；两边都按同一个 id 过滤
+    // Lambda 选择在 Java 侧做（模板里写三元会被 FreeMarker 当字符串），两条分支各自编译期确定
+    List<${className}> rows = left
+            ? ${varName}Service.list(new LambdaQueryWrapper<${className}>()
+                    .eq(${className}::get${relationKeys[0].capProp}, id))
+            : ${varName}Service.list(new LambdaQueryWrapper<${className}>()
+                    .eq(${className}::get${relationKeys[1].capProp}, id));
+    List<Long> values = new ArrayList<>();
+    for (${className} row : rows) {
+        Object v = left ? row.get${relationKeys[1].capProp}() : row.get${relationKeys[0].capProp}();
+        if (v != null) {
+            values.add(Long.valueOf(String.valueOf(v)));
+        }
+    }
+    return Result.ok(values);
+}
+</#if>
 <#if ctrlPageApi>${''}
 @Operation(summary = "分页查询${comment}")
 @PostMapping("/page")
@@ -169,6 +207,19 @@ public Result<Map<String, Object>> detailWithChildren(@PathVariable("id") Long i
     for (${child.className} row : childRows) {
         ${child.className}VO childVo = new ${child.className}VO();
         BeanUtils.copyProperties(row, childVo);
+<#if child.hasGrandChild>
+        // P3-1 三级：按子表主键再查一层，整棵树一次返回，避免前端逐行发请求
+        List<${child.grandChild.className}> gRows = ${child.grandChild.varName}Service.list(
+                new LambdaQueryWrapper<${child.grandChild.className}>()
+                        .eq(${child.grandChild.className}::get${child.grandChild.fkCapField}, row.getId()));
+        List<${child.grandChild.className}> gList = new ArrayList<>();
+        for (${child.grandChild.className} g : gRows) {
+            ${child.grandChild.className}VO gVo = new ${child.grandChild.className}VO();
+            BeanUtils.copyProperties(g, gVo);
+            gList.add(gVo);
+        }
+        childVo.set${child.grandChild.className}s(gList);
+</#if>
         children.add(childVo);
     }
     data.put("master", vo);
@@ -194,11 +245,20 @@ public static class WithChildrenDTO {
     private List<${child.className}SaveDTO> children;
 }
 </#if>
-<#if hasExcelExport>${''}
-@Operation(summary = "导出${comment} Excel")
-@GetMapping("/export")
-public ResponseEntity<byte[]> export() throws IOException {
-    List<${className}> rows = ${varName}Service.list();
+<#if hasExcelExport && !isMiddle>${''}
+@Operation(summary = "导出${comment} Excel（按查询条件过滤；不传条件导出全部）")
+@PostMapping("/export")
+public ResponseEntity<byte[]> export(@RequestBody(required = false) ${className}PageDTO query) throws IOException {
+    // 复用列表页的筛选口径：导出的行必须和用户在页面上看到的一致，
+    // 否则「筛出 20 条、导出 2000 条」会被当成 bug。
+    LambdaQueryWrapper<${className}> wrapper = new LambdaQueryWrapper<>();
+    if (query != null) {
+<#list queryColumns as c>
+        wrapper.${c.queryOp}(<#if c.isString>StringUtils.hasText(query.get${c.capField}())<#else>query.get${c.capField}() != null</#if>, ${className}::get${c.capField}, query.get${c.capField}());
+</#list>
+    }
+    wrapper.orderByDesc(${className}::getId);
+    List<${className}> rows = ${varName}Service.list(wrapper);
     try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
         Sheet sheet = wb.createSheet("${comment}");
         Row header = sheet.createRow(0);
@@ -226,13 +286,15 @@ public ResponseEntity<byte[]> export() throws IOException {
 }
 </#if>
 <#if hasExcelImport>${''}
-@Operation(summary = "导入${comment} Excel（首行为表头）")
-@PostMapping("/import")
+@Operation(summary = "导入${comment} Excel（首行为表头，逐行独立事务）")
+<#if genLog>@Log(title = "${comment}", type = "IMPORT", saveParam = false)
+</#if>@PostMapping("/import")
 public Result<Map<String, Object>> importExcel(@RequestParam("file") MultipartFile file) throws IOException {
     if (file == null || file.isEmpty()) {
         throw new BusinessException(400, "请选择要导入的文件");
     }
     int success = 0;
+    int skipped = 0;
     List<Map<String, Object>> failed = new ArrayList<>();
     try (Workbook wb = new XSSFWorkbook(file.getInputStream())) {
         Sheet sheet = wb.getSheetAt(0);
@@ -244,33 +306,166 @@ public Result<Map<String, Object>> importExcel(@RequestParam("file") MultipartFi
         for (int i = 0; i < header.getLastCellNum(); i++) {
             index.put(cellText(header.getCell(i)).trim(), i);
         }
+        // 表头缺失的列直接提示出来，避免用户以为导入了却全是空值
+        List<String> missing = new ArrayList<>();
 <#list excelImportColumns as c>
         Integer col${c.capField} = index.get("${c.columnComment}");
+        if (col${c.capField} == null) {
+            missing.add("${c.columnComment}");
+        }
 </#list>
+        if (!missing.isEmpty()) {
+            throw new BusinessException(400, "表头缺少列：" + String.join("、", missing));
+        }
         for (int r = 1; r <= sheet.getLastRowNum(); r++) {
             Row row = sheet.getRow(r);
-            if (row == null) {
+            if (row == null || isBlankRow(row)) {
                 continue;
             }
+            // 每行独立事务：单行失败只回滚该行，不影响已成功的行
             try {
                 ${className} entity = new ${className}();
 <#list excelImportColumns as c>
                 entity.set${c.capField}(<#if c.isString>text(row, col${c.capField})<#elseif c.javaType == "Integer">parseInteger(row, col${c.capField})<#elseif c.javaType == "Long">parseLong(row, col${c.capField})<#elseif c.javaType == "BigDecimal">parseDecimal(row, col${c.capField})<#elseif c.javaType == "LocalDate">parseDate(row, col${c.capField})<#elseif c.javaType == "LocalDateTime">parseDateTime(row, col${c.capField})<#else>text(row, col${c.capField})</#if>);
 </#list>
-                ${varName}Service.save(entity);
-                success++;
+                List<String> rowErrors = validateImportRow(entity, r + 1);
+                if (!rowErrors.isEmpty()) {
+                    Map<String, Object> err = new LinkedHashMap<>();
+                    err.put("row", r + 1);
+                    err.put("msg", String.join("；", rowErrors));
+                    failed.add(err);
+                    continue;
+                }
+                if (saveImportRow(entity)) {
+                    success++;
+                } else {
+                    skipped++;
+                }
             } catch (Exception ex) {
                 Map<String, Object> err = new LinkedHashMap<>();
                 err.put("row", r + 1);
-                err.put("msg", ex.getMessage() == null ? "数据格式不正确" : ex.getMessage());
+                err.put("msg", rootMessage(ex));
                 failed.add(err);
             }
         }
     }
     Map<String, Object> data = new LinkedHashMap<>();
+    data.put("total", success + skipped + failed.size());
     data.put("success", success);
+    data.put("skipped", skipped);
+    data.put("failedCount", failed.size());
     data.put("failed", failed);
     return Result.ok(data);
+}
+
+@Operation(summary = "下载${comment}导入模板（表头 + 填写说明行）")
+@GetMapping("/import-template")
+public ResponseEntity<byte[]> importTemplate() throws IOException {
+    try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+        Sheet sheet = wb.createSheet("${comment}导入模板");
+        // 第 1 行是表头，必须与 /import 的表头匹配逻辑完全一致，否则下载的模板自己导不回去
+        Row header = sheet.createRow(0);
+<#list excelImportColumns as c>
+        header.createCell(${c?index}).setCellValue("${c.columnComment}");
+</#list>
+        // 第 2 行是填写说明。导入逻辑按列名匹配表头、逐行校验，
+        // 这一行必然过不了校验而被记进 failed，所以文案里直接写「请删除本行」。
+        // 不放下拉/数据验证：POI 的 DataValidation 需要额外依赖，且模板只起提示作用。
+        Row hint = sheet.createRow(1);
+<#list excelImportColumns as c>
+        hint.createCell(${c?index}).setCellValue("【说明行，导入前请删除】<#if c.isRequired>必填<#else>选填</#if><#if (c.maxLen gt 0)>，不超过${c.maxLen}字</#if>");
+</#list>
+<#list excelImportColumns as c>
+        sheet.setColumnWidth(${c?index}, Math.min(${c.colWidth}, 60) * 256);
+</#list>
+        wb.write(bos);
+        String fileName = URLEncoder.encode("${comment}导入模板.xlsx", StandardCharsets.UTF_8).replace("+", "%20");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + fileName)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(bos.toByteArray());
+    }
+}
+
+@Operation(summary = "下载导入失败明细")
+@GetMapping("/import/failed")
+public ResponseEntity<byte[]> downloadImportFailed(@RequestParam("msg") List<String> messages) throws IOException {
+    try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+        Sheet sheet = wb.createSheet("导入失败明细");
+        Row head = sheet.createRow(0);
+        head.createCell(0).setCellValue("行号");
+        head.createCell(1).setCellValue("失败原因");
+        int r = 1;
+        for (String msg : messages) {
+            Row row = sheet.createRow(r);
+            String[] parts = msg.split("\\|", 2);
+            row.createCell(0).setCellValue(parts.length > 1 ? parts[0] : String.valueOf(r));
+            row.createCell(1).setCellValue(parts.length > 1 ? parts[1] : msg);
+            r++;
+        }
+        sheet.setColumnWidth(0, 10 * 256);
+        sheet.setColumnWidth(1, 60 * 256);
+        wb.write(bos);
+        String fileName = URLEncoder.encode("${comment}导入失败明细.xlsx", StandardCharsets.UTF_8).replace("+", "%20");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + fileName)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(bos.toByteArray());
+    }
+}
+
+/**
+ * 逐行业务校验：只校验「必填」与「长度」，其余交给数据库约束。
+ * 返回空列表代表该行可入库。
+ */
+private List<String> validateImportRow(${className} entity, int rowNum) {
+    List<String> errors = new ArrayList<>();
+<#list excelImportColumns as c>
+<#if c.isRequired>
+    if (<#if c.isString>entity.get${c.capField}() == null || entity.get${c.capField}().isBlank()<#else>entity.get${c.capField}() == null</#if>) {
+        errors.add("${c.columnComment}不能为空");
+    }
+</#if>
+<#if c.isString && c.maxLen gt 0>
+    if (entity.get${c.capField}() != null && entity.get${c.capField}().length() > ${c.maxLen}) {
+        errors.add("${c.columnComment}长度不能超过${c.maxLen}个字符");
+    }
+</#if>
+</#list>
+    return errors;
+}
+
+/**
+ * 保存单行。返回 false 表示命中唯一约束被跳过（视为已存在，不算失败）。
+ */
+private boolean saveImportRow(${className} entity) {
+    try {
+        return ${varName}Service.save(entity);
+    } catch (org.springframework.dao.DuplicateKeyException ex) {
+        return false;
+    }
+}
+
+private static String rootMessage(Throwable ex) {
+    Throwable cur = ex;
+    while (cur.getCause() != null && cur.getCause() != cur) {
+        cur = cur.getCause();
+    }
+    String msg = cur.getMessage();
+    if (msg == null || msg.isBlank()) {
+        return "数据格式不正确";
+    }
+    // 数据库原始报错太长，截断到可读长度
+    return msg.length() > 200 ? msg.substring(0, 200) + "..." : msg;
+}
+
+private static boolean isBlankRow(Row row) {
+    for (int i = 0; i < row.getLastCellNum(); i++) {
+        if (!cellText(row.getCell(i)).isBlank()) {
+            return false;
+        }
+    }
+    return true;
 }
 </#if>
 <#if ctrlDetailApi>${''}
@@ -288,8 +483,12 @@ public Result<${className}VO> getById(@PathVariable("id") Long id) {
 </#if>
 <#if ctrlAddApi>${''}
 @Operation(summary = "新增${comment}")
-@PostMapping
+<#if genLog>@Log(title = "${comment}", type = "INSERT")
+</#if>@PostMapping
 public Result<Void> add(<#if ctrlValid>@Valid </#if>@RequestBody ${className}SaveDTO dto) {
+<#if hasUnique>
+    checkUnique(dto, null);
+</#if>
     ${className} entity = new ${className}();
     BeanUtils.copyProperties(dto, entity);
     ${varName}Service.save(entity);
@@ -298,8 +497,12 @@ public Result<Void> add(<#if ctrlValid>@Valid </#if>@RequestBody ${className}Sav
 </#if>
 <#if ctrlEditApi>${''}
 @Operation(summary = "修改${comment}")
-@PutMapping
+<#if genLog>@Log(title = "${comment}", type = "UPDATE")
+</#if>@PutMapping
 public Result<Void> update(<#if ctrlValid>@Valid </#if>@RequestBody ${className}SaveDTO dto) {
+<#if hasUnique>
+    checkUnique(dto, dto.getId());
+</#if>
     ${className} entity = new ${className}();
     BeanUtils.copyProperties(dto, entity);
     ${varName}Service.updateById(entity);
@@ -308,13 +511,117 @@ public Result<Void> update(<#if ctrlValid>@Valid </#if>@RequestBody ${className}
 </#if>
 <#if ctrlDeleteApi>${''}
 @Operation(summary = "删除${comment}")
-@DeleteMapping("/{id}")
+<#if genLog>@Log(title = "${comment}", type = "DELETE")
+</#if>@DeleteMapping("/{id}")
 public Result<Void> delete(@PathVariable("id") Long id) {
     ${varName}Service.removeById(id);
     return Result.ok();
 }
 </#if>
     // <gen:end key="controller-body">
+<#if hasFlow>${''}
+    // ==================== P3-3 审批流（流程：${flowCode}） ====================
+
+    @Operation(summary = "提交${comment}审批")
+    <#if genLog>@Log(title = "${comment}", type = "SUBMIT")
+    </#if>@PostMapping("/flow/submit/{id}")
+    public Result<Void> flowSubmit(@PathVariable("id") Long id) {
+        flowService.submit("${flowCode}", id, null);
+        return Result.ok();
+    }
+
+    @Operation(summary = "审批通过${comment}")
+    @PostMapping("/flow/approve/{id}")
+    public Result<Void> flowApprove(@PathVariable("id") Long id,
+                                    @RequestParam(value = "comment", required = false) String comment) {
+        flowService.approve("${flowCode}", id, comment);
+        return Result.ok();
+    }
+
+    @Operation(summary = "驳回${comment}")
+    @PostMapping("/flow/reject/{id}")
+    public Result<Void> flowReject(@PathVariable("id") Long id,
+                                   @RequestParam(value = "comment", required = false) String comment) {
+        flowService.reject("${flowCode}", id, comment);
+        return Result.ok();
+    }
+
+    @Operation(summary = "${comment}审批记录")
+    @GetMapping("/flow/records/{id}")
+    public Result<List<Map<String, Object>>> flowRecords(@PathVariable("id") Long id) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (${rootPkg}.common.flow.FlowRecord r : flowService.records("${flowCode}", id)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("action", r.getAction());
+            m.put("fromStatus", r.getFromStatus());
+            m.put("toStatus", r.getToStatus());
+            m.put("comment", r.getComment());
+            m.put("operName", r.getOperName());
+            m.put("operTime", r.getOperTime());
+            list.add(m);
+        }
+        return Result.ok(list);
+    }
+</#if>
+<#if hasUnique>${''}
+    // ==================== P1-3 唯一性校验 ====================
+
+    @Operation(summary = "字段唯一性校验（前端异步查重用）")
+    @GetMapping("/check-unique")
+    public Result<Boolean> checkUniqueField(@RequestParam("field") String field,
+                                            @RequestParam("value") String value,
+                                            @RequestParam(value = "excludeId", required = false) Long excludeId) {
+        <#list uniqueColumns as c>
+        if ("${c.javaField}".equals(field)) {
+            return Result.ok(countBy("${c.dbField}", value, excludeId) > 0);
+        }
+        </#list>
+        return Result.ok(false);
+    }
+
+    /**
+     * 保存前兜底校验：前端异步校验只是体验优化，绕过接口直接调保存时这里必须拦住。
+     * 单列 unique 逐列判断；多列 unique 联合判断（同时相等才算重复）。
+     */
+    private void checkUnique(${className}SaveDTO dto, Long excludeId) {
+        <#if hasSingleUnique>
+        <#list uniqueColumns as c>
+        if (dto.get${c.capField}() != null && !String.valueOf(dto.get${c.capField}()).isBlank()
+                && countBy("${c.dbField}", String.valueOf(dto.get${c.capField}()), excludeId) > 0) {
+            throw new BusinessException(400, "${c.columnComment}已存在");
+        }
+        </#list>
+        <#else>
+        boolean anyNull = <#list uniqueColumns as c>dto.get${c.capField}() == null || </#list>false;
+        if (!anyNull) {
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<${className}> wrapper =
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+            <#list uniqueColumns as c>
+            wrapper.eq(${className}::get${c.capField}, dto.get${c.capField}());
+            </#list>
+            if (excludeId != null) {
+                wrapper.ne(${className}::getId, excludeId);
+            }
+            if (${varName}Service.count(wrapper) > 0) {
+                throw new BusinessException(400, "<#list uniqueColumns as c>${c.columnComment}<#if c_has_next>+</#if></#list>组合已存在");
+            }
+        }
+        </#if>
+    }
+
+    /**
+     * 按列名统计重复条数。列名来自生成期常量，不存在拼接用户输入的风险。
+     */
+    private long countBy(String column, String value, Long excludeId) {
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<${className}> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        wrapper.eq(column, value);
+        if (excludeId != null) {
+            wrapper.ne("id", excludeId);
+        }
+        return ${varName}Service.count(wrapper);
+    }
+</#if>
 <#if hasExcelExport || hasExcelImport>${''}
     private static String cellText(Object value) {
         return value == null ? "" : String.valueOf(value);

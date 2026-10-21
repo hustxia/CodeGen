@@ -6,6 +6,9 @@ package ${pkg}.dto;
 </#if>
 <#if saveDtoHasLocalDate>import java.time.LocalDate;
 </#if>
+<#if hasChild && child.hasGrandChild>import java.util.List;
+import ${child.grandChild.pkg}.dto.${child.grandChild.className}SaveDTO;
+</#if>
 <#if saveDtoHasImport>${''}
 </#if>
 <#list validImports as imp>import ${imp};
@@ -41,6 +44,13 @@ public class ${className}SaveDTO implements Serializable {
      * 所属主表 ID（由主表保存接口自动回填）
      */
     private Long ${masterFkField};
+</#if>
+<#if hasChild && child.hasGrandChild>
+    /**
+     * P3-1 第三级明细：保存时随本级一起全量替换。
+     * 字段名由子表类名推导（如 OrderItemSaveDTO → orderItems）。
+     */
+    private List<${child.grandChild.className}SaveDTO> ${child.grandChild.varName}s;
 </#if>
     // <gen:end key="dto-fields">
     // ===== 以下为手写区：写在 gen:end 之后的内容，重新生成不会被覆盖 =====

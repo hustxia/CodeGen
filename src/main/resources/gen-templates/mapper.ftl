@@ -6,6 +6,10 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * ${comment} Mapper
+<#if hasDataScope> *
+ * <p>数据权限：本表按 {@code ${scopeColumn}} 做 ${scopeType} 级隔离，
+ * 登记在启动类 {@code common.datascope.DataScopeRegistry} 里，查询与更新都会自动追加条件。
+</#if>
  */
 @Mapper
 public interface ${className}Mapper extends BaseMapper<${className}> {

@@ -9,7 +9,10 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
@@ -47,10 +50,15 @@ public class AuthContextFilter extends OncePerRequestFilter {
             "/error"
     );
 
+    private static final Logger log = LoggerFactory.getLogger(AuthContextFilter.class);
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -66,14 +74,20 @@ public class AuthContextFilter extends OncePerRequestFilter {
 
         if (hasToken) {
             String token = authorization.substring(BEARER_PREFIX.length());
+            Long userId;
+            String username;
             try {
-                UserContext.setUserId(jwtUtil.userIdOf(token));
-                UserContext.setUsername(jwtUtil.usernameOf(token));
+                userId = jwtUtil.userIdOf(token);
+                username = jwtUtil.usernameOf(token);
             } catch (Exception e) {
                 // token 解析失败（过期 / 篡改 / 密钥变更）按未登录处理
                 writeUnauthorized(response, "登录状态已失效，请重新登录");
                 return;
             }
+            UserContext.setUserId(userId);
+            UserContext.setUsername(username);
+            // 角色/部门/权限范围从库里查：写进 token 会因改权限要等 token 过期才生效
+            loadAuthority(userId);
             try {
                 filterChain.doFilter(request, response);
             } finally {
@@ -88,6 +102,47 @@ public class AuthContextFilter extends OncePerRequestFilter {
             return;
         }
         writeUnauthorized(response, "未登录或缺少访问令牌");
+    }
+
+    /**
+     * 填充当前用户的角色与数据权限范围。
+     *
+     * <p>查库失败（表结构未升级、DB 抖动）时按「最小权限」降级：
+     * 角色为空 → 数据权限落 self，不会因为查不到就变成能看全量。
+     */
+    private void loadAuthority(Long userId) {
+        try {
+            List<String> roles = jdbcTemplate.queryForList(
+                    "SELECT r.code FROM sys_role r "
+                            + "JOIN sys_user_role ur ON ur.role_id = r.id AND ur.deleted = 0 "
+                            + "WHERE ur.user_id = ? AND r.deleted = 0 AND r.status = 1",
+                    String.class, userId);
+            UserContext.setRoles(roles);
+            // 多角色时取最宽的范围：all > dept > self
+            List<String> scopes = jdbcTemplate.queryForList(
+                    "SELECT r.data_scope FROM sys_role r "
+                            + "JOIN sys_user_role ur ON ur.role_id = r.id AND ur.deleted = 0 "
+                            + "WHERE ur.user_id = ? AND r.deleted = 0 AND r.status = 1",
+                    String.class, userId);
+            UserContext.setDataScope(widest(scopes));
+            List<Long> deptIds = jdbcTemplate.queryForList(
+                    "SELECT dept_id FROM sys_user WHERE id = ? AND deleted = 0", Long.class, userId);
+            UserContext.setDeptId(deptIds.isEmpty() ? null : deptIds.get(0));
+        } catch (Exception e) {
+            log.warn("加载用户权限信息失败，按最小权限降级：{}", e.getMessage());
+            UserContext.setRoles(List.of());
+            UserContext.setDataScope("self");
+        }
+    }
+
+    private String widest(List<String> scopes) {
+        if (scopes.contains("all")) {
+            return "all";
+        }
+        if (scopes.contains("dept")) {
+            return "dept";
+        }
+        return "self";
     }
 
     private boolean isWhiteListed(HttpServletRequest request) {

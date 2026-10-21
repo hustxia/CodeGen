@@ -18,4 +18,9 @@ public class GenDdlDTO implements Serializable {
      * 建表语句
      */
     private String ddl;
+
+    /**
+     * 表名（可选）：字典编码前缀用。为空时从 DDL 的 CREATE TABLE 语句里取。
+     */
+    private String tableName;
 }

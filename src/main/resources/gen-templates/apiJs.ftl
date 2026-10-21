@@ -48,8 +48,8 @@ export function save${className}WithChildren(master, children) {
 <#if hasExcelExport>export function export${className}(params) {
   return request({
     url: '${apiBase}/export',
-    method: 'get',
-    params,
+    method: 'post',
+    data: params || {},
     responseType: 'blob'
   })
 }
@@ -62,6 +62,15 @@ export function save${className}WithChildren(master, children) {
     method: 'post',
     data: formData,
     headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}
+
+// 空白导入模板（表头 + 说明行），让用户不用猜列名
+export function download${className}Template() {
+  return request({
+    url: '${apiBase}/import-template',
+    method: 'get',
+    responseType: 'blob'
   })
 }
 </#if>
@@ -92,6 +101,39 @@ export function save${className}WithChildren(master, children) {
   return request({
     url: `${apiBase}/${'$'}{id}`,
     method: 'delete'
+  })
+}
+</#if>
+<#if hasFlow>// P3-3 审批流：四个动作走宿主统一的 /flow 接口，业务表只负责把 id 传过去
+export function flowSubmit${className}(id, comment) {
+  return request({
+    url: '/flow/submit',
+    method: 'post',
+    data: { flowCode: '${flowCode}', bizId: id, comment }
+  })
+}
+
+export function flowApprove${className}(id, comment) {
+  return request({
+    url: '/flow/approve',
+    method: 'post',
+    data: { flowCode: '${flowCode}', bizId: id, comment }
+  })
+}
+
+export function flowReject${className}(id, comment) {
+  return request({
+    url: '/flow/reject',
+    method: 'post',
+    data: { flowCode: '${flowCode}', bizId: id, comment }
+  })
+}
+
+export function get${className}FlowRecords(id) {
+  return request({
+    url: '/flow/records',
+    method: 'get',
+    params: { flowCode: '${flowCode}', bizId: id }
   })
 }
 </#if>

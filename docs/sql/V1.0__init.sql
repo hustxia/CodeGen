@@ -32,6 +32,7 @@ CREATE TABLE `gen_table` (
   `gen_entity` tinyint NOT NULL DEFAULT '1' COMMENT '开关:生成entity',
   `gen_mapper` tinyint NOT NULL DEFAULT '1' COMMENT '开关:生成mapper',
   `gen_service` tinyint NOT NULL DEFAULT '1' COMMENT '开关:生成service+impl',
+  `gen_log` tinyint NOT NULL DEFAULT '1' COMMENT '开关:生成操作日志@Log',
   `gen_controller` tinyint NOT NULL DEFAULT '1' COMMENT '开关:生成controller',
   `gen_page_api` tinyint NOT NULL DEFAULT '1' COMMENT '开关:分页接口',
   `gen_detail_api` tinyint NOT NULL DEFAULT '1' COMMENT '开关:详情接口',
@@ -49,6 +50,8 @@ CREATE TABLE `gen_table` (
   `tree_label_column` varchar(64) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '树节点显示列',
   `master_table_id` bigint DEFAULT NULL COMMENT '作为子表时所属主表的gen_table.id',
   `master_foreign_key` varchar(64) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '子表中指向主表主键的列',
+  `master_depth` tinyint NOT NULL DEFAULT '0' COMMENT 'P3-1 主子表层级深度，0为顶层',
+  `relation_type` varchar(16) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'P3-2 表关系类型:middle 多对多中间表',
   `remark` varchar(500) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '备注',
   `menu_id` bigint DEFAULT NULL COMMENT '已注册菜单ID(sys_menu.id)',
   `last_gen_time` datetime DEFAULT NULL COMMENT '最近一次写盘时间',
@@ -92,6 +95,11 @@ CREATE TABLE `gen_table_column` (
   `validate_rule` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '鏍￠獙瑙勫垯:required,maxlen=50,min=1,max=9999,email,phone,url,regex=...',
   `excel_export` tinyint NOT NULL DEFAULT '1' COMMENT '是否导出Excel',
   `excel_import` tinyint NOT NULL DEFAULT '0' COMMENT '是否允许导入',
+  `mask_type` varchar(16) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'P1-1 脱敏类型:phone/idcard/email/name/bankcard，空为不脱敏',
+  `unique_flag` tinyint NOT NULL DEFAULT '0' COMMENT 'P1-3 是否参与唯一性校验:0否1是（多列同置1则联合唯一）',
+  `link_rule` varchar(512) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'P1-4 表单联动规则 JSON',
+  `data_scope` varchar(16) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'P2-1 数据权限标记:dept 按部门/self 按本人',
+  `relation_key` tinyint NOT NULL DEFAULT '0' COMMENT 'P3-2 是否中间表外键列:0否1是',
   PRIMARY KEY (`id`),
   KEY `idx_table_id` (`table_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='代码生成器-字段配置';

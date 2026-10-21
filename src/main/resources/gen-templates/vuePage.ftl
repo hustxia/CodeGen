@@ -62,10 +62,10 @@
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
 </#if>
       >
-        <el-table-column prop="id" label="ID" width="70" />
+        <el-table-column prop="id" label="ID" width="<#if idColWidth gt 0>${idColWidth}<#else>70</#if>" />
 <#list listColumns as c>
 <#if c.isSwitch>
-        <el-table-column prop="${c.javaField}" label="${c.columnComment}" width="100" align="center">
+        <el-table-column prop="${c.javaField}" label="${c.columnComment}" width="${c.colWidth}" align="center">
           <template slot-scope="{ row }">
             <el-tag :type="row.${c.javaField} === 1 ? 'success' : 'info'" size="mini">
               {{ row.${c.javaField} === 1 ? '启用' : '停用' }}
@@ -73,18 +73,37 @@
           </template>
         </el-table-column>
 <#elseif c.hasDict>
-        <el-table-column prop="${c.javaField}" label="${c.columnComment}" min-width="120" show-overflow-tooltip
+        <el-table-column prop="${c.javaField}" label="${c.columnComment}" min-width="${c.colWidth}" show-overflow-tooltip
           :formatter="(row) => dictText('${c.dictType}', row.${c.javaField})" />
+<#elseif c.isDatetime>
+        <el-table-column prop="${c.javaField}" label="${c.columnComment}" width="${c.colWidth}" align="center" show-overflow-tooltip />
+<#elseif c.isDate>
+        <el-table-column prop="${c.javaField}" label="${c.columnComment}" width="${c.colWidth}" align="center" />
+<#elseif c.isNumberCtrl || c.isNumber>
+        <el-table-column prop="${c.javaField}" label="${c.columnComment}" width="${c.colWidth}" align="right" show-overflow-tooltip />
+<#elseif c.isText || c.isTextarea>
+        <el-table-column prop="${c.javaField}" label="${c.columnComment}" min-width="${c.colWidth}" show-overflow-tooltip />
 <#else>
-        <el-table-column prop="${c.javaField}" label="${c.columnComment}" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="${c.javaField}" label="${c.columnComment}" min-width="${c.colWidth}" show-overflow-tooltip />
 </#if>
 </#list>
-        <el-table-column prop="updateTime" label="更新时间" width="170" />
-<#if genEditBtn || genDeleteBtn || hasDetail>
-        <el-table-column label="操作" width="<#if hasDetail>170<#else>120</#if>" fixed="right">
+        <el-table-column prop="updateTime" label="更新时间" width="170" align="center" />
+<#if genEditBtn || genDeleteBtn || hasDetail || hasFlow>
+        <el-table-column label="操作" width="${opColWidth}" fixed="right" align="center">
           <template slot-scope="{ row }">
 <#if hasDetail>
             <el-button type="text" @click="openDetail(row)">详情</el-button>
+</#if>
+<#if hasFlow>
+            <!--
+              审批按钮按单据状态出现，避免用户对着「已通过」的单子再点提交。
+              状态值约定：0 草稿 / 1 待审批 / 2 已通过 / 3 已驳回。
+              服务端还会按流程节点配的角色再校验一次，这里只做界面收敛。
+            -->
+            <el-button v-if="row.${flowStatusField} === '0' || row.${flowStatusField} === '3'" type="text" @click="handleFlow('submit', row)">提交</el-button>
+            <el-button v-if="row.${flowStatusField} === '1'" type="text" @click="handleFlow('approve', row)">审批</el-button>
+            <el-button v-if="row.${flowStatusField} === '1'" type="text" class="danger-btn" @click="handleFlow('reject', row)">驳回</el-button>
+            <el-button type="text" @click="openFlowRecords(row)">流程</el-button>
 </#if>
 <#if genEditBtn>
             <el-button v-hasPermi="['${tableName}:edit']" type="text" @click="openDialog(row)">编辑</el-button>
@@ -117,33 +136,33 @@
     <el-dialog :title="form.id ? '编辑${comment}' : '新增${comment}'" :visible.sync="dialogVisible" width="<#if hasChild>860px<#else>560px</#if>">
       <el-form ref="form" :model="form" :rules="rules" label-width="110px">
 <#list formColumns as c>
-        <el-form-item label="${c.columnComment}" prop="${c.javaField}">
+        <el-form-item<#if c.hasLink> v-if="link.visible('${c.javaField}')"</#if> label="${c.columnComment}" prop="${c.javaField}">
 <#if c.hasRef>
-          <el-select v-model="form.${c.javaField}" filterable remote clearable placeholder="输入关键字搜索${c.columnComment}"
+          <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> filterable remote clearable placeholder="输入关键字搜索${c.columnComment}"
             :remote-method="kw => searchRef('${c.javaField}', '${c.refTable}', '${c.refLabel}', kw)"
             :loading="refLoading['${c.javaField}']" style="width: 100%">
             <el-option v-for="o in refOptions['${c.javaField}'] || []" :key="o.id" :label="o.label" :value="o.id" />
           </el-select>
 <#elseif c.isSelect>
-          <el-select v-model="form.${c.javaField}" placeholder="请选择${c.columnComment}" clearable style="width: 100%">
+          <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> placeholder="请选择${c.columnComment}" clearable style="width: 100%">
             <el-option v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#else>[]</#if>" :key="d.value" :label="d.label" :value="d.value" />
           </el-select>
 <#elseif c.isRadio>
-          <el-radio-group v-model="form.${c.javaField}">
+          <el-radio-group v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if>>
             <el-radio v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#else>[]</#if>" :key="d.value" :label="d.value">{{ d.label }}</el-radio>
           </el-radio-group>
 <#elseif c.isSwitch>
-          <el-switch v-model="form.${c.javaField}" :active-value="1" :inactive-value="0" />
+          <el-switch v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> :active-value="1" :inactive-value="0" />
 <#elseif c.isNumberCtrl>
-          <el-input-number v-model="form.${c.javaField}" controls-position="right" style="width: 100%" />
+          <el-input-number v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> controls-position="right" style="width: 100%" />
 <#elseif c.isDate>
-          <el-date-picker v-model="form.${c.javaField}" type="date" value-format="yyyy-MM-dd" placeholder="请选择${c.columnComment}" style="width: 100%" />
+          <el-date-picker v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="date" value-format="yyyy-MM-dd" placeholder="请选择${c.columnComment}" style="width: 100%" />
 <#elseif c.isDatetime>
-          <el-date-picker v-model="form.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="请选择${c.columnComment}" style="width: 100%" />
+          <el-date-picker v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="请选择${c.columnComment}" style="width: 100%" />
 <#elseif c.isTextarea>
-          <el-input v-model="form.${c.javaField}" type="textarea" :rows="3" placeholder="请输入${c.columnComment}" />
+          <el-input v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="textarea" :rows="3" placeholder="请输入${c.columnComment}" />
 <#else>
-          <el-input v-model="form.${c.javaField}" placeholder="请输入${c.columnComment}" />
+          <el-input v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> placeholder="请输入${c.columnComment}" />
 </#if>
         </el-form-item>
 </#list>
@@ -185,12 +204,20 @@
           </template>
         </el-table-column>
 </#list>
-        <el-table-column label="操作" width="70" align="center">
-          <template slot-scope="{ $index }">
+        <el-table-column label="操作" width="<#if child.hasGrandChild>150<#else>70</#if>" align="center">
+          <template slot-scope="{ row, $index }">
+<#if child.hasGrandChild>
+            <el-button type="text" @click="openGrandRows(row)">${child.grandChild.comment}</el-button>
+</#if>
             <el-button type="text" class="danger-btn" @click="childRows.splice($index, 1)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
+<#if child.hasGrandChild>
+      <div class="child-tip" style="margin-top: 6px">
+        ${child.grandChild.comment}在点「确定」时与本级明细一起全量替换，弹窗里改完不必单独保存。
+      </div>
+</#if>
 </#if>
 
       <div slot="footer">
@@ -198,6 +225,47 @@
         <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
       </div>
     </el-dialog>
+<#if hasChild && child.hasGrandChild>
+
+    <!-- P3-1 三级明细编辑：直接改 childRows[i].${child.grandChild.varName}s，保存时随主表一起提交 -->
+    <el-dialog
+      :title="grandTitle"
+      :visible.sync="grandVisible"
+      width="720px"
+      append-to-body
+    >
+      <div class="child-bar">
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addGrandRow">添加${child.grandChild.comment}</el-button>
+      </div>
+      <el-table :data="grandRows" border size="mini" class="child-table">
+<#list child.grandChild.formColumns as c>
+        <el-table-column label="${c.columnComment}" min-width="130">
+          <template slot-scope="{ row }">
+<#if c.isSwitch>
+            <el-switch v-model="row.${c.javaField}" :active-value="1" :inactive-value="0" />
+<#elseif c.isNumberCtrl>
+            <el-input-number v-model="row.${c.javaField}" controls-position="right" size="mini" style="width: 100%" />
+<#elseif c.isDate>
+            <el-date-picker v-model="row.${c.javaField}" type="date" value-format="yyyy-MM-dd" size="mini" style="width: 100%" />
+<#elseif c.isDatetime>
+            <el-date-picker v-model="row.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" size="mini" style="width: 100%" />
+<#else>
+            <el-input v-model="row.${c.javaField}" size="mini" placeholder="${c.columnComment}" />
+</#if>
+          </template>
+        </el-table-column>
+</#list>
+        <el-table-column label="操作" width="70" align="center">
+          <template slot-scope="{ $index }">
+            <el-button type="text" class="danger-btn" @click="grandRows.splice($index, 1)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div slot="footer">
+        <el-button @click="grandVisible = false">关闭</el-button>
+      </div>
+    </el-dialog>
+</#if>
 </#if>
 
 <#if hasDetail>
@@ -235,6 +303,11 @@
 <#if hasExcelImport>
     <!-- 导入对话框 -->
     <el-dialog title="导入${comment}" :visible.sync="importVisible" width="480px">
+      <div class="import-tpl-tip">
+        表头必须与模板一致。模板第 2 行是填写说明，
+        <b>填写真实数据前请先删掉说明行</b>。
+        <el-button type="text" size="mini" :loading="tplLoading" @click="downloadTemplate">下载模板</el-button>
+      </div>
       <el-upload
         drag
         action="#"
@@ -248,8 +321,23 @@
         <div class="el-upload__text">把 xlsx 拖到这里，或<em>点击选择</em></div>
       </el-upload>
       <div v-if="importResult" class="import-result">
-        <div>导入成功 {{ importResult.success }} 条</div>
-        <div v-for="(f, i) in importResult.failed" :key="i" class="import-fail">第 {{ f.row }} 行：{{ f.msg }}</div>
+        <div class="import-summary">
+          共 {{ importResult.total }} 行：成功 <b class="ok">{{ importResult.success }}</b> 条，
+          跳过 <b>{{ importResult.skipped || 0 }}</b> 条（已存在），
+          失败 <b class="bad">{{ importResult.failedCount || 0 }}</b> 条
+        </div>
+        <div v-if="importResult.failedCount" class="import-fail-box">
+          <div class="import-fail-head">
+            <span>失败明细（显示前 20 条）</span>
+            <el-button type="text" size="mini" @click="downloadFailed">下载全部明细</el-button>
+          </div>
+          <div v-for="(f, i) in importResult.failed.slice(0, 20)" :key="i" class="import-fail">
+            第 {{ f.row }} 行：{{ f.msg }}
+          </div>
+          <div v-if="importResult.failedCount > 20" class="import-fail-more">
+            还有 {{ importResult.failedCount - 20 }} 条未显示，请下载明细查看
+          </div>
+        </div>
       </div>
       <div slot="footer">
         <el-button @click="importVisible = false">关闭</el-button>
@@ -257,32 +345,80 @@
       </div>
     </el-dialog>
 </#if>
+<#if hasFlow>
+    <!-- 提交/审批/驳回的确认框，顺便收一句意见 -->
+    <el-dialog
+      :title="flowAction === 'submit' ? '提交审批' : (flowAction === 'reject' ? '驳回' : '审批通过')"
+      :visible.sync="flowDialogVisible"
+      width="420px"
+      append-to-body
+    >
+      <el-input
+        v-model="flowComment"
+        type="textarea"
+        :rows="3"
+        maxlength="200"
+        show-word-limit
+        :placeholder="flowAction === 'reject' ? '请填写驳回理由' : '审批意见（选填）'"
+      />
+      <div slot="footer">
+        <el-button @click="flowDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="flowSubmitting" @click="submitFlow">确定</el-button>
+      </div>
+    </el-dialog>
+    <!-- 审批记录抽屉：流程流水是只追加的，看的就是「谁在什么时候把单子推到了哪一步」 -->
+    <el-drawer title="${comment}审批记录" :visible.sync="flowVisible" size="480px">
+      <div v-loading="flowLoading" class="detail-body">
+        <div v-if="!flowRecords.length" class="flow-empty">还没有流转记录</div>
+        <el-timeline v-else>
+          <el-timeline-item
+            v-for="(r, i) in flowRecords"
+            :key="i"
+            :timestamp="r.operTime"
+            placement="top"
+            :color="flowColor(r.action)"
+          >
+            <div class="flow-node">{{ flowActionText(r.action) }}　<span class="flow-status">{{ flowStatusText(r.toStatus) }}</span></div>
+            <div class="flow-meta">{{ r.operName || '系统' }}<span v-if="r.comment">：{{ r.comment }}</span></div>
+          </el-timeline-item>
+        </el-timeline>
+      </div>
+    </el-drawer>
+</#if>
     <!-- <gen:end key="vue-template"> -->
   </div>
 </template>
 
 <script>
 import {
-<#if genPageApi>  get${className}List<#if genTree || genAddApi || genEditApi || genDeleteApi || hasChild || hasRef || hasExcelExport || hasExcelImport>,</#if>
+<#if genPageApi>  get${className}List<#if genTree || genAddApi || genEditApi || genDeleteApi || hasChild || hasRef || hasExcelExport || hasExcelImport || hasFlow>,</#if>
 </#if>
-<#if genTree>  get${className}Tree<#if genAddApi || genEditApi || genDeleteApi || hasChild || hasRef || hasExcelExport || hasExcelImport>,</#if>
+<#if genTree>  get${className}Tree<#if genAddApi || genEditApi || genDeleteApi || hasChild || hasRef || hasExcelExport || hasExcelImport || hasFlow>,</#if>
 </#if>
-<#if hasRef>  get${className}Options<#if genAddApi || genEditApi || genDeleteApi || hasChild || hasExcelExport || hasExcelImport>,</#if>
+<#if hasRef>  get${className}Options<#if genAddApi || genEditApi || genDeleteApi || hasChild || hasExcelExport || hasExcelImport || hasFlow>,</#if>
 </#if>
 <#if hasChild>  get${className}WithChildren,
-  save${className}WithChildren<#if genAddApi || genEditApi || genDeleteApi || hasExcelExport || hasExcelImport>,</#if>
+  save${className}WithChildren<#if genAddApi || genEditApi || genDeleteApi || hasExcelExport || hasExcelImport || hasFlow>,</#if>
 </#if>
-<#if hasExcelExport>  export${className}<#if genAddApi || genEditApi || genDeleteApi || hasExcelImport>,</#if>
+<#if hasExcelExport>  export${className}<#if genAddApi || genEditApi || genDeleteApi || hasExcelImport || hasFlow>,</#if>
 </#if>
-<#if hasExcelImport>  import${className}<#if genAddApi || genEditApi || genDeleteApi>,</#if>
+<#if hasExcelImport>  import${className}, download${className}Template<#if genAddApi || genEditApi || genDeleteApi || hasFlow>,</#if>
 </#if>
 <#if genAddApi>  create${className}<#if genEditApi || genDeleteApi>,</#if>
 </#if>
 <#if genEditApi>  update${className}<#if genDeleteApi>,</#if>
 </#if>
-<#if genDeleteApi>  delete${className}</#if>
+<#if genDeleteApi>  delete${className}<#if hasFlow>,</#if>
+</#if>
+<#if hasFlow>
+  flowSubmit${className},
+  flowApprove${className},
+  flowReject${className},
+  get${className}FlowRecords,
+</#if>
 } from '@/api/${moduleName}'
-<#if vueHasDict>
+<#if vueHasDict || hasSingleUnique || hasExcelImport>
+// 字典兜底、唯一性查重、导入失败明细下载都直接用通用 request，不依赖宿主是否提供专用 api 模块
 import request from '@/utils/request'
 </#if>
 
@@ -301,6 +437,13 @@ const defaultChild = () => ({
   ${c.javaField}: ${c.jsInit},
 </#list>
 })
+<#if child.hasGrandChild>
+const defaultGrand = () => ({
+<#list child.grandChild.formColumns as c>
+  ${c.javaField}: ${c.jsInit},
+</#list>
+})
+</#if>
 </#if>
 
 export default {
@@ -327,20 +470,50 @@ export default {
 </#if>
 <#if hasChild>
       childRows: [],
+<#if child.hasGrandChild>
+      // P3-1 三级明细：grandRows 指向 childRows 里某一行的 ${child.grandChild.varName}s 数组，
+      // 直接改引用，弹窗里编辑等于改主结构，无需回写拷贝
+      grandVisible: false,
+      grandRows: [],
+      grandTitle: '',
+      grandIndex: -1,
+</#if>
 </#if>
 <#if hasExcelImport>
       importVisible: false,
       importing: false,
       importFiles: [],
       importResult: null,
+      tplLoading: false,
+</#if>
+<#if hasFlow>
+      flowVisible: false,
+      flowLoading: false,
+      flowRecords: [],
+      flowRow: null,
+      flowDialogVisible: false,
+      flowAction: '',
+      flowComment: '',
+      flowSubmitting: false,
 </#if>
 <#if vueHasDict>
       dicts: {<#list dictCodes as code> ${code}: []<#if code_has_next>,</#if></#list> },
 </#if>
       rules: {<#list formColumns as c><#if c.hasVueRule>
         ${c.javaField}: ${c.vueRule},</#if></#list>
+<#if hasSingleUnique>
+        // P1-3 唯一性校验：失焦时异步查重，后端同样有兜底校验
+<#list uniqueColumns as c>
+        ${c.javaField}: [
+          { required: ${c.isRequired?c}, message: '${c.columnComment}不能为空', trigger: 'blur' },
+          { validator: this.uniqueValidator('${c.javaField}'), trigger: 'blur' }
+        ],</#list>
+</#if>
       },
-      form: defaultForm()
+      form: defaultForm()<#if hasLink>,
+      // P1-4 表单联动：由字段配置的 linkRule 驱动，visible/disabled/required 三类规则
+      linkRules: [<#list formColumns as c><#if c.hasLink>{ field: '${c.javaField}', label: '${c.columnComment}', rule: ${c.linkRule} }<#if c_has_next>,</#if></#if></#list>]<#if hasLink>,
+      linkState: {}</#if></#if>
       // <gen:end key="vue-data">
     }
   },
@@ -350,8 +523,146 @@ export default {
 </#if>
     this.fetchList()
   },
+<#if hasLink>
+  computed: {
+    /**
+     * P1-4 表单联动求值器。模板里用 link.visible(field) / link.disabled(field) 取状态，
+     * 规则统一从 linkRules 读取，生成物里不写死任何业务字段名。
+     * 规则格式：[{ field, label, rule: { when, op, value, effect, else } }]
+     *   when  触发源字段（可与 field 相同）
+     *   op    eq / ne / in / notIn / notEmpty / empty
+     *   value 比对值（in / notIn 用数组）
+     *   effect 满足条件时的效果：show / hide / enable / disable / required / optional
+     *   else   不满足条件时的效果（缺省按 effect 的反义）
+     */
+    link() {
+      const hit = field => this.linkState[field] || {}
+      return {
+        // 没配联动规则的字段恒显示、恒可用，行为与未启用该特性时完全一致
+        visible: field => (this.hasLinkRule(field) ? hit(field).visible !== false : true),
+        disabled: field => hit(field).disabled === true,
+        required: field => hit(field).required === true
+      }
+    }
+  },
+  watch: {
+    // P1-4 联动触发源变化时刷新状态；deep 保证对象/数组字段变化也能捕获
+    form: {
+      deep: true,
+      handler() {
+        this.applyLink()
+      }
+    }
+  },
+</#if>
   methods: {
     // <gen:begin key="vue-methods">
+<#if hasLink>
+    /**
+     * P1-4 表单联动：按 linkRules 重新计算每个字段的 显隐/禁用/必填 状态。
+     * 表单变化时由 watch(form) 触发，打开弹窗时由 openDialog 主动调用一次。
+     */
+    applyLink() {
+      const next = {}
+      this.linkRules.forEach(item => {
+        const rule = item.rule || {}
+        const source = rule.when || item.field
+        next[item.field] = this.evalLink(rule, this.form[source])
+      })
+      Object.keys(next).forEach(field => {
+        const state = next[field]
+        this.$set(this.linkState, field, state)
+        // 必填状态同步进校验规则；隐藏字段不参与校验，避免提交时被看不见的字段拦下
+        if (!state.visible) {
+          this.$set(this.rules, field, [])
+        } else if (state.required) {
+          this.$set(this.rules, field, [{ required: true, message: this.linkLabel(field) + '不能为空', trigger: 'blur' }])
+        } else if (this.rules[field] && this.rules[field].some(r => r.required)) {
+          this.$set(this.rules, field, [])
+        }
+      })
+    },
+    /**
+     * 单个规则求值。
+     * rule = { when, op, value, effect, else }
+     *   when   触发源字段，缺省为字段自身
+     *   op     eq / ne / in / notIn / notEmpty / empty
+     *   value  eq/ne 用标量，in/notIn 用数组
+     *   effect 条件成立时的效果：show/hide/enable/disable/required/optional
+     *   else   条件不成立时的效果，缺省取 effect 的反义
+     */
+    evalLink(rule, value) {
+      const op = rule.op || 'eq'
+      const expect = rule.value
+      const isBlank = v => v === '' || v === null || v === undefined
+        || (Array.isArray(v) && v.length === 0)
+      const same = v => String(v) === String(value)
+      let matched = true
+      if (op === 'eq') matched = same(expect)
+      else if (op === 'ne') matched = !same(expect)
+      else if (op === 'in') matched = (expect || []).some(same)
+      else if (op === 'notIn') matched = !(expect || []).some(same)
+      else if (op === 'notEmpty') matched = !isBlank(value)
+      else if (op === 'empty') matched = isBlank(value)
+
+      const state = { visible: true, disabled: false, required: false }
+      const apply = effect => {
+        if (effect === 'show') state.visible = true
+        else if (effect === 'hide') state.visible = false
+        else if (effect === 'enable') state.disabled = false
+        else if (effect === 'disable') state.disabled = true
+        else if (effect === 'required') state.required = true
+        else if (effect === 'optional') state.required = false
+      }
+      const inverse = {
+        show: 'hide', hide: 'show',
+        enable: 'disable', disable: 'enable',
+        required: 'optional', optional: 'required'
+      }
+      const hitEffect = rule.effect || 'show'
+      apply(matched ? hitEffect : (rule.else || inverse[hitEffect] || 'hide'))
+      return state
+    },
+    hasLinkRule(field) {
+      return this.linkRules.some(item => item.field === field)
+    },
+    linkLabel(field) {
+      const hit = this.linkRules.find(item => item.field === field)
+      return hit ? hit.label : field
+    },
+</#if>
+<#if hasSingleUnique>
+    /**
+     * P1-3 唯一性异步校验：字段失焦时查重。
+     * 编辑场景要排除自身 id，否则「不改这个字段直接保存」会被自己挡住。
+     */
+    uniqueValidator(field) {
+      return (rule, value, callback) => {
+        if (value === '' || value === null || value === undefined) {
+          callback()
+          return
+        }
+        request({
+          url: '/${tableName}/check-unique',
+          method: 'get',
+          params: { field, value, excludeId: this.form.id || undefined }
+        }).then(res => {
+          if (res.data === true) {
+            callback(new Error(this.columnLabel(field) + '已存在'))
+          } else {
+            callback()
+          }
+        }).catch(() => {
+          // 查重接口不可用时不阻断用户提交，后端保存时仍有兜底校验
+          callback()
+        })
+      }
+    },
+    columnLabel(field) {
+      const map = {<#list uniqueColumns as c> ${c.javaField}: '${c.columnComment}'<#if c_has_next>,</#if></#list> }
+      return map[field] || field
+    },
+</#if>
 <#if vueHasDict>
     async loadDicts() {
       const codes = [<#list dictCodes as code>'${code}'<#if code_has_next>, </#if></#list>]
@@ -467,6 +778,9 @@ export default {
       }
 </#if>
       this.$nextTick(() => {
+<#if hasLink>
+        this.applyLink()
+</#if>
         if (this.$refs.form) this.$refs.form.clearValidate()
       })
     },
@@ -482,6 +796,26 @@ export default {
     addChildRow() {
       this.childRows.push(defaultChild())
     },
+<#if child.hasGrandChild>
+    /**
+     * 打开某一行的下级明细。用 $set 保障数组存在，
+     * 因为后端返回的 VO 里该字段可能为 null（没有下级时）。
+     */
+    openGrandRows(row) {
+      if (!row.${child.grandChild.varName}s) {
+        this.$set(row, '${child.grandChild.varName}s', [])
+      }
+      this.grandRows = row.${child.grandChild.varName}s
+      this.grandTitle = '${child.grandChild.comment}'
+      this.grandVisible = true
+    },
+    addGrandRow() {
+      if (!this.grandRows) {
+        this.grandRows = []
+      }
+      this.grandRows.push(defaultGrand())
+    },
+</#if>
 </#if>
     async submitForm() {
       const valid = await this.$refs.form.validate().catch(() => false)
@@ -516,7 +850,7 @@ export default {
           this.fetchList()
         })
         .catch(() => {})
-    }<#if hasExcelExport || hasExcelImport>,</#if>
+    }<#if hasExcelExport || hasExcelImport || hasFlow>,</#if>
 </#if>
 <#if hasExcelExport>
     async handleExport() {
@@ -530,12 +864,31 @@ export default {
         a.click()
         window.URL.revokeObjectURL(url)
       } catch (e) { /* 拦截器已提示 */ }
-    }<#if hasExcelImport>,</#if>
+    }<#if hasExcelImport || hasFlow>,</#if>
 </#if>
 <#if hasExcelImport>
     handleImportChange(file, fileList) {
       this.importFiles = fileList.slice(-1)
       this.importResult = null
+    },
+    /**
+     * P2-4 下载空白模板：表头与后端 /import 的表头匹配逻辑同源生成，
+     * 用户拿到的模板一定能导回去。
+     */
+    async downloadTemplate() {
+      this.tplLoading = true
+      try {
+        const res = await download${className}Template()
+        const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = '${comment}导入模板.xlsx'
+        a.click()
+        window.URL.revokeObjectURL(url)
+      } catch (e) { /* 拦截器已提示 */ } finally {
+        this.tplLoading = false
+      }
     },
     async submitImport() {
       if (!this.importFiles.length) {
@@ -545,12 +898,98 @@ export default {
       this.importing = true
       try {
         const res = await import${className}(this.importFiles[0].raw)
-        this.importResult = res.data || { success: 0, failed: [] }
-        this.$message.success('导入完成：成功 ' + this.importResult.success + ' 条')
+        this.importResult = res.data || { total: 0, success: 0, skipped: 0, failedCount: 0, failed: [] }
+        const summary = '导入完成：成功 ' + this.importResult.success + ' 条'
+          + (this.importResult.skipped ? '，跳过 ' + this.importResult.skipped + ' 条' : '')
+          + (this.importResult.failedCount ? '，失败 ' + this.importResult.failedCount + ' 条' : '')
+        if (this.importResult.failedCount) {
+          this.$message.warning(summary)
+        } else {
+          this.$message.success(summary)
+        }
         this.fetchList()
       } catch (e) { /* 拦截器已提示 */ } finally {
         this.importing = false
       }
+    },
+    /**
+     * P1-5 失败明细下载：把「行号|原因」传给后端生成 xlsx，
+     * 前端只负责触发浏览器下载，不在页面里堆几百行错误。
+     */
+    async downloadFailed() {
+      const list = (this.importResult && this.importResult.failed) || []
+      if (!list.length) {
+        this.$message.warning('没有失败记录')
+        return
+      }
+      try {
+        const res = await request({
+          url: '/${tableName}/import/failed',
+          method: 'get',
+          params: { msg: list.map(f => f.row + '|' + f.msg) },
+          responseType: 'blob'
+        })
+        const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = '${comment}导入失败明细.xlsx'
+        a.click()
+        window.URL.revokeObjectURL(url)
+      } catch (e) { /* 拦截器已提示 */ }
+    }<#if hasFlow>,</#if>
+</#if>
+<#if hasFlow>
+    /**
+     * 提交 / 审批 / 驳回共用一条通道，避免三份几乎一样的代码。
+     * 审批意见走一个小弹窗，不逼用户在列表里用 prompt —— prompt 没法做多行和必填校验。
+     */
+    handleFlow(action, row) {
+      this.flowAction = action
+      this.flowRow = row
+      this.flowComment = ''
+      this.flowDialogVisible = true
+    },
+    async submitFlow() {
+      if (!this.flowRow) return
+      const map = {
+        submit: { fn: flowSubmit${className}, text: '提交' },
+        approve: { fn: flowApprove${className}, text: '审批通过' },
+        reject: { fn: flowReject${className}, text: '驳回' }
+      }
+      const act = map[this.flowAction]
+      if (!act) return
+      this.flowSubmitting = true
+      try {
+        await act.fn(this.flowRow.id, this.flowComment)
+        this.$message.success(act.text + '成功')
+        this.flowDialogVisible = false
+        this.fetchList()
+      } catch (e) { /* 拦截器已提示 */ } finally {
+        this.flowSubmitting = false
+      }
+    },
+    async openFlowRecords(row) {
+      this.flowRow = row
+      this.flowRecords = []
+      this.flowVisible = true
+      this.flowLoading = true
+      try {
+        const res = await get${className}FlowRecords(row.id)
+        this.flowRecords = res.data || []
+      } catch (e) { /* 拦截器已提示 */ } finally {
+        this.flowLoading = false
+      }
+    },
+    /** 动作枚举转中文，后端只存 SUBMIT / APPROVE / REJECT */
+    flowActionText(action) {
+      return ({ SUBMIT: '提交', APPROVE: '审批通过', REJECT: '驳回' })[action] || action
+    },
+    flowStatusText(status) {
+      return ({ '0': '草稿', '1': '待审批', '2': '已通过', '3': '已驳回' })[status] || status
+    },
+    flowColor(action) {
+      return ({ SUBMIT: '#909399', APPROVE: '#67c23a', REJECT: '#f56c6c' })[action] || '#c0c4cc'
     }
 </#if>
     // <gen:end key="vue-methods">
@@ -591,6 +1030,55 @@ export default {
   font-size: 12px;
 }
 
+.import-summary {
+  margin-bottom: 8px;
+}
+
+.import-tpl-tip {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #606266;
+}
+
+.import-summary .ok {
+  color: #67c23a;
+}
+
+.import-summary .bad {
+  color: #f56c6c;
+}
+
+.import-fail-box {
+  max-height: 200px;
+  overflow: auto;
+  padding: 8px;
+  background: #fdf6ec;
+  border-radius: 4px;
+}
+
+.import-fail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.import-fail {
+  color: #f56c6c;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.import-fail-more {
+  color: #909399;
+  font-size: 12px;
+}
+
 .child-table {
   margin-bottom: 8px;
 }
@@ -625,4 +1113,30 @@ export default {
 .import-fail {
   color: #f56c6c;
 }
+<#if hasFlow>
+
+.flow-empty {
+  padding: 40px 0;
+  text-align: center;
+  color: #909399;
+  font-size: 13px;
+}
+
+.flow-node {
+  font-size: 14px;
+  color: #303133;
+}
+
+.flow-status {
+  font-size: 12px;
+  color: #909399;
+}
+
+.flow-meta {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #606266;
+  word-break: break-all;
+}
+</#if>
 </style>

@@ -5,19 +5,28 @@ import com.codegen.config.GenOutputProperties;
 import com.codegen.dto.GenApplyDTO;
 import com.codegen.dto.GenDbImportDTO;
 import com.codegen.dto.GenDdlDTO;
+import com.codegen.dto.GenDdlExecuteDTO;
 import com.codegen.dto.GenDiffDTO;
+import com.codegen.dto.GenDictApplyDTO;
+import com.codegen.dto.RelationApplyDTO;
 import com.codegen.dto.GenDownloadDTO;
 import com.codegen.dto.GenMenuRegisterDTO;
 import com.codegen.dto.GenOutputPageDTO;
+import com.codegen.dto.GenScaffoldDTO;
 import com.codegen.dto.GenTableBatchDTO;
 import com.codegen.dto.GenTablePageDTO;
 import com.codegen.dto.GenTableSaveDTO;
 import com.codegen.dto.GenWriteDTO;
 import com.codegen.entity.GenOutput;
+import com.codegen.service.ApiCatalogService;
+import com.codegen.service.RelationDetectService;
+import com.codegen.service.DictDetectService;
 import com.codegen.service.GenApplyService;
 import com.codegen.service.GenCodeService;
+import com.codegen.service.GenDdlService;
 import com.codegen.service.GenMenuService;
 import com.codegen.service.GenOutputService;
+import com.codegen.service.GenScaffoldService;
 import com.codegen.service.GenSelfCheckService;
 import com.codegen.service.GenTableService;
 import com.codegen.service.GenVerifyService;
@@ -25,11 +34,17 @@ import com.codegen.util.GenUtils;
 import com.codegen.vo.GenApplyVO;
 import com.codegen.vo.GenColumnSyncVO;
 import com.codegen.vo.GenDbTableVO;
+import com.codegen.vo.DictDetectItemVO;
+import com.codegen.vo.ApiCatalogItemVO;
+import com.codegen.vo.RelationDetectVO;
+import com.codegen.vo.GenDdlExecuteVO;
 import com.codegen.vo.GenDiffVO;
 import com.codegen.vo.GenFileVO;
 import com.codegen.vo.GenImportVO;
 import com.codegen.vo.GenMenuRegisterVO;
 import com.codegen.vo.GenOutputBatchVO;
+import com.codegen.vo.GenScaffoldCheckVO;
+import com.codegen.vo.GenScaffoldVO;
 import com.codegen.vo.GenSelfCheckVO;
 import com.codegen.vo.GenTableVO;
 import com.codegen.vo.GenVerifyVO;
@@ -38,6 +53,7 @@ import com.codegen.common.exception.BusinessException;
 import com.codegen.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -87,7 +103,60 @@ public class GenController {
     private GenVerifyService genVerifyService;
 
     @Autowired
+    private GenScaffoldService genScaffoldService;
+
+    @Autowired
+    private GenDdlService genDdlService;
+
+    @Autowired
+    private DictDetectService dictDetectService;
+
+    @Autowired
+    private ApiCatalogService apiCatalogService;
+
+    @Autowired
+    private RelationDetectService relationDetectService;
+
+    @Autowired
     private GenOutputProperties outputProperties;
+
+    @Operation(summary = "P3-2 多对多中间表识别（只读）")
+    @GetMapping("/relation/detect")
+    public Result<List<RelationDetectVO>> detectRelation(@RequestParam(required = false) String schema) {
+        return Result.ok(relationDetectService.detect(schema));
+    }
+
+    @Operation(summary = "P3-2 标记中间表与两侧外键")
+    @PostMapping("/relation/apply")
+    public Result<Integer> applyRelation(@RequestBody RelationApplyDTO dto) {
+        return Result.ok(relationDetectService.apply(dto.getSchema(), dto.getMiddleTables()));
+    }
+
+    @Operation(summary = "P2-5 接口目录：按表聚合全部生成接口")
+    @GetMapping("/api-catalog")
+    public Result<List<ApiCatalogItemVO>> apiCatalog(
+            @RequestParam(required = false) Long tableId,
+            @RequestParam(required = false) String keyword) {
+        return Result.ok(apiCatalogService.catalog(tableId, keyword));
+    }
+
+    @Operation(summary = "P2-3 字典自动识别（只读，不落库）")
+    @GetMapping("/dict/detect")
+    public Result<List<DictDetectItemVO>> detectDict(@RequestParam Long tableId) {
+        return Result.ok(dictDetectService.detect(tableId));
+    }
+
+    @Operation(summary = "P2-3 DDL 内联识别枚举（导入前预览）")
+    @PostMapping("/dict/detect-ddl")
+    public Result<List<DictDetectItemVO>> detectDictFromDdl(@RequestBody GenDdlDTO dto) {
+        return Result.ok(dictDetectService.detectFromDdl(dto.getTableName(), dto.getDdl()));
+    }
+
+    @Operation(summary = "P2-3 落库：建字典 + 回填 dict_type")
+    @PostMapping("/dict/apply")
+    public Result<Integer> applyDict(@RequestBody GenDictApplyDTO dto) {
+        return Result.ok(dictDetectService.apply(dto.getTableId(), dto.getDictCodes()));
+    }
 
     @Operation(summary = "生成输出全局配置（前端展示用）")
     @GetMapping("/output-config")
@@ -265,5 +334,28 @@ public class GenController {
     @PostMapping("/verify")
     public Result<GenVerifyVO> verify(@RequestBody GenDownloadDTO dto) {
         return Result.ok(genVerifyService.check(dto.getIds()));
+    }
+
+    // ==================== P0：一键建工程 ====================
+
+    @Operation(summary = "一键建工程（生成可运行的空白工程，含已验证基座）")
+    @PostMapping("/scaffold")
+    public Result<GenScaffoldVO> scaffold(@Valid @RequestBody GenScaffoldDTO dto) {
+        return Result.ok(genScaffoldService.scaffold(dto));
+    }
+
+    @Operation(summary = "脚手架体检（缺什么、怎么补）")
+    @GetMapping("/scaffold/check")
+    public Result<GenScaffoldCheckVO> scaffoldCheck(
+            @RequestParam(value = "backendRoot", required = false) String backendRoot,
+            @RequestParam(value = "frontendRoot", required = false) String frontendRoot,
+            @RequestParam(value = "rootPackage", required = false) String rootPackage) {
+        return Result.ok(genScaffoldService.check(backendRoot, frontendRoot, rootPackage));
+    }
+
+    @Operation(summary = "执行 DDL 并自动导入表配置（建库建表一键导入）")
+    @PostMapping("/db/execute-ddl")
+    public Result<GenDdlExecuteVO> executeDdl(@Valid @RequestBody GenDdlExecuteDTO dto) {
+        return Result.ok(genDdlService.execute(dto));
     }
 }

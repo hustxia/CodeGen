@@ -14,6 +14,7 @@ import com.codegen.entity.GenTableColumn;
 import com.codegen.mapper.GenTableMapper;
 import com.codegen.service.GenMenuService;
 import com.codegen.service.GenTableColumnService;
+import com.codegen.service.DictDetectService;
 import com.codegen.service.GenTableService;
 import com.codegen.util.GenUtils;
 import com.codegen.vo.GenColumnSyncVO;
@@ -49,6 +50,10 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
     private static final Logger log = LoggerFactory.getLogger(GenTableServiceImpl.class);
 
     private static final Pattern NAME_PATTERN = Pattern.compile("^\\w+$");
+    /**
+     * 联动规则的触发字段名：只允许 Java 属性名形态，杜绝把任意内容拼进生成的 JS。
+     */
+    private static final Pattern LINK_FIELD_NAME = Pattern.compile("^[A-Za-z_$][A-Za-z0-9_$]*$");
     private static final List<String> SYSTEM_SCHEMAS = List.of(
             "information_schema", "mysql", "performance_schema", "sys");
     private static final List<String> GEN_EXCLUDED_TABLES = List.of("gen_table", "gen_table_column");
@@ -64,6 +69,9 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
     private GenTableColumnService columnService;
 
     @Autowired
+    private DictDetectService dictDetectService;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -71,6 +79,9 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 
     @Autowired
     private GenMenuService genMenuService;
+
+    @Autowired
+    private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @Override
     public IPage<GenTableVO> pageList(GenTablePageDTO dto) {
@@ -499,6 +510,20 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             if (entity.getExcelImport() == null) {
                 entity.setExcelImport(0);
             }
+            // P1 新增列的默认值与校验：空串统一转 null，避免落库后模板判空失效
+            if (!StringUtils.hasText(entity.getMaskType())) {
+                entity.setMaskType(null);
+            }
+            if (entity.getUniqueFlag() == null) {
+                entity.setUniqueFlag(0);
+            }
+            if (entity.getRelationKey() == null) {
+                entity.setRelationKey(0);
+            }
+            if (!StringUtils.hasText(entity.getDataScope())) {
+                entity.setDataScope(null);
+            }
+            entity.setLinkRule(normalizeLinkRule(col.getColumnName(), entity.getLinkRule()));
             columnService.save(entity);
         }
     }
@@ -509,8 +534,46 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         return vo;
     }
 
-    private GenColumnDTO toColumnDTO(GenTableColumn column) {
-        GenColumnDTO dto = new GenColumnDTO();
+    /**
+     * 规范化 P1-4 联动规则 JSON。
+     * <p>
+     * 规则会被生成期原样内联进 Vue 页面源码，所以这里必须拒绝非法 JSON——
+     * 否则生成出一份打不开的前端页面，用户要等到打开页面时才发现问题。
+     * 只做「能不能用」的判定，不做业务语义推断。
+     */
+    private String normalizeLinkRule(String columnName, String raw) {
+        if (!StringUtils.hasText(raw)) {
+            return null;
+        }
+        String text = raw.trim();
+        try {
+            java.util.Map<String, Object> rule = objectMapper.readValue(text,
+                    new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>() {
+                    });
+            Object op = rule.get("op");
+            Object effect = rule.get("effect");
+            Set<String> ops = Set.of("eq", "ne", "in", "notIn", "notEmpty", "empty");
+            Set<String> effects = Set.of("show", "hide", "enable", "disable", "required", "optional");
+            if (op != null && !ops.contains(String.valueOf(op))) {
+                throw new BusinessException(400, "字段 " + columnName + " 的联动条件不合法：" + op);
+            }
+            if (effect != null && !effects.contains(String.valueOf(effect))) {
+                throw new BusinessException(400, "字段 " + columnName + " 的联动动作不合法：" + effect);
+            }
+            Object when = rule.get("when");
+            if (when != null && !LINK_FIELD_NAME.matcher(String.valueOf(when)).matches()) {
+                throw new BusinessException(400, "字段 " + columnName + " 的联动触发字段名不合法：" + when);
+            }
+            // 输出时去掉空白，模板里按单行内联
+            return text.replaceAll("\\s*\\n\\s*", "");
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(400, "字段 " + columnName + " 的联动规则不是合法 JSON：" + text);
+        }
+    }
+
+    private GenColumnDTO toColumnDTO(GenTableColumn column) {        GenColumnDTO dto = new GenColumnDTO();
         BeanUtils.copyProperties(column, dto);
         return dto;
     }
@@ -581,7 +644,18 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         dto.setFrontendRoot("");
         dto.setOverwrite(false);
         dto.setColumns(loadColumnsFromDb(schema, tableName));
-        saveConfig(dto);
+        Long tableId = saveConfig(dto);
+        // P2-3 全链路：导入时就把 enum/注释里的枚举建成字典并回填 dict_type，
+        // 否则开发者还得自己再跑一遍「字典识别」。
+        // 这里吞掉异常：建字典失败不应该让整张表的导入回滚。
+        try {
+            int dicts = dictDetectService.apply(tableId, null);
+            if (dicts > 0) {
+                return new GenImportVO(tableName, "SAVED", "导入成功，自动识别 " + dicts + " 个字典");
+            }
+        } catch (Exception e) {
+            log.warn("导入表 {} 时自动建字典失败，已跳过：{}", tableName, e.getMessage());
+        }
         return new GenImportVO(tableName, "SAVED", "导入成功");
     }
 

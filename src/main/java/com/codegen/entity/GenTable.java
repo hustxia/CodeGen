@@ -81,6 +81,12 @@ public class GenTable extends BaseEntity {
     private Integer genService;
 
     /**
+     * 开关：生成操作日志注解 @Log:0否1是。
+     * 未设置时按「生成 Service 即记录」处理，新增字段默认为开。
+     */
+    private Integer genLog;
+
+    /**
      * 开关:生成controller
      */
     private Integer genController;
@@ -174,6 +180,21 @@ public class GenTable extends BaseEntity {
      * 子表中指向主表主键的列（如 order_id）
      */
     private String masterForeignKey;
+
+    /**
+     * 主子表层级深度：0 为顶层，1 为一级子表，2 为二级子表（P3-1 多级主子孙）
+     */
+    private Integer masterDepth;
+
+    /**
+     * 表关系类型：middle 表示多对多中间表（P3-2），此类表不生成独立页面
+     */
+    private String relationType;
+
+    /**
+     * P3-3 绑定的审批流程编码（sys_flow_def.flow_code），为空表示不启用审批
+     */
+    private String flowCode;
 
     /**
      * 已注册菜单ID（sys_menu.id），为空表示尚未注册

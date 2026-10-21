@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -93,9 +94,9 @@ public class GenMenuServiceImpl implements GenMenuService {
         result.setOutlet(internal ? "internal" : "artifact");
 
         long parentId = dto.getParentId() == null ? 0L : dto.getParentId();
-        Long roleId = dto.getRoleId() != null && dto.getRoleId() > 0
-                ? dto.getRoleId()
-                : (internal ? resolveRoleId(null) : 1L);
+        // direct/internal 出口：支持一次授给多个角色；artifact 出口仍只记录一个角色用于生成 SQL
+        List<Long> roleIds = internal ? resolveRoleIds(dto) : List.of(resolveRoleId(dto.getRoleId()));
+        Long roleId = roleIds.get(0);
         result.setRoleId(roleId);
 
         String parentPath = internal && parentId > 0 ? pathOf(parentId) : "";
@@ -115,7 +116,7 @@ public class GenMenuServiceImpl implements GenMenuService {
                 continue;
             }
             if (internal) {
-                registerInternal(result, table, parentId, parentPath, roleId, dryRun);
+                registerInternal(result, table, parentId, parentPath, roleIds, dryRun);
             } else {
                 registerArtifact(result, table, parentId, parentPath, plans, dryRun);
             }
@@ -144,13 +145,13 @@ public class GenMenuServiceImpl implements GenMenuService {
      * internal 出口：写平台自身 sys_menu（原行为）
      */
     private void registerInternal(GenMenuRegisterVO result, GenTable table, long parentId,
-                                  String parentPath, Long roleId, boolean dryRun) {
+                                  String parentPath, List<Long> roleIds, boolean dryRun) {
         if (table.getMenuId() != null && menuExists(table.getMenuId())) {
             String backfilled = backfillPerms(table);
             String fixedComponent = backfillComponent(table);
             boolean reEnabled = !dryRun && enableIfDisabled(table.getMenuId());
             if (reEnabled) {
-                grant(roleId, table.getMenuId());
+                grantAll(roleIds, table.getMenuId());
             }
             List<String> parts = new ArrayList<>();
             if (backfilled != null) {
@@ -189,13 +190,14 @@ public class GenMenuServiceImpl implements GenMenuService {
             for (String[] btn : buttonsOf(table)) {
                 Long btnId = insertMenu(menuId, btn[0], null, null,
                         table.getTableName() + ":" + btn[1], 3, sort++);
-                grant(roleId, btnId);
+                grantAll(roleIds, btnId);
             }
-            grant(roleId, menuId);
+            grantAll(roleIds, menuId);
             jdbcTemplate.update("UPDATE gen_table SET menu_id = ? WHERE id = ?", menuId, table.getId());
             result.getMenus().add(new GenMenuVO(table.getTableName(), menuId, table.getTableComment(),
                     pagePath, 2, "REGISTERED",
-                    "已注册菜单与 " + (sort - 1) + " 个按钮权限，并授权角色 " + roleId));
+                    "已注册菜单与 " + (sort - 1) + " 个按钮权限，并授权 " + roleIds.size() + " 个角色 "
+                            + roleIds));
         } catch (Exception e) {
             log.warn("register menu failed for {}: {}", table.getTableName(), e.getMessage());
             result.getMenus().add(new GenMenuVO(table.getTableName(), null, table.getTableComment(),
@@ -526,6 +528,51 @@ public class GenMenuServiceImpl implements GenMenuService {
     private void grant(Long roleId, Long menuId) {
         jdbcTemplate.update("INSERT INTO sys_role_menu(role_id, menu_id, deleted) VALUES(?, ?, 0) "
                 + "ON DUPLICATE KEY UPDATE deleted = 0", roleId, menuId);
+    }
+
+    /**
+     * 批量授权：把同一条菜单授给多个角色（direct 出口用）。
+     * 幂等，重复授权只会把 deleted 复位。
+     */
+    private void grantAll(List<Long> roleIds, Long menuId) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return;
+        }
+        for (Long roleId : roleIds) {
+            grant(roleId, menuId);
+        }
+    }
+
+    /**
+     * 解析目标角色列表：显式 roleIds > grantAllRoles > roleId > 管理员角色。
+     * 结果去重且过滤掉不存在的角色，避免插入脏授权。
+     */
+    private List<Long> resolveRoleIds(GenMenuRegisterDTO dto) {
+        List<Long> ids = new ArrayList<>();
+        if (dto.getRoleIds() != null) {
+            for (Long id : dto.getRoleIds()) {
+                if (id != null && id > 0) {
+                    ids.add(id);
+                }
+            }
+        }
+        if (Boolean.TRUE.equals(dto.getGrantAllRoles())) {
+            ids.addAll(jdbcTemplate.queryForList(
+                    "SELECT id FROM sys_role WHERE deleted = 0 AND status = 1 ORDER BY id", Long.class));
+        }
+        if (ids.isEmpty()) {
+            ids.add(resolveRoleId(dto.getRoleId()));
+        }
+        // 去重 + 过滤不存在的角色
+        List<Long> valid = new ArrayList<>();
+        for (Long id : new LinkedHashSet<>(ids)) {
+            Integer cnt = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM sys_role WHERE id = ? AND deleted = 0", Integer.class, id);
+            if (cnt != null && cnt > 0 && !valid.contains(id)) {
+                valid.add(id);
+            }
+        }
+        return valid.isEmpty() ? List.of(resolveRoleId(dto.getRoleId())) : valid;
     }
 
     private long nextSort(long parentId) {
