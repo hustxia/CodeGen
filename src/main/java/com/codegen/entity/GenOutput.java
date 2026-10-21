@@ -67,4 +67,11 @@ public class GenOutput extends BaseEntity {
      * 操作人
      */
     private String operator;
+
+    /**
+     * 生成时表所属的系统（V3.0）。
+     * 之前只有 table_id，按系统统计「上次什么时候生成过」得先 join 回 gen_table，
+     * 而 gen_table 的 project_id 会随表迁移而变，台账应当记录当时的值。
+     */
+    private Long projectId;
 }

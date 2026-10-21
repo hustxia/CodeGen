@@ -1,5 +1,7 @@
 package com.codegen.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.codegen.common.entity.BaseEntity;
 import lombok.Data;
@@ -210,4 +212,18 @@ public class GenTable extends BaseEntity {
      * 最近一次写盘操作人
      */
     private Long lastGenBy;
+
+    /**
+     * 所属系统（sys_project.id）。为空表示沿用 application.yml 的全局默认，
+     * 这是 V3.0 之前的存量表兼容路径。
+     *
+     * <p>生成时的配置回落顺序：本表字段 → 所属系统 → 全局默认。
+     *
+     * <p>更新策略显式设为 IGNORED：MyBatis-Plus 默认 NOT_NULL，null 字段不进 UPDATE，
+     * 用户在弹窗里把系统清空想「解绑」时会静默失败。这里允许写 null。
+     * 代价是其它走 updateById 的局部更新必须带上此字段——
+     * 目前只有 updateConfig / saveConfig 两处写它，且都带着完整 DTO，不存在误清风险。
+     */
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
+    private Long projectId;
 }

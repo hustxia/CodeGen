@@ -262,7 +262,7 @@ public class GenController {
     @Operation(summary = "库表批量导入")
     @PostMapping("/db/import")
     public Result<List<GenImportVO>> dbImport(@RequestBody GenDbImportDTO dto) {
-        return Result.ok(genTableService.importTables(dto.getSchema(), dto.getTableNames()));
+        return Result.ok(genTableService.importTables(dto.getSchema(), dto.getTableNames(), dto.getProjectId()));
     }
 
     @Operation(summary = "生成预览（路径+内容）")

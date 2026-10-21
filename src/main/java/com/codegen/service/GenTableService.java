@@ -75,5 +75,5 @@ public interface GenTableService extends IService<GenTable> {
     /**
      * 批量导入库表为生成配置（已存在的跳过）
      */
-    List<GenImportVO> importTables(String schema, List<String> tableNames);
+    List<GenImportVO> importTables(String schema, List<String> tableNames, Long projectId);
 }

@@ -24,6 +24,9 @@ public class GenDdlExecuteDTO {
     @Schema(description = "允许执行 DROP / TRUNCATE 等破坏性语句，默认 false")
     private Boolean allowDestructive = Boolean.FALSE;
 
+    @Schema(description = "自动导入表配置时归属的系统ID；留空则不绑定系统，生成时回落全局配置")
+    private Long projectId;
+
     @Schema(description = "dryRun=true 只解析不执行，返回将要执行的语句清单", example = "false")
     private Boolean dryRun = Boolean.FALSE;
 }

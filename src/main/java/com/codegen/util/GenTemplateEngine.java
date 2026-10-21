@@ -96,9 +96,23 @@ public class GenTemplateEngine {
      * 主子表：主表会额外加载其子表配置参与渲染。
      */
     public Map<String, String> render(GenTable table, List<GenTableColumn> cols) {
+        return renderWithProject(table, cols, null);
+    }
+
+    /**
+     * 渲染单表全部生成物（V3.0 带所属系统配置）。
+     *
+     * <p>单独起名字而不是重载 {@code render(table, cols, ...)}：
+     * 重载会让 {@code render(table, cols, null)} 出现二义性（ChildInfo 还是 ProjectConfig），
+     * 调用方每处都得强转，不如一个明确的方法名。
+     *
+     * @param project 所属系统配置，为 null 时按全局 yml 默认值渲染
+     */
+    public Map<String, String> renderWithProject(GenTable table, List<GenTableColumn> cols,
+                                                 GenTemplateModel.ProjectConfig project) {
         Long tableId = table.getId() == null ? 0L : table.getId();
         GenTemplateModel.ChildInfo child = loadChild(table);
-        return render(table, cols, child, tplCode -> resolveFromDb(tplCode, tableId));
+        return render(table, cols, child, tplCode -> resolveFromDb(tplCode, tableId), project);
     }
 
     /**
@@ -143,7 +157,16 @@ public class GenTemplateEngine {
      */
     public static Map<String, String> render(GenTable table, List<GenTableColumn> cols,
                                              GenTemplateModel.ChildInfo child, TemplateResolver resolver) {
-        Map<String, Object> model = GenTemplateModel.build(table, cols, child);
+        return render(table, cols, child, resolver, null);
+    }
+
+    /**
+     * 渲染单表全部生成物（V3.0：带所属系统配置的三级回落）
+     */
+    public static Map<String, String> render(GenTable table, List<GenTableColumn> cols,
+                                             GenTemplateModel.ChildInfo child, TemplateResolver resolver,
+                                             GenTemplateModel.ProjectConfig project) {
+        Map<String, Object> model = GenTemplateModel.build(table, cols, child, project);
         boolean genService = GenTemplateModel.on(table.getGenService());
         boolean genPageApi = GenTemplateModel.on(table.getGenPageApi());
         boolean genDetailApi = GenTemplateModel.on(table.getGenDetailApi());

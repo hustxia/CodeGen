@@ -80,7 +80,7 @@ public class GenSelfCheckProperties {
     /**
      * 把 {@code dir/*} 展开成该目录下全部 jar 的绝对路径
      */
-    static String expandWildcards(String raw) {
+    public static String expandWildcards(String raw) {
         String sep = java.io.File.pathSeparator;
         StringBuilder out = new StringBuilder();
         for (String part : raw.split(java.util.regex.Pattern.quote(sep))) {

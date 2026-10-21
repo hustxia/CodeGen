@@ -76,6 +76,27 @@ public final class GenTemplateModel {
     }
 
     /**
+     * 所属系统的输出配置（V3.0 多系统）。
+     *
+     * <p>刻意用 record 而不是直接传 {@code SysProject} 实体：
+     * 模板层只需要这几个字符串，传整个实体会让 util 反向依赖 entity，
+     * 也让「哪些字段参与渲染」变得不明确。
+     *
+     * @param packageName  默认包名，表级为空时用
+     * @param gatewayPrefix 接口前缀，表级为空时用
+     * @param rootPackage  基座根包名（工程级，表上不存）
+     * @param projectCode  系统编码，用于权限点与字典编码前缀（多系统隔离）
+     */
+    public record ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                                String projectCode) {
+
+        /** 兼容 V3.0 之前的构造：无系统编码，权限点不加前缀 */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage) {
+            this(packageName, gatewayPrefix, rootPackage, null);
+        }
+    }
+
+    /**
      * 构建完整渲染模型（无子表）
      */
     public static Map<String, Object> build(GenTable table, List<GenTableColumn> cols) {
@@ -88,11 +109,31 @@ public final class GenTemplateModel {
      * @param child 本表作为主表时的子表信息，可为 null
      */
     public static Map<String, Object> build(GenTable table, List<GenTableColumn> cols, ChildInfo child) {
-        String pkg = orDefault(table.getPackageName(), "com.demo");
+        return build(table, cols, child, null);
+    }
+
+    /**
+     * 构建完整渲染模型（带所属系统配置）。
+     *
+     * <p>V3.0 多系统：配置解析顺序是 **表级字段 → 所属系统 → 全局默认**。
+     * 表级优先是为了保护用户手工微调过的值，不能被系统配置悄悄盖掉；
+     * 系统为空（存量表未迁移）时自然落到全局 {@link #rootPkg}。
+     *
+     * @param project 所属系统，可为 null
+     */
+    public static Map<String, Object> build(GenTable table, List<GenTableColumn> cols,
+                                            ChildInfo child, ProjectConfig project) {
+        String pkg = firstText(table.getPackageName(), project == null ? null : project.packageName(),
+                "com.demo");
         String className = table.getClassName();
         String module = orDefault(table.getModuleName(), "");
-        String prefix = orDefault(table.getGatewayPrefix(), "demo");
+        String prefix = firstText(table.getGatewayPrefix(), project == null ? null : project.gatewayPrefix(),
+                "demo");
         String backendBase = orDefault(table.getBackendPath(), "src/main/java/" + pkg.replace('.', '/'));
+        // 根包名不进 gen_table（它是工程级属性），所以只看系统 → 全局静态值
+        String effectiveRootPkg = firstText(project == null ? null : project.rootPackage(), rootPkg);
+        // 权限点前缀只在多系统场景需要；单系统（无 project）保持原样，避免存量页面权限码全变
+        String effectiveProjectCode = project == null ? "" : firstText(project.projectCode());
         List<GenTableColumn> biz = bizColumns(cols == null ? List.of() : cols);
 
         boolean genFrontend = on(table.getGenFrontend());
@@ -114,11 +155,16 @@ public final class GenTemplateModel {
 
         Map<String, Object> m = new HashMap<>();
         m.put("pkg", pkg);
-        m.put("rootPkg", rootPkg);
+        m.put("rootPkg", effectiveRootPkg);
         m.put("backendBase", backendBase);
         m.put("className", className);
         m.put("varName", decap(className));
         m.put("tableName", table.getTableName());
+        // V3.0 权限点前缀：多系统下必须带系统编码，否则同名表的权限点会串。
+        // 与 GenMenuServiceImpl.permsPrefix 保持同一规则，两边的 perms 才能对上。
+        m.put("permsPrefix", StringUtils.hasText(effectiveProjectCode)
+                ? effectiveProjectCode + "_" + table.getTableName()
+                : table.getTableName());
         m.put("comment", orDefault(table.getTableComment(), className));
         m.put("moduleName", module);
         m.put("gatewayPrefix", prefix);
@@ -273,7 +319,7 @@ public final class GenTemplateModel {
             cm.put("comment", orDefault(ct.getTableComment(), ct.getClassName()));
             cm.put("moduleName", orDefault(ct.getModuleName(), module));
             cm.put("pkg", childPkg);
-            cm.put("rootPkg", rootPkg);
+            cm.put("rootPkg", effectiveRootPkg);
             cm.put("samePkg", childPkg.equals(pkg));
             cm.put("fkColumn", fkColumn);
             cm.put("fkField", GenUtils.toCamel(fkColumn));
@@ -663,6 +709,21 @@ public final class GenTemplateModel {
 
     private static String orDefault(String value, String def) {
         return value == null || value.isBlank() ? def : value;
+    }
+
+    /**
+     * 按优先级取第一个非空值。
+     *
+     * <p>三级回落用：表级 → 系统 → 全局默认。写成可变参数是因为
+     * 将来若加第四级（比如组织级配置）不用再改方法签名。
+     */
+    private static String firstText(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank()) {
+                return v;
+            }
+        }
+        return "";
     }
 
     private static String capitalize(String name) {

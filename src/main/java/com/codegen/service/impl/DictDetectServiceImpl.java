@@ -74,6 +74,28 @@ public class DictDetectServiceImpl implements DictDetectService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    /**
+     * 取系统编码，用作字典编码前缀。
+     *
+     * <p>直接用 JdbcTemplate 查而不是注入 SysProjectService：这里只需一个字符串，
+     * 而且识别是在批量循环里调的，走 Mapper 反而更轻。
+     * 查不到（系统被删或未绑定）返回 null，字典编码退化为旧规则。
+     */
+    private String projectCodeOf(Long projectId) {
+        if (projectId == null) {
+            return null;
+        }
+        try {
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                    "SELECT project_code FROM sys_project WHERE id = ? AND deleted = 0", projectId);
+            return rows.isEmpty() ? null : str(rows.get(0).get("project_code"));
+        } catch (Exception e) {
+            // 旧库没有 sys_project 表时不能让识别整个失败
+            log.warn("读取系统编码失败，字典编码退化为旧规则：{}", e.getMessage());
+            return null;
+        }
+    }
+
     @Autowired
     private GenTableMapper genTableMapper;
 
@@ -100,7 +122,7 @@ public class DictDetectServiceImpl implements DictDetectService {
             String dictType = str(row.get("dict_type"));
 
             DictDetectItemVO item = detectColumn(table.getTableName(), columnName, columnType,
-                    comment, htmlType, dictType);
+                    comment, htmlType, dictType, projectCodeOf(table.getProjectId()));
             if (item != null) {
                 result.add(item);
             }
@@ -127,7 +149,7 @@ public class DictDetectServiceImpl implements DictDetectService {
             }
             for (com.codegen.dto.GenColumnDTO c : parsed.getColumns()) {
                 DictDetectItemVO item = detectColumn(table, c.getColumnName(), c.getColumnType(),
-                        c.getColumnComment(), c.getHtmlType(), c.getDictType());
+                        c.getColumnComment(), c.getHtmlType(), c.getDictType(), null);
                 if (item != null) {
                     result.add(item);
                 }
@@ -142,7 +164,8 @@ public class DictDetectServiceImpl implements DictDetectService {
      * 单列识别。返回 null 表示这一列不需要字典。
      */
     private DictDetectItemVO detectColumn(String tableName, String columnName, String columnType,
-                                          String comment, String htmlType, String dictType) {
+                                          String comment, String htmlType, String dictType,
+                                          String projectCode) {
         if (!StringUtils.hasText(columnName)) {
             return null;
         }
@@ -176,7 +199,7 @@ public class DictDetectServiceImpl implements DictDetectService {
         }
 
         DictDetectItemVO vo = new DictDetectItemVO();
-        vo.setDictCode(buildDictCode(tableName, columnName));
+        vo.setDictCode(buildDictCode(tableName, columnName, projectCode));
         vo.setDictName(buildDictName(comment, columnName));
         vo.setSource(source);
         vo.setTableName(tableName);
@@ -295,11 +318,27 @@ public class DictDetectServiceImpl implements DictDetectService {
      *
      * <p>例：{@code v2_order.status} → {@code v2_order_status}
      */
-    private String buildDictCode(String tableName, String columnName) {
+    /**
+     * 字典编码：{@code 系统编码_表名_列名}。
+     *
+     * <p>为什么必须带系统前缀：多系统下 {@code sys_user.status} 这类表名+列名
+     * 组合几乎必然重复。不带前缀时，两个系统的 status 会落到同一条字典上，
+     * 后导入的系统会把前一个的选项覆盖掉——而且不报错，只是下拉框里出现
+     * 另一个系统的选项，排查起来极其困难。
+     *
+     * <p>projectCode 为空时退化为旧规则（{@code 表名_列名}），
+     * 保证存量表和未绑定系统的表行为不变。
+     */
+    private String buildDictCode(String tableName, String columnName, String projectCode) {
         String t = tableName == null ? "" : tableName.trim().toLowerCase(Locale.ROOT);
         String c = columnName.trim().toLowerCase(Locale.ROOT);
         String code = t + "_" + c;
-        return code.replaceAll("[^a-z0-9_]", "_");
+        String normalized = code.replaceAll("[^a-z0-9_]", "_");
+        if (!StringUtils.hasText(projectCode)) {
+            return normalized;
+        }
+        String prefix = projectCode.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]", "_");
+        return StringUtils.hasText(prefix) ? prefix + "_" + normalized : normalized;
     }
 
     /**

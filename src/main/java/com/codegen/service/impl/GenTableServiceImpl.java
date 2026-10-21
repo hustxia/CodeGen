@@ -91,6 +91,15 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         LambdaQueryWrapper<GenTable> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasText(dto.getTableName()), GenTable::getTableName, dto.getTableName());
         wrapper.like(StringUtils.hasText(dto.getTableComment()), GenTable::getTableComment, dto.getTableComment());
+        // V3.0 系统筛选：-1 是前端约定的「未绑定系统」，其余按 id 精确匹配。
+        // 用 -1 而不是 0 当哨兵：0 可能是合法但尚未分配的 id。
+        if (dto.getProjectId() != null) {
+            if (dto.getProjectId() == -1L) {
+                wrapper.isNull(GenTable::getProjectId);
+            } else {
+                wrapper.eq(GenTable::getProjectId, dto.getProjectId());
+            }
+        }
         if ("generated".equals(status)) {
             wrapper.isNotNull(GenTable::getLastGenTime);
         } else if ("ungenerated".equals(status)) {
@@ -604,7 +613,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 
     @Override
     @Transactional
-    public List<GenImportVO> importTables(String schema, List<String> tableNames) {
+    public List<GenImportVO> importTables(String schema, List<String> tableNames, Long projectId) {
         validateSchema(schema);
         if (tableNames == null || tableNames.isEmpty()) {
             throw new BusinessException(400, "请先勾选要导入的表");
@@ -616,7 +625,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
                 continue;
             }
             try {
-                results.add(importOne(schema, tableName));
+                results.add(importOne(schema, tableName, projectId));
             } catch (Exception e) {
                 results.add(new GenImportVO(tableName, "ERROR", e.getMessage()));
             }
@@ -624,7 +633,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         return results;
     }
 
-    private GenImportVO importOne(String schema, String tableName) {
+    private GenImportVO importOne(String schema, String tableName, Long projectId) {
         if (getByTableName(tableName) != null) {
             return new GenImportVO(tableName, "EXISTS", "已存在，跳过");
         }
@@ -636,12 +645,15 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         dto.setTableComment(tableComment == null || tableComment.isBlank() ? tableName : tableComment);
         dto.setClassName(GenUtils.toPascal(tableName));
         dto.setModuleName(GenUtils.inferModuleName(tableName));
-        // 包名/输出路径/网关前缀取全局配置，前后端仓库根目录留空（写盘时回落 gen.output.*）
-        dto.setPackageName(outputProperties.getPackageName());
-        dto.setBackendPath(outputProperties.getBackendPath());
-        dto.setGatewayPrefix(outputProperties.getGatewayPrefix());
+        // V3.0：包名/输出路径/网关前缀一律留空，交给「表级 → 系统 → 全局」回落链决定。
+        // 早先这里填的是全局值，一旦表挂到系统上，表级非空就会盖住系统的包名，
+        // 系统级配置等于失效——这正是多系统支持最容易踩的坑。
+        dto.setPackageName("");
+        dto.setBackendPath("");
+        dto.setGatewayPrefix("");
         dto.setBackendRoot("");
         dto.setFrontendRoot("");
+        dto.setProjectId(projectId);
         dto.setOverwrite(false);
         dto.setColumns(loadColumnsFromDb(schema, tableName));
         Long tableId = saveConfig(dto);

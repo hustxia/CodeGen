@@ -185,11 +185,11 @@ public class GenMenuServiceImpl implements GenMenuService {
         try {
             String component = componentOf(table);
             Long menuId = insertMenu(parentId, table.getTableComment(), pagePath, component,
-                    table.getTableName() + ":list", 2, nextSort(parentId));
+                    permsPrefix(table) + ":list", 2, nextSort(parentId));
             long sort = 1;
             for (String[] btn : buttonsOf(table)) {
                 Long btnId = insertMenu(menuId, btn[0], null, null,
-                        table.getTableName() + ":" + btn[1], 3, sort++);
+                        permsPrefix(table) + ":" + btn[1], 3, sort++);
                 grantAll(roleIds, btnId);
             }
             grantAll(roleIds, menuId);
@@ -215,7 +215,7 @@ public class GenMenuServiceImpl implements GenMenuService {
         List<String[]> buttons = buttonsOf(table);
         if (!dryRun) {
             plans.add(new PlannedMenu(table, pagePath, component,
-                    table.getTableName() + ":list", buttons));
+                    permsPrefix(table) + ":list", buttons));
         }
         result.getMenus().add(new GenMenuVO(table.getTableName(), table.getMenuId(),
                 table.getTableComment(), pagePath, 2,
@@ -414,7 +414,7 @@ public class GenMenuServiceImpl implements GenMenuService {
             for (String[] btn : plan.buttons()) {
                 sb.append("INSERT INTO sys_menu (parent_id, name, path, component, perms, type, sort, status, deleted)\n");
                 sb.append("VALUES (@").append(var).append(", ").append(sqlStr(btn[0])).append(", NULL, NULL, ")
-                        .append(sqlStr(table.getTableName() + ":" + btn[1])).append(", 3, ").append(sort++)
+                        .append(sqlStr(permsPrefix(table) + ":" + btn[1])).append(", 3, ").append(sort++)
                         .append(", 1, 0);\n");
             }
             sb.append("INSERT INTO sys_role_menu (role_id, menu_id, deleted) VALUES (")
@@ -498,6 +498,42 @@ public class GenMenuServiceImpl implements GenMenuService {
     }
 
     /**
+     * 权限点前缀：{@code 系统编码_表名}（未绑定系统时就是表名）。
+     *
+     * <p>为什么要带系统编码：两个系统都有 {@code sys_user} 时，
+     * 权限点 {@code sys_user:add} 会重名。角色授权时勾了 A 系统的用户新增，
+     * B 系统的按钮也会亮起来——权限串了但系统不报错，属于最难查的一类问题。
+     *
+     * <p>项目里权限码还出现在 {@code :*} 通配和按钮码上，所以统一从这里出，
+     * 不要在各处手写字符串拼接，否则漏一处就是一处越权。
+     */
+    private String permsPrefix(GenTable table) {
+        String tableName = table.getTableName() == null ? "" : table.getTableName();
+        String projectCode = projectCodeOf(table.getProjectId());
+        if (!StringUtils.hasText(projectCode)) {
+            return tableName;
+        }
+        return projectCode.trim().toLowerCase(java.util.Locale.ROOT) + "_" + tableName;
+    }
+
+    /**
+     * 系统编码，查不到返回 null（旧库无 sys_project 表时也走这里）
+     */
+    private String projectCodeOf(Long projectId) {
+        if (projectId == null) {
+            return null;
+        }
+        try {
+            java.util.List<String> codes = jdbcTemplate.queryForList(
+                    "SELECT project_code FROM sys_project WHERE id = ? AND deleted = 0",
+                    String.class, projectId);
+            return codes.isEmpty() ? null : codes.get(0);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
      * 生成页的组件路径：模块名/index，模块名缺失时退回表名
      */
     private String componentOf(GenTable table) {
@@ -518,11 +554,11 @@ public class GenMenuServiceImpl implements GenMenuService {
         for (String[] btn : BUTTONS) {
             jdbcTemplate.update("UPDATE sys_menu SET perms = ? WHERE parent_id = ? AND type = 3 "
                             + "AND name = ? AND (perms IS NULL OR perms = '')",
-                    table.getTableName() + ":" + btn[1], table.getMenuId(), btn[0]);
+                    permsPrefix(table) + ":" + btn[1], table.getMenuId(), btn[0]);
         }
         jdbcTemplate.update("UPDATE sys_menu SET perms = ? WHERE id = ? AND (perms IS NULL OR perms = '')",
-                table.getTableName() + ":list", table.getMenuId());
-        return table.getTableName() + ":*";
+                permsPrefix(table) + ":list", table.getMenuId());
+        return permsPrefix(table) + ":*";
     }
 
     private void grant(Long roleId, Long menuId) {

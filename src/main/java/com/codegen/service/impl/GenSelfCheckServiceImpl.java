@@ -79,6 +79,34 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
     private com.codegen.config.GenOutputProperties outputProperties;
 
     @Autowired
+    private com.codegen.mapper.SysProjectMapper sysProjectMapper;
+
+    /**
+     * 取本批表所属系统的 classpath。
+     *
+     * <p>一批里可能混了不同系统的表，这种情况不能悄悄用第一张表的配置——
+     * 会给出误导性的「通过」。混选时直接返回空，回落到全局配置，
+     * 并在结果里提示一句，让用户自己拆开自检。
+     */
+    private String projectClasspathOf(List<Long> ids) {
+        java.util.Set<Long> projectIds = new java.util.LinkedHashSet<>();
+        for (GenTable table : genTableMapper.selectBatchIds(ids)) {
+            if (table.getProjectId() != null) {
+                projectIds.add(table.getProjectId());
+            }
+        }
+        if (projectIds.isEmpty()) {
+            return null;
+        }
+        if (projectIds.size() > 1) {
+            // 不抛异常：自检仍可继续，只是 classpath 用全局的
+            return null;
+        }
+        com.codegen.entity.SysProject project = sysProjectMapper.selectById(projectIds.iterator().next());
+        return project == null ? null : project.getSelfcheckClasspath();
+    }
+
+    @Autowired
     private GenCodeService genCodeService;
 
     @Autowired
@@ -139,7 +167,7 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         result.setJavaCount(javaSources.size());
 
         // 2) 真实编译
-        compile(result, javaSources);
+        compile(result, javaSources, projectClasspathOf(ids));
 
         // 3) 语义提示：下拉/单选没有字典，生成出来的控件是空选项
         checkDictBinding(result, columns);
@@ -270,7 +298,7 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
     /**
      * 内存编译全部 Java 产物；类路径沿用当前进程，保证依赖版本与运行时一致
      */
-    private void compile(GenSelfCheckVO result, List<JavaSource> sources) {
+    private void compile(GenSelfCheckVO result, List<JavaSource> sources, String projectClasspath) {
         if (sources.isEmpty()) {
             return;
         }
@@ -289,8 +317,12 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         }
         result.setCompilerAvailable(true);
 
-        String classpath = selfCheckProperties.resolveClasspath();
-        if (selfCheckProperties.classpathLooksNested()) {
+        // V3.0：系统自带 classpath 优先。多系统下各系统依赖版本不同，
+        // 共用一份会出现「依赖明明在却报 cannot find symbol」，比不配还难排查。
+        String classpath = StringUtils.hasText(projectClasspath)
+                ? GenSelfCheckProperties.expandWildcards(projectClasspath)
+                : selfCheckProperties.resolveClasspath();
+        if (selfCheckProperties.classpathLooksNested() && !StringUtils.hasText(projectClasspath)) {
             result.addIssue("javac", 0L, "WARNING",
                     "当前进程以单个肥 jar 启动，java.class.path 无法覆盖嵌套依赖，编译检查可能满屏 cannot find symbol；"
                             + "建议配置 gen.selfcheck.classpath 指向依赖目录（支持 lib/*）");
@@ -489,6 +521,22 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         return actions;
     }
 
+    /**
+     * 权限点前缀，与 GenMenuServiceImpl.permsPrefix / 模板 ${permsPrefix} 三方一致。
+     * 任何一处规则改动都要同步另外两处，否则自检会报假警、或真实越权被漏掉。
+     */
+    private String permsPrefixOf(GenTable table) {
+        String tableName = table.getTableName();
+        if (table.getProjectId() == null) {
+            return tableName;
+        }
+        com.codegen.entity.SysProject project = sysProjectMapper.selectById(table.getProjectId());
+        if (project == null || !org.springframework.util.StringUtils.hasText(project.getProjectCode())) {
+            return tableName;
+        }
+        return project.getProjectCode().trim().toLowerCase(java.util.Locale.ROOT) + "_" + tableName;
+    }
+
     private void checkPermsConsistency(GenSelfCheckVO result, List<GenFileVO> files, List<Long> ids,
                                        List<GenTableColumn> columns) {
         Map<String, Set<String>> expected = new LinkedHashMap<>();
@@ -497,7 +545,9 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
             if (table == null || table.getTableName() == null) {
                 continue;
             }
-            expected.put(table.getTableName(), expectedActions(table, columns));
+            // V3.0：页面里的权限码前缀是 permsPrefix（带系统编码），
+            // 这里必须用同一个规则，否则每条都会误报「权限码对不上」
+            expected.put(permsPrefixOf(table), expectedActions(table, columns));
         }
         Set<String> knownTables = expected.keySet();
         if (knownTables.isEmpty()) {

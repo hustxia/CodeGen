@@ -110,5 +110,15 @@ public class GenTableVO implements Serializable {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long menuId;
 
+    /**
+     * 所属系统ID（字符串下发，避免前端精度丢失）。
+     *
+     * <p>为空表示 V3.0 存量表，生成时回落到 application.yml 的全局默认。
+     * 列表页要用它显示系统归属，编辑弹窗要用它回显下拉，所以必须出现在 VO 里——
+     * 之前漏了这个字段，分页接口按系统筛得对，但前端拿不到值、列显示空白。
+     */
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long projectId;
+
     private List<GenColumnDTO> columns;
 }

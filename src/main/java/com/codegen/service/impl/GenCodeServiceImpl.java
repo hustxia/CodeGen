@@ -8,12 +8,15 @@ import com.codegen.dto.GenWriteDTO;
 import com.codegen.entity.GenOutput;
 import com.codegen.entity.GenTable;
 import com.codegen.entity.GenTableColumn;
+import com.codegen.entity.SysProject;
 import com.codegen.mapper.GenOutputMapper;
 import com.codegen.mapper.GenTableMapper;
+import com.codegen.mapper.SysProjectMapper;
 import com.codegen.service.GenCodeService;
 import com.codegen.service.GenTableColumnService;
 import com.codegen.util.GenMergeUtils;
 import com.codegen.util.GenTemplateEngine;
+import com.codegen.util.GenTemplateModel;
 import com.codegen.vo.GenDiffVO;
 import com.codegen.vo.GenFileVO;
 import com.codegen.vo.GenWriteVO;
@@ -69,6 +72,16 @@ public class GenCodeServiceImpl implements GenCodeService {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private SysProjectMapper projectMapper;
+
+    /**
+     * 单次生成内的系统配置缓存（projectId -> 系统）。
+     * clearProjectCache() 在每次生成入口清空，避免用户在管理页改完配置后
+     * 同一次进程生命周期里一直读到旧值。
+     */
+    private final Map<Long, SysProject> projectCache = new HashMap<>();
 
     /**
      * 渲染结果：表配置 + 相对路径 -> 内容
@@ -380,6 +393,8 @@ public class GenCodeServiceImpl implements GenCodeService {
             row.setBatchNo(StringUtils.hasText(batchNo) ? batchNo : "");
             row.setTableId(table.getId());
             row.setTableName(table.getTableName());
+            // 记下当时的所属系统：表后续被迁到别的系统时，历史台账仍应反映生成当时的归属
+            row.setProjectId(table.getProjectId());
             row.setFileGroup(fileGroup);
             row.setRelPath(relPath);
             row.setAbsPath(StringUtils.hasText(absPath) ? absPath : "");
@@ -414,6 +429,8 @@ public class GenCodeServiceImpl implements GenCodeService {
         if (ids == null || ids.isEmpty()) {
             throw new BusinessException(400, "请先勾选要生成的表");
         }
+        // 每个批次开始时清一次系统缓存，保证读到的是管理页最新的配置
+        clearProjectCache();
         List<GenTable> tables = new ArrayList<>();
         for (Long id : ids) {
             GenTable table = genTableMapper.selectById(id);
@@ -433,9 +450,30 @@ public class GenCodeServiceImpl implements GenCodeService {
         for (GenTable table : tables) {
             applyOutputDefaults(table);
             rendered.add(new TableFiles(table,
-                    genTemplateEngine.render(table, columnsByTable.getOrDefault(table.getId(), List.of()))));
+                    genTemplateEngine.renderWithProject(table,
+                            columnsByTable.getOrDefault(table.getId(), List.of()),
+                            projectConfigOf(table))));
         }
         return rendered;
+    }
+
+    /**
+     * 把系统配置转成模板层可用的轻量 record。
+     *
+     * <p>分两个字段传而不是一律用 rootPackage：
+     * {@code packageName} 是业务包（如 com.demo.order），根包（如 com.demo）只用于
+     * import 基座类。两者混用会让生成的 entity 跑到错误的包下。
+     * 系统上没有单独的「业务默认包」概念，所以回落顺序是：
+     * 系统 rootPackage → 全局 packageName（GenTemplateModel 内部处理）。
+     */
+    private GenTemplateModel.ProjectConfig projectConfigOf(GenTable table) {
+        SysProject project = projectOf(table);
+        if (project == null) {
+            return null;
+        }
+        return new GenTemplateModel.ProjectConfig(
+                project.getRootPackage(), project.getGatewayPrefix(),
+                project.getRootPackage(), project.getProjectCode());
     }
 
     /**
@@ -446,7 +484,7 @@ public class GenCodeServiceImpl implements GenCodeService {
         LambdaQueryWrapper<GenTableColumn> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(GenTableColumn::getTableId, table.getId());
         wrapper.orderByAsc(GenTableColumn::getSort);
-        return genTemplateEngine.render(table, columnService.list(wrapper));
+        return genTemplateEngine.renderWithProject(table, columnService.list(wrapper), projectConfigOf(table));
     }
 
     /**
@@ -456,6 +494,28 @@ public class GenCodeServiceImpl implements GenCodeService {
      * 此时只有让模块覆盖，才能把同一套生成器指到 product / order 等其它微服务。
      */
     private void applyOutputDefaults(GenTable table) {
+        // V3.0 多系统：系统配置排在最前，作为「表级为空时」的兜底来源。
+        // 注意顺序——表级字段前面已由用户配置，这里只在为空时补，不覆盖。
+        // 目标模块（yml 里的 modules）仍然优先于系统：它是更细的一层。
+        SysProject project = projectOf(table);
+        if (project != null) {
+            if (!StringUtils.hasText(table.getBackendPath()) && StringUtils.hasText(project.getBackendPath())) {
+                table.setBackendPath(project.getBackendPath());
+            }
+            if (!StringUtils.hasText(table.getPackageName()) && StringUtils.hasText(project.getRootPackage())) {
+                table.setPackageName(project.getRootPackage());
+            }
+            if (!StringUtils.hasText(table.getGatewayPrefix()) && StringUtils.hasText(project.getGatewayPrefix())) {
+                table.setGatewayPrefix(project.getGatewayPrefix());
+            }
+            if (!StringUtils.hasText(table.getBackendRoot()) && StringUtils.hasText(project.getBackendRoot())) {
+                table.setBackendRoot(project.getBackendRoot());
+            }
+            if (!StringUtils.hasText(table.getFrontendRoot()) && StringUtils.hasText(project.getFrontendRoot())) {
+                table.setFrontendRoot(project.getFrontendRoot());
+            }
+        }
+
         GenOutputProperties.ModuleConfig module = moduleOf(table);
         if (module != null) {
             if (StringUtils.hasText(module.getBackendPath())) {
@@ -477,6 +537,36 @@ public class GenCodeServiceImpl implements GenCodeService {
         if (!StringUtils.hasText(table.getGatewayPrefix()) && StringUtils.hasText(outputProperties.getGatewayPrefix())) {
             table.setGatewayPrefix(outputProperties.getGatewayPrefix());
         }
+    }
+
+    /**
+     * 表所属的系统配置。
+     *
+     * <p>批量生成时同一系统会被查很多次，用请求内的 Map 缓存挡住：
+     * 一个批次通常几十张表，直查会变成几十次重复 select。
+     * 缓存是实例级而非静态，跟着 Bean 生命周期走，不跨请求残留脏数据。
+     */
+    private SysProject projectOf(GenTable table) {
+        Long projectId = table.getProjectId();
+        if (projectId == null) {
+            // 存量表未迁移：返回 null，后面自然回落到全局 yml
+            return null;
+        }
+        // 不用 computeIfAbsent：系统被删时 selectById 返回 null，
+        // computeIfAbsent 不缓存 null，会把每次调用都打成一次查库
+        if (projectCache.containsKey(projectId)) {
+            return projectCache.get(projectId);
+        }
+        SysProject project = projectMapper.selectById(projectId);
+        projectCache.put(projectId, project);
+        return project;
+    }
+
+    /**
+     * 清空系统配置缓存。生成入口先调一次，保证拿到的是最新配置。
+     */
+    private void clearProjectCache() {
+        projectCache.clear();
     }
 
     /**

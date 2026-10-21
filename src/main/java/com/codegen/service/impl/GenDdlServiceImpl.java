@@ -251,7 +251,7 @@ public class GenDdlServiceImpl implements GenDdlService {
         if (!dryRun && Boolean.TRUE.equals(dto.getAutoImport()) && !tables.isEmpty()) {
             try {
                 List<GenImportVO> imported = genTableService.importTables(schema,
-                        new ArrayList<>(tables));
+                        new ArrayList<>(tables), dto.getProjectId());
                 for (GenImportVO r : imported) {
                     if ("SAVED".equals(r.getStatus())) {
                         vo.getImportedTables().add(r.getTableName());

@@ -46,6 +46,11 @@ public class GenTableSaveDTO implements Serializable {
     private String packageName;
 
     /**
+     * 所属系统（sys_project.id）。为空表示未绑定，生成时回落全局配置。
+     */
+    private Long projectId;
+
+    /**
      * 后端输出基准相对路径
      */
     private String backendPath;

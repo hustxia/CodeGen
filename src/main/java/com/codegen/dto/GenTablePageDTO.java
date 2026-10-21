@@ -19,4 +19,9 @@ public class GenTablePageDTO extends PageQuery {
      * 生成状态筛选：generated（生成过）/ ungenerated（没生成过）/ drift（结构漂移）/ menu（已注册菜单）
      */
     private String genStatus;
+
+    /**
+     * 所属系统筛选（V3.0）。null 为全部；-1 表示筛选「未绑定系统」的存量表
+     */
+    private Long projectId;
 }

@@ -28,7 +28,7 @@
         </el-form-item>
 </#list>
         <el-form-item>
-          <el-button v-hasPermi="['${tableName}:query']" type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
+          <el-button v-hasPermi="['${permsPrefix}:query']" type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
           <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
@@ -41,7 +41,7 @@
         <span>${comment}列表</span>
         <div>
 <#if genAddBtn>
-          <el-button v-hasPermi="['${tableName}:add']" type="primary" icon="el-icon-plus" size="small" @click="openDialog()">新增${comment}</el-button>
+          <el-button v-hasPermi="['${permsPrefix}:add']" type="primary" icon="el-icon-plus" size="small" @click="openDialog()">新增${comment}</el-button>
 </#if>
 <#if hasExcelExport>
           <el-button icon="el-icon-download" size="small" @click="handleExport">导出</el-button>
@@ -106,10 +106,10 @@
             <el-button type="text" @click="openFlowRecords(row)">流程</el-button>
 </#if>
 <#if genEditBtn>
-            <el-button v-hasPermi="['${tableName}:edit']" type="text" @click="openDialog(row)">编辑</el-button>
+            <el-button v-hasPermi="['${permsPrefix}:edit']" type="text" @click="openDialog(row)">编辑</el-button>
 </#if>
 <#if genDeleteBtn>
-            <el-button v-hasPermi="['${tableName}:remove']" type="text" class="danger-btn" @click="handleDelete(row)">删除</el-button>
+            <el-button v-hasPermi="['${permsPrefix}:remove']" type="text" class="danger-btn" @click="handleDelete(row)">删除</el-button>
 </#if>
           </template>
         </el-table-column>
