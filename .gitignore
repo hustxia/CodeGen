@@ -1,0 +1,29 @@
+# 依赖
+node_modules/
+dist/
+
+# 本地环境
+.env.local
+.env.*.local
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# 编辑器
+.idea
+.vscode
+*.suo
+*.sw?
+.DS_Store
+
+# 文件级备份目录（本地工具产物）
+.gen-backup/
+
+# 生成器运行期产物
+.gen-artifacts/
+.gen-verify/
