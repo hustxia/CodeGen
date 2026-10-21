@@ -4,7 +4,7 @@ import request from '@/utils/request'
 
 export function login(data) {
   return request({
-    url: '/api/auth/login',
+    url: '/auth/login',
     method: 'post',
     data
   })
@@ -12,7 +12,7 @@ export function login(data) {
 
 export function getInfo() {
   return request({
-    url: '/api/auth/info',
+    url: '/auth/info',
     method: 'get'
   })
 }
@@ -20,7 +20,7 @@ export function getInfo() {
 // 动态路由：按当前用户的角色下发菜单树（V2.0）
 export function getRouters() {
   return request({
-    url: '/api/auth/routers',
+    url: '/auth/routers',
     method: 'get'
   })
 }

@@ -1,6 +1,6 @@
 import request, { toPageData } from '@/utils/request'
 
-// 代码生成接口：管理服务 shop-service-admin（经网关 /api/gen）
+// 代码生成接口：codegen-server 单体服务（直接 /gen）
 function toPageQuery(params) {
   const { page, size, ...query } = params || {}
   return { pageNum: page || 1, pageSize: size || 10, ...query }
@@ -11,7 +11,7 @@ function toPageQuery(params) {
 // 表配置分页
 export function getGenTablePage(params) {
   return request({
-    url: '/api/gen/table/page',
+    url: '/gen/table/page',
     method: 'post',
     data: toPageQuery(params)
   }).then(toPageData)
@@ -20,7 +20,7 @@ export function getGenTablePage(params) {
 // 表配置详情（含字段列）
 export function getGenTableDetail(id) {
   return request({
-    url: `/api/gen/table/${id}`,
+    url: `/gen/table/${id}`,
     method: 'get'
   })
 }
@@ -28,7 +28,7 @@ export function getGenTableDetail(id) {
 // 新建表配置（overwrite=true 覆盖同名配置）
 export function createGenTable(data) {
   return request({
-    url: '/api/gen/table',
+    url: '/gen/table',
     method: 'post',
     data
   })
@@ -37,7 +37,7 @@ export function createGenTable(data) {
 // 更新表配置（含字段列）
 export function updateGenTable(id, data) {
   return request({
-    url: '/api/gen/table',
+    url: '/gen/table',
     method: 'put',
     data: { ...data, id }
   })
@@ -46,7 +46,7 @@ export function updateGenTable(id, data) {
 // 删除表配置
 export function deleteGenTable(id) {
   return request({
-    url: `/api/gen/table/${id}`,
+    url: `/gen/table/${id}`,
     method: 'delete'
   })
 }
@@ -56,7 +56,7 @@ export function deleteGenTable(id) {
 // 解析 CREATE TABLE 语句
 export function parseDdl(ddl) {
   return request({
-    url: '/api/gen/parseDdl',
+    url: '/gen/parseDdl',
     method: 'post',
     data: { ddl }
   })
@@ -65,7 +65,7 @@ export function parseDdl(ddl) {
 // 生成输出全局配置（后端/前端根目录等，表级留空时生效）
 export function getGenOutputConfig() {
   return request({
-    url: '/api/gen/output-config',
+    url: '/gen/output-config',
     method: 'get'
   })
 }
@@ -73,7 +73,7 @@ export function getGenOutputConfig() {
 // 数据库 schema 列表
 export function listDbSchemas() {
   return request({
-    url: '/api/gen/db/schemas',
+    url: '/gen/db/schemas',
     method: 'get'
   })
 }
@@ -81,7 +81,7 @@ export function listDbSchemas() {
 // 指定库下的表清单 [{ name, comment }]
 export function listDbTables(schema) {
   return request({
-    url: '/api/gen/db/tables',
+    url: '/gen/db/tables',
     method: 'get',
     params: { schema }
   })
@@ -90,7 +90,7 @@ export function listDbTables(schema) {
 // 批量导入数据库表，返回 [{ tableName, status, message }]
 export function importDbTables(schema, tables) {
   return request({
-    url: '/api/gen/db/import',
+    url: '/gen/db/import',
     method: 'post',
     data: { schema, tableNames: tables }
   })
@@ -101,7 +101,7 @@ export function importDbTables(schema, tables) {
 // 生成预览，返回 [{ path, content, tableName }]
 export function previewGenCode(ids) {
   return request({
-    url: '/api/gen/preview',
+    url: '/gen/preview',
     method: 'post',
     data: { ids }
   })
@@ -110,7 +110,7 @@ export function previewGenCode(ids) {
 // 写入磁盘，返回 [{ path, status, message }]
 export function writeGenCode(ids, overwrite) {
   return request({
-    url: '/api/gen/write',
+    url: '/gen/write',
     method: 'post',
     data: { ids, overwrite }
   })
@@ -119,7 +119,7 @@ export function writeGenCode(ids, overwrite) {
 // 下载 ZIP（blob 流，浏览器触发下载），返回文件清单（后端如经响应头提供可扩展）
 export async function downloadGenCode(ids) {
   const response = await request({
-    url: '/api/gen/download',
+    url: '/gen/download',
     method: 'post',
     data: { ids },
     responseType: 'blob'
@@ -141,7 +141,7 @@ export async function downloadGenCode(ids) {
 // 自检：内存编译生成的 Java 源码 + 结构检查
 export function selfCheckGenCode(ids) {
   return request({
-    url: '/api/gen/self-check',
+    url: '/gen/self-check',
     method: 'post',
     data: { ids }
   })
@@ -152,7 +152,7 @@ export function selfCheckGenCode(ids) {
 // 注册菜单与按钮权限（幂等），同时重建前端路由文件
 export function registerGenMenu(data) {
   return request({
-    url: '/api/gen/menu/register',
+    url: '/gen/menu/register',
     method: 'post',
     data
   })
@@ -161,7 +161,7 @@ export function registerGenMenu(data) {
 // 仅重建前端路由文件
 export function syncGenRoute(dryRun) {
   return request({
-    url: '/api/gen/menu/route-sync',
+    url: '/gen/menu/route-sync',
     method: 'post',
     params: { dryRun: !!dryRun }
   })
@@ -172,7 +172,7 @@ export function syncGenRoute(dryRun) {
 // 一键生成：自检 → 备份 → 写盘 →（编译）→ 注册菜单 → 重建路由
 export function applyGenCode(data) {
   return request({
-    url: '/api/gen/apply',
+    url: '/gen/apply',
     method: 'post',
     data
   })
@@ -181,7 +181,7 @@ export function applyGenCode(data) {
 // 回滚某个写盘批次（有备份的还原，首次生成的文件删除）
 export function rollbackGenBatch(batchNo) {
   return request({
-    url: '/api/gen/history/rollback',
+    url: '/gen/history/rollback',
     method: 'post',
     params: { batchNo }
   })
@@ -190,7 +190,7 @@ export function rollbackGenBatch(batchNo) {
 // 最近的写盘批次
 export function listGenBatches(limit = 10) {
   return request({
-    url: '/api/gen/history/batches',
+    url: '/gen/history/batches',
     method: 'get',
     params: { limit }
   })
@@ -199,7 +199,7 @@ export function listGenBatches(limit = 10) {
 // 批量设置输出参数 / 套用开关预设
 export function batchUpdateGenTables(data) {
   return request({
-    url: '/api/gen/table/batch',
+    url: '/gen/table/batch',
     method: 'post',
     data
   })
@@ -208,7 +208,7 @@ export function batchUpdateGenTables(data) {
 // 批量删除表配置（连同菜单）
 export function batchDeleteGenTables(ids) {
   return request({
-    url: '/api/gen/table/batch-delete',
+    url: '/gen/table/batch-delete',
     method: 'post',
     data: { ids }
   })
@@ -219,7 +219,7 @@ export function batchDeleteGenTables(ids) {
 // 写盘前的行级差异预览，返回 [{ tableName, path, absPath, status, additions, deletions, lines }]
 export function diffGenCode(ids, overwrite = true, onlyChanged = true) {
   return request({
-    url: '/api/gen/diff',
+    url: '/gen/diff',
     method: 'post',
     data: { ids, overwrite, onlyChanged }
   })
@@ -228,7 +228,7 @@ export function diffGenCode(ids, overwrite = true, onlyChanged = true) {
 // 结构漂移同步：把库里新增的列补进字段配置（removeMissing=true 时才删多余配置）
 export function syncGenColumns(id, removeMissing = false) {
   return request({
-    url: `/api/gen/table/${id}/sync-columns`,
+    url: `/gen/table/${id}/sync-columns`,
     method: 'post',
     params: { removeMissing }
   })

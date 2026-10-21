@@ -10,7 +10,7 @@ function toPageQuery(params) {
 
 export function getSysUserList(params) {
   return request({
-    url: '/api/user/page',
+    url: '/user/page',
     method: 'post',
     data: toPageQuery(params)
   }).then(toPageData)
@@ -18,7 +18,7 @@ export function getSysUserList(params) {
 
 export function createSysUser(data) {
   return request({
-    url: '/api/user',
+    url: '/user',
     method: 'post',
     data
   })
@@ -26,7 +26,7 @@ export function createSysUser(data) {
 
 export function updateSysUser(id, data) {
   return request({
-    url: '/api/user',
+    url: '/user',
     method: 'put',
     data: { ...data, id }
   })
@@ -34,7 +34,7 @@ export function updateSysUser(id, data) {
 
 export function deleteSysUser(id) {
   return request({
-    url: `/api/user/${id}`,
+    url: `/user/${id}`,
     method: 'delete'
   })
 }
@@ -43,7 +43,7 @@ export function deleteSysUser(id) {
 
 export function getRoleList(params) {
   return request({
-    url: '/api/role/page',
+    url: '/role/page',
     method: 'post',
     data: toPageQuery(params)
   }).then(toPageData)
@@ -51,7 +51,7 @@ export function getRoleList(params) {
 
 export function createRole(data) {
   return request({
-    url: '/api/role',
+    url: '/role',
     method: 'post',
     data
   })
@@ -59,7 +59,7 @@ export function createRole(data) {
 
 export function updateRole(id, data) {
   return request({
-    url: '/api/role',
+    url: '/role',
     method: 'put',
     data: { ...data, id }
   })
@@ -67,7 +67,7 @@ export function updateRole(id, data) {
 
 export function deleteRole(id) {
   return request({
-    url: `/api/role/${id}`,
+    url: `/role/${id}`,
     method: 'delete'
   })
 }
@@ -77,7 +77,7 @@ export function deleteRole(id) {
 // 菜单树：菜单管理页要能看到禁用菜单，所以不传 status（全部）
 export function getMenuTree() {
   return request({
-    url: '/api/menu/tree',
+    url: '/menu/tree',
     method: 'get'
   })
 }
@@ -85,7 +85,7 @@ export function getMenuTree() {
 // 授权用的菜单树：只要启用中的菜单
 export function getEnabledMenuTree() {
   return request({
-    url: '/api/menu/tree',
+    url: '/menu/tree',
     method: 'get',
     params: { status: 1 }
   })
@@ -93,7 +93,7 @@ export function getEnabledMenuTree() {
 
 export function createMenu(data) {
   return request({
-    url: '/api/menu',
+    url: '/menu',
     method: 'post',
     data
   })
@@ -101,7 +101,7 @@ export function createMenu(data) {
 
 export function updateMenu(id, data) {
   return request({
-    url: '/api/menu',
+    url: '/menu',
     method: 'put',
     data: { ...data, id }
   })
@@ -109,7 +109,7 @@ export function updateMenu(id, data) {
 
 export function deleteMenu(id) {
   return request({
-    url: `/api/menu/${id}`,
+    url: `/menu/${id}`,
     method: 'delete'
   })
 }
@@ -119,7 +119,7 @@ export function deleteMenu(id) {
 // 角色已授权的菜单 ID（含按钮）
 export function getRoleMenuIds(roleId) {
   return request({
-    url: '/api/role-menu/menu-ids',
+    url: '/role-menu/menu-ids',
     method: 'get',
     params: { roleId }
   })
@@ -128,7 +128,7 @@ export function getRoleMenuIds(roleId) {
 // 整体覆盖角色菜单（后端事务：先删后插）
 export function saveRoleMenus(roleId, menuIds) {
   return request({
-    url: '/api/role-menu/batch',
+    url: '/role-menu/batch',
     method: 'post',
     data: { roleId, menuIds }
   })

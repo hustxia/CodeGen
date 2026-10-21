@@ -48,7 +48,7 @@
         </el-button>
 
         <div class="login-tip">
-          <i class="el-icon-info"></i> 本地演示账号：admin / admin123（后端接入前临时使用）
+          <i class="el-icon-info"></i> 默认账号：admin / admin123
         </div>
       </el-form>
     </div>
@@ -83,7 +83,7 @@ export default {
             this.$router.push(this.$route.query.redirect || '/gen/table')
           })
           .catch(() => {
-            this.$message.error('登录失败：后端接口未接入，请先在 src/api/user.js 配置真实接口')
+            // 具体错误信息（如"用户名或密码错误"）已由 request 拦截器统一提示，这里不重复弹
           })
           .finally(() => {
             this.loading = false

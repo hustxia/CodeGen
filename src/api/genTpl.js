@@ -1,6 +1,6 @@
 import request, { toPageData } from '@/utils/request'
 
-// 代码模板接口：管理服务 shop-service-admin（经网关 /api/gen/template）
+// 代码模板接口：codegen-server 单体服务（直接 /gen/template）
 function toPageQuery(params) {
   const { page, size, ...query } = params || {}
   return { pageNum: page || 1, pageSize: size || 10, ...query }
@@ -9,7 +9,7 @@ function toPageQuery(params) {
 // 模板分页
 export function getGenTplPage(params) {
   return request({
-    url: '/api/gen/template/page',
+    url: '/gen/template/page',
     method: 'post',
     data: toPageQuery(params)
   }).then(toPageData)
@@ -18,7 +18,7 @@ export function getGenTplPage(params) {
 // 模板详情（含 content）
 export function getGenTplDetail(id) {
   return request({
-    url: `/api/gen/template/${id}`,
+    url: `/gen/template/${id}`,
     method: 'get'
   })
 }
@@ -26,7 +26,7 @@ export function getGenTplDetail(id) {
 // 模板列表（下拉用，不含 content）
 export function getGenTplList(tableId) {
   return request({
-    url: '/api/gen/template/list',
+    url: '/gen/template/list',
     method: 'get',
     params: tableId == null ? {} : { tableId }
   })
@@ -35,7 +35,7 @@ export function getGenTplList(tableId) {
 // 新增模板
 export function createGenTpl(data) {
   return request({
-    url: '/api/gen/template',
+    url: '/gen/template',
     method: 'post',
     data
   })
@@ -44,7 +44,7 @@ export function createGenTpl(data) {
 // 修改模板
 export function updateGenTpl(id, data) {
   return request({
-    url: '/api/gen/template',
+    url: '/gen/template',
     method: 'put',
     data: { ...data, id }
   })
@@ -53,7 +53,7 @@ export function updateGenTpl(id, data) {
 // 删除模板（物理删除）
 export function deleteGenTpl(id) {
   return request({
-    url: `/api/gen/template/${id}`,
+    url: `/gen/template/${id}`,
     method: 'delete'
   })
 }
@@ -61,7 +61,7 @@ export function deleteGenTpl(id) {
 // 复制为表级模板
 export function copyGenTpl(id, tableId) {
   return request({
-    url: '/api/gen/template/copy',
+    url: '/gen/template/copy',
     method: 'post',
     data: { id, tableId }
   })
@@ -70,7 +70,7 @@ export function copyGenTpl(id, tableId) {
 // 模板语法校验
 export function validateGenTpl(content, tplCode) {
   return request({
-    url: '/api/gen/template/validate',
+    url: '/gen/template/validate',
     method: 'post',
     data: { content, tplCode }
   })
@@ -81,7 +81,7 @@ export function validateGenTpl(content, tplCode) {
 // 历史版本列表（不含 content，按版本倒序）
 export function getGenTplHistory(id) {
   return request({
-    url: `/api/gen/template/${id}/history`,
+    url: `/gen/template/${id}/history`,
     method: 'get'
   })
 }
@@ -89,7 +89,7 @@ export function getGenTplHistory(id) {
 // 某个历史版本的完整内容
 export function getGenTplHistoryDetail(id, version) {
   return request({
-    url: `/api/gen/template/${id}/history/${version}`,
+    url: `/gen/template/${id}/history/${version}`,
     method: 'get'
   })
 }
@@ -97,7 +97,7 @@ export function getGenTplHistoryDetail(id, version) {
 // 回滚到指定版本（当前版本会先存快照，可再回滚回来）
 export function rollbackGenTpl(id, version) {
   return request({
-    url: `/api/gen/template/${id}/rollback/${version}`,
+    url: `/gen/template/${id}/rollback/${version}`,
     method: 'post'
   })
 }
