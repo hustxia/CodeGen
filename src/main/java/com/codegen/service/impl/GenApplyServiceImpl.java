@@ -108,6 +108,9 @@ public class GenApplyServiceImpl implements GenApplyService {
         } catch (BusinessException e) {
             result.stage(new GenApplyStageVO("CHECK", "FAILED", e.getMessage(), elapsed(t)));
             result.setPassed(false);
+            result.setWritten(0);
+            result.setSkipped(0);
+            result.setFailed(0);
             result.setElapsedMs(elapsed(started));
             return result;
         }
@@ -127,6 +130,9 @@ public class GenApplyServiceImpl implements GenApplyService {
         if (!Boolean.TRUE.equals(check.isPassed()) && !skipCheck) {
             checkStage.setMessage(checkStage.getMessage() + " —— 自检未通过，已中止，未写入任何文件");
             result.setPassed(false);
+            result.setWritten(0);
+            result.setSkipped(0);
+            result.setFailed(0);
             result.setElapsedMs(elapsed(started));
             return result;
         }
@@ -134,6 +140,9 @@ public class GenApplyServiceImpl implements GenApplyService {
         if (dryRun) {
             result.stage(new GenApplyStageVO("WRITE", "SKIPPED", "dryRun：只自检，不写盘不注册", 0L));
             result.setPassed(Boolean.TRUE.equals(check.isPassed()));
+            result.setWritten(0);
+            result.setSkipped(0);
+            result.setFailed(0);
             result.setElapsedMs(elapsed(started));
             return result;
         }
