@@ -102,7 +102,42 @@ public final class GenMergeUtils {
 
         List<String> keys = new ArrayList<>(replaced);
         keys.addAll(appendedKeys);
-        return new MergeResult(String.join("\n", oldLines), "MERGED", keys);
+
+        // import 同步：块外合并会保留旧文件的 import 区，但新模板可能新增了 import
+        // （例如这次打开了「操作日志」开关，body 块里出现 @Log 而 import 没有）。
+        // 取新模板 import 与合并结果的并集，缺的插到最后一行 import 之后。
+        List<String> merged = syncImports(oldLines, newLines);
+        return new MergeResult(String.join("\n", merged), "MERGED", keys);
+    }
+
+    /**
+     * 把 newLines 里有而合并结果里没有的 import 行补进去，插到最后一行 import 之后。
+     * Java 里多余的 import 无害，宁多勿缺。
+     */
+    private static List<String> syncImports(List<String> mergedLines, List<String> newLines) {
+        java.util.Set<String> existing = new java.util.LinkedHashSet<>();
+        int lastImportIdx = -1;
+        for (int i = 0; i < mergedLines.size(); i++) {
+            String t = mergedLines.get(i).trim();
+            if (t.startsWith("import ")) {
+                existing.add(t);
+                lastImportIdx = i;
+            }
+        }
+        List<String> missing = new ArrayList<>();
+        for (String line : newLines) {
+            String t = line.trim();
+            if (t.startsWith("import ") && !existing.contains(t)) {
+                missing.add(line);
+                existing.add(t);
+            }
+        }
+        if (missing.isEmpty()) {
+            return mergedLines;
+        }
+        int at = lastImportIdx >= 0 ? lastImportIdx + 1 : 0;
+        mergedLines.addAll(at, missing);
+        return mergedLines;
     }
 
     /**
