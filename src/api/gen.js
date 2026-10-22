@@ -107,12 +107,13 @@ export function previewGenCode(ids) {
   })
 }
 
-// 写入磁盘，返回 [{ path, status, message }]
-export function writeGenCode(ids, overwrite) {
+// 写入磁盘，返回 [{ path, status, message, backupPath }]
+// skipDrifted：只写未漂移文件（磁盘已被手改的一律 SKIPPED），V4.2
+export function writeGenCode(ids, overwrite, skipDrifted) {
   return request({
     url: '/gen/write',
     method: 'post',
-    data: { ids, overwrite }
+    data: { ids, overwrite, skipDrifted: !!skipDrifted }
   })
 }
 
@@ -179,11 +180,32 @@ export function applyGenCode(data) {
 }
 
 // 回滚某个写盘批次（有备份的还原，首次生成的文件删除）
-export function rollbackGenBatch(batchNo) {
+// payload: { ledgerIds?: [], paths?: [], skipDrifted?: bool }，不传即整批
+export function rollbackGenBatch(batchNo, payload) {
   return request({
     url: '/gen/history/rollback',
     method: 'post',
-    params: { batchNo }
+    params: { batchNo },
+    data: payload || {}
+  })
+}
+
+// 回滚预览（dry-run）：返回将还原/将删除/将跳过与明细，不落盘
+export function previewGenRollback(batchNo, payload) {
+  return request({
+    url: '/gen/history/rollback/preview',
+    method: 'post',
+    params: { batchNo },
+    data: payload || {}
+  })
+}
+
+// 产物漂移检测：磁盘内容 vs 台账 md5
+export function scanGenDrift(ids) {
+  return request({
+    url: '/gen/drift',
+    method: 'post',
+    data: { ids: ids || null }
   })
 }
 

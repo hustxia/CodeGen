@@ -75,8 +75,8 @@
           <span class="header-tip">
             已选 {{ selectedTables.length }} 张表 · 生成 {{ allRows.length }} 个文件 · 当前显示 {{ diffRows.length }} 个
           </span>
-          <span v-if="!overwrite && skipCount" class="header-tip c-orange">
-            {{ skipCount }} 个同名文件将被跳过（切到「覆盖」可纳入）
+          <span v-if="skipCount" class="header-tip c-orange">
+            {{ skipCount }} 个文件将被跳过{{ overwrite ? '（已被手改）' : '（同名已存在，切到「覆盖」可纳入）' }}
           </span>
         </div>
         <div class="diff-layout">
@@ -101,6 +101,8 @@
                 @click="activeFile = row"
               >
                 <span class="mono-text tree-path">{{ shortPath(row.path) }}</span>
+                <!-- 漂移是「磁盘 vs 上次生成」的事实，与 status（渲染结果 vs 磁盘）正交，所以单独一枚标签 -->
+                <el-tag v-if="row.drift === 'DRIFTED'" type="danger" size="mini" effect="plain">已手改</el-tag>
                 <el-tag :type="statusTagType(row.status)" size="mini">
                   {{ statusText(row.status, row) }}
                 </el-tag>
@@ -112,6 +114,10 @@
               <div class="diff-head mono-text">
                 {{ activeFile.path }}
                 <el-tag :type="statusTagType(activeFile.status)" size="mini">{{ statusText(activeFile.status, activeFile) }}</el-tag>
+                <el-tag v-if="activeFile.drift === 'DRIFTED'" type="danger" size="mini" effect="plain">
+                  磁盘已被手改 · {{ activeFile.lastModified }}
+                </el-tag>
+                <el-tag v-else-if="activeFile.drift === 'MISSING'" type="info" size="mini" effect="plain">文件已不存在</el-tag>
                 <span>+{{ activeFile.additions }} -{{ activeFile.deletions }}</span>
               </div>
               <div class="diff-body">
@@ -128,28 +134,37 @@
       <!-- 第③步：写盘策略 -->
       <div v-show="step === 2" v-loading="diffLoading">
         <div class="strategy-list">
-          <div class="strategy-option" :class="{ active: !overwrite }" @click="overwrite = false">
-            <el-radio v-model="overwrite" :label="false"><b>同名跳过（推荐）</b></el-radio>
+          <div class="strategy-option" :class="{ active: strategyMode === 'skip' }" @click="strategyMode = 'skip'">
+            <el-radio v-model="strategyMode" label="skip"><b>同名跳过（推荐）</b></el-radio>
             <p>磁盘已存在的文件不写入，记 SKIPPED；仅新增文件落盘，最安全。</p>
           </div>
-          <div class="strategy-option" :class="{ active: overwrite }" @click="overwrite = true">
-            <el-radio v-model="overwrite" :label="true"><b>覆盖（保留手写代码）</b></el-radio>
-            <p>已有文件先备份到 .gen-backup/&lt;批次号&gt;/，标记块内替换、块外手写代码原样保留（MERGED），记 OVERWRITTEN。</p>
+          <div class="strategy-option" :class="{ active: strategyMode === 'safe' }" @click="strategyMode = 'safe'">
+            <el-radio v-model="strategyMode" label="safe"><b>覆盖，但跳过已手改</b></el-radio>
+            <p>
+              已有文件先备份到 .gen-backup/&lt;批次号&gt;/，块内替换、块外手写代码保留；
+              磁盘内容相对上次生成被改过的文件一律跳过，并说明「已手改」，不会覆盖掉手写逻辑。
+            </p>
+          </div>
+          <div class="strategy-option" :class="{ active: strategyMode === 'overwrite' }" @click="strategyMode = 'overwrite'">
+            <el-radio v-model="strategyMode" label="overwrite"><b>强制覆盖</b></el-radio>
+            <p>不看漂移，全部按合并规则写入（仍会备份）。手改内容可能被块内替换掉，动手前请先确认差异页。</p>
           </div>
         </div>
         <div class="strategy-stats">
           <div class="stat"><b>{{ allRows.length }}</b><span>生成文件总数</span></div>
           <div class="stat"><b class="c-green">{{ statOf('NEW') }}</b><span>新增（会写入）</span></div>
           <div class="stat">
-            <b class="c-orange">{{ overwrite ? statOf('MODIFIED') : skipCount }}</b>
+            <b class="c-orange">{{ overwrite ? statOf('MODIFIED') - (skipDrifted ? driftedOverwriteCount : 0) : skipCount }}</b>
             <span>{{ overwrite ? '覆盖 / 合并' : '同名跳过' }}</span>
+          </div>
+          <div class="stat">
+            <b class="c-red">{{ driftCount }}</b>
+            <span>已手改（漂移）{{ skipDrifted ? '· 将跳过' : '' }}</span>
           </div>
           <div class="stat"><b class="c-gray">{{ statOf('UNCHANGED') }}</b><span>内容无变化</span></div>
         </div>
         <div class="stat-note">
-          {{ overwrite
-            ? '覆盖模式：已存在文件先备份再写入，标记块内替换、块外手写代码保留。'
-            : '跳过模式：已存在文件一律不写，只有新增文件落盘（切「覆盖」可查看会改动哪些文件）。' }}
+          {{ strategyNote }}
         </div>
 
         <el-divider content-position="left">写盘后动作</el-divider>
@@ -300,7 +315,10 @@ export default {
       allRows: [],
       diffLoading: false,
       activeFile: null,
-      overwrite: false,
+      // 三档策略：skip 同名跳过 / safe 覆盖但跳过已手改 / overwrite 强制覆盖
+      // 用一档枚举而不是「overwrite + skipDrifted」两个布尔：两个布尔有四种组合，
+      // 而其中一种是自相矛盾的（跳过 + 只写未漂移），枚举从类型上就排除了
+      strategyMode: 'skip',
       writeLoading: false,
       writeDone: false,
       batchNo: '',
@@ -316,6 +334,31 @@ export default {
     }
   },
   computed: {
+    overwrite() {
+      return this.strategyMode !== 'skip'
+    },
+    skipDrifted() {
+      return this.strategyMode === 'safe'
+    },
+    /** 磁盘内容相对上次生成被改过的文件数（来自后端台账 md5 比对） */
+    driftCount() {
+      return this.allRows.filter(r => r.drift === 'DRIFTED').length
+    },
+    /** 保守覆盖下会被跳过的「已手改」文件数：只统计本来就要覆盖的（NEW 不存在，谈不上漂移） */
+    driftedOverwriteCount() {
+      return this.allRows.filter(r => r.status !== 'NEW' && r.drift === 'DRIFTED').length
+    },
+    strategyNote() {
+      if (this.strategyMode === 'skip') {
+        return '跳过模式：已存在文件一律不写，只有新增文件落盘（切「覆盖」可查看会改动哪些文件）。'
+      }
+      if (this.strategyMode === 'safe') {
+        return this.driftCount
+          ? `覆盖模式（保守）：已存在文件先备份再写入；其中 ${this.driftCount} 个文件相对上次生成被手改过，将按策略跳过并在结果里标注「已手改」。`
+          : '覆盖模式（保守）：已存在文件先备份再写入；当前没有检测到手改文件，行为等同强制覆盖。'
+      }
+      return '强制覆盖：不看漂移，全部按合并规则写入，手改内容可能在块内被替换（备份仍保留，可回滚）。'
+    },
     canNext() {
       if (this.step === 0) return this.selectedTables.length > 0
       return true
@@ -334,9 +377,13 @@ export default {
       return groups
     },
     skipCount() {
-      // 「跳过」是策略推导出来的，不是内容事实：跳过模式下所有已存在文件都不写
-      if (this.overwrite) return 0
-      return this.allRows.filter(r => r.status !== 'NEW').length
+      // 「跳过」是策略推导出来的，不是内容事实：跳过模式下所有已存在文件都不写；
+      // 保守覆盖模式下只有「已手改」的会被跳过
+      if (!this.overwrite) return this.allRows.filter(r => r.status !== 'NEW').length
+      if (this.skipDrifted) {
+        return this.allRows.filter(r => r.status !== 'NEW' && r.drift === 'DRIFTED').length
+      }
+      return 0
     },
     writtenCount() {
       return this.writeResults.filter(r => ['WRITTEN', 'OVERWRITTEN', 'MERGED'].includes(r.status)).length
@@ -446,7 +493,7 @@ export default {
       this.menuResult = null
       this.verifyResult = null
       try {
-        const res = await writeGenCode(this.selectedIds(), this.overwrite)
+        const res = await writeGenCode(this.selectedIds(), this.overwrite, this.skipDrifted)
         this.writeResults = res.data || []
         this.batchNo = (this.writeResults[0] && this.writeResults[0].batchNo) || ''
         this.writeDone = true
@@ -591,7 +638,7 @@ export default {
 .stat { flex: 1; border: 1px solid var(--cg-border-light); border-radius: 4px; padding: 12px 16px; background: var(--cg-bg-page); }
 .stat b { display: block; font-size: 22px; }
 .stat span { color: var(--cg-text-secondary); font-size: 12px; }
-.c-green { color: var(--cg-success); } .c-orange { color: var(--cg-warning); } .c-gray { color: var(--cg-text-secondary); }
+.c-green { color: var(--cg-success); } .c-orange { color: var(--cg-warning); } .c-gray { color: var(--cg-text-secondary); } .c-red { color: var(--cg-danger); }
 .menu-option { padding: 2px 0 6px; }
 .menu-parent { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
 .menu-msg { margin-bottom: 10px; }
