@@ -295,9 +295,16 @@
 </template>
 
 <script>
-import { getGenTablePage, previewGenCode, diffGenCode, writeGenCode, registerGenMenu } from '@/api/gen'
+import { getGenTablePage, diffGenCode, writeGenCode, registerGenMenu } from '@/api/gen'
 import { verifyGenOutput } from '@/api/genOutput'
 import { getEnabledMenuTree } from '@/api/system'
+import {
+  resolveWriteFlags,
+  countDrifted,
+  countDriftedOverwrite,
+  countSkipped,
+  strategyNote as buildStrategyNote
+} from '@/utils/genStrategy'
 
 export default {
   name: 'GenWizard',
@@ -334,30 +341,27 @@ export default {
     }
   },
   computed: {
+    // 策略推导全部走 utils/genStrategy：同一套规则被 vitest 覆盖，
+    // 页面只负责展示，不再在这里各写一遍
+    writeFlags() {
+      return resolveWriteFlags(this.strategyMode)
+    },
     overwrite() {
-      return this.strategyMode !== 'skip'
+      return this.writeFlags.overwrite
     },
     skipDrifted() {
-      return this.strategyMode === 'safe'
+      return this.writeFlags.skipDrifted
     },
     /** 磁盘内容相对上次生成被改过的文件数（来自后端台账 md5 比对） */
     driftCount() {
-      return this.allRows.filter(r => r.drift === 'DRIFTED').length
+      return countDrifted(this.allRows)
     },
-    /** 保守覆盖下会被跳过的「已手改」文件数：只统计本来就要覆盖的（NEW 不存在，谈不上漂移） */
+    /** 保守覆盖下会被跳过的「已手改」文件数 */
     driftedOverwriteCount() {
-      return this.allRows.filter(r => r.status !== 'NEW' && r.drift === 'DRIFTED').length
+      return countDriftedOverwrite(this.allRows)
     },
     strategyNote() {
-      if (this.strategyMode === 'skip') {
-        return '跳过模式：已存在文件一律不写，只有新增文件落盘（切「覆盖」可查看会改动哪些文件）。'
-      }
-      if (this.strategyMode === 'safe') {
-        return this.driftCount
-          ? `覆盖模式（保守）：已存在文件先备份再写入；其中 ${this.driftCount} 个文件相对上次生成被手改过，将按策略跳过并在结果里标注「已手改」。`
-          : '覆盖模式（保守）：已存在文件先备份再写入；当前没有检测到手改文件，行为等同强制覆盖。'
-      }
-      return '强制覆盖：不看漂移，全部按合并规则写入，手改内容可能在块内被替换（备份仍保留，可回滚）。'
+      return buildStrategyNote(this.strategyMode, this.driftCount)
     },
     canNext() {
       if (this.step === 0) return this.selectedTables.length > 0
@@ -377,13 +381,7 @@ export default {
       return groups
     },
     skipCount() {
-      // 「跳过」是策略推导出来的，不是内容事实：跳过模式下所有已存在文件都不写；
-      // 保守覆盖模式下只有「已手改」的会被跳过
-      if (!this.overwrite) return this.allRows.filter(r => r.status !== 'NEW').length
-      if (this.skipDrifted) {
-        return this.allRows.filter(r => r.status !== 'NEW' && r.drift === 'DRIFTED').length
-      }
-      return 0
+      return countSkipped(this.allRows, this.strategyMode)
     },
     writtenCount() {
       return this.writeResults.filter(r => ['WRITTEN', 'OVERWRITTEN', 'MERGED'].includes(r.status)).length

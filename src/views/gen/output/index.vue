@@ -297,6 +297,13 @@ import {
   cleanupGenBackups
 } from '@/api/genOutput'
 import { getGenTablePage, previewGenRollback, rollbackGenBatch } from '@/api/gen'
+import {
+  rollbackDefaultSelection,
+  isRollbackSelectable,
+  rollbackConfirmText,
+  opText as opTextOf,
+  opTagType as opTagTypeOf
+} from '@/utils/genStrategy'
 
 const ACTION_OPTIONS = [
   { value: 'WRITTEN', label: 'WRITTEN（新建）' },
@@ -454,10 +461,14 @@ export default {
         this.rbRows = res.data.items || []
         // 默认勾选「会真动文件」且没被手改的：手改的让用户自己决定，避免顺手覆盖掉
         this.$nextTick(() => {
-          this.rbRows
-            .filter(r => r.op !== 'SKIP' && !r.drifted)
+          rollbackDefaultSelection(this.rbRows)
             .forEach(r => this.$refs.rbTable && this.$refs.rbTable.toggleRowSelection(r, true))
         })
+      } catch (e) {
+        // 只有 SKIPPED/ERROR 的批次没有可回滚文件，后端会返回 404；
+        // 这是正常情况（纯跳过批次），不能让它变成未捕获的 Promise 异常
+        this.rbVisible = false
+        this.$message.warning(e && e.message ? e.message : '该批次没有可回滚的文件')
       } finally {
         this.rbLoading = false
       }
@@ -467,13 +478,13 @@ export default {
     },
     rbSelectable(row) {
       // SKIP 行没有可执行动作，勾了也不会生效，干脆不让勾
-      return row.op !== 'SKIP'
+      return isRollbackSelectable(row)
     },
     opTagType(op) {
-      return { RESTORE: 'warning', DELETE: 'danger', SKIP: 'info' }[op] || 'info'
+      return opTagTypeOf(op)
     },
     opText(op) {
-      return { RESTORE: '还原', DELETE: '删除', SKIP: '跳过' }[op] || op
+      return opTextOf(op)
     },
     async doRollback() {
       if (!this.rbPicked.length) {
@@ -482,7 +493,7 @@ export default {
       }
       try {
         await this.$confirm(
-          `将对 ${this.rbPicked.length} 个文件执行回滚，其中 ${this.rbPicked.filter(r => r.drifted).length} 个已被手改（会被覆盖）。`,
+          rollbackConfirmText(this.rbPicked),
           '确认回滚',
           { type: 'warning', confirmButtonText: '执行回滚', cancelButtonText: '再想想' }
         )

@@ -16,8 +16,6 @@ VueRouter.prototype.replace = function replace(location, onResolve, onReject) {
   return originalReplace.call(this, location).catch(err => err)
 }
 
-/* 布局组件 */
-import Layout from '@/layout/index.vue'
 // 落地页：登录后进入代码生成
 const HOME_PATH = '/gen/table'
 

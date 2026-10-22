@@ -158,7 +158,6 @@ import {
   DEFAULT_HUE,
   DEFAULT_MODE,
   DEFAULT_SHAPE,
-  DEFAULT_THEME,
   parseThemeId,
   normalizeThemeId,
   themeLabel,
