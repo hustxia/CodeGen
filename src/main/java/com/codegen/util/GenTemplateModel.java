@@ -161,10 +161,9 @@ public final class GenTemplateModel {
         m.put("varName", decap(className));
         m.put("tableName", table.getTableName());
         // V3.0 权限点前缀：多系统下必须带系统编码，否则同名表的权限点会串。
-        // 与 GenMenuServiceImpl.permsPrefix 保持同一规则，两边的 perms 才能对上。
-        m.put("permsPrefix", StringUtils.hasText(effectiveProjectCode)
-                ? effectiveProjectCode + "_" + table.getTableName()
-                : table.getTableName());
+        // 规则统一放在 GenNaming，菜单服务与自检服务调的是同一个方法——
+        // 这里若自己拼字符串，就会出现「大小写/空白处理不一致 → 按钮点了没反应」的静默 bug。
+        m.put("permsPrefix", com.codegen.support.GenNaming.permsPrefix(effectiveProjectCode, table.getTableName()));
         m.put("comment", orDefault(table.getTableComment(), className));
         m.put("moduleName", module);
         m.put("gatewayPrefix", prefix);

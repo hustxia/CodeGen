@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -55,10 +56,12 @@ public class SysProjectController {
         return Result.ok(projectService.getById(id));
     }
 
-    @Operation(summary = "新增系统")
+    @Operation(summary = "新增系统（可选从已有系统复制路径配置）")
     @PostMapping
-    public Result<Long> create(@RequestBody SysProject project) {
-        return Result.ok(projectService.create(project));
+    public Result<Long> create(@RequestBody SysProject project,
+                               @RequestParam(value = "copyFrom", required = false) Long copyFrom) {
+        // 只复制路径与开关默认值，不复制编码/名称/根包名/网关前缀——见 SysProjectService#create
+        return Result.ok(projectService.create(project, copyFrom));
     }
 
     @Operation(summary = "修改系统（编码在有表挂载后不可改）")

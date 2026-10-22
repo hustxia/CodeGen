@@ -9,6 +9,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 代码生成器-表配置 VO
@@ -119,6 +120,15 @@ public class GenTableVO implements Serializable {
      */
     @JsonSerialize(using = ToStringSerializer.class)
     private Long projectId;
+
+    /**
+     * 所属系统的 17 个生成开关默认值（详情接口返回）。
+     *
+     * <p>key 与实体字段同名（genEntity / genFrontend ...），值已按「系统 → 1」解析。
+     * 前端用它在开关旁标「默认」，并作为「恢复系统默认」的目标值，
+     * 不必为了 17 个数字再单独请求一次系统详情。
+     */
+    private Map<String, Integer> projectGenDefaults;
 
     private List<GenColumnDTO> columns;
 }

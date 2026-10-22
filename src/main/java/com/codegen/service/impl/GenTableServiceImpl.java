@@ -16,6 +16,7 @@ import com.codegen.service.GenMenuService;
 import com.codegen.service.GenTableColumnService;
 import com.codegen.service.DictDetectService;
 import com.codegen.service.GenTableService;
+import com.codegen.support.GenSwitchDefaults;
 import com.codegen.util.GenUtils;
 import com.codegen.vo.GenColumnSyncVO;
 import com.codegen.vo.GenDbTableVO;
@@ -82,6 +83,27 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 
     @Autowired
     private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
+    @Autowired
+    private com.codegen.mapper.SysProjectMapper projectMapper;
+
+    /**
+     * 表所属系统，未绑定/已删返回 null。单次请求内缓存，避免批量导入时
+     * 几十张表把同一个系统重复查几十次。
+     */
+    private final Map<Long, com.codegen.entity.SysProject> projectCache = new HashMap<>();
+
+    private com.codegen.entity.SysProject projectOf(Long projectId) {
+        if (projectId == null) {
+            return null;
+        }
+        if (projectCache.containsKey(projectId)) {
+            return projectCache.get(projectId);
+        }
+        com.codegen.entity.SysProject project = projectMapper.selectById(projectId);
+        projectCache.put(projectId, project);
+        return project;
+    }
 
     @Override
     public IPage<GenTableVO> pageList(GenTablePageDTO dto) {
@@ -282,8 +304,17 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         }
         int affected = 0;
         for (Long id : dto.getIds()) {
+            GenTable exist = getById(id);
+            if (exist == null) {
+                continue;
+            }
             GenTable patch = new GenTable();
             patch.setId(id);
+            // 必须把 projectId 原样带回去：GenTable.projectId 是 FieldStrategy.IGNORED
+            // （为了支持「解绑系统」把 null 写进库），部分更新时若不显式带回，
+            // 批量套预设会顺手把这批表的系统归属全部清空——生成路径当场回落到全局，
+            // 表现为「套了个预设，文件全写到别的仓库去了」。V3.1 实机验证时踩到过。
+            patch.setProjectId(exist.getProjectId());
             if (StringUtils.hasText(dto.getModuleName())) {
                 patch.setModuleName(dto.getModuleName().trim());
             }
@@ -362,11 +393,32 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             return null;
         }
         GenTableVO vo = toVO(table);
+        // 系统默认值随详情下发：前端用它做「默认」标记和「恢复系统默认」按钮，
+        // 免得前端为了 17 个数字再单独发一次请求
+        vo.setProjectGenDefaults(GenSwitchDefaults.defaultsOf(projectOf(table.getProjectId())));
         LambdaQueryWrapper<GenTableColumn> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(GenTableColumn::getTableId, id);
         wrapper.orderByAsc(GenTableColumn::getSort);
         vo.setColumns(columnService.list(wrapper).stream().map(this::toColumnDTO).toList());
         return vo;
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Integer> resetSwitchDefaults(Long tableId) {
+        GenTable table = getById(tableId);
+        if (table == null) {
+            throw new BusinessException(404, "表配置不存在");
+        }
+        // 只构造开关字段的补丁对象：updateById 默认 NOT_NULL 策略，
+        // 其余字段为 null 不会参与 SET，包名/路径/字段配置原样保留
+        GenTable patch = new GenTable();
+        patch.setId(tableId);
+        // projectId 是 IGNORED 策略，null 会被写进库，必须原样带回（同 batchUpdate）
+        patch.setProjectId(table.getProjectId());
+        GenSwitchDefaults.resetToProject(patch, projectOf(table.getProjectId()));
+        updateById(patch);
+        return GenSwitchDefaults.defaultsOf(projectOf(table.getProjectId()));
     }
 
     @Override
@@ -378,6 +430,10 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         GenTable table = new GenTable();
         BeanUtils.copyProperties(dto, table);
         table.setId(null);
+        // V3.1 P0-3：17 个开关留空的，按「所属系统默认值 → 1」补齐。
+        // 放在入库前而不是生成时：生成阶段必须尊重表级值，否则用户手动关掉的开关
+        // 会被系统默认值顶回去，表现为「关了还在生成」，极难排查。
+        GenSwitchDefaults.fillMissing(table, projectOf(dto.getProjectId()));
         if (exist != null) {
             if (!overwrite) {
                 throw new BusinessException(409, "表名已存在：" + dto.getTableName() + "，可选择覆盖");

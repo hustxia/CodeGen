@@ -14,6 +14,7 @@ import com.codegen.mapper.GenTableMapper;
 import com.codegen.mapper.SysProjectMapper;
 import com.codegen.service.GenCodeService;
 import com.codegen.service.GenTableColumnService;
+import com.codegen.support.GenPathResolver;
 import com.codegen.util.GenMergeUtils;
 import com.codegen.util.GenTemplateEngine;
 import com.codegen.util.GenTemplateModel;
@@ -508,12 +509,10 @@ public class GenCodeServiceImpl implements GenCodeService {
             if (!StringUtils.hasText(table.getGatewayPrefix()) && StringUtils.hasText(project.getGatewayPrefix())) {
                 table.setGatewayPrefix(project.getGatewayPrefix());
             }
-            if (!StringUtils.hasText(table.getBackendRoot()) && StringUtils.hasText(project.getBackendRoot())) {
-                table.setBackendRoot(project.getBackendRoot());
-            }
-            if (!StringUtils.hasText(table.getFrontendRoot()) && StringUtils.hasText(project.getFrontendRoot())) {
-                table.setFrontendRoot(project.getFrontendRoot());
-            }
+            // 注意：backendRoot / frontendRoot 不在这里回填。
+            // 这两个字段只服务于落盘路径，模板根本不读，回填进实体只会让
+            // 「表级为空 → 系统层生效」这条链看不出来（V3.0 的写盘 bug 就藏在这）。
+            // 落盘时统一走 GenPathResolver，那里能看到真实来源。
         }
 
         GenOutputProperties.ModuleConfig module = moduleOf(table);
@@ -573,69 +572,31 @@ public class GenCodeServiceImpl implements GenCodeService {
      * 表配置的目标模块（gen_table.target_module），未配置或未命中返回 null
      */
     private GenOutputProperties.ModuleConfig moduleOf(GenTable table) {
-        String key = table.getTargetModule();
-        if (!StringUtils.hasText(key) || outputProperties.getModules() == null) {
-            return null;
-        }
-        return outputProperties.getModules().get(key.trim());
+        return GenPathResolver.moduleOf(table, outputProperties);
     }
 
     /**
-     * 后端文件相对路径前缀，回落链：表级 > 所属系统 > gen.output.backend-path > 按包名推。
+     * 后端文件相对路径前缀，回落链见 {@link GenPathResolver#backendBase}。
      *
-     * <p>系统层放在全局之前：同一台机器上两套系统各自在自己的仓库里，
-     * backendPath 往往不同（demo-server/ vs mkt-server/），靠全局只能二选一。
+     * <p>现在表级字段已不再被 applyOutputDefaults 回填，所以这里必须自己走完四级；
+     * 四个入口（预览 / 写盘 / 差异 / ZIP）都调本方法，保证路径只有一份实现。
      */
     private String backendBaseOf(GenTable table) {
-        if (StringUtils.hasText(table.getBackendPath())) {
-            return table.getBackendPath();
-        }
-        SysProject project = projectOf(table);
-        if (project != null && StringUtils.hasText(project.getBackendPath())) {
-            return project.getBackendPath();
-        }
-        if (StringUtils.hasText(outputProperties.getBackendPath())) {
-            return outputProperties.getBackendPath();
-        }
-        // 系统没配 backendPath 时，用「系统根包」推路径，避免退到全局的 com.codegen
-        String pkg = StringUtils.hasText(table.getPackageName())
-                ? table.getPackageName()
-                : (project != null && StringUtils.hasText(project.getRootPackage())
-                    ? project.getRootPackage()
-                    : "com.codegen");
-        return "src/main/java/" + pkg.replace('.', '/');
+        return GenPathResolver.backendBase(table, projectOf(table), outputProperties);
     }
 
     /**
-     * 后端仓库根目录：表级配置 > 所属系统 > 目标模块配置 > gen.output.backend-root
+     * 后端仓库根目录：表级配置 &gt; 所属系统 &gt; 目标模块 &gt; gen.output.backend-root
      */
     private String backendRootOf(GenTable table) {
-        if (StringUtils.hasText(table.getBackendRoot())) {
-            return table.getBackendRoot();
-        }
-        SysProject project = projectOf(table);
-        if (project != null && StringUtils.hasText(project.getBackendRoot())) {
-            return project.getBackendRoot();
-        }
-        GenOutputProperties.ModuleConfig module = moduleOf(table);
-        if (module != null && StringUtils.hasText(module.getBackendRoot())) {
-            return module.getBackendRoot();
-        }
-        return outputProperties.getBackendRoot();
+        return GenPathResolver.backendRoot(table, projectOf(table), outputProperties);
     }
 
     /**
-     * 前端仓库根目录：表级配置 > 所属系统 > gen.output.frontend-root
+     * 前端仓库根目录：表级配置 &gt; 所属系统 &gt; gen.output.frontend-root
      */
     private String frontendRootOf(GenTable table) {
-        if (StringUtils.hasText(table.getFrontendRoot())) {
-            return table.getFrontendRoot();
-        }
-        SysProject project = projectOf(table);
-        if (project != null && StringUtils.hasText(project.getFrontendRoot())) {
-            return project.getFrontendRoot();
-        }
-        return outputProperties.getFrontendRoot();
+        return GenPathResolver.frontendRoot(table, projectOf(table), outputProperties);
     }
 
     /**
@@ -661,17 +622,7 @@ public class GenCodeServiceImpl implements GenCodeService {
      * <p>表级没有 frontendPath 字段（一张表不可能换前端工程），所以第一个有资格说话的就是系统。
      */
     private String frontendPathOf(GenTable table) {
-        SysProject project = projectOf(table);
-        if (project != null && StringUtils.hasText(project.getFrontendPath())) {
-            return project.getFrontendPath().trim();
-        }
-        GenOutputProperties.ModuleConfig module = moduleOf(table);
-        if (module != null && StringUtils.hasText(module.getFrontendPath())) {
-            return module.getFrontendPath().trim();
-        }
-        return StringUtils.hasText(outputProperties.getFrontendPath())
-                ? outputProperties.getFrontendPath().trim()
-                : "";
+        return GenPathResolver.frontendPath(table, projectOf(table), outputProperties);
     }
 
     /**

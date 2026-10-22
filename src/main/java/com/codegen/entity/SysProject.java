@@ -90,4 +90,100 @@ public class SysProject extends BaseEntity {
      * 备注
      */
     private String remark;
+
+    /* =========================================================
+     * 17 个生成开关的系统默认值（V3.1 P0-3）
+     *
+     * NULL = 未配置，回落硬编码 1。不用「NOT NULL DEFAULT 1」是为了区分
+     * 「这个系统明确要求关掉」和「压根没配过」——否则以后调整硬编码默认值时，
+     * 分不清哪些行是人为设置，一改就覆盖了用户的意图。
+     *
+     * 生效时机是「从数据库导入」：按这里填进 gen_table 的对应列。
+     * 已经存在的表不会被改写，避免改一次系统配置把存量表全部翻掉。
+     * ========================================================= */
+
+    /**
+     * 默认：生成 entity
+     */
+    private Integer defaultGenEntity;
+
+    /**
+     * 默认：生成 mapper
+     */
+    private Integer defaultGenMapper;
+
+    /**
+     * 默认：生成 service + impl
+     */
+    private Integer defaultGenService;
+
+    /**
+     * 默认：生成操作日志注解 @Log
+     */
+    private Integer defaultGenLog;
+
+    /**
+     * 默认：生成 controller
+     */
+    private Integer defaultGenController;
+
+    /**
+     * 默认：分页接口
+     */
+    private Integer defaultGenPageApi;
+
+    /**
+     * 默认：详情接口
+     */
+    private Integer defaultGenDetailApi;
+
+    /**
+     * 默认：新增接口
+     */
+    private Integer defaultGenAddApi;
+
+    /**
+     * 默认：修改接口
+     */
+    private Integer defaultGenEditApi;
+
+    /**
+     * 默认：删除接口
+     */
+    private Integer defaultGenDeleteApi;
+
+    /**
+     * 默认：生成前端
+     */
+    private Integer defaultGenFrontend;
+
+    /**
+     * 默认：生成 api.js
+     */
+    private Integer defaultGenApiJs;
+
+    /**
+     * 默认：生成 vue 页面
+     */
+    private Integer defaultGenVuePage;
+
+    /**
+     * 默认：生成查询区
+     */
+    private Integer defaultGenQueryForm;
+
+    /**
+     * 默认：生成新增按钮
+     */
+    private Integer defaultGenAddBtn;
+
+    /**
+     * 默认：生成编辑按钮
+     */
+    private Integer defaultGenEditBtn;
+
+    /**
+     * 默认：生成删除按钮
+     */
+    private Integer defaultGenDeleteBtn;
 }

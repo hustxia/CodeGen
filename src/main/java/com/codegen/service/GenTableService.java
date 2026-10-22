@@ -76,4 +76,14 @@ public interface GenTableService extends IService<GenTable> {
      * 批量导入库表为生成配置（已存在的跳过）
      */
     List<GenImportVO> importTables(String schema, List<String> tableNames, Long projectId);
+
+    /**
+     * 把 17 个生成开关恢复成「所属系统的默认值」（系统没配则按 1）。
+     *
+     * <p>只动开关，不动包名/路径/字段配置——用户点这个按钮的意图是
+     * 「这批开关恢复默认」，不是「把我改过的所有东西都撤销」。
+     *
+     * @return 恢复后的开关值，key 与实体字段同名
+     */
+    java.util.Map<String, Integer> resetSwitchDefaults(Long tableId);
 }

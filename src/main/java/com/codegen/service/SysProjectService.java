@@ -40,6 +40,18 @@ public interface SysProjectService {
     Long create(SysProject project);
 
     /**
+     * 新建，并从已有系统复制配置。
+     *
+     * <p>只复制「路径类 + 生成开关默认值」，<b>不复制</b>编码、名称、根包名、网关前缀：
+     * 路径是「这台机器上的目录约定」，兄弟系统通常一样；
+     * 而根包名和网关前缀属于系统身份，抄过来会得到两个 com.demo 的系统，
+     * 生成的代码互相覆盖，比让用户多填两个字段危险得多。
+     *
+     * @param copyFromId 被复制的系统 ID，null 等同不复制
+     */
+    Long create(SysProject project, Long copyFromId);
+
+    /**
      * 修改。编码一旦有表挂上去就不允许改，否则已生成的产物与记录会对不上。
      */
     void update(SysProject project);

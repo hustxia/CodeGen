@@ -77,9 +77,22 @@ public class SysProjectServiceImpl implements SysProjectService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(SysProject project) {
+        return create(project, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long create(SysProject project, Long copyFromId) {
         validate(project, true);
         if (getByCode(project.getProjectCode()) != null) {
             throw new BusinessException(400, "系统编码已存在：" + project.getProjectCode());
+        }
+        if (copyFromId != null) {
+            SysProject source = projectMapper.selectById(copyFromId);
+            if (source == null) {
+                throw new BusinessException(404, "被复制的系统不存在：" + copyFromId);
+            }
+            copyPathConfig(source, project);
         }
         if (project.getEnabled() == null) {
             project.setEnabled(1);
@@ -95,6 +108,82 @@ public class SysProjectServiceImpl implements SysProjectService {
         }
         projectMapper.insert(project);
         return project.getId();
+    }
+
+    /**
+     * 复制路径类配置与生成开关默认值。
+     *
+     * <p>只补目标对象里「没填」的字段：前端表单允许用户先手填再选复制源，
+     * 手填的优先级高于复制源。编码、名称、根包名、网关前缀一律不碰。
+     */
+    private void copyPathConfig(SysProject source, SysProject target) {
+        if (!StringUtils.hasText(target.getBackendRoot())) {
+            target.setBackendRoot(source.getBackendRoot());
+        }
+        if (!StringUtils.hasText(target.getFrontendRoot())) {
+            target.setFrontendRoot(source.getFrontendRoot());
+        }
+        if (!StringUtils.hasText(target.getBackendPath())) {
+            target.setBackendPath(source.getBackendPath());
+        }
+        if (!StringUtils.hasText(target.getFrontendPath())) {
+            target.setFrontendPath(source.getFrontendPath());
+        }
+        if (!StringUtils.hasText(target.getSelfcheckClasspath())) {
+            target.setSelfcheckClasspath(source.getSelfcheckClasspath());
+        }
+        // 生成开关默认值：整组复制，否则新系统还得再点 17 次
+        if (target.getDefaultGenEntity() == null) {
+            target.setDefaultGenEntity(source.getDefaultGenEntity());
+        }
+        if (target.getDefaultGenMapper() == null) {
+            target.setDefaultGenMapper(source.getDefaultGenMapper());
+        }
+        if (target.getDefaultGenService() == null) {
+            target.setDefaultGenService(source.getDefaultGenService());
+        }
+        if (target.getDefaultGenLog() == null) {
+            target.setDefaultGenLog(source.getDefaultGenLog());
+        }
+        if (target.getDefaultGenController() == null) {
+            target.setDefaultGenController(source.getDefaultGenController());
+        }
+        if (target.getDefaultGenPageApi() == null) {
+            target.setDefaultGenPageApi(source.getDefaultGenPageApi());
+        }
+        if (target.getDefaultGenDetailApi() == null) {
+            target.setDefaultGenDetailApi(source.getDefaultGenDetailApi());
+        }
+        if (target.getDefaultGenAddApi() == null) {
+            target.setDefaultGenAddApi(source.getDefaultGenAddApi());
+        }
+        if (target.getDefaultGenEditApi() == null) {
+            target.setDefaultGenEditApi(source.getDefaultGenEditApi());
+        }
+        if (target.getDefaultGenDeleteApi() == null) {
+            target.setDefaultGenDeleteApi(source.getDefaultGenDeleteApi());
+        }
+        if (target.getDefaultGenFrontend() == null) {
+            target.setDefaultGenFrontend(source.getDefaultGenFrontend());
+        }
+        if (target.getDefaultGenApiJs() == null) {
+            target.setDefaultGenApiJs(source.getDefaultGenApiJs());
+        }
+        if (target.getDefaultGenVuePage() == null) {
+            target.setDefaultGenVuePage(source.getDefaultGenVuePage());
+        }
+        if (target.getDefaultGenQueryForm() == null) {
+            target.setDefaultGenQueryForm(source.getDefaultGenQueryForm());
+        }
+        if (target.getDefaultGenAddBtn() == null) {
+            target.setDefaultGenAddBtn(source.getDefaultGenAddBtn());
+        }
+        if (target.getDefaultGenEditBtn() == null) {
+            target.setDefaultGenEditBtn(source.getDefaultGenEditBtn());
+        }
+        if (target.getDefaultGenDeleteBtn() == null) {
+            target.setDefaultGenDeleteBtn(source.getDefaultGenDeleteBtn());
+        }
     }
 
     @Override

@@ -140,16 +140,18 @@
                 <version>3.4.1</version>
             </plugin>
             <!--
-              本机离线环境没有 surefire-api 3.6.0，-DskipTests / -Dmaven.test.skip 都拦不住
-              插件自身的依赖解析。这里直接关掉测试执行：本工程没有单元测试，
-              模板层面的自检走 GenSelfCheck + TplRenderCheck，不依赖 surefire。
+              V3.1 起本工程有真实单元测试（src/test），所以不能再无条件 skipTests。
+              - `mvn test` 跑测试；`mvn package -DskipTests` 仍然跳过，打包流程不变。
+              - 依赖已在本地仓库就位（surefire 3.5.4 + surefire-junit-platform +
+                junit-platform-launcher 1.10.2），离线 -o 可执行。
+              原先这里写死 true 的原因是「本机离线、surefire-api 3.6.0 解析失败」，
+              那是父 POM 未继承导致的版本错配；固定到 3.5.4 后已不复现。
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
                 <configuration>
-                    <skipTests>true</skipTests>
                     <failIfNoTests>false</failIfNoTests>
                 </configuration>
             </plugin>

@@ -4,8 +4,12 @@ import com.codegen.config.GenMenuProperties;
 import com.codegen.config.GenOutputProperties;
 import com.codegen.dto.GenMenuRegisterDTO;
 import com.codegen.entity.GenTable;
+import com.codegen.entity.SysProject;
 import com.codegen.mapper.GenTableMapper;
+import com.codegen.mapper.SysProjectMapper;
 import com.codegen.service.GenMenuService;
+import com.codegen.support.GenNaming;
+import com.codegen.support.GenPathResolver;
 import com.codegen.vo.GenMenuRegisterVO;
 import com.codegen.vo.GenMenuVO;
 import com.codegen.common.exception.BusinessException;
@@ -73,6 +77,14 @@ public class GenMenuServiceImpl implements GenMenuService {
 
     @Autowired
     private GenMenuProperties menuProperties;
+
+    @Autowired
+    private SysProjectMapper projectMapper;
+
+    /**
+     * 单次注册内按 projectId 缓存系统，避免一批表把同一个系统重复查十几次
+     */
+    private final Map<Long, SysProject> projectCache = new java.util.HashMap<>();
 
     /**
      * 菜单计划：artifact 出口下用于生成 SQL 与路由的中间结构
@@ -176,7 +188,7 @@ public class GenMenuServiceImpl implements GenMenuService {
                     table.getTableComment(), pathOf(table.getMenuId()), 2, status, note));
             return;
         }
-        String pagePath = joinPath(parentPath, table.getModuleName(), LEAF);
+        String pagePath = joinPath(parentPath, projectCodeOf(table.getProjectId()), table.getModuleName(), LEAF);
         if (dryRun) {
             result.getMenus().add(new GenMenuVO(table.getTableName(), null, table.getTableComment(),
                     pagePath, 2, "PLANNED", "预览，未落库"));
@@ -210,7 +222,7 @@ public class GenMenuServiceImpl implements GenMenuService {
      */
     private void registerArtifact(GenMenuRegisterVO result, GenTable table, long parentId,
                                   String parentPath, List<PlannedMenu> plans, boolean dryRun) {
-        String pagePath = joinPath(parentPath, table.getModuleName(), LEAF);
+        String pagePath = joinPath(parentPath, projectCodeOf(table.getProjectId()), table.getModuleName(), LEAF);
         String component = componentOf(table);
         List<String[]> buttons = buttonsOf(table);
         if (!dryRun) {
@@ -227,118 +239,164 @@ public class GenMenuServiceImpl implements GenMenuService {
     /**
      * 重建前端路由文件：由 sys_menu + gen_table（internal）或仅 gen_table（artifact）派生，
      * 整文件覆盖（该文件属于生成物）。
+     *
+     * <p>V3.1 起**按前端工程分组写**：两套系统各有自己的前端仓库时，
+     * 一个 {@code gen-routes.js} 装不下两份路由——旧实现只写全局 frontend-root，
+     * B 系统的页面永远同步不到 B 的前端工程。分组键就是解析出来的前端工程根。
      */
     private void fillRoute(GenMenuRegisterVO result, boolean dryRun, boolean internal) {
-        List<String> skipped = new ArrayList<>();
-        String content = internal ? buildRouteContentFromDb(skipped) : buildRouteContentFromTables(skipped);
-        result.setRouteContent(content);
-        if (!skipped.isEmpty()) {
-            result.setMessage("已跳过 " + skipped.size() + " 个页面未落盘的模块（不生成路由，避免前端编译失败）："
-                    + String.join("、", skipped));
-        }
-        Path base = webBase();
-        if (base == null) {
-            result.setMessage("未配置 gen.output.frontend-root，路由文件未写入（内容已返回，可手工保存）");
+        Map<Path, List<Map<String, Object>>> groups =
+                internal ? groupRowsByWebBase(loadRowsFromDb()) : groupRowsByWebBase(loadRowsFromTables());
+
+        if (groups.isEmpty()) {
+            result.setRouteContent(renderRoutes(List.of(), List.of()));
+            result.setMessage("没有可生成路由的表（需 gen_frontend=1 且 gen_vue_page=1）");
             return;
         }
-        Path target = base.resolve("src/router/gen-routes.js");
-        result.setRouteFile(target.toString());
+
+        List<String> written = new ArrayList<>();
+        StringBuilder content = new StringBuilder();
+        boolean multi = groups.size() > 1;
+        for (Map.Entry<Path, List<Map<String, Object>>> group : groups.entrySet()) {
+            Path base = group.getKey();
+            List<String> skipped = new ArrayList<>();
+            List<Map<String, Object>> rows = new ArrayList<>();
+            Path viewsRoot = base.resolve("src/views");
+            for (Map<String, Object> row : group.getValue()) {
+                String module = String.valueOf(row.get("module_name"));
+                // 页面没落盘的模块不生成路由，否则前端 import 直接编译失败
+                if (!Files.exists(viewsRoot.resolve(module).resolve("index.vue"))) {
+                    if (!skipped.contains(module)) {
+                        skipped.add(module);
+                    }
+                    continue;
+                }
+                rows.add(row);
+            }
+            String groupContent = renderRoutes(rows, skipped);
+            if (multi) {
+                content.append("// ==== ").append(base.resolve("src/router/gen-routes.js")).append('\n');
+            }
+            content.append(groupContent);
+            if (!skipped.isEmpty()) {
+                appendMessage(result, "已跳过 " + skipped.size() + " 个页面未落盘的模块（" + base.getFileName()
+                        + "）：" + String.join("、", skipped));
+            }
+
+            Path target = base.resolve("src/router/gen-routes.js");
+            written.add(target.toString());
+            if (dryRun) {
+                continue;
+            }
+            writeRouteFile(result, target, groupContent);
+        }
+        result.setRouteContent(content.toString());
+        result.setRouteFile(String.join("、", written));
         if (dryRun) {
-            result.setMessage("dryRun：未写入路由文件");
-            return;
+            appendMessage(result, "dryRun：未写入路由文件，内容已返回");
         }
+    }
+
+    /**
+     * 写单个路由文件。内容一致就不重写——注册菜单是幂等操作，
+     * 每次刷 mtime 会让 dev server 无谓热重载。
+     */
+    private void writeRouteFile(GenMenuRegisterVO result, Path target, String content) {
         try {
             if (target.getParent() != null) {
                 Files.createDirectories(target.getParent());
             }
-            // 内容一致就不重写：注册菜单是幂等操作，每次刷 mtime 会让 dev server 无谓热重载
             String old = Files.exists(target) ? Files.readString(target, StandardCharsets.UTF_8) : null;
             if (content.equals(old)) {
                 result.setRouteSynced(true);
-                if (result.getMessage() == null) {
-                    result.setMessage("路由文件内容无变化，未重写");
-                }
+                appendMessage(result, "路由文件内容无变化（" + target.getFileName() + "）");
                 return;
             }
             Files.writeString(target, content, StandardCharsets.UTF_8);
             result.setRouteSynced(true);
         } catch (Exception e) {
-            result.setMessage("路由文件写入失败：" + e.getMessage());
+            appendMessage(result, "路由文件写入失败（" + target + "）：" + e.getMessage());
         }
     }
 
+    private void appendMessage(GenMenuRegisterVO result, String text) {
+        result.setMessage(result.getMessage() == null ? text : result.getMessage() + "；" + text);
+    }
+
     /**
-     * internal 出口的路由内容：菜单表里的 path 才是权威来源
+     * internal 出口的行：菜单表里的 path 才是权威来源
      */
-    private String buildRouteContentFromDb(List<String> skipped) {
-        String sql = "SELECT t.table_comment, t.class_name, t.module_name, m.path "
+    private List<Map<String, Object>> loadRowsFromDb() {
+        String sql = "SELECT t.table_comment, t.class_name, t.module_name, t.project_id, m.path "
                 + "FROM gen_table t JOIN sys_menu m ON m.id = t.menu_id "
                 + "WHERE t.deleted = 0 AND m.deleted = 0 AND m.status = 1 "
                 + "AND t.gen_frontend = 1 AND t.gen_vue_page = 1 "
                 + "ORDER BY m.sort, t.id";
-        List<Map<String, Object>> queried = jdbcTemplate.queryForList(sql);
-        List<Map<String, Object>> rows = new ArrayList<>();
-        Path viewsRoot = viewsRoot();
-        for (Map<String, Object> row : queried) {
-            String module = String.valueOf(row.get("module_name"));
-            if (viewsRoot != null && !Files.exists(viewsRoot.resolve(module).resolve("index.vue"))) {
-                if (!skipped.contains(module)) {
-                    skipped.add(module);
-                }
-                continue;
-            }
-            rows.add(row);
-        }
-        return renderRoutes(rows, skipped);
+        return jdbcTemplate.queryForList(sql);
     }
 
     /**
-     * artifact 出口的路由内容：目标工程没有菜单表，path 由模块名推导
+     * artifact 出口的行：目标工程没有菜单表，path 由「系统编码 + 模块名」推导
      */
-    private String buildRouteContentFromTables(List<String> skipped) {
-        String sql = "SELECT table_comment, class_name, module_name FROM gen_table "
+    private List<Map<String, Object>> loadRowsFromTables() {
+        String sql = "SELECT table_comment, class_name, module_name, project_id FROM gen_table "
                 + "WHERE deleted = 0 AND master_table_id IS NULL "
                 + "AND gen_frontend = 1 AND gen_vue_page = 1 ORDER BY id";
-        List<Map<String, Object>> queried = jdbcTemplate.queryForList(sql);
         List<Map<String, Object>> rows = new ArrayList<>();
-        Path viewsRoot = viewsRoot();
-        for (Map<String, Object> row : queried) {
-            String module = String.valueOf(row.get("module_name"));
-            if (viewsRoot != null && !Files.exists(viewsRoot.resolve(module).resolve("index.vue"))) {
-                if (!skipped.contains(module)) {
-                    skipped.add(module);
-                }
-                continue;
-            }
+        for (Map<String, Object> row : jdbcTemplate.queryForList(sql)) {
             Map<String, Object> copy = new java.util.LinkedHashMap<>(row);
-            copy.put("path", joinPath("", module, LEAF));
+            Object projectId = row.get("project_id");
+            String code = projectCodeOf(projectId == null ? null : ((Number) projectId).longValue());
+            copy.put("path", joinPath("", code, String.valueOf(row.get("module_name")), LEAF));
             rows.add(copy);
         }
-        return renderRoutes(rows, skipped);
+        return rows;
     }
 
     /**
-     * 前端工程根（frontend-root + gen.output.frontend-path），前端在 monorepo 子目录时也能定位
+     * 按前端工程根分组。前端根解析不出来（未配置 frontend-root）的行直接丢弃并提示，
+     * 因为不知道往哪儿写，留着只会让调用方以为同步成功了。
      */
-    private Path webBase() {
-        String root = outputProperties.getFrontendRoot();
+    private Map<Path, List<Map<String, Object>>> groupRowsByWebBase(List<Map<String, Object>> rows) {
+        Map<Path, List<Map<String, Object>>> groups = new java.util.LinkedHashMap<>();
+        boolean dropped = false;
+        for (Map<String, Object> row : rows) {
+            Object projectId = row.get("project_id");
+            SysProject project = projectId == null ? null : projectOf(((Number) projectId).longValue());
+            Path base = webBaseOf(project);
+            if (base == null) {
+                dropped = true;
+                continue;
+            }
+            groups.computeIfAbsent(base, k -> new ArrayList<>()).add(row);
+        }
+        if (dropped) {
+            log.warn("有表未解析出前端工程根（未配置 gen.output.frontend-root 且系统未配 frontend-root）");
+        }
+        return groups;
+    }
+
+    /**
+     * 前端工程根 = 系统/全局 frontend-root + 系统/模块/全局 frontend-path。
+     *
+     * <p>与写盘用同一个解析器（{@link GenPathResolver}）：页面落在哪儿，路由就必须写到哪儿。
+     * 这两处一旦各算一遍，就会出现「文件写进了 A 工程、路由写进了 B 工程」的静默错位。
+     */
+    private Path webBaseOf(SysProject project) {
+        String root = GenPathResolver.frontendRoot(null, project, outputProperties);
         if (!StringUtils.hasText(root)) {
             return null;
         }
         Path base = Paths.get(root).toAbsolutePath().normalize();
-        String sub = outputProperties.getFrontendPath();
+        String sub = GenPathResolver.frontendPath(null, project, outputProperties);
         if (StringUtils.hasText(sub)) {
             Path resolved = base.resolve(sub).normalize();
+            // 越界（.. 逃出前端根）时忽略子目录，别把路由写到工程外面去
             if (resolved.startsWith(base)) {
                 base = resolved;
             }
         }
         return base;
-    }
-
-    private Path viewsRoot() {
-        Path base = webBase();
-        return base == null ? null : base.resolve("src/views");
     }
 
     private String renderRoutes(List<Map<String, Object>> rows, List<String> skipped) {
@@ -508,29 +566,38 @@ public class GenMenuServiceImpl implements GenMenuService {
      * 不要在各处手写字符串拼接，否则漏一处就是一处越权。
      */
     private String permsPrefix(GenTable table) {
-        String tableName = table.getTableName() == null ? "" : table.getTableName();
-        String projectCode = projectCodeOf(table.getProjectId());
-        if (!StringUtils.hasText(projectCode)) {
-            return tableName;
-        }
-        return projectCode.trim().toLowerCase(java.util.Locale.ROOT) + "_" + tableName;
+        return GenNaming.permsPrefix(projectCodeOf(table.getProjectId()), table.getTableName());
     }
 
     /**
-     * 系统编码，查不到返回 null（旧库无 sys_project 表时也走这里）
+     * 系统编码，查不到返回 null（未绑定系统的存量表就是这种情况）
      */
     private String projectCodeOf(Long projectId) {
+        SysProject project = projectOf(projectId);
+        return project == null ? null : project.getProjectCode();
+    }
+
+    /**
+     * 表所属系统，未绑定或系统已删返回 null。
+     * 用 Map 手动缓存而不是 computeIfAbsent：系统被删时 selectById 返回 null，
+     * computeIfAbsent 不缓存 null，会退化成每次调用查一次库。
+     */
+    private SysProject projectOf(Long projectId) {
         if (projectId == null) {
             return null;
         }
-        try {
-            java.util.List<String> codes = jdbcTemplate.queryForList(
-                    "SELECT project_code FROM sys_project WHERE id = ? AND deleted = 0",
-                    String.class, projectId);
-            return codes.isEmpty() ? null : codes.get(0);
-        } catch (Exception e) {
-            return null;
+        if (projectCache.containsKey(projectId)) {
+            return projectCache.get(projectId);
         }
+        SysProject project;
+        try {
+            project = projectMapper.selectById(projectId);
+        } catch (Exception e) {
+            // 旧库可能还没有 sys_project 表，此时等同于「未绑定系统」
+            project = null;
+        }
+        projectCache.put(projectId, project);
+        return project;
     }
 
     /**
@@ -659,15 +726,30 @@ public class GenMenuServiceImpl implements GenMenuService {
         return ids.isEmpty() ? 1L : ids.get(0);
     }
 
-    private String joinPath(String parentPath, String module, String leaf) {
+    /**
+     * 菜单路径拼装：{@code /{系统编码}/{模块}/{list}}。
+     *
+     * <p>系统编码这一段是 V3.1 加的。平台的 {@code sys_menu} 是所有系统共用的一张表，
+     * 两个系统各有一张 {@code goods} 时，旧规则会拼出两条一模一样的
+     * {@code /goods/list}——后注册的把先注册的覆盖掉，或者前端路由出现重复 path，
+     * vue-router 只会静默取第一条，表现为「点 A 系统的菜单进了 B 系统的页面」。
+     *
+     * <p>系统编码只在最外层加：{@code parentPath} 非空说明挂在已有父菜单下
+     * （internal 出口的「指定父级」功能），此时父级路径已经是权威前缀，
+     * 再插一段会变成 {@code /sys/default/goods/list}。
+     */
+    private String joinPath(String parentPath, String projectCode, String module, String leaf) {
         String base = parentPath == null ? "" : parentPath.trim();
         while (base.endsWith("/")) {
             base = base.substring(0, base.length() - 1);
         }
+        String scope = projectCode == null ? "" : projectCode.trim().toLowerCase(java.util.Locale.ROOT);
         String mid = module == null ? "" : module.trim();
         List<String> parts = new ArrayList<>();
         if (!base.isEmpty()) {
             parts.add(base);
+        } else if (!scope.isEmpty()) {
+            parts.add(scope);
         }
         if (!mid.isEmpty()) {
             parts.add(mid);

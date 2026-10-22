@@ -226,6 +226,12 @@ public class GenController {
         return Result.ok(genTableService.syncColumns(id, removeMissing));
     }
 
+    @Operation(summary = "17 个生成开关恢复所属系统默认值")
+    @PostMapping("/table/{id}/switch-defaults/reset")
+    public Result<java.util.Map<String, Integer>> resetSwitchDefaults(@PathVariable("id") Long id) {
+        return Result.ok(genTableService.resetSwitchDefaults(id));
+    }
+
     @Operation(summary = "差异预览（渲染结果 vs 磁盘）")
     @PostMapping("/diff")
     public Result<List<GenDiffVO>> diff(@RequestBody GenDiffDTO dto) {

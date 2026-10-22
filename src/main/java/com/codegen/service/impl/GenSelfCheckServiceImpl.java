@@ -526,15 +526,12 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
      * 任何一处规则改动都要同步另外两处，否则自检会报假警、或真实越权被漏掉。
      */
     private String permsPrefixOf(GenTable table) {
-        String tableName = table.getTableName();
         if (table.getProjectId() == null) {
-            return tableName;
+            return com.codegen.support.GenNaming.permsPrefix(null, table.getTableName());
         }
         com.codegen.entity.SysProject project = sysProjectMapper.selectById(table.getProjectId());
-        if (project == null || !org.springframework.util.StringUtils.hasText(project.getProjectCode())) {
-            return tableName;
-        }
-        return project.getProjectCode().trim().toLowerCase(java.util.Locale.ROOT) + "_" + tableName;
+        String code = project == null ? null : project.getProjectCode();
+        return com.codegen.support.GenNaming.permsPrefix(code, table.getTableName());
     }
 
     private void checkPermsConsistency(GenSelfCheckVO result, List<GenFileVO> files, List<Long> ids,

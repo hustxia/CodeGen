@@ -330,15 +330,9 @@ public class DictDetectServiceImpl implements DictDetectService {
      * 保证存量表和未绑定系统的表行为不变。
      */
     private String buildDictCode(String tableName, String columnName, String projectCode) {
-        String t = tableName == null ? "" : tableName.trim().toLowerCase(Locale.ROOT);
-        String c = columnName.trim().toLowerCase(Locale.ROOT);
-        String code = t + "_" + c;
-        String normalized = code.replaceAll("[^a-z0-9_]", "_");
-        if (!StringUtils.hasText(projectCode)) {
-            return normalized;
-        }
-        String prefix = projectCode.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]", "_");
-        return StringUtils.hasText(prefix) ? prefix + "_" + normalized : normalized;
+        // 规则统一放在 GenNaming：自检、模板、菜单都按同一份实现拼编码，
+        // 这里若各写一份，改一处就漏一处
+        return com.codegen.support.GenNaming.dictCode(projectCode, tableName, columnName);
     }
 
     /**
