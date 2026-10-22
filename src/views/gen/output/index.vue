@@ -101,7 +101,7 @@
         <el-table-column prop="skipped" label="SKIPPED" width="80" align="center" />
         <el-table-column label="ERROR" width="70" align="center">
           <template slot-scope="{ row }">
-            <span :style="row.errors > 0 ? 'color:#f56c6c;font-weight:600' : ''">{{ row.errors }}</span>
+            <span :style="row.errors > 0 ? 'color:var(--cg-danger);font-weight:600' : ''">{{ row.errors }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="totalBytes" label="总字节" width="90" align="right" />
@@ -315,9 +315,9 @@ export default {
 <style scoped>
 .tip-bar { margin-bottom: 12px; }
 .card-header { display: flex; align-items: center; justify-content: space-between; }
-.header-tip { color: #909399; font-size: 12px; }
+.header-tip { color: var(--cg-text-secondary); font-size: 12px; }
 .mono-text { font-family: Consolas, Monaco, monospace; font-size: 12px; }
 .pagination { margin-top: 14px; text-align: right; }
-.dlg-tip { color: #909399; font-size: 12px; margin-top: 10px; }
+.dlg-tip { color: var(--cg-text-secondary); font-size: 12px; margin-top: 10px; }
 .verify-stats { display: flex; gap: 10px; align-items: center; margin: 8px 0 12px; }
 </style>

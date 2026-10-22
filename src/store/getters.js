@@ -5,6 +5,7 @@ const getters = {
   avatar: state => state.user.avatar,
   roles: state => state.user.roles,
   permissions: state => state.user.permissions,
+  themePref: state => state.user.themePref,
   // 动态路由（V2.0）
   menus: state => state.permission.menus,
   allPaths: state => state.permission.allPaths,

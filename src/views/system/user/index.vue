@@ -203,6 +203,6 @@ export default {
 }
 
 .danger-btn {
-  color: #f56c6c;
+  color: var(--cg-danger);
 }
 </style>

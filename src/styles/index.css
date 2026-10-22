@@ -1,15 +1,7 @@
-/* ========== 全局样式 & Element UI 美化 ========== */
-
-:root {
-  --primary: #3d6df5;
-  --primary-dark: #2b57d9;
-  --sidebar-bg-start: #1b2647;
-  --sidebar-bg-end: #111a33;
-  --sidebar-text: #a7b1c8;
-  --page-bg: #f3f5fa;
-  --card-shadow: 0 1px 3px rgba(16, 30, 75, 0.05), 0 4px 16px rgba(16, 30, 75, 0.06);
-  --radius: 10px;
-}
+/* ========== 全局基础样式 ==========
+   颜色一律走 theme.css 的 --cg-* token，本文件不出现任何硬编码色值。
+   Element UI 组件的视觉覆盖集中在 theme.css 的「L3 组件映射」，
+   这里只保留与尺寸/间距相关的布局调整，避免两处定义打架。 */
 
 html,
 body {
@@ -20,6 +12,8 @@ body {
     'Microsoft YaHei', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--cg-bg-page);
+  color: var(--cg-text-regular);
 }
 
 #app {
@@ -28,7 +22,7 @@ body {
 
 a {
   text-decoration: none;
-  color: var(--primary);
+  color: var(--cg-primary);
 }
 
 /* 页面容器 */
@@ -36,113 +30,38 @@ a {
   padding: 16px;
 }
 
-/* ---------- 滚动条 ---------- */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-thumb {
-  background: #c9d2e3;
-  border-radius: 8px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #a8b4cf;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* ---------- 卡片 ---------- */
-.el-card {
-  border: none;
-  border-radius: var(--radius);
-  box-shadow: var(--card-shadow);
-}
+/* ---------- 卡片间距 ---------- */
 .el-card + .el-card,
 .app-container > .el-card + * {
   margin-top: 16px;
 }
 
-/* ---------- 表格 ---------- */
-.el-table {
-  border-radius: var(--radius);
-}
-.el-table th.el-table__cell {
-  background: #f7f9fc;
-  color: #303952;
-  font-weight: 600;
-}
-.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
-  background: #fafbfe;
-}
+/* ---------- 表格行高（宽度/配色由 theme.css 负责） ---------- */
 .el-table .cell {
   line-height: 22px;
 }
 
-/* ---------- 按钮 ---------- */
-.el-button {
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-.el-button--primary {
-  background: var(--primary);
-  border-color: var(--primary);
-}
-.el-button--primary:hover,
-.el-button--primary:focus {
-  background: var(--primary-dark);
-  border-color: var(--primary-dark);
-  box-shadow: 0 4px 12px rgba(61, 109, 245, 0.35);
-}
-
-/* ---------- 表单 ---------- */
-.el-input__inner,
-.el-textarea__inner {
-  border-radius: 6px;
-}
-.el-input__inner:focus,
-.el-textarea__inner:focus {
-  border-color: var(--primary);
-}
-.el-select .el-input.is-focus .el-input__inner {
-  border-color: var(--primary);
-}
-
-/* ---------- 弹窗 / 抽屉 / 消息 ---------- */
-.el-dialog {
-  border-radius: 12px;
-  overflow: hidden;
-}
+/* ---------- 弹窗内边距 ---------- */
 .el-dialog__header {
-  border-bottom: 1px solid #f0f2f7;
   padding: 16px 20px;
 }
 .el-dialog__title {
   font-weight: 600;
   font-size: 16px;
 }
-.el-message-box {
-  border-radius: 12px;
+.el-dialog {
+  overflow: hidden;
 }
 .el-drawer__header {
   margin-bottom: 0;
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f2f7;
-  color: #303952;
   font-weight: 600;
-}
-
-/* ---------- 标签 ---------- */
-.el-tag {
-  border-radius: 4px;
 }
 
 /* ---------- 分页 ---------- */
 .el-pagination {
   margin-top: 16px;
   text-align: right;
-  font-weight: 400;
 }
 
 /* ---------- 筛选区 ---------- */
@@ -154,12 +73,7 @@ a {
   margin-right: 12px;
 }
 
-/* ---------- 描述列表 ---------- */
-.el-descriptions-item__label {
-  color: #8492b0;
-}
-
-/* ---------- 进度条 / 步骤条细节 ---------- */
+/* ---------- 进度条细节 ---------- */
 .el-progress-bar__outer {
   border-radius: 4px;
 }

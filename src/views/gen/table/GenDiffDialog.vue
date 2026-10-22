@@ -136,16 +136,16 @@ export default {
 
 .write-tip {
   font-size: 13px;
-  color: #606266;
+  color: var(--cg-text-regular);
 }
 
 .inline-tip {
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
 }
 
 .muted {
-  color: #909399;
+  color: var(--cg-text-secondary);
   font-size: 12.5px;
 }
 
@@ -157,7 +157,7 @@ export default {
 
 .preview-tree {
   width: 44%;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--cg-border-light);
   border-radius: 4px;
   overflow: auto;
   padding: 8px;
@@ -165,7 +165,7 @@ export default {
 
 .preview-code {
   flex: 1;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--cg-border-light);
   border-radius: 4px;
   background: #282c34;
   display: flex;
@@ -197,11 +197,11 @@ export default {
 }
 
 .diff-item:hover {
-  background: #f5f7fa;
+  background: var(--cg-bg-page);
 }
 
 .diff-item.active {
-  background: #ecf5ff;
+  background: var(--cg-primary-soft);
 }
 
 .diff-path {
@@ -218,12 +218,12 @@ export default {
 }
 
 .diff-add-num {
-  color: #67c23a;
+  color: var(--cg-success);
   margin-left: 6px;
 }
 
 .diff-del-num {
-  color: #f56c6c;
+  color: var(--cg-danger);
   margin-left: 6px;
 }
 

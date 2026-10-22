@@ -23,23 +23,23 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #f0f2f5;
+  background: var(--cg-bg-page);
 }
 
 .forbidden h1 {
   font-size: 80px;
   margin: 0;
-  color: #e6a23c;
+  color: var(--cg-warning);
 }
 
 .forbidden p {
   margin: 6px 0;
-  color: #303133;
+  color: var(--cg-text);
 }
 
 .forbidden .hint {
   font-size: 13px;
-  color: #909399;
+  color: var(--cg-text-secondary);
   margin-bottom: 18px;
 }
 </style>

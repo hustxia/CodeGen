@@ -446,35 +446,35 @@ export default {
 .tip-bar { margin-bottom: 12px; }
 .steps { margin-bottom: 20px; }
 .step-toolbar { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
-.header-tip { color: #909399; font-size: 12px; }
+.header-tip { color: var(--cg-text-secondary); font-size: 12px; }
 .mono-text { font-family: Consolas, Monaco, monospace; font-size: 12px; }
 .pagination { margin-top: 14px; text-align: right; }
 .diff-layout { display: flex; gap: 12px; min-height: 420px; }
-.file-tree { width: 330px; flex-shrink: 0; border: 1px solid #ebeef5; border-radius: 4px; padding: 10px; background: #fafbfc; overflow: auto; max-height: 480px; }
-.tree-group-title { color: #909399; font-size: 12px; font-weight: 600; margin: 8px 0 4px; }
+.file-tree { width: 330px; flex-shrink: 0; border: 1px solid var(--cg-border-light); border-radius: 4px; padding: 10px; background: var(--cg-bg-page); overflow: auto; max-height: 480px; }
+.tree-group-title { color: var(--cg-text-secondary); font-size: 12px; font-weight: 600; margin: 8px 0 4px; }
 .tree-node { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
-.tree-node:hover { background: #ecf5ff; }
-.tree-node.active { background: #ecf5ff; }
+.tree-node:hover { background: var(--cg-primary-soft); }
+.tree-node.active { background: var(--cg-primary-soft); }
 .tree-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.diff-pane { flex: 1; border: 1px solid #ebeef5; border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
-.diff-head { background: #f8f9fb; padding: 8px 12px; border-bottom: 1px solid #ebeef5; }
+.diff-pane { flex: 1; border: 1px solid var(--cg-border-light); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
+.diff-head { background: var(--cg-bg-hover); padding: 8px 12px; border-bottom: 1px solid var(--cg-border-light); }
 .diff-body { overflow: auto; max-height: 440px; }
 .diff-line { padding: 1px 12px; white-space: pre-wrap; }
-.dl-add { background: #f0f9eb; color: #4a7a2e; }
-.dl-del { background: #fef0f0; color: #b3544e; text-decoration: line-through; }
-.dl-ctx { color: #606266; }
-.strategy-option { display: block; border: 1px solid #dcdfe6; border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; cursor: pointer; }
-.strategy-option.active { border-color: #409eff; background: #ecf5ff; }
-.strategy-option p { color: #909399; font-size: 12px; margin: 6px 0 0; }
+.dl-add { background: var(--cg-success-bg); color: var(--cg-success); }
+.dl-del { background: var(--cg-danger-bg); color: var(--cg-danger); text-decoration: line-through; }
+.dl-ctx { color: var(--cg-text-regular); }
+.strategy-option { display: block; border: 1px solid var(--cg-border); border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; cursor: pointer; }
+.strategy-option.active { border-color: var(--cg-primary); background: var(--cg-primary-soft); }
+.strategy-option p { color: var(--cg-text-secondary); font-size: 12px; margin: 6px 0 0; }
 .strategy-stats { display: flex; gap: 12px; margin-top: 16px; }
-.stat { flex: 1; border: 1px solid #ebeef5; border-radius: 4px; padding: 12px 16px; background: #fafbfc; }
+.stat { flex: 1; border: 1px solid var(--cg-border-light); border-radius: 4px; padding: 12px 16px; background: var(--cg-bg-page); }
 .stat b { display: block; font-size: 22px; }
-.stat span { color: #909399; font-size: 12px; }
-.c-green { color: #67c23a; } .c-orange { color: #e6a23c; } .c-gray { color: #909399; }
+.stat span { color: var(--cg-text-secondary); font-size: 12px; }
+.c-green { color: var(--cg-success); } .c-orange { color: var(--cg-warning); } .c-gray { color: var(--cg-text-secondary); }
 .menu-option { padding: 2px 0 6px; }
 .menu-parent { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
 .menu-msg { margin-bottom: 10px; }
 .verify-stats { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.final-tip { margin-top: 14px; color: #606266; }
+.final-tip { margin-top: 14px; color: var(--cg-text-regular); }
 .wizard-foot { display: flex; margin-top: 18px; }
 </style>

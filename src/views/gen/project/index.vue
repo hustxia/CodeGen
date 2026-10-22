@@ -277,13 +277,13 @@ export default {
 .page-title {
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--cg-text);
   margin-right: 12px;
 }
 
 .page-desc {
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
   line-height: 1.6;
 }
 
@@ -297,7 +297,7 @@ export default {
 .toolbar-tip {
   margin-left: 8px;
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
 }
 
 .proj-name {
@@ -305,18 +305,18 @@ export default {
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  color: #303133;
+  color: var(--cg-text);
 }
 
 .proj-code {
   margin-top: 2px;
   font-family: Consolas, Monaco, monospace;
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
 }
 
 .path-main {
-  color: #303133;
+  color: var(--cg-text);
   font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -326,7 +326,7 @@ export default {
 .path-sub {
   margin-top: 2px;
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -338,16 +338,16 @@ export default {
 }
 
 .muted {
-  color: #c0c4cc;
+  color: var(--cg-text-placeholder);
   font-size: 12px;
 }
 
 .danger-btn {
-  color: #f56c6c;
+  color: var(--cg-danger);
 }
 
 .form-tip {
-  color: #909399;
+  color: var(--cg-text-secondary);
   font-size: 12px;
   line-height: 1.6;
   margin-top: 4px;

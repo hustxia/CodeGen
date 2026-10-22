@@ -180,10 +180,10 @@ export default {
 }
 
 .layout-aside {
-  background: linear-gradient(180deg, #1b2647 0%, #111a33 100%);
+  background: linear-gradient(180deg, var(--cg-aside-from) 0%, var(--cg-aside-to) 100%);
   transition: width 0.28s;
   overflow: visible; /* 允许二级菜单向右滑出 */
-  box-shadow: 2px 0 12px rgba(10, 18, 45, 0.35);
+  box-shadow: var(--cg-aside-shadow);
   z-index: 10;
 }
 
@@ -199,12 +199,12 @@ export default {
 .logo-badge {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #4d7cfe, #2b57d9);
+  border-radius: var(--cg-radius-badge);
+  background: linear-gradient(135deg, var(--cg-primary-solid), var(--cg-primary-active));
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(61, 109, 245, 0.45);
+  box-shadow: 0 4px 10px var(--cg-primary-glow);
 }
 
 .logo-badge i {
@@ -214,7 +214,7 @@ export default {
 
 .logo-text {
   margin-left: 10px;
-  color: #fff;
+  color: var(--cg-aside-text-active);
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -235,8 +235,8 @@ export default {
   height: 46px;
   margin: 4px 10px;
   padding: 0 14px;
-  border-radius: 8px;
-  color: #a7b1c8;
+  border-radius: var(--cg-radius-nav);
+  color: var(--cg-aside-text);
   font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
@@ -250,19 +250,19 @@ export default {
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: var(--cg-aside-hover);
+  color: var(--cg-aside-text-active);
 }
 
 .nav-item.active {
-  background: linear-gradient(90deg, #4d7cfe, #2b57d9);
+  background: linear-gradient(90deg, var(--cg-primary-solid), var(--cg-primary-active));
   color: #fff;
-  box-shadow: 0 4px 10px rgba(61, 109, 245, 0.4);
+  box-shadow: 0 4px 10px var(--cg-primary-glow);
 }
 
 .nav-item.has-children.open {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--cg-aside-text-active);
+  background: var(--cg-aside-hover);
 }
 
 .nav-label {
@@ -297,8 +297,8 @@ export default {
   top: 0;
   min-width: 152px;
   padding: 8px;
-  background: #16203c;
-  border-radius: 10px;
+  background: var(--cg-aside-panel);
+  border-radius: var(--cg-radius-nav);
   box-shadow: 0 10px 32px rgba(6, 12, 34, 0.55);
   z-index: 3000;
 }
@@ -306,7 +306,8 @@ export default {
 .flyout-title {
   padding: 6px 12px 8px;
   font-size: 12px;
-  color: #66739a;
+  color: var(--cg-aside-text);
+  opacity: 0.7;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   margin-bottom: 6px;
 }
@@ -314,20 +315,20 @@ export default {
 .flyout-item {
   display: block;
   padding: 9px 12px;
-  border-radius: 6px;
-  color: #a7b1c8;
+  border-radius: var(--cg-radius-sm);
+  color: var(--cg-aside-text);
   font-size: 13px;
   white-space: nowrap;
   transition: background 0.15s, color 0.15s;
 }
 
 .flyout-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: var(--cg-aside-hover);
+  color: var(--cg-aside-text-active);
 }
 
 .flyout-item.active {
-  background: linear-gradient(90deg, #4d7cfe, #2b57d9);
+  background: linear-gradient(90deg, var(--cg-primary-solid), var(--cg-primary-active));
   color: #fff;
 }
 
@@ -347,8 +348,8 @@ export default {
 .layout-header {
   display: flex;
   align-items: center;
-  background: #fff;
-  box-shadow: 0 1px 6px rgba(16, 30, 75, 0.08);
+  background: var(--cg-header-bg);
+  box-shadow: var(--cg-header-shadow);
   position: relative;
   z-index: 5;
 }
@@ -357,14 +358,14 @@ export default {
   font-size: 20px;
   cursor: pointer;
   margin-right: 16px;
-  color: #4a5670;
+  color: var(--cg-text-regular);
   padding: 6px;
-  border-radius: 6px;
+  border-radius: var(--cg-radius-sm);
   transition: background 0.2s;
 }
 
 .hamburger:hover {
-  background: #f0f3fa;
+  background: var(--cg-bg-hover);
 }
 
 .right-menu {
@@ -373,7 +374,7 @@ export default {
 
 .user-info {
   cursor: pointer;
-  color: #4a5670;
+  color: var(--cg-text-regular);
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
@@ -382,14 +383,14 @@ export default {
 }
 
 .user-info:hover {
-  background: #f0f3fa;
+  background: var(--cg-bg-hover);
 }
 
 .user-info .el-icon-user-solid {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4d7cfe, #2b57d9);
+  background: linear-gradient(135deg, var(--cg-primary-solid), var(--cg-primary-active));
   color: #fff;
   font-size: 14px;
   display: inline-flex;
@@ -399,7 +400,7 @@ export default {
 }
 
 .layout-main {
-  background: #f3f5fa;
+  background: var(--cg-bg-page);
   padding: 0;
 }
 </style>

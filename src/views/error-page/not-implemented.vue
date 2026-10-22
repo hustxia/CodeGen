@@ -28,14 +28,14 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #303133;
+  color: var(--cg-text);
   background: #fff;
   border-radius: 6px;
 }
 
 .not-implemented i {
   font-size: 56px;
-  color: #c0c4cc;
+  color: var(--cg-text-placeholder);
   margin-bottom: 12px;
 }
 
@@ -46,19 +46,19 @@ export default {
 
 .not-implemented p {
   margin: 4px 0;
-  color: #606266;
+  color: var(--cg-text-regular);
 }
 
 .not-implemented .hint {
   font-size: 13px;
-  color: #909399;
+  color: var(--cg-text-secondary);
   max-width: 560px;
   text-align: center;
   margin-bottom: 18px;
 }
 
 .not-implemented code {
-  background: #f4f4f5;
+  background: var(--cg-bg-page);
   padding: 1px 5px;
   border-radius: 3px;
 }

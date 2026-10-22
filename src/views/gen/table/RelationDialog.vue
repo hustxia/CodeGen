@@ -117,17 +117,17 @@ export default {
 .rel-tip {
   margin-bottom: 10px;
   padding: 8px 12px;
-  background: #f6f8fa;
-  border-left: 3px solid #67c23a;
+  background: var(--cg-bg-page);
+  border-left: 3px solid var(--cg-success);
   font-size: 12px;
   line-height: 1.7;
-  color: #606266;
+  color: var(--cg-text-regular);
 }
 .rel-tip code {
-  background: #eef1f5;
+  background: var(--cg-bg-hover);
   padding: 0 4px;
   border-radius: 2px;
-  color: #d63384;
+  color: var(--cg-primary);
 }
 .rel-side {
   font-weight: 500;
@@ -135,19 +135,19 @@ export default {
 .rel-key {
   font-family: Menlo, Consolas, monospace;
   font-size: 11px;
-  color: #909399;
+  color: var(--cg-text-secondary);
 }
 .rel-icon {
   margin: 0 6px;
-  color: #409eff;
+  color: var(--cg-primary);
 }
 .rel-foot {
   float: left;
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
   line-height: 32px;
 }
 .muted {
-  color: #c0c4cc;
+  color: var(--cg-text-placeholder);
 }
 </style>

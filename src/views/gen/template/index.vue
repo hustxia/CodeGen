@@ -74,8 +74,8 @@
           <template slot-scope="{ row }">
             <el-button type="text" @click="openEditDialog(row)">编辑</el-button>
             <el-button type="text" @click="openHistoryDrawer(row)">历史</el-button>
-            <el-button v-if="isGlobalTpl(row)" type="text" style="color: #67c23a" @click="openCopyDialog(row)">复制为表级</el-button>
-            <el-button v-else type="text" style="color: #e6a23c" @click="handleRestore(row)">恢复默认</el-button>
+            <el-button v-if="isGlobalTpl(row)" type="text" style="color: var(--cg-success)" @click="openCopyDialog(row)">复制为表级</el-button>
+            <el-button v-else type="text" style="color: var(--cg-warning)" @click="handleRestore(row)">恢复默认</el-button>
             <el-button type="text" class="danger-btn" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -214,7 +214,7 @@
               <el-button type="text" @click="viewHistory(row)">查看</el-button>
               <el-button
                 type="text"
-                style="color: #e6a23c"
+                style="color: var(--cg-warning)"
                 :disabled="row.version === (historyTpl.version || 1)"
                 @click="handleRollback(row)"
               >回滚到此</el-button>
@@ -543,7 +543,7 @@ export default {
 }
 
 .danger-btn {
-  color: #f56c6c;
+  color: var(--cg-danger);
 }
 
 .tip-bar {
@@ -551,7 +551,7 @@ export default {
 }
 
 .form-tip {
-  color: #909399;
+  color: var(--cg-text-secondary);
   font-size: 12px;
   line-height: 1.6;
   margin-top: 8px;

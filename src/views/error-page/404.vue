@@ -19,12 +19,12 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #f0f2f5;
+  background: var(--cg-bg-page);
 }
 
 .not-found h1 {
   font-size: 80px;
   margin: 0;
-  color: #409eff;
+  color: var(--cg-primary);
 }
 </style>

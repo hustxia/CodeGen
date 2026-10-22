@@ -95,6 +95,8 @@ export default {
 </script>
 
 <style scoped>
+/* 登录页不提供任何主题切换入口：它的皮肤来自「已保存的主题偏好」，
+   由 public/index.html 的内联脚本在首帧注入，或由登录成功后 applyTheme 更新。 */
 .login-container {
   position: relative;
   height: 100%;
@@ -102,7 +104,12 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #16224a 0%, #1d3461 45%, #2b57d9 100%);
+  background: linear-gradient(
+    135deg,
+    var(--cg-hero-from) 0%,
+    var(--cg-hero-via) 45%,
+    var(--cg-hero-to) 100%
+  );
   overflow: hidden;
 }
 
@@ -117,21 +124,21 @@ export default {
 .glow-1 {
   width: 420px;
   height: 420px;
-  background: #4d7cfe;
+  background: var(--cg-glow-1);
   top: -120px;
   left: -100px;
 }
 .glow-2 {
   width: 360px;
   height: 360px;
-  background: #7ab8ff;
+  background: var(--cg-glow-2);
   bottom: -140px;
   right: -80px;
 }
 .glow-3 {
   width: 220px;
   height: 220px;
-  background: #9d7bff;
+  background: var(--cg-glow-3);
   top: 40%;
   left: 62%;
 }
@@ -141,9 +148,10 @@ export default {
   z-index: 1;
   width: 400px;
   padding: 40px 40px 28px;
-  background: rgba(255, 255, 255, 0.98);
-  border-radius: 16px;
-  box-shadow: 0 24px 64px rgba(6, 14, 40, 0.45);
+  background: var(--cg-bg-elevated);
+  border-radius: var(--cg-radius-lg);
+  border: 1px solid var(--cg-border-light);
+  box-shadow: var(--cg-shadow-login);
   backdrop-filter: blur(8px);
 }
 
@@ -156,12 +164,12 @@ export default {
 .brand-badge {
   width: 56px;
   height: 56px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #4d7cfe, #2b57d9);
+  border-radius: var(--cg-radius-badge);
+  background: linear-gradient(135deg, var(--cg-primary-solid), var(--cg-primary-active));
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 24px rgba(61, 109, 245, 0.45);
+  box-shadow: 0 10px 24px var(--cg-primary-glow);
 }
 
 .brand-badge i {
@@ -174,52 +182,54 @@ export default {
   text-align: center;
   font-size: 22px;
   font-weight: 700;
-  color: #1f2d50;
+  color: var(--cg-text);
 }
 
 .subtitle {
   margin: 8px 0 26px;
   text-align: center;
   font-size: 13px;
-  color: #8a94ad;
+  color: var(--cg-text-secondary);
 }
 
 .login-form ::v-deep .el-input__inner {
-  height: 44px;
-  line-height: 44px;
-  border-radius: 8px;
-  background: #f5f7fc;
-  border-color: #e6ebf5;
+  height: var(--cg-control-h);
+  line-height: var(--cg-control-h);
+  border-radius: var(--cg-radius-input);
+  background: var(--cg-input-bg);
+  border-color: var(--cg-border);
+  color: var(--cg-text);
 }
 
 .login-form ::v-deep .el-input__inner:focus {
-  background: #fff;
-  border-color: #3d6df5;
+  background: var(--cg-input-bg-focus);
+  border-color: var(--cg-primary);
+  box-shadow: 0 0 0 3px var(--cg-primary-ring);
 }
 
 .login-btn {
   width: 100%;
-  height: 44px;
+  height: var(--cg-control-h);
   margin-top: 6px;
   font-size: 16px;
   letter-spacing: 4px;
   border: none;
-  border-radius: 8px;
-  background: linear-gradient(90deg, #4d7cfe, #2b57d9);
-  box-shadow: 0 8px 20px rgba(61, 109, 245, 0.35);
+  border-radius: var(--cg-radius-btn);
+  background: linear-gradient(90deg, var(--cg-primary-solid), var(--cg-primary-active));
+  box-shadow: var(--cg-shadow-btn);
 }
 
 .login-btn:hover,
 .login-btn:focus {
-  background: linear-gradient(90deg, #3d6df5, #234ec4);
-  box-shadow: 0 10px 26px rgba(61, 109, 245, 0.5);
+  background: linear-gradient(90deg, var(--cg-primary-solid), var(--cg-primary-active));
+  box-shadow: 0 10px 26px var(--cg-primary-glow);
 }
 
 .login-tip {
   margin-top: 16px;
   text-align: center;
   font-size: 12px;
-  color: #98a2bb;
+  color: var(--cg-text-placeholder);
 }
 
 .footer-note {
@@ -227,7 +237,7 @@ export default {
   z-index: 1;
   margin-top: 26px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--cg-hero-footer);
   letter-spacing: 1px;
 }
 </style>

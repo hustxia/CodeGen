@@ -134,17 +134,17 @@ export default {
 .dict-detect-tip {
   margin-bottom: 10px;
   padding: 8px 12px;
-  background: #f6f8fa;
-  border-left: 3px solid #409eff;
+  background: var(--cg-bg-page);
+  border-left: 3px solid var(--cg-primary);
   font-size: 12px;
   line-height: 1.7;
-  color: #606266;
+  color: var(--cg-text-regular);
 }
 .dict-detect-tip code {
-  background: #eef1f5;
+  background: var(--cg-bg-hover);
   padding: 0 4px;
   border-radius: 2px;
-  color: #d63384;
+  color: var(--cg-primary);
 }
 .dict-opts {
   display: flex;
@@ -158,7 +158,7 @@ export default {
 .dict-detect-foot {
   float: left;
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
   line-height: 32px;
 }
 </style>

@@ -1,13 +1,16 @@
 import { login, logout, getInfo } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import { resetRouter } from '@/router'
+import { applyTheme } from '@/utils/theme'
 
 const getDefaultState = () => ({
   token: getToken(),
   name: '',
   avatar: '',
   roles: [],
-  permissions: []
+  permissions: [],
+  // 服务端已保存的界面主题偏好（仅用于展示，实际渲染看 document 上的 data-theme）
+  themePref: ''
 })
 
 const state = getDefaultState()
@@ -30,6 +33,9 @@ const mutations = {
   },
   SET_PERMISSIONS(state, permissions) {
     state.permissions = permissions || []
+  },
+  SET_THEME_PREF(state, themeId) {
+    state.themePref = themeId || ''
   }
 }
 
@@ -43,6 +49,13 @@ const actions = {
           const { data } = res
           commit('SET_TOKEN', data.token)
           setToken(data.token)
+          // 登录返回值里带用户已保存的主题偏好：立刻套用并写入本地缓存。
+          // 这样登录成功后每一次刷新，public/index.html 的内联脚本都能在首帧
+          // 直接命中正确皮肤，不会先闪一下默认蓝色。
+          if (data.themeId) {
+            const applied = applyTheme(data.themeId)
+            commit('SET_THEME_PREF', applied)
+          }
           // 换账号登录时清掉上一个账号的动态路由，否则会串菜单
           commit('permission/RESET_STATE', null, { root: true })
           resolve()
@@ -66,6 +79,11 @@ const actions = {
           commit('SET_ROLES', data.roles || ['admin'])
           // 权限码由后端 /auth/info 下发（超管为 ['*:*:*']），按钮级控制靠它
           commit('SET_PERMISSIONS', data.permissions || [])
+          // 刷新页面 / 换设备时兜底同步一次主题：本地缓存被清掉也能恢复
+          if (data.themeId) {
+            const applied = applyTheme(data.themeId)
+            commit('SET_THEME_PREF', applied)
+          }
           resolve(data)
         })
         .catch(reject)

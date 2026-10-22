@@ -53,7 +53,7 @@ export default {
 <style scoped>
 .tip {
   font-size: 12.5px;
-  color: #909399;
+  color: var(--cg-text-secondary);
   line-height: 1.6;
   margin-top: 8px;
 }
@@ -71,12 +71,12 @@ export default {
 }
 
 .pill.err {
-  background: #fef0f0;
-  color: #f56c6c;
+  background: var(--cg-danger-bg);
+  color: var(--cg-danger);
 }
 
 .pill.skip {
-  background: #fdf6ec;
-  color: #e6a23c;
+  background: var(--cg-warning-bg);
+  color: var(--cg-warning);
 }
 </style>

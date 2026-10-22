@@ -158,9 +158,9 @@
         <el-table-column label="操作" width="380" fixed="right">
           <template slot-scope="{ row }">
             <el-button type="text" @click="openColumnDialog(row)">字段配置</el-button>
-            <el-button type="text" style="color: #409eff" @click="openDictDetect(row)">字典识别</el-button>
-            <el-button type="text" style="color: #67c23a" @click="openApplyDialog(row)">一键生成</el-button>
-            <el-button type="text" style="color: #e6a23c" @click="doSelfCheck([row.id])">自检</el-button>
+            <el-button type="text" style="color: var(--cg-primary)" @click="openDictDetect(row)">字典识别</el-button>
+            <el-button type="text" style="color: var(--cg-success)" @click="openApplyDialog(row)">一键生成</el-button>
+            <el-button type="text" style="color: var(--cg-warning)" @click="doSelfCheck([row.id])">自检</el-button>
             <el-button type="text" @click="doPreview([row.id])">预览</el-button>
             <el-button type="text" class="danger-btn" @click="handleDelete(row)">删除</el-button>
           </template>
@@ -1658,7 +1658,7 @@ export default {
 .card-title {
   font-size: 15px;
   font-weight: 600;
-  color: #303133;
+  color: var(--cg-text);
   white-space: nowrap;
 }
 
@@ -1680,7 +1680,7 @@ export default {
 .group-divider {
   width: 1px;
   height: 20px;
-  background: #dcdfe6;
+  background: var(--cg-border);
 }
 
 .more-btn {
@@ -1694,7 +1694,7 @@ export default {
 }
 
 .danger-btn {
-  color: #f56c6c;
+  color: var(--cg-danger);
 }
 
 .tip-bar {
@@ -1702,7 +1702,7 @@ export default {
 }
 
 .form-tip {
-  color: #909399;
+  color: var(--cg-text-secondary);
   font-size: 12px;
   line-height: 1.6;
   margin-top: 8px;
@@ -1713,13 +1713,13 @@ export default {
 }
 
 .muted {
-  color: #c0c4cc;
+  color: var(--cg-text-placeholder);
   font-size: 12px;
 }
 
 .inline-tip {
   margin-left: 8px;
-  color: #909399;
+  color: var(--cg-text-secondary);
   font-size: 12px;
 }
 
@@ -1736,20 +1736,20 @@ export default {
   gap: 8px;
   padding: 8px 12px;
   margin-bottom: 12px;
-  background: #f4f8ff;
-  border: 1px solid #d9ecff;
+  background: var(--cg-primary-soft);
+  border: 1px solid var(--cg-primary-light-7);
   border-radius: 4px;
 }
 
 .batch-count {
   font-size: 13px;
-  color: #409eff;
+  color: var(--cg-primary);
   font-weight: 600;
 }
 
 .cell-sub {
   font-size: 11px;
-  color: #909399;
+  color: var(--cg-text-secondary);
   line-height: 1.4;
 }
 
@@ -1762,14 +1762,14 @@ export default {
 
 .preset-label {
   font-size: 13px;
-  color: #606266;
+  color: var(--cg-text-regular);
 }
 
 .apply-details {
   margin-top: 10px;
   padding: 8px 10px;
-  background: #fafafa;
-  border: 1px solid #ebeef5;
+  background: var(--cg-bg-hover);
+  border: 1px solid var(--cg-border-light);
   border-radius: 4px;
   max-height: 180px;
   overflow: auto;
@@ -1778,7 +1778,7 @@ export default {
 .detail-line {
   font-family: Consolas, Monaco, monospace;
   font-size: 12px;
-  color: #606266;
+  color: var(--cg-text-regular);
   line-height: 1.7;
   word-break: break-all;
 }
@@ -1791,7 +1791,7 @@ export default {
 }
 
 .import-results {
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--cg-border-light);
   margin-top: 10px;
   padding-top: 8px;
   max-height: 180px;
@@ -1808,7 +1808,7 @@ export default {
 }
 
 .res-msg {
-  color: #909399;
+  color: var(--cg-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1823,21 +1823,21 @@ export default {
 }
 
 .pill.ok {
-  background: #f0f9eb;
-  color: #67c23a;
-  border: 1px solid #e1f3d8;
+  background: var(--cg-success-bg);
+  color: var(--cg-success);
+  border: 1px solid transparent;
 }
 
 .pill.skip {
-  background: #fdf6ec;
-  color: #e6a23c;
-  border: 1px solid #faecd8;
+  background: var(--cg-warning-bg);
+  color: var(--cg-warning);
+  border: 1px solid transparent;
 }
 
 .pill.err {
-  background: #fef0f0;
-  color: #f56c6c;
-  border: 1px solid #fde2e2;
+  background: var(--cg-danger-bg);
+  color: var(--cg-danger);
+  border: 1px solid transparent;
 }
 
 .preview {
@@ -1848,7 +1848,7 @@ export default {
 
 .preview-tree {
   width: 44%;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--cg-border-light);
   border-radius: 4px;
   overflow: auto;
   padding: 8px;
@@ -1856,7 +1856,7 @@ export default {
 
 .preview-code {
   flex: 1;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--cg-border-light);
   border-radius: 4px;
   background: #282c34;
   display: flex;
@@ -1893,7 +1893,7 @@ export default {
 
 .write-tip {
   font-size: 13px;
-  color: #606266;
+  color: var(--cg-text-regular);
 }
 
 .switch-grid {
@@ -1907,11 +1907,11 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #f8f9fb;
+  background: var(--cg-bg-hover);
   border-radius: 4px;
   padding: 8px 12px;
   font-size: 13px;
-  color: #606266;
+  color: var(--cg-text-regular);
 }
 
 .file-list {
@@ -1925,8 +1925,8 @@ export default {
 .file-list li {
   font-family: Consolas, Monaco, monospace;
   font-size: 12.5px;
-  color: #303133;
-  background: #f8f9fb;
+  color: var(--cg-text);
+  background: var(--cg-bg-hover);
   border-radius: 4px;
   padding: 7px 12px;
   margin: 6px 0;
@@ -1935,7 +1935,7 @@ export default {
 /* ---------- V1.3 diff 预览 ---------- */
 .opt-sub {
   float: right;
-  color: #909399;
+  color: var(--cg-text-secondary);
   font-size: 12px;
   margin-left: 10px;
 }

@@ -314,7 +314,7 @@ export default {
 }
 
 .danger-btn {
-  color: #f56c6c;
+  color: var(--cg-danger);
 }
 
 /* ---------- 分配权限抽屉 ---------- */
@@ -329,13 +329,13 @@ export default {
   align-items: center;
   gap: 16px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--cg-border-light);
   margin-bottom: 10px;
 }
 
 .perm-hint {
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
 }
 
 .perm-tree {
@@ -355,7 +355,7 @@ export default {
 .perm-node-perms {
   font-family: Consolas, Monaco, monospace;
   font-size: 11.5px;
-  color: #b1b3b8;
+  color: var(--cg-text-placeholder);
 }
 
 .perm-footer {
@@ -364,7 +364,7 @@ export default {
   left: 0;
   right: 0;
   padding: 12px 20px;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid var(--cg-border-light);
   background: #fff;
   text-align: right;
 }

@@ -340,11 +340,11 @@ export default {
 }
 
 .danger-btn {
-  color: #f56c6c;
+  color: var(--cg-danger);
 }
 
 .form-tip {
-  color: #909399;
+  color: var(--cg-text-secondary);
   font-size: 12px;
   line-height: 1.6;
   margin-top: 8px;

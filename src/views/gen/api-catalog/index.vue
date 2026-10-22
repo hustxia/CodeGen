@@ -113,7 +113,7 @@ export default {
 }
 .page-desc {
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
 }
 .filter {
   margin-bottom: 8px;
@@ -133,7 +133,7 @@ export default {
 .api-base {
   font-family: Menlo, Consolas, monospace;
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
 }
 .api-base {
   margin-left: auto;
@@ -143,11 +143,11 @@ export default {
   font-size: 12px;
 }
 .muted {
-  color: #c0c4cc;
+  color: var(--cg-text-placeholder);
 }
 .api-empty {
   padding: 12px;
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
 }
 </style>

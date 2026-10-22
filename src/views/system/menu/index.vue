@@ -286,7 +286,7 @@ export default {
 
 .field-tip {
   font-size: 12px;
-  color: #909399;
+  color: var(--cg-text-secondary);
   line-height: 1.5;
   margin-top: 2px;
 }
@@ -297,10 +297,10 @@ export default {
 }
 
 .muted {
-  color: #c0c4cc;
+  color: var(--cg-text-placeholder);
 }
 
 .danger-btn {
-  color: #f56c6c;
+  color: var(--cg-danger);
 }
 </style>
