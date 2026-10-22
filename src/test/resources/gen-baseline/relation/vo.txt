@@ -1,0 +1,28 @@
+package com.demo.vo;
+
+import lombok.Data;
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.math.BigDecimal;
+
+/**
+ * 商品 VO
+ */
+@Data
+public class DemoGoodsVO implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    // <gen:begin key="vo-fields">
+    private Long id;
+    private String goodsName;
+    private Integer status;
+    private Long deptId;
+    private BigDecimal price;
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
+    // <gen:end key="vo-fields">
+    // ===== 以下为手写区：写在 gen:end 之后的内容，重新生成不会被覆盖 =====
+}

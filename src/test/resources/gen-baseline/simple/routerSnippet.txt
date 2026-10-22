@@ -1,0 +1,6 @@
+{
+  path: 'tag',
+  name: 'DemoTag',
+  component: () => import('@/views/tag/index.vue'),
+  meta: { title: '标签' }
+},

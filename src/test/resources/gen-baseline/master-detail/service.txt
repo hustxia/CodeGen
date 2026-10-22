@@ -1,0 +1,21 @@
+package com.demo.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.demo.entity.DemoOrder;
+import com.demo.dto.DemoOrderSaveDTO;
+import com.demo.dto.DemoOrderItemSaveDTO;
+import java.util.List;
+
+/**
+ * 订单 Service
+ */
+public interface DemoOrderService extends IService<DemoOrder> {
+
+    // <gen:begin key="service-body">
+    /**
+     * 主表 + 子表同事务保存（先清旧子表再插新行）
+     */
+    void saveWithChildren(DemoOrderSaveDTO master, List<DemoOrderItemSaveDTO> children);
+    // <gen:end key="service-body">
+    // ===== 以下为手写区：自定义方法写在这里，重新生成不会被覆盖 =====
+}

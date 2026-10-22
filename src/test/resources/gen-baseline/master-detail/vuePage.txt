@@ -1,0 +1,447 @@
+<template>
+  <div class="app-container">
+    <!-- <gen:begin key="vue-template"> -->
+    <!-- 筛选区 -->
+    <el-card shadow="never" class="filter-card">
+      <el-form :inline="true" :model="query" @submit.native.prevent>
+        <el-form-item label="订单号">
+          <el-input v-model="query.orderNo" placeholder="订单号" clearable @keyup.enter.native="handleSearch" />
+        </el-form-item>
+        <el-form-item>
+          <el-button v-hasPermi="['demo_order:query']" type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
+          <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 列表 -->
+    <el-card shadow="never">
+      <div slot="header" class="card-header">
+        <span>订单列表</span>
+        <div>
+          <el-button v-hasPermi="['demo_order:add']" type="primary" icon="el-icon-plus" size="small" @click="openDialog()">新增订单</el-button>
+          <el-button icon="el-icon-download" size="small" @click="handleExport">导出</el-button>
+        </div>
+      </div>
+
+      <el-table
+        v-loading="loading"
+        :data="list"
+        border
+        stripe
+      >
+        <el-table-column prop="id" label="ID" width="180" />
+        <el-table-column prop="orderNo" label="订单号" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="amount" label="金额" width="110" align="right" show-overflow-tooltip />
+        <el-table-column prop="updateTime" label="更新时间" width="170" align="center" />
+        <el-table-column label="操作" width="216" fixed="right" align="center">
+          <template slot-scope="{ row }">
+            <el-button type="text" @click="openDetail(row)">详情</el-button>
+            <el-button v-hasPermi="['demo_order:edit']" type="text" @click="openDialog(row)">编辑</el-button>
+            <el-button v-hasPermi="['demo_order:remove']" type="text" class="danger-btn" @click="handleDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-pagination
+        class="pagination"
+        background
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        :page-size="query.size"
+        :current-page.sync="query.page"
+        @size-change="handleSizeChange"
+        @current-change="fetchList"
+      />
+    </el-card>
+
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog :title="form.id ? '编辑订单' : '新增订单'" :visible.sync="dialogVisible" width="860px">
+      <el-form ref="form" :model="form" :rules="rules" label-width="110px">
+        <el-form-item label="订单号" prop="orderNo">
+          <el-input v-model="form.orderNo" placeholder="请输入订单号" />
+        </el-form-item>
+        <el-form-item label="金额" prop="amount">
+          <el-input v-model="form.amount" placeholder="请输入金额" />
+        </el-form-item>
+      </el-form>
+
+      <el-divider content-position="left">订单明细</el-divider>
+      <div class="child-bar">
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addChildRow">添加明细</el-button>
+        <span class="child-tip">主表与子表在同一事务中保存（先清后插）</span>
+      </div>
+      <el-table :data="childRows" border size="mini" class="child-table">
+        <el-table-column label="商品名称" min-width="130">
+          <template slot-scope="{ row }">
+            <el-input v-model="row.goodsName" size="mini" placeholder="商品名称" />
+          </template>
+        </el-table-column>
+        <el-table-column label="数量" min-width="130">
+          <template slot-scope="{ row }">
+            <el-input v-model="row.qty" size="mini" placeholder="数量" />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="150" align="center">
+          <template slot-scope="{ row, $index }">
+            <el-button type="text" @click="openGrandRows(row)">明细属性</el-button>
+            <el-button type="text" class="danger-btn" @click="childRows.splice($index, 1)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="child-tip" style="margin-top: 6px">
+        明细属性在点「确定」时与本级明细一起全量替换，弹窗里改完不必单独保存。
+      </div>
+
+      <div slot="footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- P3-1 三级明细编辑：直接改 childRows[i].demoOrderItemAttrs，保存时随主表一起提交 -->
+    <el-dialog
+      :title="grandTitle"
+      :visible.sync="grandVisible"
+      width="720px"
+      append-to-body
+    >
+      <div class="child-bar">
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addGrandRow">添加明细属性</el-button>
+      </div>
+      <el-table :data="grandRows" border size="mini" class="child-table">
+        <el-table-column label="属性名" min-width="130">
+          <template slot-scope="{ row }">
+            <el-input v-model="row.attrName" size="mini" placeholder="属性名" />
+          </template>
+        </el-table-column>
+        <el-table-column label="属性值" min-width="130">
+          <template slot-scope="{ row }">
+            <el-input v-model="row.attrValue" size="mini" placeholder="属性值" />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="70" align="center">
+          <template slot-scope="{ $index }">
+            <el-button type="text" class="danger-btn" @click="grandRows.splice($index, 1)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div slot="footer">
+        <el-button @click="grandVisible = false">关闭</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 详情抽屉（只读） -->
+    <el-drawer title="订单详情" :visible.sync="detailVisible" size="420px">
+      <div class="detail-body">
+        <div class="detail-row">
+          <span class="detail-label">ID</span>
+          <span class="detail-value">{{ detail.id }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">订单号</span>
+          <span class="detail-value">{{ detail.orderNo }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">金额</span>
+          <span class="detail-value">{{ detail.amount }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">创建时间</span>
+          <span class="detail-value">{{ detail.createTime }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">更新时间</span>
+          <span class="detail-value">{{ detail.updateTime }}</span>
+        </div>
+      </div>
+    </el-drawer>
+
+    <!-- <gen:end key="vue-template"> -->
+  </div>
+</template>
+
+<script>
+import {
+  getDemoOrderList,
+  getDemoOrderWithChildren,
+  saveDemoOrderWithChildren,
+  exportDemoOrder,
+  createDemoOrder,
+  updateDemoOrder,
+  deleteDemoOrder
+} from '@/api/order'
+
+const defaultForm = () => ({
+  id: undefined,
+  orderNo: '',
+  amount: '',
+})
+const defaultChild = () => ({
+  goodsName: '',
+  qty: '',
+})
+const defaultGrand = () => ({
+  attrName: '',
+  attrValue: '',
+})
+
+export default {
+  name: 'DemoOrder',
+  data() {
+    return {
+      // <gen:begin key="vue-data">
+      loading: false,
+      list: [],
+      total: 0,
+      query: { page: 1, size: 10, orderNo: '' },
+      dialogVisible: false,
+      submitting: false,
+      detailVisible: false,
+      detail: {},
+      childRows: [],
+      // P3-1 三级明细：grandRows 指向 childRows 里某一行的 demoOrderItemAttrs 数组，
+      // 直接改引用，弹窗里编辑等于改主结构，无需回写拷贝
+      grandVisible: false,
+      grandRows: [],
+      grandTitle: '',
+      grandIndex: -1,
+      rules: {
+      },
+      form: defaultForm()
+      // <gen:end key="vue-data">
+    }
+  },
+  created() {
+    this.fetchList()
+  },
+  methods: {
+    // <gen:begin key="vue-methods">
+    async fetchList() {
+      this.loading = true
+      try {
+        const res = await getDemoOrderList(this.query)
+        this.list = res.data.list || []
+        this.total = res.data.total || 0
+      } catch (e) {
+        this.list = []
+        this.total = 0
+      } finally {
+        this.loading = false
+      }
+    },
+    handleSearch() {
+      this.query.page = 1
+      this.fetchList()
+    },
+    handleReset() {
+      this.query = { page: 1, size: this.query.size, orderNo: '' }
+      this.fetchList()
+    },
+    handleSizeChange(size) {
+      this.query.size = size
+      this.query.page = 1
+      this.fetchList()
+    },
+    openDetail(row) {
+      this.detail = row || {}
+      this.detailVisible = true
+    },
+    openDialog(row) {
+      this.form = row ? { ...defaultForm(), ...row } : defaultForm()
+      this.childRows = []
+      this.dialogVisible = true
+      if (row && row.id) {
+        this.loadChildren(row.id)
+      }
+      this.$nextTick(() => {
+        if (this.$refs.form) this.$refs.form.clearValidate()
+      })
+    },
+    async loadChildren(id) {
+      try {
+        const res = await getDemoOrderWithChildren(id)
+        this.childRows = (res.data && res.data.children) || []
+      } catch (e) {
+        this.childRows = []
+      }
+    },
+    addChildRow() {
+      this.childRows.push(defaultChild())
+    },
+    /**
+     * 打开某一行的下级明细。用 $set 保障数组存在，
+     * 因为后端返回的 VO 里该字段可能为 null（没有下级时）。
+     */
+    openGrandRows(row) {
+      if (!row.demoOrderItemAttrs) {
+        this.$set(row, 'demoOrderItemAttrs', [])
+      }
+      this.grandRows = row.demoOrderItemAttrs
+      this.grandTitle = '明细属性'
+      this.grandVisible = true
+    },
+    addGrandRow() {
+      if (!this.grandRows) {
+        this.grandRows = []
+      }
+      this.grandRows.push(defaultGrand())
+    },
+    async submitForm() {
+      const valid = await this.$refs.form.validate().catch(() => false)
+      if (!valid) return
+      this.submitting = true
+      try {
+        await saveDemoOrderWithChildren(this.form, this.childRows)
+        this.$message.success(this.form.id ? '更新成功' : '创建成功')
+        this.dialogVisible = false
+        this.fetchList()
+      } catch (e) { /* 拦截器已提示 */ } finally {
+        this.submitting = false
+      }
+    },
+    handleDelete(row) {
+      this.$confirm(`确定删除该订单吗？`, '提示', { type: 'warning' })
+        .then(async () => {
+          await deleteDemoOrder(row.id)
+          this.$message.success('删除成功')
+          if (this.list.length === 1 && this.query.page > 1) this.query.page--
+          this.fetchList()
+        })
+        .catch(() => {})
+    },
+    async handleExport() {
+      try {
+        const res = await exportDemoOrder(this.query)
+        const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = '订单.xlsx'
+        a.click()
+        window.URL.revokeObjectURL(url)
+      } catch (e) { /* 拦截器已提示 */ }
+    }
+    // <gen:end key="vue-methods">
+    // ===== 以下为手写区：自定义方法写在这里，重新生成不会被覆盖 =====
+  }
+}
+</script>
+
+<style scoped>
+.filter-card {
+  margin-bottom: 16px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pagination {
+  margin-top: 16px;
+  text-align: right;
+}
+
+.danger-btn {
+  color: #f56c6c;
+}
+
+.child-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.child-tip {
+  color: #909399;
+  font-size: 12px;
+}
+
+.import-summary {
+  margin-bottom: 8px;
+}
+
+.import-tpl-tip {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #606266;
+}
+
+.import-summary .ok {
+  color: #67c23a;
+}
+
+.import-summary .bad {
+  color: #f56c6c;
+}
+
+.import-fail-box {
+  max-height: 200px;
+  overflow: auto;
+  padding: 8px;
+  background: #fdf6ec;
+  border-radius: 4px;
+}
+
+.import-fail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.import-fail {
+  color: #f56c6c;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.import-fail-more {
+  color: #909399;
+  font-size: 12px;
+}
+
+.child-table {
+  margin-bottom: 8px;
+}
+
+.detail-body {
+  padding: 0 20px;
+}
+
+.detail-row {
+  display: flex;
+  padding: 8px 0;
+  border-bottom: 1px solid #ebeef5;
+  font-size: 13px;
+}
+
+.detail-label {
+  width: 110px;
+  color: #909399;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  color: #303133;
+  word-break: break-all;
+}
+
+.import-result {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.import-fail {
+  color: #f56c6c;
+}
+</style>

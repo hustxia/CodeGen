@@ -61,6 +61,18 @@ public class GenApplyServiceImpl implements GenApplyService {
 
     private static final DateTimeFormatter BATCH_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
+    /**
+     * 回滚批次精确到毫秒。
+     *
+     * <p>为什么不能和写盘批次一样只到秒：回滚的「回滚前备份」放在
+     * {@code .gen-backup/<批次号>/<相对路径>}，批次号相同就是同一个目录。
+     * 用户点一次回滚、紧接着点一次「撤销回滚」，两次落在同一秒时，
+     * 第二次的备份会**覆盖掉它正要用的还原源**——回滚看起来成功，实际什么都没变，
+     * 而且备份链被永久破坏。契约测试（rollbackRestoresAndCanRollbackAgain）钉住了这一条。
+     */
+    private static final DateTimeFormatter ROLLBACK_BATCH_FORMAT =
+            DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+
     @Autowired
     private GenSelfCheckService selfCheckService;
 
@@ -304,7 +316,7 @@ public class GenApplyServiceImpl implements GenApplyService {
 
         // 回滚本身也记台账（新批次），否则「回滚」这个动作不可再回滚：
         // 覆盖模式回滚后如果又后悔，用户需要能回到回滚前的样子
-        String rollbackBatch = "RBK" + LocalDateTime.now().format(BATCH_FORMAT);
+        String rollbackBatch = "RBK" + LocalDateTime.now().format(ROLLBACK_BATCH_FORMAT);
         vo.setRollbackBatch(rollbackBatch);
         int restored = 0;
         int removed = 0;
@@ -325,7 +337,8 @@ public class GenApplyServiceImpl implements GenApplyService {
                 String beforeMd5 = exists ? GenDigestUtils.md5Hex(target) : null;
                 // 回滚前先备份当前内容，回滚才可逆
                 String beforeBackup = exists
-                        ? backupBeforeRollback(target, item.getRelPath(), rollbackBatch) : null;
+                        ? backupBeforeRollback(target, item.getRelPath(), rollbackBatch,
+                                "RESTORE".equals(item.getOp()) ? item.getReasonPath() : null) : null;
                 if ("RESTORE".equals(item.getOp())) {
                     Path from = Paths.get(item.getReasonPath());
                     if (target.getParent() != null) {
@@ -447,8 +460,11 @@ public class GenApplyServiceImpl implements GenApplyService {
 
     /**
      * 回滚前备份当前文件到 {@code <root>/.gen-backup/<rollbackBatch>/<relPath>}
+     *
+     * @param avoidPath 本次回滚将要读取的还原源；与备份目标同一路径时改名，
+     *                  否则「备份」会把「还原源」覆盖掉，回滚变成空操作
      */
-    private String backupBeforeRollback(Path target, String relPath, String batchNo) {
+    private String backupBeforeRollback(Path target, String relPath, String batchNo, String avoidPath) {
         try {
             Path root = inferRoot(target, relPath);
             if (root == null) {
@@ -458,6 +474,11 @@ public class GenApplyServiceImpl implements GenApplyService {
             Path dest = backupRoot.resolve(relPath.replace('\\', '/')).normalize();
             if (!dest.startsWith(backupRoot)) {
                 return null;
+            }
+            if (avoidPath != null && !avoidPath.isBlank()
+                    && dest.equals(Paths.get(avoidPath).toAbsolutePath().normalize())) {
+                dest = dest.resolveSibling(dest.getFileName() + ".before");
+                log.warn("回滚前备份与还原源同路径，已改名避免覆盖：{}", dest);
             }
             if (dest.getParent() != null) {
                 Files.createDirectories(dest.getParent());

@@ -1,0 +1,36 @@
+package com.demo.dto;
+
+import java.math.BigDecimal;
+import java.util.List;
+import com.demo.dto.DemoOrderItemAttrSaveDTO;
+
+import lombok.Data;
+
+import java.io.Serial;
+import java.io.Serializable;
+
+/**
+ * 订单保存 DTO（新增/修改）
+ */
+@Data
+public class DemoOrderSaveDTO implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    // <gen:begin key="dto-fields">
+    /**
+     * 主键，新增时为空
+     */
+    private Long id;
+
+    private String orderNo;
+    private BigDecimal amount;
+    /**
+     * P3-1 第三级明细：保存时随本级一起全量替换。
+     * 字段名由子表类名推导（如 OrderItemSaveDTO → orderItems）。
+     */
+    private List<DemoOrderItemAttrSaveDTO> demoOrderItemAttrs;
+    // <gen:end key="dto-fields">
+    // ===== 以下为手写区：写在 gen:end 之后的内容，重新生成不会被覆盖 =====
+}
