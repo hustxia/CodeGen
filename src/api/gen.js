@@ -287,8 +287,15 @@ export function getDefaultProject() {
   return request({ url: '/project/default', method: 'get' })
 }
 
-export function createProject(data) {
-  return request({ url: '/project', method: 'post', data })
+// 新建系统。copyFrom 非空时复制该系统的路径配置与生成开关默认值
+// （编码、名称、根包名、网关前缀不复制——那两个属于系统身份，抄过来会生成两套同名包）
+export function createProject(data, copyFrom) {
+  return request({
+    url: '/project',
+    method: 'post',
+    params: copyFrom ? { copyFrom } : {},
+    data
+  })
 }
 
 export function updateProject(data) {
@@ -301,4 +308,9 @@ export function deleteProject(id) {
 
 export function setDefaultProject(id) {
   return request({ url: `/project/${id}/default`, method: 'put' })
+}
+
+// 17 个生成开关恢复所属系统默认值（系统没配则按 1）
+export function resetGenSwitchDefaults(id) {
+  return request({ url: `/gen/table/${id}/switch-defaults/reset`, method: 'post' })
 }

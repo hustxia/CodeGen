@@ -97,6 +97,28 @@
           <el-input v-model="form.projectName" placeholder="如 客户管理系统" />
         </el-form-item>
 
+        <!-- 只在新增时出现：编辑态改「复制来源」没有意义，路径直接改字段就行 -->
+        <el-form-item v-if="!form.id" label="复制配置自">
+          <el-select
+            v-model="copyFromId"
+            clearable
+            placeholder="不复制，从空开始"
+            style="width: 100%"
+            @change="onCopyFromChange"
+          >
+            <el-option
+              v-for="p in list"
+              :key="p.id"
+              :label="`${p.projectName}（${p.projectCode}）`"
+              :value="String(p.id)"
+            />
+          </el-select>
+          <div class="form-tip">
+            只复制路径类字段与 17 个生成开关默认值。编码、名称、根包名、网关前缀不复制——
+            这几项属于系统身份，抄过来会得到两套同名包，生成的代码互相覆盖。
+          </div>
+        </el-form-item>
+
         <el-form-item label="后端工程根">
           <el-input v-model="form.backendRoot" placeholder="绝对路径，如 D:/proj/crm-server" />
         </el-form-item>
@@ -135,6 +157,19 @@
           <el-switch v-model="form.enabled" :active-value="1" :inactive-value="0" active-text="启用" />
         </el-form-item>
 
+        <el-form-item label="生成开关默认">
+          <div class="default-switch-grid">
+            <div v-for="sw in genSwitchDefs" :key="sw.key" class="default-switch-item">
+              <span>{{ sw.label }}</span>
+              <el-switch v-model="form[sw.key]" :active-value="1" :inactive-value="0" />
+            </div>
+          </div>
+          <div class="form-tip">
+            只影响以后导入的新表：导入时按这份默认值落表，已有表的开关不会被改写
+            （避免改一次系统配置把存量表全部翻掉）。表配置弹窗里的「恢复系统默认」也读这里。
+          </div>
+        </el-form-item>
+
         <el-form-item label="备注">
           <el-input v-model="form.remark" type="textarea" :rows="2" placeholder="选填" />
         </el-form-item>
@@ -171,8 +206,47 @@ const defaultForm = () => ({
   enabled: 1,
   sort: 0,
   remark: '',
-  tableCount: 0
+  tableCount: 0,
+  // 17 个生成开关的系统默认值（V3.1 P0-3）。null 表示未配置，后端按 1 处理
+  defaultGenEntity: 1,
+  defaultGenMapper: 1,
+  defaultGenService: 1,
+  defaultGenLog: 1,
+  defaultGenController: 1,
+  defaultGenPageApi: 1,
+  defaultGenDetailApi: 1,
+  defaultGenAddApi: 1,
+  defaultGenEditApi: 1,
+  defaultGenDeleteApi: 1,
+  defaultGenFrontend: 1,
+  defaultGenApiJs: 1,
+  defaultGenVuePage: 1,
+  defaultGenQueryForm: 1,
+  defaultGenAddBtn: 1,
+  defaultGenEditBtn: 1,
+  defaultGenDeleteBtn: 1
 })
+
+// 与后端 GenSwitchDefaults.KEYS 一一对应，顺序也一致
+const genSwitchDefs = [
+  { key: 'defaultGenEntity', label: 'entity' },
+  { key: 'defaultGenMapper', label: 'mapper' },
+  { key: 'defaultGenService', label: 'service' },
+  { key: 'defaultGenController', label: 'controller' },
+  { key: 'defaultGenLog', label: '操作日志' },
+  { key: 'defaultGenPageApi', label: '分页接口' },
+  { key: 'defaultGenDetailApi', label: '详情接口' },
+  { key: 'defaultGenAddApi', label: '新增接口' },
+  { key: 'defaultGenEditApi', label: '修改接口' },
+  { key: 'defaultGenDeleteApi', label: '删除接口' },
+  { key: 'defaultGenFrontend', label: '前端' },
+  { key: 'defaultGenApiJs', label: 'api.js' },
+  { key: 'defaultGenVuePage', label: 'vue 页面' },
+  { key: 'defaultGenQueryForm', label: '查询区' },
+  { key: 'defaultGenAddBtn', label: '新增按钮' },
+  { key: 'defaultGenEditBtn', label: '编辑按钮' },
+  { key: 'defaultGenDeleteBtn', label: '删除按钮' }
+]
 
 export default {
   name: 'GenProject',
@@ -183,6 +257,9 @@ export default {
       list: [],
       dialogVisible: false,
       form: defaultForm(),
+      genSwitchDefs,
+      // 复制来源系统 id（字符串，避免 Long 精度丢失）；空表示不复制
+      copyFromId: '',
       rules: {
         projectCode: [
           { required: true, message: '请输入系统编码', trigger: 'blur' },
@@ -205,6 +282,10 @@ export default {
   },
   created() {
     this.load()
+    // 深链：/gen/project?create=1 直接打开新增弹窗，方便从别处（如向导页）跳过来建系统
+    if (this.$route.query.create === '1') {
+      this.openDialog()
+    }
   },
   methods: {
     async load() {
@@ -220,8 +301,24 @@ export default {
     },
     openDialog(row) {
       this.form = row ? { ...defaultForm(), ...row, tableCount: row.tableCount || 0 } : defaultForm()
+      this.copyFromId = ''
       this.dialogVisible = true
       this.$nextTick(() => this.$refs.form && this.$refs.form.clearValidate())
+    },
+    /**
+     * 选了复制来源就把路径回填到表单，让用户在保存前看得见、改得动。
+     * 服务端也会再复制一次（只补请求里为空的项）：前端回填是为了所见即所得，
+     * 服务端复制是为了防止绕过页面直接调接口时行为不一致。
+     */
+    onCopyFromChange(id) {
+      if (!id) return
+      const src = this.list.find(p => String(p.id) === String(id))
+      if (!src) return
+      const fields = ['backendRoot', 'frontendRoot', 'backendPath', 'frontendPath', 'selfcheckClasspath']
+      fields.forEach(f => {
+        if (!this.form[f]) this.form[f] = src[f] || ''
+      })
+      this.$message.success(`已复制「${src.projectName}」的路径配置`)
     },
     submit() {
       this.$refs.form.validate(async (valid) => {
@@ -233,7 +330,7 @@ export default {
           if (payload.id) {
             await updateProject(payload)
           } else {
-            await createProject(payload)
+            await createProject(payload, this.copyFromId || undefined)
           }
           this.$message.success('保存成功')
           this.dialogVisible = false
@@ -270,6 +367,25 @@ export default {
 </script>
 
 <style scoped>
+/* 17 个开关的紧凑网格：放在系统弹窗里，两列就够，四列会把标签挤断 */
+.default-switch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 16px;
+  width: 100%;
+}
+
+.default-switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--cg-bg-hover);
+  font-size: 12px;
+  color: var(--cg-text-regular);
+}
+
 .page-head {
   margin-bottom: 16px;
 }

@@ -488,13 +488,26 @@
         <el-button size="mini" @click="applyPreset('backend-only')">仅后端 API</el-button>
         <el-button size="mini" @click="applyPreset('standard')">标准 CRUD</el-button>
         <el-button size="mini" @click="applyPreset('readonly')">只读列表</el-button>
+        <el-button size="mini" :loading="resettingSwitches" @click="resetSwitchesToProject">
+          恢复系统默认
+        </el-button>
         <span class="inline-tip">预设只是快速勾选，仍可手动微调后再保存</span>
       </div>
       <div class="switch-grid">
         <div v-for="sw in switchDefs" :key="sw.key" class="switch-item">
-          <span>{{ sw.label }}</span>
+          <span class="switch-label">
+            {{ sw.label }}
+            <em
+              v-if="isProjectDefault(sw.key)"
+              class="switch-default"
+              title="与所属系统默认值一致"
+            >默认</em>
+          </span>
           <el-switch v-model="currentTable[sw.key]" :active-value="1" :inactive-value="0" />
         </div>
+      </div>
+      <div v-if="!currentTable.projectId" class="form-tip">
+        当前表未绑定系统，开关只能逐张手动调。绑定系统后，新表会按系统默认值落地。
       </div>
 
       <el-divider content-position="left">字段列表</el-divider>
@@ -782,7 +795,7 @@ import {
   listDbSchemas, listDbTables, importDbTables, previewGenCode, writeGenCode,
   getGenOutputConfig, selfCheckGenCode, registerGenMenu,
   applyGenCode, rollbackGenBatch, batchUpdateGenTables, batchDeleteGenTables,
-  syncGenColumns, listProjectOptions
+  syncGenColumns, listProjectOptions, resetGenSwitchDefaults
 } from '@/api/gen'
 import { listDictTypes } from '@/api/dict'
 import GenDiffDialog from './GenDiffDialog.vue'
@@ -806,7 +819,7 @@ const defaultTableConfig = () => ({
   gatewayPrefix: '',
   // 所属系统：新建时由调用方从 projectOptions 里取默认系统填入
   projectId: undefined,
-  genEntity: 1, genMapper: 1, genService: 1, genController: 1,
+  genEntity: 1, genMapper: 1, genService: 1, genController: 1, genLog: 1,
   genPageApi: 1, genDetailApi: 1, genAddApi: 1, genEditApi: 1, genDeleteApi: 1,
   genFrontend: 1, genApiJs: 1, genVuePage: 1,
   genQueryForm: 1, genAddBtn: 1, genEditBtn: 1, genDeleteBtn: 1,
@@ -896,6 +909,9 @@ export default {
       },
       // 生成输出全局配置（gen.output.*）
       outputConfig: {},
+      // 所属系统的 17 个开关默认值（详情接口带回），用于「默认」标记与恢复按钮
+      projectGenDefaults: {},
+      resettingSwitches: false,
       // V1.3 diff 预览
       diffVisible: false,
       // V1.3 结构同步
@@ -918,6 +934,7 @@ export default {
         { key: 'genMapper', label: '生成 mapper' },
         { key: 'genService', label: '生成 service' },
         { key: 'genController', label: '生成 controller' },
+        { key: 'genLog', label: '操作日志' },
         { key: 'genPageApi', label: '分页接口' },
         { key: 'genDetailApi', label: '详情接口' },
         { key: 'genAddApi', label: '新增接口' },
@@ -1226,6 +1243,51 @@ export default {
       this.$message.success('已套用预设，记得点保存')
     },
 
+    // 当前值是否等于所属系统默认值。只是「看起来一致」，不代表一定是继承来的——
+    // 用户手动调成一样的值也会亮这个标，所以文案用「默认」而不是「继承」
+    isProjectDefault(key) {
+      const defaults = this.projectGenDefaults || {}
+      const def = defaults[key]
+      if (def === undefined || def === null) return false
+      return Number(this.currentTable[key]) === Number(def)
+    },
+
+    // 恢复系统默认：只改开关，包名/路径/字段配置一律不动
+    async resetSwitchesToProject() {
+      if (!this.currentTable.id) {
+        // 还没落库的新表：本地按详情里带回的默认值填，等保存时一起提交
+        const defaults = this.projectGenDefaults || {}
+        const patch = {}
+        this.switchDefs.forEach(sw => {
+          const def = defaults[sw.key]
+          if (def !== undefined && def !== null) patch[sw.key] = Number(def)
+        })
+        if (Object.keys(patch).length === 0) {
+          this.$message.warning('所属系统没有配置默认值，无法恢复')
+          return
+        }
+        Object.assign(this.currentTable, patch)
+        this.$message.success('已按系统默认值重置开关，记得点保存')
+        return
+      }
+      this.resettingSwitches = true
+      try {
+        const res = await resetGenSwitchDefaults(this.currentTable.id)
+        const defaults = res.data || {}
+        const patch = {}
+        this.switchDefs.forEach(sw => {
+          if (defaults[sw.key] !== undefined) patch[sw.key] = defaults[sw.key]
+        })
+        Object.assign(this.currentTable, patch)
+        this.projectGenDefaults = defaults
+        this.$message.success('开关已恢复为系统默认值')
+      } catch (e) {
+        /* 拦截器已提示 */
+      } finally {
+        this.resettingSwitches = false
+      }
+    },
+
     /* ---------- 数据库导入 ---------- */
     async openDbDialog() {
       this.dbVisible = true
@@ -1503,6 +1565,7 @@ export default {
       const res = await getGenTableDetail(String(row.id))
       const data = res.data || {}
       this.currentTable = { ...defaultTableConfig(), ...data }
+      this.projectGenDefaults = data.projectGenDefaults || {}
       this.currentColumns = (data.columns || []).map(c => ({
         ...c,
         excelExport: c.excelExport == null ? 1 : c.excelExport,
@@ -1912,6 +1975,27 @@ export default {
   padding: 8px 12px;
   font-size: 13px;
   color: var(--cg-text-regular);
+}
+
+.switch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* 「默认」不是按钮，只是标记：与所属系统默认值一致时亮起，
+   用很轻的描边，避免和真正可点的标签混淆 */
+.switch-default {
+  font-style: normal;
+  font-size: 11px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: var(--cg-text-secondary);
+  border: 1px solid var(--cg-border);
+  background: var(--cg-bg-container);
+  cursor: help;
 }
 
 .file-list {
