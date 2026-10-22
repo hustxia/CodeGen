@@ -18,4 +18,10 @@ public class LoginVO implements Serializable {
     private Long userId;
     private String username;
     private String nickname;
+
+    /**
+     * 界面主题 ID。随登录一起下发，前端拿到后立刻套用并写入本地缓存，
+     * 这样下一步刷新页面时首屏就能直接渲染正确皮肤，不会先闪一下默认色。
+     */
+    private String themeId;
 }

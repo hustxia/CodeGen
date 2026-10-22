@@ -26,6 +26,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +36,13 @@ import java.util.stream.Collectors;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     private static final Logger log = LoggerFactory.getLogger(SysUserServiceImpl.class);
+
+    /**
+     * 主题 ID 格式：三段小写字母，用连字符连接，如 blue-light-rounded。
+     * 只校验形状不校验取值，理由见 {@link #saveTheme(Long, String)}。
+     */
+    private static final Pattern THEME_ID_PATTERN =
+            Pattern.compile("^[a-z]{2,20}(-[a-z]{2,20}){2}$");
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -65,6 +73,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         vo.setUserId(user.getId());
         vo.setUsername(user.getUsername());
         vo.setNickname(user.getNickname());
+        // 主题随登录一起下发：前端收到后立刻套用并写入 localStorage，
+        // 下次刷新首屏就能直接渲染正确皮肤
+        vo.setThemeId(user.getThemeId());
         return vo;
     }
 
@@ -135,5 +146,30 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             }).collect(Collectors.toList());
             userRoleService.saveBatch(list);
         }
+    }
+
+    /**
+     * 保存界面主题偏好。
+     *
+     * <p>只做格式校验（色相-明暗-形态三段小写字母），不在后端维护色相白名单：
+     * 主题体系属于前端表现层，后端硬编码枚举会导致「前端加主题、后端要跟着发版」。
+     * 格式对但色相不存在时，前端 normalizeThemeId 会回落到默认主题，不会白屏。
+     */
+    @Override
+    public String saveTheme(Long userId, String themeId) {
+        if (!StringUtils.hasText(themeId)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "主题 ID 不能为空");
+        }
+        String normalized = themeId.trim().toLowerCase();
+        if (!THEME_ID_PATTERN.matcher(normalized).matches()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                    "主题 ID 格式不合法，应形如 blue-light-rounded");
+        }
+        SysUser entity = new SysUser();
+        entity.setId(userId);
+        entity.setThemeId(normalized);
+        updateById(entity);
+        log.info("用户 {} 更新界面主题为 {}", userId, normalized);
+        return normalized;
     }
 }

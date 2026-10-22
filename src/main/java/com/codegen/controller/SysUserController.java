@@ -2,8 +2,12 @@ package com.codegen.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.codegen.common.context.UserContext;
+import com.codegen.common.exception.BusinessException;
+import com.codegen.common.result.ResultCode;
 import com.codegen.dto.SysUserPageDTO;
 import com.codegen.dto.SysUserSaveDTO;
+import com.codegen.dto.ThemeSaveDTO;
 import com.codegen.entity.SysUser;
 import com.codegen.service.SysUserService;
 import com.codegen.vo.SysUserVO;
@@ -96,5 +100,24 @@ public class SysUserController {
     public Result<Void> assignRoles(@PathVariable Long userId, @RequestBody List<Long> roleIds) {
         userService.assignRoles(userId, roleIds);
         return Result.ok();
+    }
+
+    /**
+     * 保存当前登录用户的界面主题偏好。
+     *
+     * <p>只改「自己」的主题：userId 取自登录上下文，不接受前端传入，
+     * 否则任何登录用户都能改别人的皮肤。
+     *
+     * <p>保存后不会立即改变当前页面 —— 前端按产品约定提示「重新登录生效」，
+     * 由下次登录时 /auth/login 下发的 themeId 驱动首屏渲染。
+     */
+    @Operation(summary = "保存当前用户界面主题偏好")
+    @PutMapping("/theme")
+    public Result<String> saveTheme(@RequestBody ThemeSaveDTO dto) {
+        Long userId = UserContext.getUserId();
+        if (userId == null) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "未登录或登录状态已失效");
+        }
+        return Result.ok(userService.saveTheme(userId, dto.getThemeId()));
     }
 }

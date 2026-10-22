@@ -26,6 +26,11 @@ public class SysUserVO implements Serializable {
     private LocalDateTime updateTime;
 
     /**
+     * 界面主题 ID（色相-明暗-形态）。前端据此在登录后立即套用皮肤。
+     */
+    private String themeId;
+
+    /**
      * 权限码集合（超管为 ["*:*:*"]），前端 v-hasPermi 指令据此判断按钮显示
      */
     private List<String> permissions;

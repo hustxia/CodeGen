@@ -42,4 +42,10 @@ public class SysUser extends BaseEntity {
      * 状态：0禁用 1启用
      */
     private Integer status;
+
+    /**
+     * 界面主题 ID，形如 blue-light-rounded（色相-明暗-形态）。
+     * 为空表示从未设置过，前端按默认主题渲染。
+     */
+    private String themeId;
 }
