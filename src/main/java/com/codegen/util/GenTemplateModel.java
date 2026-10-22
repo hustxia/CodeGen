@@ -379,6 +379,9 @@ public final class GenTemplateModel {
         m.put("excelImportColumns", toModel(importCols));
         m.put("hasExcelExport", genService && genPageApi && genFrontend && !excelCols.isEmpty());
         m.put("hasExcelImport", genService && genAddApi && genFrontend && !importCols.isEmpty());
+        // 任一列绑了字典：controller 模板据此注入 DictTexts（导出列翻译中文）
+        m.put("hasDictColumn", cols != null && cols.stream().anyMatch(c ->
+                c.getDictType() != null && !c.getDictType().isBlank()));
         m.put("excelHasBigDecimal", hasType(excelCols, "BigDecimal"));
         m.put("excelHasLocalDateTime", hasType(excelCols, "LocalDateTime"));
         m.put("excelHasLocalDate", hasType(excelCols, "LocalDate"));

@@ -89,6 +89,10 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 "backend", force, vo, counter);
         write(backendRoot, pkgPath + "/common/config/LongIdJacksonConfig.java",
                 longIdJacksonConfigJava(pkg), "backend", force, vo, counter);
+        write(backendRoot, pkgPath + "/common/config/TimeJacksonConfig.java",
+                timeJacksonConfigJava(pkg), "backend", force, vo, counter);
+        write(backendRoot, pkgPath + "/common/util/DictTexts.java",
+                dictTextsJava(pkg), "backend", force, vo, counter);
         write(backendRoot, pkgPath + "/common/handler/AuditMetaObjectHandler.java",
                 auditMetaObjectHandlerJava(pkg), "backend", force, vo, counter);
         write(backendRoot, pkgPath + "/common/util/MaskUtils.java", maskUtilsJava(pkg),
@@ -1033,6 +1037,77 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        LambdaQueryWrapper<OpeLog> wrapper = new LambdaQueryWrapper<>();\n"
                 + "        wrapper.lt(OpeLog::getOperTime, before);\n"
                 + "        return Result.ok(opeLogMapper.delete(wrapper));\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    /**
+     * 时间序列化统一格式：LocalDateTime 输出 yyyy-MM-dd HH:mm:ss，
+     * 避免前端拿到 ISO 默认格式（2026-10-21T13:31:22，中间带 T）。
+     */
+    private String timeJacksonConfigJava(String pkg) {
+        return "package " + pkg + ".common.config;\n\n"
+                + "import com.fasterxml.jackson.databind.Module;\n"
+                + "import com.fasterxml.jackson.databind.module.SimpleModule;\n"
+                + "import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;\n"
+                + "import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;\n"
+                + "import org.springframework.context.annotation.Bean;\n"
+                + "import org.springframework.context.annotation.Configuration;\n\n"
+                + "import java.time.LocalDateTime;\n"
+                + "import java.time.format.DateTimeFormatter;\n\n"
+                + "/**\n"
+                + " * 时间序列化统一格式：LocalDateTime 输出 yyyy-MM-dd HH:mm:ss。\n"
+                + " * 由 codegen-server 脚手架生成。\n"
+                + " */\n"
+                + "@Configuration\n"
+                + "public class TimeJacksonConfig {\n\n"
+                + "    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(\"yyyy-MM-dd HH:mm:ss\");\n\n"
+                + "    @Bean\n"
+                + "    public Module localDateTimeModule() {\n"
+                + "        return new SimpleModule()\n"
+                + "                .addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(FORMATTER))\n"
+                + "                .addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(FORMATTER));\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    /**
+     * 字典翻译组件：dict_code + value -> label，导出/展示用。
+     * 结果按 code 缓存，字典变更后重启生效（导出场景足够）。
+     */
+    private String dictTextsJava(String pkg) {
+        return "package " + pkg + ".common.util;\n\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
+                + "import org.springframework.jdbc.core.JdbcTemplate;\n"
+                + "import org.springframework.stereotype.Component;\n\n"
+                + "import java.util.HashMap;\n"
+                + "import java.util.Map;\n"
+                + "import java.util.concurrent.ConcurrentHashMap;\n\n"
+                + "/**\n"
+                + " * 导出/展示用的字典翻译：dict_code + value -> label。\n"
+                + " * 由 codegen-server 脚手架生成；结果按 code 缓存，字典变更后重启生效。\n"
+                + " */\n"
+                + "@Component\n"
+                + "public class DictTexts {\n\n"
+                + "    @Autowired\n"
+                + "    private JdbcTemplate jdbcTemplate;\n\n"
+                + "    private final Map<String, Map<String, String>> cache = new ConcurrentHashMap<>();\n\n"
+                + "    public String label(String dictCode, String value) {\n"
+                + "        if (dictCode == null || value == null || value.isBlank()) {\n"
+                + "            return value == null ? \"\" : value;\n"
+                + "        }\n"
+                + "        Map<String, String> mapping = cache.computeIfAbsent(dictCode, code -> {\n"
+                + "            Map<String, String> m = new HashMap<>();\n"
+                + "            try {\n"
+                + "                jdbcTemplate.query(\n"
+                + "                        \"SELECT dict_value, dict_label FROM sys_dict_data WHERE dict_code = ? AND deleted = 0\",\n"
+                + "                        rs -> m.put(rs.getString(1), rs.getString(2)), code);\n"
+                + "            } catch (Exception ignored) {\n"
+                + "                // 字典缺失时原样返回值，不阻断导出\n"
+                + "            }\n"
+                + "            return m;\n"
+                + "        });\n"
+                + "        return mapping.getOrDefault(value, value);\n"
                 + "    }\n"
                 + "}\n";
     }

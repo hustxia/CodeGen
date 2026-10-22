@@ -102,6 +102,10 @@ ${''}
     @Autowired
     private JdbcTemplate jdbcTemplate;
 </#if>
+<#if hasDictColumn>
+    @Autowired
+    private ${rootPkg}.common.util.DictTexts dictTexts;
+</#if>
     // <gen:begin key="controller-body">
 <#if isMiddle && relationKeys?size gte 2>${''}
 @Operation(summary = "${comment}：按一个外键取另一侧的全部值（多选回显用）")
@@ -263,13 +267,16 @@ public ResponseEntity<byte[]> export(@RequestBody(required = false) ${className}
         Sheet sheet = wb.createSheet("${comment}");
         Row header = sheet.createRow(0);
 <#list excelColumns as c>
-        header.createCell(${c?index}).setCellValue("${c.columnComment}");
+        header.createCell(${c?index}).setCellValue("${c.commentLabel}");
 </#list>
         int rowIndex = 1;
         for (${className} e : rows) {
             Row row = sheet.createRow(rowIndex++);
 <#list excelColumns as c>
-<#if c.isNumber>
+<#if c.hasDict>
+            // 字典列导出中文标签，与页面显示一致
+            row.createCell(${c?index}).setCellValue(dictTexts.label("${c.dictType}", String.valueOf(e.get${c.capField}())));
+<#elseif c.isNumber>
             row.createCell(${c?index}).setCellValue(cellNum(e.get${c.capField}()));
 <#else>
             row.createCell(${c?index}).setCellValue(cellText(e.get${c.capField}()));

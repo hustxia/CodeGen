@@ -59,6 +59,8 @@ public class DemoGoodsController {
     private DemoGoodsService demoGoodsService;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private com.codegen.common.util.DictTexts dictTexts;
     // <gen:begin key="controller-body">
 
 @Operation(summary = "分页查询商品")
@@ -137,7 +139,8 @@ public ResponseEntity<byte[]> export(@RequestBody(required = false) DemoGoodsPag
         for (DemoGoods e : rows) {
             Row row = sheet.createRow(rowIndex++);
             row.createCell(0).setCellValue(cellText(e.getGoodsName()));
-            row.createCell(1).setCellValue(cellNum(e.getStatus()));
+            // 字典列导出中文标签，与页面显示一致
+            row.createCell(1).setCellValue(dictTexts.label("sys_status", String.valueOf(e.getStatus())));
             row.createCell(2).setCellValue(cellNum(e.getDeptId()));
             row.createCell(3).setCellValue(cellNum(e.getPrice()));
         }
