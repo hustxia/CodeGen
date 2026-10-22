@@ -308,8 +308,9 @@ public class GenMenuServiceImpl implements GenMenuService {
             }
             String old = Files.exists(target) ? Files.readString(target, StandardCharsets.UTF_8) : null;
             if (content.equals(old)) {
+                // 内容一致是幂等时的正常结果，不是问题：不写盘、也不塞 message
+                // （message 在前端会渲染成警示条，把「一切正常」显示成黄条会误导）
                 result.setRouteSynced(true);
-                appendMessage(result, "路由文件内容无变化（" + target.getFileName() + "）");
                 return;
             }
             Files.writeString(target, content, StandardCharsets.UTF_8);

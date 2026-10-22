@@ -195,6 +195,8 @@ public class GenCodeServiceImpl implements GenCodeService {
             throw new BusinessException(400, "请先勾选要对比的表");
         }
         boolean onlyChanged = dto.getOnlyChanged() == null || Boolean.TRUE.equals(dto.getOnlyChanged());
+        // overwrite 不参与差异计算：差异是「渲染结果 vs 磁盘现状」的事实，
+        // 写不写由策略决定（见 GenDiffDTO#overwrite 注释）。保留参数只为兼容既有调用。
         List<GenDiffVO> result = new ArrayList<>();
         for (Long id : ids) {
             GenTable table = genTableMapper.selectById(id);
@@ -226,6 +228,7 @@ public class GenCodeServiceImpl implements GenCodeService {
                 vo.setTableName(table.getTableName());
                 vo.setPath(relPath);
                 vo.setAbsPath(target.toString());
+                vo.setSide(isBackend ? "BACKEND" : "FRONTEND");
                 String oldContent = null;
                 if (Files.exists(target)) {
                     try {
@@ -241,6 +244,9 @@ public class GenCodeServiceImpl implements GenCodeService {
                 vo.setAdditions(stats[0]);
                 vo.setDeletions(stats[1]);
                 boolean isNew = oldContent == null;
+                // status 只描述内容事实：这个文件是不是新的、内容有没有变。
+                // 「会不会被写入」取决于用户在第③步选的 overwrite 策略，由调用方推导，
+                // 不能混进 status——同一份差异不该因策略不同而变脸。
                 vo.setStatus(isNew ? "NEW" : (stats[0] + stats[1] == 0 ? "UNCHANGED" : "MODIFIED"));
                 if (onlyChanged && "UNCHANGED".equals(vo.getStatus())) {
                     continue;

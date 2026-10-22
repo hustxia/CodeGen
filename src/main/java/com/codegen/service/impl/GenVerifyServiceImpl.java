@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.codegen.config.GenOutputProperties;
 import com.codegen.entity.GenOutput;
 import com.codegen.entity.GenTable;
+import com.codegen.entity.SysProject;
 import com.codegen.mapper.GenOutputMapper;
 import com.codegen.mapper.GenTableMapper;
+import com.codegen.mapper.SysProjectMapper;
 import com.codegen.service.GenVerifyService;
+import com.codegen.support.GenPathResolver;
 import com.codegen.vo.GenVerifyVO;
 import com.codegen.common.exception.BusinessException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +57,9 @@ public class GenVerifyServiceImpl implements GenVerifyService {
 
     @Autowired
     private GenOutputProperties outputProperties;
+
+    @Autowired
+    private SysProjectMapper projectMapper;
 
     @Override
     public GenVerifyVO check(List<Long> ids) {
@@ -253,15 +259,17 @@ public class GenVerifyServiceImpl implements GenVerifyService {
      * 以 component 指向 views/&lt;module&gt;/index.vue 为注册标志
      */
     private void verifyRoute(GenTable table, GenVerifyVO vo) {
-        String root = StringUtils.hasText(table.getFrontendRoot())
-                ? table.getFrontendRoot() : outputProperties.getFrontendRoot();
+        // 与写盘/路由重建同一个解析器：表级 → 系统 → 目标模块 → 全局。
+        // 早先这里只读表级 frontendRoot + 全局 frontendPath，多系统下会去校验错的前端工程。
+        SysProject project = table.getProjectId() == null ? null : projectMapper.selectById(table.getProjectId());
+        String root = GenPathResolver.frontendRoot(table, project, outputProperties);
         if (!StringUtils.hasText(root)) {
             vo.getItems().add(new GenVerifyVO.Item("src/router/gen-routes.js", "WARN", "前端根目录未配置，跳过路由核对"));
             return;
         }
         Path base = Paths.get(root).toAbsolutePath().normalize();
-        // 前端工程可能位于 frontend-root 的子目录（monorepo），与写盘侧保持同一解析口径
-        String sub = outputProperties.getFrontendPath();
+        // 前端工程可能位于 frontend-root 的子目录（monorepo）
+        String sub = GenPathResolver.frontendPath(table, project, outputProperties);
         if (StringUtils.hasText(sub)) {
             Path resolved = base.resolve(sub).normalize();
             if (resolved.startsWith(base)) {
