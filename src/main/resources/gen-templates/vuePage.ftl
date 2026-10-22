@@ -6,24 +6,24 @@
     <el-card shadow="never" class="filter-card">
       <el-form :inline="true" :model="query" @submit.native.prevent>
 <#list vueQueryColumns as c>
-        <el-form-item label="${c.columnComment}">
+        <el-form-item label="${c.commentLabel}">
 <#if c.isSelect || c.isRadio>
-          <el-select v-model="query.${c.javaField}" placeholder="请选择${c.columnComment}" clearable style="width: 160px">
+          <el-select v-model="query.${c.javaField}" placeholder="请选择${c.commentLabel}" clearable style="width: 160px">
             <el-option v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#else>[]</#if>" :key="d.value" :label="d.label" :value="d.value" />
           </el-select>
 <#elseif c.isSwitch>
-          <el-select v-model="query.${c.javaField}" placeholder="请选择${c.columnComment}" clearable style="width: 120px">
+          <el-select v-model="query.${c.javaField}" placeholder="请选择${c.commentLabel}" clearable style="width: 120px">
             <el-option label="启用" :value="1" />
             <el-option label="停用" :value="0" />
           </el-select>
 <#elseif c.isNumberCtrl>
           <el-input-number v-model="query.${c.javaField}" controls-position="right" style="width: 160px" />
 <#elseif c.isDate>
-          <el-date-picker v-model="query.${c.javaField}" type="date" value-format="yyyy-MM-dd" placeholder="请选择${c.columnComment}" style="width: 160px" />
+          <el-date-picker v-model="query.${c.javaField}" type="date" value-format="yyyy-MM-dd" placeholder="请选择${c.commentLabel}" style="width: 160px" />
 <#elseif c.isDatetime>
-          <el-date-picker v-model="query.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="请选择${c.columnComment}" style="width: 200px" />
+          <el-date-picker v-model="query.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="请选择${c.commentLabel}" style="width: 200px" />
 <#else>
-          <el-input v-model="query.${c.javaField}" placeholder="${c.columnComment}" clearable @keyup.enter.native="handleSearch" />
+          <el-input v-model="query.${c.javaField}" placeholder="${c.commentLabel}" clearable @keyup.enter.native="handleSearch" />
 </#if>
         </el-form-item>
 </#list>
@@ -65,7 +65,7 @@
         <el-table-column prop="id" label="ID" width="<#if idColWidth gt 0>${idColWidth}<#else>70</#if>" />
 <#list listColumns as c>
 <#if c.isSwitch>
-        <el-table-column prop="${c.javaField}" label="${c.columnComment}" width="${c.colWidth}" align="center">
+        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="center">
           <template slot-scope="{ row }">
             <el-tag :type="row.${c.javaField} === 1 ? 'success' : 'info'" size="mini">
               {{ row.${c.javaField} === 1 ? '启用' : '停用' }}
@@ -73,18 +73,18 @@
           </template>
         </el-table-column>
 <#elseif c.hasDict>
-        <el-table-column prop="${c.javaField}" label="${c.columnComment}" min-width="${c.colWidth}" show-overflow-tooltip
+        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip
           :formatter="(row) => dictText('${c.dictType}', row.${c.javaField})" />
 <#elseif c.isDatetime>
-        <el-table-column prop="${c.javaField}" label="${c.columnComment}" width="${c.colWidth}" align="center" show-overflow-tooltip />
+        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="center" show-overflow-tooltip />
 <#elseif c.isDate>
-        <el-table-column prop="${c.javaField}" label="${c.columnComment}" width="${c.colWidth}" align="center" />
+        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="center" />
 <#elseif c.isNumberCtrl || c.isNumber>
-        <el-table-column prop="${c.javaField}" label="${c.columnComment}" width="${c.colWidth}" align="right" show-overflow-tooltip />
+        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="right" show-overflow-tooltip />
 <#elseif c.isText || c.isTextarea>
-        <el-table-column prop="${c.javaField}" label="${c.columnComment}" min-width="${c.colWidth}" show-overflow-tooltip />
+        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip />
 <#else>
-        <el-table-column prop="${c.javaField}" label="${c.columnComment}" min-width="${c.colWidth}" show-overflow-tooltip />
+        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip />
 </#if>
 </#list>
         <el-table-column prop="updateTime" label="更新时间" width="170" align="center" />
@@ -136,15 +136,15 @@
     <el-dialog :title="form.id ? '编辑${comment}' : '新增${comment}'" :visible.sync="dialogVisible" width="<#if hasChild>860px<#else>560px</#if>">
       <el-form ref="form" :model="form" :rules="rules" label-width="110px">
 <#list formColumns as c>
-        <el-form-item<#if c.hasLink> v-if="link.visible('${c.javaField}')"</#if> label="${c.columnComment}" prop="${c.javaField}">
+        <el-form-item<#if c.hasLink> v-if="link.visible('${c.javaField}')"</#if> label="${c.commentLabel}" prop="${c.javaField}">
 <#if c.hasRef>
-          <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> filterable remote clearable placeholder="输入关键字搜索${c.columnComment}"
+          <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> filterable remote clearable placeholder="输入关键字搜索${c.commentLabel}"
             :remote-method="kw => searchRef('${c.javaField}', '${c.refTable}', '${c.refLabel}', kw)"
             :loading="refLoading['${c.javaField}']" style="width: 100%">
             <el-option v-for="o in refOptions['${c.javaField}'] || []" :key="o.id" :label="o.label" :value="o.id" />
           </el-select>
 <#elseif c.isSelect>
-          <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> placeholder="请选择${c.columnComment}" clearable style="width: 100%">
+          <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> placeholder="请选择${c.commentLabel}" clearable style="width: 100%">
             <el-option v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#else>[]</#if>" :key="d.value" :label="d.label" :value="d.value" />
           </el-select>
 <#elseif c.isRadio>
@@ -156,13 +156,13 @@
 <#elseif c.isNumberCtrl>
           <el-input-number v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> controls-position="right" style="width: 100%" />
 <#elseif c.isDate>
-          <el-date-picker v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="date" value-format="yyyy-MM-dd" placeholder="请选择${c.columnComment}" style="width: 100%" />
+          <el-date-picker v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="date" value-format="yyyy-MM-dd" placeholder="请选择${c.commentLabel}" style="width: 100%" />
 <#elseif c.isDatetime>
-          <el-date-picker v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="请选择${c.columnComment}" style="width: 100%" />
+          <el-date-picker v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="请选择${c.commentLabel}" style="width: 100%" />
 <#elseif c.isTextarea>
-          <el-input v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="textarea" :rows="3" placeholder="请输入${c.columnComment}" />
+          <el-input v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="textarea" :rows="3" placeholder="请输入${c.commentLabel}" />
 <#else>
-          <el-input v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> placeholder="请输入${c.columnComment}" />
+          <el-input v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> placeholder="请输入${c.commentLabel}" />
 </#if>
         </el-form-item>
 </#list>
@@ -188,7 +188,7 @@
       </div>
       <el-table :data="childRows" border size="mini" class="child-table">
 <#list child.formColumns as c>
-        <el-table-column label="${c.columnComment}" min-width="130">
+        <el-table-column label="${c.commentLabel}" min-width="130">
           <template slot-scope="{ row }">
 <#if c.isSwitch>
             <el-switch v-model="row.${c.javaField}" :active-value="1" :inactive-value="0" />
@@ -199,7 +199,7 @@
 <#elseif c.isDatetime>
             <el-date-picker v-model="row.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" size="mini" style="width: 100%" />
 <#else>
-            <el-input v-model="row.${c.javaField}" size="mini" placeholder="${c.columnComment}" />
+            <el-input v-model="row.${c.javaField}" size="mini" placeholder="${c.commentLabel}" />
 </#if>
           </template>
         </el-table-column>
@@ -239,7 +239,7 @@
       </div>
       <el-table :data="grandRows" border size="mini" class="child-table">
 <#list child.grandChild.formColumns as c>
-        <el-table-column label="${c.columnComment}" min-width="130">
+        <el-table-column label="${c.commentLabel}" min-width="130">
           <template slot-scope="{ row }">
 <#if c.isSwitch>
             <el-switch v-model="row.${c.javaField}" :active-value="1" :inactive-value="0" />
@@ -250,7 +250,7 @@
 <#elseif c.isDatetime>
             <el-date-picker v-model="row.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" size="mini" style="width: 100%" />
 <#else>
-            <el-input v-model="row.${c.javaField}" size="mini" placeholder="${c.columnComment}" />
+            <el-input v-model="row.${c.javaField}" size="mini" placeholder="${c.commentLabel}" />
 </#if>
           </template>
         </el-table-column>
@@ -278,7 +278,7 @@
         </div>
 <#list listColumns as c>
         <div class="detail-row">
-          <span class="detail-label">${c.columnComment}</span>
+          <span class="detail-label">${c.commentLabel}</span>
 <#if c.isSwitch>
           <span class="detail-value">{{ detail.${c.javaField} === 1 ? '启用' : '停用' }}</span>
 <#elseif c.hasDict>
@@ -505,14 +505,14 @@ export default {
         // P1-3 唯一性校验：失焦时异步查重，后端同样有兜底校验
 <#list uniqueColumns as c>
         ${c.javaField}: [
-          { required: ${c.isRequired?c}, message: '${c.columnComment}不能为空', trigger: 'blur' },
+          { required: ${c.isRequired?c}, message: '${c.commentLabel}不能为空', trigger: 'blur' },
           { validator: this.uniqueValidator('${c.javaField}'), trigger: 'blur' }
         ],</#list>
 </#if>
       },
       form: defaultForm()<#if hasLink>,
       // P1-4 表单联动：由字段配置的 linkRule 驱动，visible/disabled/required 三类规则
-      linkRules: [<#list formColumns as c><#if c.hasLink>{ field: '${c.javaField}', label: '${c.columnComment}', rule: ${c.linkRule} }<#if c_has_next>,</#if></#if></#list>]<#if hasLink>,
+      linkRules: [<#list formColumns as c><#if c.hasLink>{ field: '${c.javaField}', label: '${c.commentLabel}', rule: ${c.linkRule} }<#if c_has_next>,</#if></#if></#list>]<#if hasLink>,
       linkState: {}</#if></#if>
       // <gen:end key="vue-data">
     }
@@ -659,7 +659,7 @@ export default {
       }
     },
     columnLabel(field) {
-      const map = {<#list uniqueColumns as c> ${c.javaField}: '${c.columnComment}'<#if c_has_next>,</#if></#list> }
+      const map = {<#list uniqueColumns as c> ${c.javaField}: '${c.commentLabel}'<#if c_has_next>,</#if></#list> }
       return map[field] || field
     },
 </#if>

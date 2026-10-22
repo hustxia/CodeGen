@@ -265,6 +265,15 @@ public final class GenValidateUtils {
         if (idx > 0) {
             s = s.substring(0, idx);
         }
+        // 冒号后是枚举说明（状态:1启用0停用），label 只取主标题
+        idx = s.indexOf(':');
+        if (idx > 0) {
+            s = s.substring(0, idx);
+        }
+        idx = s.indexOf('：');
+        if (idx > 0) {
+            s = s.substring(0, idx);
+        }
         s = s.trim();
         return s.matches("^[0-9].*") ? "" : s;
     }

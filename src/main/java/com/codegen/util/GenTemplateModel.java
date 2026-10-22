@@ -500,6 +500,28 @@ public final class GenTemplateModel {
         return m.find() ? Integer.parseInt(m.group(1)) : 0;
     }
 
+    /**
+     * 注释 → 页面显示名。
+     *
+     * <p>字段注释里常带枚举说明（{@code 状态:1启用0停用}、{@code 订单状态（待付款、已付款）}），
+     * 直接当 label 会把枚举说明整段显示出来。这里取冒号/括号前的主标题当显示名；
+     * 枚举说明由字典识别（DictDetectService）解析并绑定字典，页面下拉/翻译用它。
+     * 无分隔符的普通注释原样返回。
+     */
+    private static final java.util.regex.Pattern COMMENT_TITLE_SPLIT =
+            java.util.regex.Pattern.compile("^([^:：（(]+)[:：（(].+$");
+
+    private static String commentLabel(String comment) {
+        if (comment == null || comment.isBlank()) {
+            return "";
+        }
+        var m = COMMENT_TITLE_SPLIT.matcher(comment.trim());
+        if (m.matches() && !m.group(1).isBlank()) {
+            return m.group(1).trim();
+        }
+        return comment.trim();
+    }
+
     private static int columnWidth(GenTableColumn c, String htmlType, String javaType) {
         int base;
         if ("switch".equals(htmlType)) {
@@ -531,8 +553,7 @@ public final class GenTemplateModel {
     /**
      * 列模型展平
      */
-    private static List<Map<String, Object>> toModel(List<GenTableColumn> cols) {
-        List<Map<String, Object>> list = new ArrayList<>();
+    private static List<Map<String, Object>> toModel(List<GenTableColumn> cols) {        List<Map<String, Object>> list = new ArrayList<>();
         for (GenTableColumn c : cols) {
             Map<String, Object> cm = new HashMap<>();
             String javaType = c.getJavaType();
@@ -547,7 +568,11 @@ public final class GenTemplateModel {
             // 数据库列名：查重、导出表头映射等需要按真实列名拼 SQL
             cm.put("dbField", c.getColumnName());
             cm.put("javaType", javaType);
+            // 原始注释：枚举说明等仍可能在少数场景被引用
             cm.put("columnComment", c.getColumnComment());
+            // 页面显示名：剥掉注释里的枚举说明（状态:1启用0停用 -> 状态），
+            // vue 模板的 label/placeholder/校验消息统一用这个，原始注释不再直接上屏
+            cm.put("commentLabel", commentLabel(c.getColumnComment()));
             cm.put("columnType", c.getColumnType());
             cm.put("queryType", c.getQueryType());
             cm.put("queryOp", queryOp(c.getQueryType()));

@@ -71,6 +71,12 @@ public class DictDetectServiceImpl implements DictDetectService {
     private static final Pattern LABEL_VALUE = Pattern.compile(
             "^(.+?)\\s*[=:：]\\s*(.+)$");
 
+    /**
+     * 连写枚举段：{@code 1启用0停用}、{@code 1待付款2已付款}。
+     * 值是数字，标签是紧随其后不超过 12 字的中文/字母。
+     */
+    private static final Pattern DENSE_OPTION = Pattern.compile("(\\d+)([\\u4e00-\\u9fa5A-Za-z]{1,12})");
+
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -280,6 +286,48 @@ public class DictDetectServiceImpl implements DictDetectService {
             return null;
         }
         String[] parts = body.split(OPTION_SEP_REGEX);
+        List<DictDetectItemVO.Option> list = parseParts(parts);
+        // 常规分隔拆不出时，再试连写格式「1启用0停用」
+        if (list == null) {
+            list = optionsFromDense(body);
+        }
+        return list != null && list.size() >= MIN_OPTIONS ? list : null;
+    }
+
+    /**
+     * 连写枚举解析：整段必须被「数字+短标签」序列完整覆盖才算认，
+     * 避免把「支持1000种商品」这类普通说明误拆。
+     */
+    private List<DictDetectItemVO.Option> optionsFromDense(String body) {
+        if (!StringUtils.hasText(body)) {
+            return null;
+        }
+        String text = body.replaceAll("\\s", "");
+        Matcher m = DENSE_OPTION.matcher(text);
+        List<DictDetectItemVO.Option> list = new ArrayList<>();
+        Set<String> seen = new LinkedHashSet<>();
+        int covered = 0;
+        int sort = 0;
+        while (m.find()) {
+            String label = m.group(2);
+            String value = m.group(1);
+            if (!seen.add(value)) {
+                return null;
+            }
+            covered += m.group().length();
+            list.add(new DictDetectItemVO.Option(label, value, ++sort));
+        }
+        // 有未覆盖的残段（如尾部说明文字）就不认
+        if (list.isEmpty() || covered != text.length()) {
+            return null;
+        }
+        return list.size() >= MIN_OPTIONS && list.size() <= MAX_OPTIONS ? list : null;
+    }
+
+    /**
+     * 按分隔符拆选项（从 optionsFromComment 抽出，供常规/回退两路复用）
+     */
+    private List<DictDetectItemVO.Option> parseParts(String[] parts) {
         List<DictDetectItemVO.Option> list = new ArrayList<>();
         Set<String> seen = new LinkedHashSet<>();
         int sort = 0;
