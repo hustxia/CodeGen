@@ -30,3 +30,6 @@ logs/
 # 生成器运行期产物
 .gen-artifacts/
 .gen-verify/
+
+# Trae skills 已统一到 D:/workspace/skills 真源（目录联接），不纳入仓库
+.trae/skills/
