@@ -111,4 +111,14 @@ public class GenOutputProperties {
      * 编译超时（秒）
      */
     private int compileTimeoutSeconds = 300;
+
+    /**
+     * 保留最近多少个批次的备份目录（V4.2 P1-2），<=0 表示不按批次数清理
+     */
+    private int backupKeepBatches = 20;
+
+    /**
+     * 保留最近多少天的备份目录（V4.2 P1-2），<=0 表示不按天数清理
+     */
+    private int backupKeepDays = 30;
 }

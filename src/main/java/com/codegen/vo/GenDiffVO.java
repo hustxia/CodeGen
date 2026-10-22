@@ -43,6 +43,21 @@ public class GenDiffVO implements Serializable {
      */
     private String side;
 
+    /**
+     * 漂移状态（V4.2）：SAME 与台账一致 / DRIFTED 生成后被手改 / MISSING 文件不存在 /
+     * UNKNOWN 无台账记录（从未生成过或台账已清）。
+     *
+     * <p>与 {@link #status} 正交：status 是「渲染结果 vs 磁盘」的差异，
+     * drift 是「磁盘 vs 上次生成」的差异。一个 UNCHANGED 的文件也可能 DRIFTED——
+     * 那说明手改后的内容恰好又和模板一致了。
+     */
+    private String drift;
+
+    /**
+     * 磁盘最后修改时间（漂移为 DRIFTED 时给用户做参照）
+     */
+    private String lastModified;
+
     private int additions;
 
     private int deletions;

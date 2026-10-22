@@ -12,6 +12,7 @@ import com.codegen.dto.RelationApplyDTO;
 import com.codegen.dto.GenDownloadDTO;
 import com.codegen.dto.GenMenuRegisterDTO;
 import com.codegen.dto.GenOutputPageDTO;
+import com.codegen.dto.GenRollbackDTO;
 import com.codegen.dto.GenScaffoldDTO;
 import com.codegen.dto.GenTableBatchDTO;
 import com.codegen.dto.GenTablePageDTO;
@@ -23,6 +24,8 @@ import com.codegen.service.RelationDetectService;
 import com.codegen.service.DictDetectService;
 import com.codegen.service.GenApplyService;
 import com.codegen.service.GenCodeService;
+import com.codegen.service.GenDriftService;
+import com.codegen.service.GenLedgerService;
 import com.codegen.service.GenDdlService;
 import com.codegen.service.GenMenuService;
 import com.codegen.service.GenOutputService;
@@ -39,10 +42,13 @@ import com.codegen.vo.ApiCatalogItemVO;
 import com.codegen.vo.RelationDetectVO;
 import com.codegen.vo.GenDdlExecuteVO;
 import com.codegen.vo.GenDiffVO;
+import com.codegen.vo.GenDriftSummaryVO;
+import com.codegen.vo.GenLedgerHealthVO;
 import com.codegen.vo.GenFileVO;
 import com.codegen.vo.GenImportVO;
 import com.codegen.vo.GenMenuRegisterVO;
 import com.codegen.vo.GenOutputBatchVO;
+import com.codegen.vo.GenRollbackVO;
 import com.codegen.vo.GenScaffoldCheckVO;
 import com.codegen.vo.GenScaffoldVO;
 import com.codegen.vo.GenSelfCheckVO;
@@ -53,6 +59,7 @@ import com.codegen.common.exception.BusinessException;
 import com.codegen.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -86,6 +93,12 @@ public class GenController {
 
     @Autowired
     private GenCodeService genCodeService;
+
+    @Autowired
+    private GenDriftService genDriftService;
+
+    @Autowired
+    private GenLedgerService genLedgerService;
 
     @Autowired
     private GenSelfCheckService genSelfCheckService;
@@ -279,8 +292,14 @@ public class GenController {
 
     @Operation(summary = "写盘（按每表前后端根目录）")
     @PostMapping("/write")
-    public Result<List<GenWriteVO>> write(@RequestBody GenWriteDTO dto) {
-        return Result.ok(genCodeService.writeToDisk(dto));
+    public Result<List<GenWriteVO>> write(@RequestBody GenWriteDTO dto, HttpServletResponse response) {
+        List<GenWriteVO> list = genCodeService.writeToDisk(dto);
+        // 台账失败不阻断写盘，但必须让调用方看见：文件写了、账没记上，下次回滚就对不上
+        int ledgerErrors = genCodeService.ledgerErrorCount();
+        if (ledgerErrors > 0) {
+            response.setHeader("X-Gen-Ledger-Errors", String.valueOf(ledgerErrors));
+        }
+        return Result.ok(list);
     }
 
     @Operation(summary = "生成自检（内存编译 + 结构检查）")
@@ -309,10 +328,36 @@ public class GenController {
         return Result.ok(genApplyService.apply(dto));
     }
 
-    @Operation(summary = "回滚某个写盘批次")
+    @Operation(summary = "回滚某个写盘批次（不传 body 即整批，兼容旧调用）")
     @PostMapping("/history/rollback")
-    public Result<Map<String, Object>> rollback(@RequestParam("batchNo") String batchNo) {
-        return Result.ok(genApplyService.rollback(batchNo));
+    public Result<GenRollbackVO> rollback(@RequestParam("batchNo") String batchNo,
+                                          @RequestBody(required = false) GenRollbackDTO dto) {
+        return Result.ok(genApplyService.rollback(batchNo, dto));
+    }
+
+    @Operation(summary = "回滚预览（dry-run：将还原/将删除/将跳过，不落盘）")
+    @PostMapping("/history/rollback/preview")
+    public Result<GenRollbackVO> rollbackPreview(@RequestParam("batchNo") String batchNo,
+                                                 @RequestBody(required = false) GenRollbackDTO dto) {
+        return Result.ok(genApplyService.rollbackPreview(batchNo, dto));
+    }
+
+    @Operation(summary = "产物漂移检测（磁盘 vs 台账 md5）")
+    @PostMapping("/drift")
+    public Result<GenDriftSummaryVO> drift(@RequestBody(required = false) GenDownloadDTO dto) {
+        return Result.ok(genDriftService.scan(dto == null ? null : dto.getIds()));
+    }
+
+    @Operation(summary = "台账健康检查（孤儿记录/备份缺失/重复记录/漂移数）")
+    @GetMapping("/ledger/health")
+    public Result<GenLedgerHealthVO> ledgerHealth() {
+        return Result.ok(genLedgerService.health());
+    }
+
+    @Operation(summary = "清理过期备份目录（保留最近 N 个批次 / N 天）")
+    @PostMapping("/ledger/backup-cleanup")
+    public Result<Map<String, Object>> cleanupBackups() {
+        return Result.ok(genLedgerService.cleanupBackups());
     }
 
     @Operation(summary = "最近写盘批次")

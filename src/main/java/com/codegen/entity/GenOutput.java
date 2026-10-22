@@ -59,6 +59,22 @@ public class GenOutput extends BaseEntity {
     private String md5;
 
     /**
+     * 覆盖前原文件的备份路径（V4.2）。
+     *
+     * <p>原来只有 {@code gen_history} 存这个字段，导致回滚必须查另一张表；
+     * 台账合一后回滚只认本表，备份路径与 md5 必须同源。
+     */
+    private String backupPath;
+
+    /**
+     * 覆盖前原文件的 MD5（V4.2）。
+     *
+     * <p>用来判断「磁盘上这份还是不是上次生成时那份」：{@code md5} 记的是写完之后的内容，
+     * {@code prevMd5} 记的是写之前的内容，回滚后应当还原成 prevMd5。
+     */
+    private String prevMd5;
+
+    /**
      * 说明（合并块/跳过/失败原因）
      */
     private String message;

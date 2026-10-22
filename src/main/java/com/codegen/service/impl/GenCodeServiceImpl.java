@@ -13,8 +13,10 @@ import com.codegen.mapper.GenOutputMapper;
 import com.codegen.mapper.GenTableMapper;
 import com.codegen.mapper.SysProjectMapper;
 import com.codegen.service.GenCodeService;
+import com.codegen.service.GenDriftService;
 import com.codegen.service.GenTableColumnService;
 import com.codegen.support.GenPathResolver;
+import com.codegen.util.GenDigestUtils;
 import com.codegen.util.GenMergeUtils;
 import com.codegen.util.GenTemplateEngine;
 import com.codegen.util.GenTemplateModel;
@@ -23,6 +25,8 @@ import com.codegen.vo.GenFileVO;
 import com.codegen.vo.GenWriteVO;
 import com.codegen.common.context.UserContext;
 import com.codegen.common.exception.BusinessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -34,9 +38,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,7 +57,19 @@ public class GenCodeServiceImpl implements GenCodeService {
 
     private static final List<String> INFO_FILES = List.of("router-snippet.txt", "README-使用说明.txt");
 
+    private static final Logger log = LoggerFactory.getLogger(GenCodeServiceImpl.class);
+
+    /**
+     * 本次写盘中台账记录失败的条数（V4.2）。
+     *
+     * <p>写盘仍算成功——文件已经落盘，因为台账失败去回滚它反而更糟；但必须让调用方看得见，
+     * 否则就是静默丢账。用 ThreadLocal 是因为 Service 是单例，计数不能跨请求串。
+     */
+    private static final ThreadLocal<Integer> LEDGER_ERRORS = ThreadLocal.withInitial(() -> 0);
+
     private static final DateTimeFormatter BATCH_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+
+    private static final DateTimeFormatter DIFF_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Autowired
     private GenTableMapper genTableMapper;
@@ -76,6 +91,9 @@ public class GenCodeServiceImpl implements GenCodeService {
 
     @Autowired
     private SysProjectMapper projectMapper;
+
+    @Autowired
+    private GenDriftService genDriftService;
 
     /**
      * 单次生成内的系统配置缓存（projectId -> 系统）。
@@ -125,7 +143,7 @@ public class GenCodeServiceImpl implements GenCodeService {
             for (Map.Entry<String, String> entry : all.entrySet()) {
                 byte[] bytes = entry.getValue().getBytes(StandardCharsets.UTF_8);
                 manifest.append(entry.getKey()).append('\t').append(bytes.length).append('\t')
-                        .append(md5Hex(bytes)).append('\n');
+                        .append(GenDigestUtils.md5Hex(bytes)).append('\n');
             }
             writeZipEntry(zip, "manifest.txt", manifest.toString());
             // X-Gen-Files 清单与 ZIP 写入顺序一致，manifest.txt 计入
@@ -159,18 +177,23 @@ public class GenCodeServiceImpl implements GenCodeService {
 
     @Override
     public List<GenWriteVO> writeToDisk(GenWriteDTO dto, String batchNo) {
+        LEDGER_ERRORS.set(0);
         List<Long> ids = dto == null ? null : dto.getIds();
         if (ids == null || ids.isEmpty()) {
             throw new BusinessException(400, "请先勾选要生成的表");
         }
         boolean overwrite = Boolean.TRUE.equals(dto.getOverwrite());
+        boolean skipDrifted = Boolean.TRUE.equals(dto.getSkipDrifted());
+        // 台账只取一次：逐文件查库会把「一个批次几十个文件」放大成几十次往返，
+        // 而且同一批次内台账不会变，缓存一份没有一致性风险
+        Map<String, GenDriftService.LedgerSnapshot> ledger = genDriftService.latestByPath();
         List<GenWriteVO> results = new ArrayList<>();
         for (Long id : ids) {
             GenTable table = genTableMapper.selectById(id);
             if (table == null) {
                 continue;
             }
-            results.addAll(writeTable(table, overwrite, batchNo));
+            results.addAll(writeTable(table, overwrite, skipDrifted, batchNo, ledger));
             boolean wrote = results.stream()
                     .anyMatch(r -> "WRITTEN".equals(r.getStatus()) || "MERGED".equals(r.getStatus()));
             if (wrote) {
@@ -197,6 +220,8 @@ public class GenCodeServiceImpl implements GenCodeService {
         boolean onlyChanged = dto.getOnlyChanged() == null || Boolean.TRUE.equals(dto.getOnlyChanged());
         // overwrite 不参与差异计算：差异是「渲染结果 vs 磁盘现状」的事实，
         // 写不写由策略决定（见 GenDiffDTO#overwrite 注释）。保留参数只为兼容既有调用。
+        // 漂移同理：它是「磁盘 vs 上次生成」的事实，不因用户选了哪个策略而变。
+        Map<String, GenDriftService.LedgerSnapshot> ledger = genDriftService.latestByPath();
         List<GenDiffVO> result = new ArrayList<>();
         for (Long id : ids) {
             GenTable table = genTableMapper.selectById(id);
@@ -230,12 +255,22 @@ public class GenCodeServiceImpl implements GenCodeService {
                 vo.setAbsPath(target.toString());
                 vo.setSide(isBackend ? "BACKEND" : "FRONTEND");
                 String oldContent = null;
+                String actualMd5 = null;
                 if (Files.exists(target)) {
                     try {
-                        oldContent = Files.readString(target, StandardCharsets.UTF_8);
+                        // 一次读字节，两用：算漂移指纹 + 解成文本做行级 diff。
+                        // 分成两次读会在中间被别的进程改动时出现「指纹和内容不是同一版」的怪结果。
+                        byte[] raw = Files.readAllBytes(target);
+                        actualMd5 = GenDigestUtils.md5Hex(raw);
+                        oldContent = new String(raw, StandardCharsets.UTF_8);
                     } catch (Exception e) {
                         oldContent = null;
                     }
+                }
+                GenDriftService.LedgerSnapshot snap = ledger.get(target.toString());
+                vo.setDrift(genDriftService.judge(snap == null ? null : snap.md5(), actualMd5));
+                if (snap != null) {
+                    vo.setLastModified(lastModifiedOf(target));
                 }
                 String newContent = entry.getValue();
                 List<GenMergeUtils.DiffLine> lines = GenMergeUtils.diff(
@@ -265,9 +300,12 @@ public class GenCodeServiceImpl implements GenCodeService {
     /**
      * 单表写盘：后端文件 -> backend_root，前端文件 -> frontend_root
      *
-     * @param batchNo 非空时，覆盖前先备份到 {@code <root>/.gen-backup/<batchNo>/} 并记录 gen_history
+     * @param batchNo 非空时，覆盖前先备份到 {@code <root>/.gen-backup/<batchNo>/} 并把
+     *                备份路径、覆盖前 md5 一并记入 {@code gen_output} 台账
      */
-    private List<GenWriteVO> writeTable(GenTable table, boolean overwrite, String batchNo) {
+    private List<GenWriteVO> writeTable(GenTable table, boolean overwrite, boolean skipDrifted,
+                                        String batchNo,
+                                        Map<String, GenDriftService.LedgerSnapshot> ledger) {
         // 先解析目标模块，否则 backendBase 还是库里的旧值，后端文件会被误判成前端文件
         applyOutputDefaults(table);
         String backendBase = backendBaseOf(table);
@@ -286,7 +324,7 @@ public class GenCodeServiceImpl implements GenCodeService {
                 if (!StringUtils.hasText(root)) {
                     String msg = (isBackend ? "后端" : "前端") + "根目录未配置：请在 gen.output."
                             + (isBackend ? "backend-root" : "frontend-root") + " 或表配置中补充";
-                    recordOutput(batchNo, table, group, relPath, "", "ERROR", 0, "", msg);
+                    recordOutput(batchNo, table, group, relPath, "", "ERROR", 0, "", msg, null, null);
                     results.add(new GenWriteVO(table.getTableName(), relPath, "ERROR", msg));
                     continue;
                 }
@@ -297,25 +335,44 @@ public class GenCodeServiceImpl implements GenCodeService {
                 }
                 Path target = rootPath.resolve(relPath).normalize();
                 if (!target.startsWith(rootPath)) {
-                    recordOutput(batchNo, table, group, relPath, "", "ERROR", 0, "", "非法目标路径（越界）");
+                    recordOutput(batchNo, table, group, relPath, "", "ERROR", 0, "", "非法目标路径（越界）", null, null);
                     results.add(new GenWriteVO(table.getTableName(), relPath, "ERROR", "非法目标路径（越界）"));
                     continue;
                 }
                 boolean exists = Files.exists(target);
                 if (exists && !overwrite) {
                     recordOutput(batchNo, table, group, relPath, target.toString(), "SKIPPED", 0, "",
-                            "文件已存在，未勾选覆盖");
+                            "文件已存在，未勾选覆盖", null, null);
                     results.add(new GenWriteVO(table.getTableName(), relPath, "SKIPPED", "文件已存在，未勾选覆盖"));
                     continue;
+                }
+                // 覆盖前读一次原内容：备份、prevMd5、块合并、漂移判断都用这一份。
+                // 分开读会有「判断看到的是 A 版、合并用的是 B 版」的窗口。
+                byte[] originalBytes = exists ? Files.readAllBytes(target) : null;
+                String oldContent = originalBytes == null ? null : new String(originalBytes, StandardCharsets.UTF_8);
+                String currentMd5 = originalBytes == null ? null : GenDigestUtils.md5Hex(originalBytes);
+                // 只写未漂移：磁盘已被手改则让路，避免把用户块外的逻辑覆盖掉
+                if (exists && skipDrifted) {
+                    GenDriftService.LedgerSnapshot snap = ledger.get(target.toString());
+                    String drift = genDriftService.judge(snap == null ? null : snap.md5(), currentMd5);
+                    if (GenDriftService.DRIFTED.equals(drift)) {
+                        String msg = "磁盘内容已手改（漂移），按「只写未漂移」策略跳过";
+                        recordOutput(batchNo, table, group, relPath, target.toString(), "SKIPPED", 0, "",
+                                msg, null, currentMd5);
+                        results.add(new GenWriteVO(table.getTableName(), relPath, "SKIPPED", msg));
+                        continue;
+                    }
                 }
                 // 覆盖前备份：只备份真正会被覆盖的已有文件
                 String backupPath = exists ? backup(rootPath, batchNo, relPath, target) : null;
                 String finalContent = content;
                 String status = "WRITTEN";
                 String message = target.toString();
+                // 覆盖前原文件 md5（V4.2）：prevMd5 是「回滚后应该长什么样」的凭据，
+                // 必须在写入之前算——写完再算就是新内容了
+                String prevMd5 = currentMd5;
                 if (exists) {
                     // 标记块合并：块内替换、块外（手写代码）原样保留
-                    String oldContent = Files.readString(target, StandardCharsets.UTF_8);
                     GenMergeUtils.MergeResult merged = GenMergeUtils.merge(oldContent, content);
                     finalContent = merged.content();
                     if ("MERGED".equals(merged.mode())) {
@@ -327,18 +384,17 @@ public class GenCodeServiceImpl implements GenCodeService {
                     Files.createDirectories(target.getParent());
                 }
                 Files.writeString(target, finalContent, StandardCharsets.UTF_8);
-                recordHistory(batchNo, table.getTableName(), target.toString(), backupPath, status);
                 // 文件级台账（F13）：动作粒度比 VO 状态更细——覆盖已有文件记 OVERWRITTEN
                 byte[] writtenBytes = finalContent.getBytes(StandardCharsets.UTF_8);
                 boolean merged = "MERGED".equals(status);
                 String action = merged ? "MERGED" : (exists ? "OVERWRITTEN" : "WRITTEN");
                 recordOutput(batchNo, table, isBackend ? "backend" : "frontend", relPath, target.toString(),
-                        action, writtenBytes.length, md5Hex(writtenBytes), merged ? message : "");
+                        action, writtenBytes.length, GenDigestUtils.md5Hex(writtenBytes), merged ? message : "",
+                        backupPath, prevMd5);
                 results.add(new GenWriteVO(table.getTableName(), relPath, status, message, backupPath));
             } catch (Exception e) {
-                recordHistory(batchNo, table.getTableName(), relPath, null, "ERROR");
                 recordOutput(batchNo, table, relPath.startsWith(backendBase + "/") ? "backend" : "frontend",
-                        relPath, "", "ERROR", 0, "", e.getMessage());
+                        relPath, "", "ERROR", 0, "", e.getMessage(), null, null);
                 results.add(new GenWriteVO(table.getTableName(), relPath, "ERROR", e.getMessage()));
             }
         }
@@ -368,18 +424,15 @@ public class GenCodeServiceImpl implements GenCodeService {
         }
     }
 
-    private void recordHistory(String batchNo, String tableName, String filePath, String backupPath, String status) {
-        if (!StringUtils.hasText(batchNo)) {
-            return;
-        }
-        try {
-            jdbcTemplate.update("INSERT INTO gen_history(batch_no, table_name, file_path, backup_path, status, operator) "
-                            + "VALUES(?, ?, ?, ?, ?, ?)",
-                    batchNo, tableName, filePath, backupPath, status, operator());
-        } catch (Exception e) {
-            // 历史记录失败不影响写盘
-        }
-    }
+    /**
+     * 台账合一（V4.2）：不再写 {@code gen_history}。
+     *
+     * <p>原来同一个事实写两张表：{@code gen_history} 有 backup_path 没 project_id/md5，
+     * {@code gen_output} 有 project_id/md5 没 backup_path，两表 collation 还不一致（连 UNION 都报 1271）。
+     * 字段互补的双实现迟早对不上，所以回滚/漂移要用的列全部并入 {@code gen_output}，
+     * 这里只留一个写入口。历史数据已由 {@code V4.2__unify_gen_ledger.sql} 回填，
+     * {@code gen_history} 保留只读一个版本，下一版删除。
+     */
 
     private String operator() {
         String name = UserContext.getUsername();
@@ -391,10 +444,18 @@ public class GenCodeServiceImpl implements GenCodeService {
     }
 
     /**
-     * 写盘文件级台账（F13）：逐文件一行，失败不影响写盘主流程
+     * 写盘文件级台账（F13 / V4.2）：逐文件一行，失败不影响写盘主流程，但不再静默。
+     *
+     * <p>V4.2 之前这里 {@code catch (Exception e) { }} 全吞，台账写失败时接口返回「成功」、
+     * 库里却没有记录，等于静默丢账。现在改为 {@code log.warn} + 计数，由调用方放进响应头
+     * {@code X-Gen-Ledger-Errors}，写盘本身仍不因台账失败而失败（文件已经落盘，回滚它更糟）。
+     *
+     * @param backupPath 覆盖前原文件备份路径，无备份传 null
+     * @param prevMd5    覆盖前原文件 MD5，无原文件传 null
      */
     private void recordOutput(String batchNo, GenTable table, String fileGroup, String relPath,
-                              String absPath, String action, long fileSize, String md5, String message) {
+                              String absPath, String action, long fileSize, String md5,
+                              String message, String backupPath, String prevMd5) {
         try {
             GenOutput row = new GenOutput();
             row.setBatchNo(StringUtils.hasText(batchNo) ? batchNo : "");
@@ -410,21 +471,29 @@ public class GenCodeServiceImpl implements GenCodeService {
             row.setMd5(StringUtils.hasText(md5) ? md5 : "");
             row.setMessage(message == null ? "" : message);
             row.setOperator(operator());
+            row.setBackupPath(backupPath);
+            row.setPrevMd5(prevMd5);
             genOutputMapper.insert(row);
         } catch (Exception e) {
-            // 台账记录失败不影响写盘
+            LEDGER_ERRORS.set(LEDGER_ERRORS.get() + 1);
+            log.warn("写盘台账记录失败（文件已落盘，不影响写盘结果）：batch={} path={} action={} 原因={}",
+                    batchNo, relPath, action, e.getMessage());
         }
     }
 
-    private String md5Hex(byte[] bytes) {
+    @Override
+    public int ledgerErrorCount() {
+        return LEDGER_ERRORS.get();
+    }
+
+    /**
+     * 磁盘文件最后修改时间（只在有台账时附带，供用户判断手改发生在什么时候）
+     */
+    private String lastModifiedOf(Path target) {
         try {
-            byte[] digest = MessageDigest.getInstance("MD5").digest(bytes);
-            StringBuilder sb = new StringBuilder(32);
-            for (byte b : digest) {
-                sb.append(Character.forDigit((b >> 4) & 0xF, 16)).append(Character.forDigit(b & 0xF, 16));
-            }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
+            return DIFF_TIME_FORMAT.format(Files.getLastModifiedTime(target).toInstant()
+                    .atZone(ZoneId.systemDefault()));
+        } catch (Exception e) {
             return "";
         }
     }

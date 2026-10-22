@@ -3,18 +3,24 @@ package com.codegen.service.impl;
 import com.codegen.config.GenOutputProperties;
 import com.codegen.dto.GenApplyDTO;
 import com.codegen.dto.GenMenuRegisterDTO;
+import com.codegen.dto.GenRollbackDTO;
 import com.codegen.dto.GenWriteDTO;
+import com.codegen.entity.GenOutput;
 import com.codegen.entity.GenTable;
+import com.codegen.mapper.GenOutputMapper;
 import com.codegen.mapper.GenTableMapper;
 import com.codegen.service.GenApplyService;
 import com.codegen.service.GenCodeService;
 import com.codegen.service.GenMenuService;
 import com.codegen.service.GenSelfCheckService;
+import com.codegen.util.GenDigestUtils;
 import com.codegen.vo.GenApplyStageVO;
 import com.codegen.vo.GenApplyVO;
 import com.codegen.vo.GenCheckIssueVO;
+import com.codegen.vo.GenRollbackVO;
 import com.codegen.vo.GenSelfCheckVO;
 import com.codegen.vo.GenWriteVO;
+import com.codegen.common.context.UserContext;
 import com.codegen.common.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +40,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * 一键生成实现。
@@ -64,6 +72,9 @@ public class GenApplyServiceImpl implements GenApplyService {
 
     @Autowired
     private GenTableMapper genTableMapper;
+
+    @Autowired
+    private GenOutputMapper genOutputMapper;
 
     @Autowired
     private GenOutputProperties outputProperties;
@@ -209,48 +220,326 @@ public class GenApplyServiceImpl implements GenApplyService {
 
     @Override
     public Map<String, Object> rollback(String batchNo) {
+        GenRollbackVO vo = rollback(batchNo, null);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("batchNo", batchNo);
+        result.put("total", vo.getTotal());
+        result.put("restored", vo.getRestore());
+        result.put("removed", vo.getRemove());
+        result.put("skipped", vo.getSkip());
+        result.put("rollbackBatch", vo.getRollbackBatch());
+        result.put("problems", vo.getProblems());
+        return result;
+    }
+
+    @Override
+    public GenRollbackVO rollbackPreview(String batchNo, GenRollbackDTO dto) {
+        return rollbackPlan(batchNo, dto, false);
+    }
+
+    @Override
+    public GenRollbackVO rollback(String batchNo, GenRollbackDTO dto) {
+        return rollbackPlan(batchNo, dto, true);
+    }
+
+    /**
+     * 回滚的计划与执行合在一起：预览和执行必须是同一份判定逻辑。
+     *
+     * <p>分成两个方法各写一遍，就会出现「预览说会还原 3 个，执行却删了 1 个」——
+     * 这种不一致比没有预览更危险，因为用户是照着预览点的确认。
+     */
+    private GenRollbackVO rollbackPlan(String batchNo, GenRollbackDTO dto, boolean execute) {
         if (!StringUtils.hasText(batchNo)) {
             throw new BusinessException(400, "批次号不能为空");
         }
+        // 同一路径取该批次最后一条：一个批次内同一文件理论上只写一次，
+        // 但批处理重试会留下多行，取最新那行才对应磁盘现状
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT table_name, file_path, backup_path, status FROM gen_history WHERE batch_no = ? "
-                        + "ORDER BY id DESC", batchNo);
+                "SELECT o.id, o.batch_no, o.table_id, o.table_name, o.file_group, o.rel_path, o.abs_path, "
+                        + "o.action, o.file_size, o.md5, o.backup_path, o.prev_md5, o.message "
+                        + "FROM gen_output o INNER JOIN ("
+                        + "  SELECT abs_path, MAX(id) AS max_id FROM gen_output"
+                        + "  WHERE batch_no = ? AND deleted = 0 AND abs_path <> ''"
+                        + "    AND action IN ('WRITTEN', 'OVERWRITTEN', 'MERGED', 'ROLLBACK')"
+                        + "  GROUP BY abs_path"
+                        + ") t ON o.id = t.max_id ORDER BY o.id DESC", batchNo);
         if (rows.isEmpty()) {
-            throw new BusinessException(404, "批次不存在：" + batchNo);
+            throw new BusinessException(404, "批次不存在或无需回滚的文件：" + batchNo);
         }
+
+        Set<String> ledgerFilter = toSet(dto == null ? null : dto.getLedgerIds());
+        Set<String> pathFilter = toSet(dto == null ? null : dto.getPaths());
+        boolean skipDrifted = dto != null && Boolean.TRUE.equals(dto.getSkipDrifted());
+
+        GenRollbackVO vo = new GenRollbackVO();
+        vo.setBatchNo(batchNo);
+        vo.setExecuted(execute);
+        for (Map<String, Object> row : rows) {
+            if (!matched(row, ledgerFilter, pathFilter)) {
+                continue;
+            }
+            vo.getItems().add(classify(row));
+        }
+        if (vo.getItems().isEmpty()) {
+            throw new BusinessException(404, "所选文件不在该批次台账中：" + batchNo);
+        }
+        vo.setTotal(vo.getItems().size());
+        vo.setDrifted((int) vo.getItems().stream().filter(GenRollbackVO.Item::isDrifted).count());
+
+        if (!execute) {
+            vo.setRestore(count(vo, "RESTORE"));
+            vo.setRemove(count(vo, "DELETE"));
+            vo.setSkip(count(vo, "SKIP"));
+            return vo;
+        }
+
+        // 回滚本身也记台账（新批次），否则「回滚」这个动作不可再回滚：
+        // 覆盖模式回滚后如果又后悔，用户需要能回到回滚前的样子
+        String rollbackBatch = "RBK" + LocalDateTime.now().format(BATCH_FORMAT);
+        vo.setRollbackBatch(rollbackBatch);
         int restored = 0;
         int removed = 0;
-        List<String> problems = new ArrayList<>();
-        for (Map<String, Object> row : rows) {
-            String filePath = str(row.get("file_path"));
-            String backupPath = str(row.get("backup_path"));
-            String status = str(row.get("status"));
-            if (!"WRITTEN".equals(status) || !StringUtils.hasText(filePath)) {
+        int skipped = 0;
+        for (GenRollbackVO.Item item : vo.getItems()) {
+            if ("SKIP".equals(item.getOp())) {
+                skipped++;
+                continue;
+            }
+            if (skipDrifted && item.isDrifted()) {
+                item.setMessage("磁盘已被手改，按「跳过漂移文件」不处理");
+                skipped++;
                 continue;
             }
             try {
-                Path target = Paths.get(filePath);
-                if (StringUtils.hasText(backupPath) && Files.exists(Paths.get(backupPath))) {
-                    Files.createDirectories(target.getParent());
-                    Files.copy(Paths.get(backupPath), target, StandardCopyOption.REPLACE_EXISTING);
+                Path target = Paths.get(item.getAbsPath());
+                boolean exists = Files.exists(target);
+                String beforeMd5 = exists ? GenDigestUtils.md5Hex(target) : null;
+                // 回滚前先备份当前内容，回滚才可逆
+                String beforeBackup = exists
+                        ? backupBeforeRollback(target, item.getRelPath(), rollbackBatch) : null;
+                if ("RESTORE".equals(item.getOp())) {
+                    Path from = Paths.get(item.getReasonPath());
+                    if (target.getParent() != null) {
+                        Files.createDirectories(target.getParent());
+                    }
+                    Files.copy(from, target, StandardCopyOption.REPLACE_EXISTING);
+                    item.setApplied(true);
+                    item.setMessage(exists ? "已还原为覆盖前内容" : "已从备份恢复（文件此前被删除）");
+                    writeRollbackLedger(rollbackBatch, batchNo, item, target, "已还原为覆盖前内容",
+                            beforeMd5, beforeBackup);
                     restored++;
-                } else if (Files.exists(target)) {
-                    // 首次生成的文件：备份为空，回滚即删除
+                } else {
                     Files.delete(target);
+                    item.setApplied(true);
+                    item.setMessage("已删除（首次生成的文件）");
+                    writeRollbackLedger(rollbackBatch, batchNo, item, target, "回滚删除首次生成的文件",
+                            beforeMd5, beforeBackup);
                     removed++;
                 }
             } catch (Exception e) {
-                problems.add(filePath + " -> " + e.getMessage());
+                item.setMessage("失败：" + e.getMessage());
+                vo.getProblems().add(item.getRelPath() + " -> " + e.getMessage());
+                skipped++;
             }
         }
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("batchNo", batchNo);
-        result.put("total", rows.size());
-        result.put("restored", restored);
-        result.put("removed", removed);
-        result.put("problems", problems);
-        log.info("rollback batch {}: restored={}, removed={}", batchNo, restored, removed);
-        return result;
+        vo.setRestore(restored);
+        vo.setRemove(removed);
+        vo.setSkip(skipped);
+        log.info("rollback batch {} -> {}: restored={}, removed={}, skipped={}",
+                batchNo, rollbackBatch, restored, removed, skipped);
+        return vo;
+    }
+
+    /**
+     * 按台账行判定该文件的回滚动作。只判定事实，不落盘。
+     */
+    private GenRollbackVO.Item classify(Map<String, Object> row) {
+        GenRollbackVO.Item item = new GenRollbackVO.Item();
+        String ledgerId = str(row.get("id"));
+        String relPath = str(row.get("rel_path"));
+        String absPath = str(row.get("abs_path"));
+        String action = str(row.get("action"));
+        String md5 = str(row.get("md5"));
+        String backupPath = str(row.get("backup_path"));
+        item.setLedgerId(ledgerId);
+        item.setTableId(str(row.get("table_id")));
+        item.setTableName(str(row.get("table_name")));
+        item.setFileGroup(str(row.get("file_group")));
+        item.setRelPath(relPath);
+        item.setAbsPath(absPath);
+        item.setAction(action);
+
+        if (!StringUtils.hasText(absPath)) {
+            item.setOp("SKIP");
+            item.setReason("台账没有绝对路径（可能是失败记录），无法定位文件");
+            return item;
+        }
+        Path target = Paths.get(absPath);
+        boolean exists = Files.exists(target);
+        String currentMd5 = null;
+        if (exists) {
+            try {
+                currentMd5 = GenDigestUtils.md5Hex(target);
+            } catch (Exception e) {
+                item.setOp("SKIP");
+                item.setReason("磁盘文件读取失败：" + e.getMessage());
+                return item;
+            }
+        }
+        boolean drifted = StringUtils.hasText(md5) && currentMd5 != null
+                && !md5.equalsIgnoreCase(currentMd5);
+        item.setDrifted(drifted);
+        boolean backupOk = StringUtils.hasText(backupPath) && Files.exists(Paths.get(backupPath));
+        Decision decision = decideOp(action, backupOk, exists, drifted);
+        item.setOp(decision.op());
+        item.setReason(decision.reason());
+        if (backupOk && "RESTORE".equals(decision.op())) {
+            item.setReasonPath(backupPath);
+        }
+        return item;
+    }
+
+    /**
+     * 回滚动作判定（纯函数，便于单测覆盖全部分支）。
+     *
+     * <p>规则只有四条，但每条都对应一次真实的数据风险：
+     * 有备份就还原（覆盖模式也能救回来）；首次生成的文件删除（但被手改的不删）；
+     * 覆盖类记录备份丢了就只能跳过——没有备份还硬还原，等于用当前内容覆盖当前内容，
+     * 看起来"成功"了实际什么都没做，比报错更误导人。
+     *
+     * @param action       台账动作
+     * @param backupOk     备份文件存在
+     * @param targetExists 目标文件存在
+     * @param drifted      磁盘内容与台账 md5 不一致
+     */
+    static Decision decideOp(String action, boolean backupOk, boolean targetExists, boolean drifted) {
+        if (backupOk) {
+            if (!targetExists) {
+                return new Decision("RESTORE", "文件已被删除，可从备份恢复");
+            }
+            return new Decision("RESTORE", drifted
+                    ? "还原为覆盖前内容（注意：会覆盖生成后的手改）"
+                    : "还原为覆盖前内容");
+        }
+        if ("WRITTEN".equals(action)) {
+            if (!targetExists) {
+                return new Decision("SKIP", "首次生成的文件已不在磁盘，无需删除");
+            }
+            if (drifted) {
+                return new Decision("SKIP", "首次生成的文件已被手改，删除会丢内容");
+            }
+            return new Decision("DELETE", "首次生成的文件，回滚即删除");
+        }
+        return new Decision("SKIP", "覆盖类记录但没有可用备份（备份已丢失或被清理），不能贸然还原");
+    }
+
+    record Decision(String op, String reason) {
+    }
+
+    /**
+     * 回滚前备份当前文件到 {@code <root>/.gen-backup/<rollbackBatch>/<relPath>}
+     */
+    private String backupBeforeRollback(Path target, String relPath, String batchNo) {
+        try {
+            Path root = inferRoot(target, relPath);
+            if (root == null) {
+                return null;
+            }
+            Path backupRoot = root.resolve(".gen-backup").resolve(batchNo);
+            Path dest = backupRoot.resolve(relPath.replace('\\', '/')).normalize();
+            if (!dest.startsWith(backupRoot)) {
+                return null;
+            }
+            if (dest.getParent() != null) {
+                Files.createDirectories(dest.getParent());
+            }
+            Files.copy(target, dest, StandardCopyOption.REPLACE_EXISTING);
+            return dest.toString();
+        } catch (Exception e) {
+            log.warn("回滚前备份失败（继续回滚，但该次回滚不可逆）：{} 原因={}", target, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 由「绝对路径 + 相对路径」反推工程根目录：relPath 有几段就往上退几层
+     */
+    private Path inferRoot(Path target, String relPath) {
+        if (!StringUtils.hasText(relPath)) {
+            return null;
+        }
+        int depth = Paths.get(relPath.replace('\\', '/')).getNameCount();
+        Path root = target;
+        for (int i = 0; i < depth; i++) {
+            root = root.getParent();
+            if (root == null) {
+                return null;
+            }
+        }
+        return root;
+    }
+
+    /**
+     * 回滚动作写台账：action=ROLLBACK，让下一轮回滚能把这次回滚再撤回去
+     */
+    private void writeRollbackLedger(String rollbackBatch, String sourceBatch, GenRollbackVO.Item item,
+                                     Path target, String message, String prevMd5, String beforeBackup) {
+        try {
+            GenOutput row = new GenOutput();
+            row.setBatchNo(rollbackBatch);
+            row.setTableId(parseLong(item.getTableId()));
+            row.setTableName(item.getTableName());
+            row.setRelPath(item.getRelPath());
+            row.setAbsPath(item.getAbsPath());
+            row.setAction("ROLLBACK");
+            row.setFileGroup(StringUtils.hasText(item.getFileGroup()) ? item.getFileGroup() : "backend");
+            boolean exists = Files.exists(target);
+            row.setFileSize(exists ? Files.size(target) : 0L);
+            row.setMd5(exists ? GenDigestUtils.md5Hex(target) : "");
+            row.setPrevMd5(prevMd5);
+            row.setBackupPath(beforeBackup);
+            row.setMessage(message + "（来源批次 " + sourceBatch + "）");
+            row.setOperator(currentOperator());
+            genOutputMapper.insert(row);
+        } catch (Exception e) {
+            log.warn("回滚台账写入失败：batch={} path={} 原因={}", rollbackBatch, item.getRelPath(), e.getMessage());
+        }
+    }
+
+    private static int count(GenRollbackVO vo, String op) {
+        return (int) vo.getItems().stream().filter(i -> op.equals(i.getOp())).count();
+    }
+
+    private static Set<String> toSet(List<String> values) {
+        if (values == null || values.isEmpty()) {
+            return Set.of();
+        }
+        return values.stream().filter(StringUtils::hasText)
+                .map(String::trim).collect(Collectors.toSet());
+    }
+
+    private static boolean matched(Map<String, Object> row, Set<String> ledgerFilter, Set<String> pathFilter) {
+        if (ledgerFilter.isEmpty() && pathFilter.isEmpty()) {
+            return true;
+        }
+        if (!ledgerFilter.isEmpty() && ledgerFilter.contains(str(row.get("id")))) {
+            return true;
+        }
+        if (!pathFilter.isEmpty()) {
+            String relPath = str(row.get("rel_path"));
+            String absPath = str(row.get("abs_path"));
+            return pathFilter.contains(relPath) || pathFilter.contains(absPath);
+        }
+        return false;
+    }
+
+    private String currentOperator() {
+        String name = UserContext.getUsername();
+        if (StringUtils.hasText(name)) {
+            return name;
+        }
+        Long userId = UserContext.getUserId();
+        return userId == null ? "system" : String.valueOf(userId);
     }
 
     @Override
@@ -258,8 +547,11 @@ public class GenApplyServiceImpl implements GenApplyService {
         int size = limit <= 0 ? 10 : Math.min(limit, 50);
         return jdbcTemplate.queryForList(
                 "SELECT batch_no, COUNT(*) AS files, MAX(create_time) AS last_time, "
-                        + "MIN(operator) AS operator, SUM(status = 'ERROR') AS errors "
-                        + "FROM gen_history GROUP BY batch_no ORDER BY MAX(create_time) DESC LIMIT " + size);
+                        + "MIN(operator) AS operator, SUM(action = 'ERROR') AS errors, "
+                        + "SUM(action IN ('WRITTEN', 'OVERWRITTEN', 'MERGED')) AS written, "
+                        + "SUM(action = 'ROLLBACK') AS rollback_files "
+                        + "FROM gen_output WHERE deleted = 0 "
+                        + "GROUP BY batch_no ORDER BY MAX(create_time) DESC LIMIT " + size);
     }
 
     /**
@@ -401,8 +693,16 @@ public class GenApplyServiceImpl implements GenApplyService {
         return dir.get();
     }
 
-    private String str(Object value) {
+    private static String str(Object value) {
         return value == null ? null : String.valueOf(value);
+    }
+
+    private static Long parseLong(String value) {
+        try {
+            return StringUtils.hasText(value) ? Long.parseLong(value.trim()) : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private long elapsed(long from) {
