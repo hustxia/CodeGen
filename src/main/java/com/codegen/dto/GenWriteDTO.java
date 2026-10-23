@@ -1,5 +1,6 @@
 package com.codegen.dto;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 import java.io.Serial;
@@ -18,6 +19,7 @@ public class GenWriteDTO implements Serializable {
     /**
      * 表配置 ID 列表
      */
+    @NotEmpty(message = "请先勾选要生成的表")
     private List<Long> ids;
 
     /**

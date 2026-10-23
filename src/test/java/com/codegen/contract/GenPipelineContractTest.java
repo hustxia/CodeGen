@@ -394,8 +394,9 @@ class GenPipelineContractTest {
         JsonNode res = callJson(post("/gen/write")
                 .contentType(MediaType.APPLICATION_JSON).content(body));
         assertEquals(200, res.path("code").asInt(), "写盘失败：" + res.path("msg").asText());
+        // V4.2 台账合一：data 从文件数组包成 {batchNo, ledgerErrors, files}
         List<JsonNode> list = new ArrayList<>();
-        res.path("data").forEach(list::add);
+        res.path("data").path("files").forEach(list::add);
         return list;
     }
 
