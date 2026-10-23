@@ -43,7 +43,10 @@ public class GenTemplateSeeder implements ApplicationRunner {
             new SeedMeta("entity", "实体类", "backend", "${backendBase}/entity/${className}.java"),
             new SeedMeta("mapper", "Mapper 接口", "backend", "${backendBase}/mapper/${className}Mapper.java"),
             new SeedMeta("service", "Service 接口", "backend", "${backendBase}/service/${className}Service.java"),
-            new SeedMeta("serviceImpl", "Service 实现", "backend", "${backendBase}/service/impl/${className}ServiceImpl.java"),
+            // V4.4 模板分道：serviceImpl 按表形态拆三个（派发判据在 GenTemplateModel.serviceImplTplCode）
+            new SeedMeta("serviceImplSimple", "Service 实现（单表）", "backend", "${backendBase}/service/impl/${className}ServiceImpl.java"),
+            new SeedMeta("serviceImplTree", "Service 实现（树形）", "backend", "${backendBase}/service/impl/${className}ServiceImpl.java"),
+            new SeedMeta("serviceImplMasterdetail", "Service 实现（主子表）", "backend", "${backendBase}/service/impl/${className}ServiceImpl.java"),
             new SeedMeta("pageDto", "分页查询 DTO", "backend", "${backendBase}/dto/${className}PageDTO.java"),
             new SeedMeta("saveDto", "保存 DTO", "backend", "${backendBase}/dto/${className}SaveDTO.java"),
             new SeedMeta("vo", "列表 VO", "backend", "${backendBase}/vo/${className}VO.java"),

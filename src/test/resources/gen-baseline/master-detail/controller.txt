@@ -8,6 +8,9 @@ import com.demo.dto.DemoOrderItemSaveDTO;
 import com.demo.entity.DemoOrderItem;
 import com.demo.service.DemoOrderItemService;
 import com.demo.vo.DemoOrderItemVO;
+import com.demo.entity.DemoOrderItemAttr;
+import com.demo.service.DemoOrderItemAttrService;
+import com.demo.vo.DemoOrderItemAttrVO;
 import com.demo.service.DemoOrderService;
 import com.demo.entity.DemoOrder;
 import com.demo.vo.DemoOrderVO;
@@ -56,10 +59,13 @@ import java.time.LocalDateTime;
 @RequestMapping("/order")
 public class DemoOrderController {
 
+    // Service 注入无条件保留（理由见 import 区注释）
     @Autowired
     private DemoOrderService demoOrderService;
     @Autowired
     private DemoOrderItemService demoOrderItemService;
+    @Autowired
+    private DemoOrderItemAttrService demoOrderItemAttrService;
     // <gen:begin key="controller-body">
 
 @Operation(summary = "分页查询订单")
@@ -83,7 +89,7 @@ public Result<Page<DemoOrderVO>> page(@RequestBody DemoOrderPageDTO dto) {
     return Result.ok(voPage);
 }
 
-@Operation(summary = "主表详情（含子表订单明细）")
+@Operation(summary = "主表详情（含1张子表明细）")
 @GetMapping("/{id}/with-children")
 public Result<Map<String, Object>> detailWithChildren(@PathVariable("id") Long id) {
     DemoOrder entity = demoOrderService.getById(id);
@@ -91,48 +97,55 @@ public Result<Map<String, Object>> detailWithChildren(@PathVariable("id") Long i
     if (entity == null) {
         return Result.ok(data);
     }
-    DemoOrderVO vo = new DemoOrderVO();
-    BeanUtils.copyProperties(entity, vo);
-    List<DemoOrderItem> childRows = demoOrderItemService.list(
-            new LambdaQueryWrapper<DemoOrderItem>().eq(DemoOrderItem::getOrderId, id));
-    List<DemoOrderItemVO> children = new ArrayList<>();
-    for (DemoOrderItem row : childRows) {
+    DemoOrderVO masterVo = new DemoOrderVO();
+    BeanUtils.copyProperties(entity, masterVo);
+    List<Map<String, Object>> children = new ArrayList<>();
+    // 子表：订单明细（整棵树一次返回，避免前端逐行发请求）
+    Map<String, Object> demoOrderItemGroup = new LinkedHashMap<>();
+    demoOrderItemGroup.put("key", "demoOrderItem");
+    demoOrderItemGroup.put("tableName", "demo_order_item");
+    demoOrderItemGroup.put("comment", "订单明细");
+    List<DemoOrderItemVO> demoOrderItemList = new ArrayList<>();
+    for (DemoOrderItem row : demoOrderItemService.list(
+            new LambdaQueryWrapper<DemoOrderItem>().eq(DemoOrderItem::getOrderId, id))) {
         DemoOrderItemVO childVo = new DemoOrderItemVO();
         BeanUtils.copyProperties(row, childVo);
-        // P3-1 三级：按子表主键再查一层，整棵树一次返回，避免前端逐行发请求
-        List<DemoOrderItemAttr> gRows = demoOrderItemAttrService.list(
+        // 三级：按子表主键再查一层
+        List<DemoOrderItemAttrVO> demoOrderItemAttrList = new ArrayList<>();
+        for (DemoOrderItemAttr g : demoOrderItemAttrService.list(
                 new LambdaQueryWrapper<DemoOrderItemAttr>()
-                        .eq(DemoOrderItemAttr::getItemId, row.getId()));
-        List<DemoOrderItemAttr> gList = new ArrayList<>();
-        for (DemoOrderItemAttr g : gRows) {
+                        .eq(DemoOrderItemAttr::getItemId, row.getId()))) {
             DemoOrderItemAttrVO gVo = new DemoOrderItemAttrVO();
             BeanUtils.copyProperties(g, gVo);
-            gList.add(gVo);
+            demoOrderItemAttrList.add(gVo);
         }
-        childVo.setDemoOrderItemAttrs(gList);
-        children.add(childVo);
+        childVo.setDemoOrderItemAttrs(demoOrderItemAttrList);
+        demoOrderItemList.add(childVo);
     }
-    data.put("master", vo);
+    demoOrderItemGroup.put("rows", demoOrderItemList);
+    children.add(demoOrderItemGroup);
+    data.put("master", masterVo);
     data.put("children", children);
     return Result.ok(data);
 }
 
-@Operation(summary = "保存订单（主表 + 子表同事务）")
+@Operation(summary = "保存订单（主表 + 子表同事务；子表字段为 null 表示不动，空列表表示清空）")
 @PostMapping("/save-with-children")
 public Result<Void> saveWithChildren(@RequestBody WithChildrenDTO dto) {
-    demoOrderService.saveWithChildren(dto.getMaster(), dto.getChildren());
+    demoOrderService.saveWithChildren(dto.getMaster(),
+                                       dto.getDemoOrderItemRows());
     return Result.ok();
 }
 
 /**
- * 主子表保存入参
+ * 主子表保存入参：每张子表一个可空字段（null=不动该子表，[]=清空该子表）
  */
 @lombok.Data
 public static class WithChildrenDTO {
 
     private DemoOrderSaveDTO master;
 
-    private List<DemoOrderItemSaveDTO> children;
+    private List<DemoOrderItemSaveDTO> demoOrderItemRows;
 }
 
 @Operation(summary = "导出订单 Excel（按查询条件过滤；不传条件导出全部）")

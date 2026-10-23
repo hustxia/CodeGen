@@ -60,19 +60,42 @@ public final class GenTemplateModel {
     /**
      * 主子表：子表配置（表 + 字段 + 它自己的子表）。
      *
-     * <p>P3-1 起支持三级以上：{@code grandChild} 非空即表示这一层还有下一级。
-     * 模板里仍然只用 {@code child.*} 这一套键，通过 {@code hasGrandChild} 判断要不要
-     * 渲染下层。这样单层（订单→明细）与多层（订单→明细→批次）共用同一份模板，
-     * 不会因为多一级就生成两套代码。
+     * <p>V4.4 一主多子：主表可挂多张子表（{@code loadChildren} 返回列表），
+     * 每张子表自己的下级也支持多张（{@code grandChildren}），深度仍封顶三层。
+     * 模板里通过 {@code <#list children as child>} 循环渲染，
+     * {@code hasGrandChild / grandChild} 保留为首张下级的便捷键（兼容存量模板片段）。
      *
-     * @param grandChild 子表的子表，可为 null
+     * @param grandChildren 本子表的下级列表，可为空列表
      */
-    public record ChildInfo(GenTable table, List<GenTableColumn> cols, ChildInfo grandChild) {
-
+    public record ChildInfo(GenTable table, List<GenTableColumn> cols, List<ChildInfo> grandChildren) {
         /** 兼容单层构造：老调用方只关心一层 */
         public ChildInfo(GenTable table, List<GenTableColumn> cols) {
-            this(table, cols, null);
+            this(table, cols, List.of());
         }
+
+        /** 兼容单下级构造：P3-1 时代只支持一张孙表 */
+        public ChildInfo(GenTable table, List<GenTableColumn> cols, ChildInfo grandChild) {
+            this(table, cols, grandChild == null ? List.of() : List.of(grandChild));
+        }
+    }
+
+    /**
+     * V4.4 模板分道：按表形态派发 serviceImpl 模板编码。
+     *
+     * <p>唯一派发入口——渲染引擎与基线测试都调它，判据只写这一处：
+     * 有子表走 masterdetail（含「树形 + 子表」组合），否则树形走 tree，
+     * 其余（绝大多数普通单表）走 simple。
+     *
+     * @param model {@link #build} 产出的模板模型，只读 hasChild / genTree 两个布尔键
+     */
+    public static String serviceImplTplCode(Map<String, Object> model) {
+        if (Boolean.TRUE.equals(model.get("hasChild"))) {
+            return "serviceImplMasterdetail";
+        }
+        if (Boolean.TRUE.equals(model.get("genTree"))) {
+            return "serviceImplTree";
+        }
+        return "serviceImplSimple";
     }
 
     /**
@@ -100,16 +123,16 @@ public final class GenTemplateModel {
      * 构建完整渲染模型（无子表）
      */
     public static Map<String, Object> build(GenTable table, List<GenTableColumn> cols) {
-        return build(table, cols, null);
+        return build(table, cols, (List<ChildInfo>) null, null);
     }
 
     /**
-     * 构建完整渲染模型
+     * 构建完整渲染模型（单子表兼容签名，V4.4 起内部转列表）
      *
      * @param child 本表作为主表时的子表信息，可为 null
      */
     public static Map<String, Object> build(GenTable table, List<GenTableColumn> cols, ChildInfo child) {
-        return build(table, cols, child, null);
+        return build(table, cols, child == null ? List.of() : List.of(child), null);
     }
 
     /**
@@ -119,10 +142,13 @@ public final class GenTemplateModel {
      * 表级优先是为了保护用户手工微调过的值，不能被系统配置悄悄盖掉；
      * 系统为空（存量表未迁移）时自然落到全局 {@link #rootPkg}。
      *
-     * @param project 所属系统，可为 null
+     * <p>V4.4 一主多子：{@code children} 为本表挂接的全部子表（原单子表签名保留兼容）。
+     *
+     * @param children 本表作为主表时的全部子表，可为 null / 空列表
+     * @param project  所属系统，可为 null
      */
     public static Map<String, Object> build(GenTable table, List<GenTableColumn> cols,
-                                            ChildInfo child, ProjectConfig project) {
+                                            List<ChildInfo> children, ProjectConfig project) {
         String pkg = firstText(table.getPackageName(), project == null ? null : project.packageName(),
                 "com.demo");
         String className = table.getClassName();
@@ -319,62 +345,22 @@ public final class GenTemplateModel {
         m.put("masterFkInForm", isChild && formCols.stream().anyMatch(c -> c.getColumnName() != null
                 && c.getColumnName().equalsIgnoreCase(orDefault(table.getMasterForeignKey(), ""))));
 
-        // 本表作为主表：子表信息（当前支持单子表）
-        boolean hasChild = child != null && child.table() != null;
-        m.put("hasChild", hasChild);
-        if (hasChild) {
-            GenTable ct = child.table();
-            String childPkg = orDefault(ct.getPackageName(), pkg);
-            String fkColumn = orDefault(ct.getMasterForeignKey(), "");
-            List<GenTableColumn> childBiz = bizColumns(child.cols() == null ? List.of() : child.cols());
-            Map<String, Object> cm = new HashMap<>();
-            cm.put("className", ct.getClassName());
-            cm.put("varName", decap(ct.getClassName()));
-            cm.put("tableName", ct.getTableName());
-            cm.put("comment", orDefault(ct.getTableComment(), ct.getClassName()));
-            cm.put("moduleName", orDefault(ct.getModuleName(), module));
-            cm.put("pkg", childPkg);
-            cm.put("rootPkg", effectiveRootPkg);
-            cm.put("samePkg", childPkg.equals(pkg));
-            cm.put("fkColumn", fkColumn);
-            cm.put("fkField", GenUtils.toCamel(fkColumn));
-            cm.put("fkCapField", capitalize(GenUtils.toCamel(fkColumn)));
-            cm.put("listColumns", toModel(childBiz.stream().filter(c -> on(c.getIsList())).toList()));
-            // 外键列由后端按主表 ID 赋值，不能出现在可编辑表单里（否则前端会拿它当普通数字框）
-            cm.put("formColumns", toModel(childBiz.stream()
-                    .filter(c -> on(c.getIsForm()))
-                    .filter(c -> c.getColumnName() == null
-                            || !c.getColumnName().equalsIgnoreCase(fkColumn))
-                    .toList()));
-
-            // P3-1 三级以上：子表自己还有子表时，把它的子表也铺进来。
-            // 键名沿用 child.xxx，这样模板里只要判断 hasGrandChild 就看能渲染几层。
-            ChildInfo gc = child.grandChild();
-            boolean hasGrandChild = gc != null && gc.table() != null;
-            cm.put("hasGrandChild", hasGrandChild);
-            if (hasGrandChild) {
-                GenTable gct = gc.table();
-                String gFk = orDefault(gct.getMasterForeignKey(), "");
-                List<GenTableColumn> gBiz = bizColumns(gc.cols() == null ? List.of() : gc.cols());
-                Map<String, Object> gcm = new HashMap<>();
-                gcm.put("className", gct.getClassName());
-                gcm.put("varName", decap(gct.getClassName()));
-                gcm.put("tableName", gct.getTableName());
-                gcm.put("comment", orDefault(gct.getTableComment(), gct.getClassName()));
-                gcm.put("pkg", orDefault(gct.getPackageName(), childPkg));
-                gcm.put("fkColumn", gFk);
-                gcm.put("fkField", GenUtils.toCamel(gFk));
-                gcm.put("fkCapField", capitalize(GenUtils.toCamel(gFk)));
-                gcm.put("listColumns", toModel(gBiz.stream().filter(c -> on(c.getIsList())).toList()));
-                gcm.put("formColumns", toModel(gBiz.stream()
-                        .filter(c -> on(c.getIsForm()))
-                        .filter(c -> c.getColumnName() == null || !c.getColumnName().equalsIgnoreCase(gFk))
-                        .toList()));
-                // 只支持到三层：再深的业务几乎都会拆成独立页面，强行递归收益不大
-                cm.put("grandChild", gcm);
+        // 本表作为主表：子表信息（V4.4 一主多子，按 master_table_id 全量挂接）
+        List<Map<String, Object>> childrenModel = new ArrayList<>();
+        if (children != null) {
+            for (ChildInfo ci : children) {
+                if (ci == null || ci.table() == null) {
+                    continue;
+                }
+                childrenModel.add(childModel(ci, pkg, module, effectiveRootPkg));
             }
-            m.put("child", cm);
         }
+        m.put("children", childrenModel);
+        m.put("hasChild", !childrenModel.isEmpty());
+        m.put("childCount", childrenModel.size());
+        // 任一子表带下级时，页面才需要生成三级明细弹窗
+        m.put("hasGrandDialog", childrenModel.stream()
+                .anyMatch(c -> Boolean.TRUE.equals(c.get("hasGrandChild"))));
 
         // 关联下拉：字段里 ref_table 非空的列
         List<Map<String, Object>> refCols = new ArrayList<>();
@@ -482,6 +468,80 @@ public final class GenTemplateModel {
         m.put("scopeColumn", scopeCol == null ? "" : scopeCol.getColumnName());
         m.put("scopeType", scopeCol == null ? "" : scopeCol.getDataScope().trim());
         return m;
+    }
+
+    /**
+     * 单张子表的模板模型（V4.4 从 build 主流程抽出，支持一主多子循环调用）。
+     *
+     * <p>键名与 V3.x 单子表时代完全一致（className/varName/fkCapField/...），
+     * 模板里 {@code <#list children as child>} 后沿用 {@code child.xxx} 即可。
+     */
+    private static Map<String, Object> childModel(ChildInfo ci, String pkg, String module, String rootPkg) {
+        GenTable ct = ci.table();
+        String childPkg = orDefault(ct.getPackageName(), pkg);
+        String fkColumn = orDefault(ct.getMasterForeignKey(), "");
+        List<GenTableColumn> childBiz = bizColumns(ci.cols() == null ? List.of() : ci.cols());
+        Map<String, Object> cm = new HashMap<>();
+        cm.put("className", ct.getClassName());
+        cm.put("varName", decap(ct.getClassName()));
+        cm.put("tableName", ct.getTableName());
+        cm.put("comment", orDefault(ct.getTableComment(), ct.getClassName()));
+        cm.put("moduleName", orDefault(ct.getModuleName(), module));
+        cm.put("pkg", childPkg);
+        cm.put("rootPkg", rootPkg);
+        cm.put("samePkg", childPkg.equals(pkg));
+        cm.put("fkColumn", fkColumn);
+        cm.put("fkField", GenUtils.toCamel(fkColumn));
+        cm.put("fkCapField", capitalize(GenUtils.toCamel(fkColumn)));
+        cm.put("listColumns", toModel(childBiz.stream().filter(c -> on(c.getIsList())).toList()));
+        // 外键列由后端按主表 ID 赋值，不能出现在可编辑表单里（否则前端会拿它当普通数字框）
+        cm.put("formColumns", toModel(childBiz.stream()
+                .filter(c -> on(c.getIsForm()))
+                .filter(c -> c.getColumnName() == null
+                        || !c.getColumnName().equalsIgnoreCase(fkColumn))
+                .toList()));
+
+        // 三级：本子表自己的下级（V4.4 起可多张），深度封顶三层
+        List<Map<String, Object>> grands = new ArrayList<>();
+        if (ci.grandChildren() != null) {
+            for (ChildInfo gc : ci.grandChildren()) {
+                if (gc == null || gc.table() == null) {
+                    continue;
+                }
+                grands.add(grandModel(gc, childPkg));
+            }
+        }
+        cm.put("grandChildren", grands);
+        cm.put("hasGrandChild", !grands.isEmpty());
+        if (!grands.isEmpty()) {
+            // 兼容旧键：单下级场景模板仍可写 child.grandChild.xxx
+            cm.put("grandChild", grands.get(0));
+        }
+        return cm;
+    }
+
+    /**
+     * 孙表（第三级）模板模型，键名与 V3.x 一致。
+     */
+    private static Map<String, Object> grandModel(ChildInfo gc, String parentChildPkg) {
+        GenTable gct = gc.table();
+        String gFk = orDefault(gct.getMasterForeignKey(), "");
+        List<GenTableColumn> gBiz = bizColumns(gc.cols() == null ? List.of() : gc.cols());
+        Map<String, Object> gcm = new HashMap<>();
+        gcm.put("className", gct.getClassName());
+        gcm.put("varName", decap(gct.getClassName()));
+        gcm.put("tableName", gct.getTableName());
+        gcm.put("comment", orDefault(gct.getTableComment(), gct.getClassName()));
+        gcm.put("pkg", orDefault(gct.getPackageName(), parentChildPkg));
+        gcm.put("fkColumn", gFk);
+        gcm.put("fkField", GenUtils.toCamel(gFk));
+        gcm.put("fkCapField", capitalize(GenUtils.toCamel(gFk)));
+        gcm.put("listColumns", toModel(gBiz.stream().filter(c -> on(c.getIsList())).toList()));
+        gcm.put("formColumns", toModel(gBiz.stream()
+                .filter(c -> on(c.getIsForm()))
+                .filter(c -> c.getColumnName() == null || !c.getColumnName().equalsIgnoreCase(gFk))
+                .toList()));
+        return gcm;
     }
 
     /**

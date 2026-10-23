@@ -55,6 +55,7 @@ import java.time.LocalDateTime;
 @RequestMapping("/goods")
 public class DemoGoodsController {
 
+    // Service 注入无条件保留（理由见 import 区注释）
     @Autowired
     private DemoGoodsService demoGoodsService;
     @Autowired

@@ -1,0 +1,6 @@
+{
+  path: 'order',
+  name: 'DemoOrder',
+  component: () => import('@/views/order/index.vue'),
+  meta: { title: '订单' }
+},

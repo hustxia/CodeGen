@@ -229,7 +229,8 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 
         List<GenColumnDTO> dbColumns;
         try {
-            dbColumns = loadColumnsFromDb("shop", table.getTableName());
+            // 库名不能写死：以前是 "shop"，换库后同步列会一直报「表不存在」
+            dbColumns = loadColumnsFromDb(currentSchema(), table.getTableName());
         } catch (BusinessException e) {
             vo.setSkipped(e.getMessage());
             return vo;
@@ -725,6 +726,17 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             log.warn("导入表 {} 时自动建字典失败，已跳过：{}", tableName, e.getMessage());
         }
         return new GenImportVO(tableName, "SAVED", "导入成功");
+    }
+
+    /**
+     * 当前连接实际所在的库。表配置里没存库名，只能以数据源为准。
+     */
+    private String currentSchema() {
+        try {
+            return jdbcTemplate.queryForObject("SELECT DATABASE()", String.class);
+        } catch (Exception e) {
+            throw new BusinessException(500, "无法确定当前数据库：" + e.getMessage());
+        }
     }
 
     /**

@@ -57,6 +57,9 @@ public class LogAspect {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private IpRegionResolver ipRegionResolver;
+
     @Around("@annotation(operLog)")
     public Object around(ProceedingJoinPoint point, Log operLog) throws Throwable {
         long start = System.currentTimeMillis();
@@ -94,10 +97,12 @@ public class LogAspect {
         entity.setMethod(className + "#" + signature.getName());
 
         HttpServletRequest request = currentRequest();
+        String ip = null;
         if (request != null) {
             entity.setRequestUri(request.getRequestURI());
             entity.setRequestMethod(request.getMethod());
-            entity.setOperIp(clientIp(request));
+            ip = clientIp(request);
+            entity.setOperIp(ip);
         }
         entity.setOperType(inferType(operLog.type(), request, signature.getName()));
 
@@ -108,6 +113,19 @@ public class LogAspect {
             entity.setJsonResult(truncate(toJson(result)));
         }
         operLogMapper.insert(entity);
+
+        // 省市由 IP 反查：审计时只看 IP 判断不了地域，但查询要走网络，
+        // 必须异步回填，否则每条日志都让业务接口慢一次网络往返
+        if (ip != null) {
+            Long logId = entity.getId();
+            ipRegionResolver.resolveAsync(ip, region -> {
+                SysOperLog patch = new SysOperLog();
+                patch.setId(logId);
+                patch.setProvince(region.province());
+                patch.setCity(region.city());
+                operLogMapper.updateById(patch);
+            });
+        }
     }
 
     /**

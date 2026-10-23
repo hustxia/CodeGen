@@ -97,6 +97,12 @@ class GenTemplateBaselineTest {
         compare("master-detail", modelMasterDetail());
     }
 
+    @Test
+    @DisplayName("master-multichild：一主两子（其一含三级）的 12 个产物")
+    void masterMultichild() {
+        compare("master-multichild", modelMasterMultichild());
+    }
+
     // ------------------------------------------------------------------
     // 比对与更新
     // ------------------------------------------------------------------
@@ -143,11 +149,14 @@ class GenTemplateBaselineTest {
     private Map<String, String> renderAll(Map<String, Object> model) {
         Map<String, String> out = new LinkedHashMap<>();
         for (String tpl : TEMPLATES) {
-            String content = read(tplDir.resolve(tpl + ".ftl"));
+            // V4.4 分道：serviceImpl 是逻辑名，物理模板按形态派发（判据与引擎同源）
+            String physical = "serviceImpl".equals(tpl)
+                    ? GenTemplateModel.serviceImplTplCode(model) : tpl;
+            String content = read(tplDir.resolve(physical + ".ftl"));
             try {
                 out.put(tpl, normalize(GenTemplateEngine.renderString(content, model)));
             } catch (Exception ex) {
-                fail("渲染模板 " + tpl + " 失败：" + ex.getMessage());
+                fail("渲染模板 " + physical + " 失败：" + ex.getMessage());
             }
         }
         return out;
@@ -275,9 +284,45 @@ class GenTemplateBaselineTest {
         grandCols.add(col("attr_name", "属性名", "varchar(50)", "attrName", "String", 0, 1, 0, "EQ", 1, 1, 2));
         grandCols.add(col("attr_value", "属性值", "varchar(100)", "attrValue", "String", 0, 0, 0, "EQ", 1, 1, 3));
 
-        GenTemplateModel.ChildInfo grandInfo = new GenTemplateModel.ChildInfo(grand, grandCols, null);
+        // V4.4 后 ChildInfo 有了 List 重载，裸 null 会产生二义性，必须显式转型
+        GenTemplateModel.ChildInfo grandInfo = new GenTemplateModel.ChildInfo(grand, grandCols, (GenTemplateModel.ChildInfo) null);
         GenTemplateModel.ChildInfo childInfo = new GenTemplateModel.ChildInfo(child, childCols, grandInfo);
         return GenTemplateModel.build(main, mainCols, childInfo);
+    }
+
+    /**
+     * V4.4 一主多子：订单 → 订单明细（含三级属性） + 操作日志（无下级）。
+     * 覆盖 children[] 循环、多子各自 CRUD、孙层只出现在带它的那张子表。
+     */
+    private static Map<String, Object> modelMasterMultichild() {
+        GenTable main = baseTable("demo_order", "订单", "DemoOrder", "order");
+        List<GenTableColumn> mainCols = new ArrayList<>();
+        mainCols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        mainCols.add(col("order_no", "订单号", "varchar(32)", "orderNo", "String", 0, 1, 1, "LIKE", 1, 1, 2));
+
+        GenTable child = baseTable("demo_order_item", "订单明细", "DemoOrderItem", "orderItem");
+        child.setMasterForeignKey("order_id");
+        List<GenTableColumn> childCols = new ArrayList<>();
+        childCols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        childCols.add(col("goods_name", "商品名称", "varchar(100)", "goodsName", "String", 0, 1, 0, "EQ", 1, 1, 2));
+        childCols.add(col("qty", "数量", "int", "qty", "Integer", 0, 1, 0, "EQ", 1, 1, 3));
+
+        GenTable grand = baseTable("demo_order_item_attr", "明细属性", "DemoOrderItemAttr", "orderItemAttr");
+        grand.setMasterForeignKey("item_id");
+        List<GenTableColumn> grandCols = new ArrayList<>();
+        grandCols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        grandCols.add(col("attr_name", "属性名", "varchar(50)", "attrName", "String", 0, 1, 0, "EQ", 1, 1, 2));
+
+        GenTable log = baseTable("demo_order_log", "操作日志", "DemoOrderLog", "orderLog");
+        log.setMasterForeignKey("order_id");
+        List<GenTableColumn> logCols = new ArrayList<>();
+        logCols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        logCols.add(col("log_text", "日志内容", "varchar(200)", "logText", "String", 0, 1, 0, "EQ", 1, 1, 2));
+
+        GenTemplateModel.ChildInfo grandInfo = new GenTemplateModel.ChildInfo(grand, grandCols, (GenTemplateModel.ChildInfo) null);
+        GenTemplateModel.ChildInfo itemInfo = new GenTemplateModel.ChildInfo(child, childCols, grandInfo);
+        GenTemplateModel.ChildInfo logInfo = new GenTemplateModel.ChildInfo(log, logCols, (GenTemplateModel.ChildInfo) null);
+        return GenTemplateModel.build(main, mainCols, List.of(itemInfo, logInfo), null);
     }
 
     private static GenTable baseTable(String name, String comment, String className, String module) {
@@ -340,7 +385,7 @@ class GenTemplateBaselineTest {
             return;
         }
         List<String> known = new ArrayList<>();
-        for (String caseName : List.of("simple", "relation", "master-detail")) {
+        for (String caseName : List.of("simple", "relation", "master-detail", "master-multichild")) {
             for (String tpl : TEMPLATES) {
                 known.add(caseName + "/" + tpl + ".txt");
             }

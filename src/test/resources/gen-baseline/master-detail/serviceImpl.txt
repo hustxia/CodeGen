@@ -28,41 +28,51 @@ public class DemoOrderServiceImpl extends ServiceImpl<DemoOrderMapper, DemoOrder
     private DemoOrderItemAttrMapper demoOrderItemAttrMapper;
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void saveWithChildren(DemoOrderSaveDTO master, List<DemoOrderItemSaveDTO> children) {
+    public void saveWithChildren(DemoOrderSaveDTO master,
+                                 List<DemoOrderItemSaveDTO> demoOrderItemRows) {
         DemoOrder entity = new DemoOrder();
         BeanUtils.copyProperties(master, entity);
         saveOrUpdate(entity);
+        replaceDemoOrderItemRows(entity.getId(), demoOrderItemRows);
+    }
+    /**
+     * 订单明细 全量替换：先按外键逻辑删除旧行，再逐行插入，与主表同一事务。
+     * rows 为 null 表示本次提交未涉及该子表（不动），空列表表示清空。
+     */
+    private void replaceDemoOrderItemRows(Long masterId, List<DemoOrderItemSaveDTO> rows) {
+        if (masterId == null) {
+            return;
+        }
+        if (rows == null) {
+            return;
+        }
         DemoOrderItemMapper childMapper = demoOrderItemMapper;
-        // 子表全量替换：先按外键逻辑删除旧行，再逐行插入，整体与主表同一事务
         childMapper.delete(new LambdaQueryWrapper<DemoOrderItem>()
-                .eq(DemoOrderItem::getOrderId, entity.getId()));
-        if (children != null) {
-            for (DemoOrderItemSaveDTO dto : children) {
-                DemoOrderItem child = new DemoOrderItem();
-                BeanUtils.copyProperties(dto, child);
-                // 关键：旧行是逻辑删除（deleted=1，物理行仍在），沿用回传主键会撞 PRIMARY。
-                // 一律清空主键与审计字段，让雪花 ID 重新生成、时间交给自动填充。
-                child.setId(null);
-                child.setCreateTime(null);
-                child.setUpdateTime(null);
-                child.setCreateBy(null);
-                child.setUpdateBy(null);
-                child.setOrderId(entity.getId());
-                childMapper.insert(child);
-                // P3-1 三级：这一行的下级也要跟着落库，外键指向刚插入的这行
-                saveDemoOrderItemAttrRows(child.getId(), dto.getDemoOrderItemAttrs());
-            }
+                .eq(DemoOrderItem::getOrderId, masterId));
+        for (DemoOrderItemSaveDTO dto : rows) {
+            DemoOrderItem child = new DemoOrderItem();
+            BeanUtils.copyProperties(dto, child);
+            // 关键：旧行是逻辑删除（deleted=1，物理行仍在），沿用回传主键会撞 PRIMARY。
+            // 一律清空主键与审计字段，让雪花 ID 重新生成、时间交给自动填充。
+            child.setId(null);
+            child.setCreateTime(null);
+            child.setUpdateTime(null);
+            child.setCreateBy(null);
+            child.setUpdateBy(null);
+            child.setOrderId(masterId);
+            childMapper.insert(child);
+            // 三级：这一行的下级也要跟着落库，外键指向刚插入的这行
+            saveDemoOrderItemAttrRows(child.getId(), dto.getDemoOrderItemAttrs());
         }
     }
     /**
-     * 第三级全量替换。抽成独立方法，避免 {@code saveWithChildren} 里出现三层嵌套循环。
+     * 明细属性 全量替换。抽成独立方法，避免保存主流程出现三层嵌套循环。
      */
-    private void saveDemoOrderItemAttrRows(Long parentId,
-                                                  List<DemoOrderItemAttrSaveDTO> rows) {
-        DemoOrderItemAttrMapper mapper = demoOrderItemAttrMapper;
+    private void saveDemoOrderItemAttrRows(Long parentId, List<DemoOrderItemAttrSaveDTO> rows) {
         if (parentId == null) {
             return;
         }
+        DemoOrderItemAttrMapper mapper = demoOrderItemAttrMapper;
         mapper.delete(new LambdaQueryWrapper<DemoOrderItemAttr>()
                 .eq(DemoOrderItemAttr::getItemId, parentId));
         if (rows == null) {

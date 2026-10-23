@@ -215,43 +215,48 @@
       </el-form>
 
 <#if hasChild>
-      <el-divider content-position="left">${child.comment}</el-divider>
-      <div class="child-bar">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addChildRow">添加明细</el-button>
-        <span class="child-tip">主表与子表在同一事务中保存（先清后插）</span>
-      </div>
-      <el-table :data="childRows" border size="mini" class="child-table">
+      <el-tabs v-model="activeChildTab" type="card" class="child-tabs">
+<#list children as child>
+        <el-tab-pane label="${child.comment}" name="${child.varName}">
+          <div class="child-bar">
+            <el-button type="primary" icon="el-icon-plus" size="mini" @click="addChildRow('${child.varName}')">添加明细</el-button>
+            <span class="child-tip">主表与子表在同一事务中保存（先清后插）</span>
+          </div>
+          <el-table :data="${child.varName}Rows" border size="mini" class="child-table">
 <#list child.formColumns as c>
-        <el-table-column label="${c.commentLabel}" min-width="130">
-          <template slot-scope="{ row }">
+            <el-table-column label="${c.commentLabel}" min-width="130">
+              <template slot-scope="{ row }">
 <#if c.isSwitch>
-            <el-switch v-model="row.${c.javaField}" :active-value="1" :inactive-value="0" />
+                <el-switch v-model="row.${c.javaField}" :active-value="1" :inactive-value="0" />
 <#elseif c.isNumberCtrl>
-            <el-input-number v-model="row.${c.javaField}" controls-position="right" size="mini" style="width: 100%" />
+                <el-input-number v-model="row.${c.javaField}" controls-position="right" size="mini" style="width: 100%" />
 <#elseif c.isDate>
-            <el-date-picker v-model="row.${c.javaField}" type="date" value-format="yyyy-MM-dd" size="mini" style="width: 100%" />
+                <el-date-picker v-model="row.${c.javaField}" type="date" value-format="yyyy-MM-dd" size="mini" style="width: 100%" />
 <#elseif c.isDatetime>
-            <el-date-picker v-model="row.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" size="mini" style="width: 100%" />
+                <el-date-picker v-model="row.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" size="mini" style="width: 100%" />
 <#else>
-            <el-input v-model="row.${c.javaField}" size="mini" placeholder="${c.commentLabel}" />
+                <el-input v-model="row.${c.javaField}" size="mini" placeholder="${c.commentLabel}" />
 </#if>
-          </template>
-        </el-table-column>
+              </template>
+            </el-table-column>
 </#list>
-        <el-table-column label="操作" width="<#if child.hasGrandChild>150<#else>70</#if>" align="center">
-          <template slot-scope="{ row, $index }">
+            <el-table-column label="操作" width="<#if child.hasGrandChild>150<#else>70</#if>" align="center">
+              <template slot-scope="{ row, $index }">
+<#list child.grandChildren as gc>
+                <el-button type="text" @click="openGrandRows('${child.varName}', '${gc.varName}', row)">${gc.comment}</el-button>
+</#list>
+                <el-button type="text" class="danger-btn" @click="${child.varName}Rows.splice($index, 1)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
 <#if child.hasGrandChild>
-            <el-button type="text" @click="openGrandRows(row)">${child.grandChild.comment}</el-button>
+          <div class="child-tip" style="margin-top: 6px">
+            下级明细在点「确定」时与本级明细一起全量替换，弹窗里改完不必单独保存。
+          </div>
 </#if>
-            <el-button type="text" class="danger-btn" @click="childRows.splice($index, 1)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-<#if child.hasGrandChild>
-      <div class="child-tip" style="margin-top: 6px">
-        ${child.grandChild.comment}在点「确定」时与本级明细一起全量替换，弹窗里改完不必单独保存。
-      </div>
-</#if>
+        </el-tab-pane>
+</#list>
+      </el-tabs>
 </#if>
 
       <div slot="footer">
@@ -259,9 +264,9 @@
         <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
       </div>
     </el-dialog>
-<#if hasChild && child.hasGrandChild>
+<#if hasGrandDialog>
 
-    <!-- P3-1 三级明细编辑：直接改 childRows[i].${child.grandChild.varName}s，保存时随主表一起提交 -->
+    <!-- 三级明细编辑：直接改选中行的下级数组（引用直改），保存时随主表一起提交 -->
     <el-dialog
       :title="grandTitle"
       :visible.sync="grandVisible"
@@ -269,10 +274,12 @@
       append-to-body
     >
       <div class="child-bar">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addGrandRow">添加${child.grandChild.comment}</el-button>
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addGrandRow">添加{{ grandTitle }}</el-button>
       </div>
-      <el-table :data="grandRows" border size="mini" class="child-table">
-<#list child.grandChild.formColumns as c>
+<#list children as child>
+<#list child.grandChildren as gc>
+      <el-table v-show="grandDialog === '${child.varName}.${gc.varName}'" :data="grandRows" border size="mini" class="child-table">
+<#list gc.formColumns as c>
         <el-table-column label="${c.commentLabel}" min-width="130">
           <template slot-scope="{ row }">
 <#if c.isSwitch>
@@ -295,6 +302,8 @@
           </template>
         </el-table-column>
       </el-table>
+</#list>
+</#list>
       <div slot="footer">
         <el-button @click="grandVisible = false">关闭</el-button>
       </div>
@@ -470,17 +479,28 @@ const defaultForm = () => ({
 </#if>
 })
 <#if hasChild>
-const defaultChild = () => ({
-<#list child.formColumns as c>
-  ${c.javaField}: ${c.jsInit},
+// 每张子表的新行工厂：键 = 子表 varName（与后端 children[].key 一致）
+const defaultChildMap = {
+<#list children as child>
+  '${child.varName}': () => ({<#list child.formColumns as c> ${c.javaField}: ${c.jsInit}<#if c_has_next>,</#if></#list> })<#if child_has_next>,</#if>
 </#list>
-})
-<#if child.hasGrandChild>
-const defaultGrand = () => ({
-<#list child.grandChild.formColumns as c>
-  ${c.javaField}: ${c.jsInit},
+}
+<#if hasGrandDialog>
+// 三级明细新行工厂：键 = '子表.varName'，与 grandDialog 状态对齐
+const defaultGrandMap = {
+<#list children as child>
+<#list child.grandChildren as gc>
+  '${child.varName}.${gc.varName}': () => ({<#list gc.formColumns as c> ${c.javaField}: ${c.jsInit}<#if c_has_next>,</#if></#list> })<#if child_has_next || gc_has_next>,</#if>
 </#list>
-})
+</#list>
+}
+const grandTitleMap = {
+<#list children as child>
+<#list child.grandChildren as gc>
+  '${child.varName}.${gc.varName}': '${gc.comment}'<#if child_has_next || gc_has_next>,</#if>
+</#list>
+</#list>
+}
 </#if>
 </#if>
 
@@ -509,14 +529,17 @@ export default {
       refLabels: {},
 </#if>
 <#if hasChild>
-      childRows: [],
-<#if child.hasGrandChild>
-      // P3-1 三级明细：grandRows 指向 childRows 里某一行的 ${child.grandChild.varName}s 数组，
-      // 直接改引用，弹窗里编辑等于改主结构，无需回写拷贝
+      activeChildTab: '${(children[0].varName)!""}',
+<#list children as child>
+      ${child.varName}Rows: [],
+</#list>
+<#if hasGrandDialog>
+      // 三级明细：grandRows 指向选中行的下级数组（直接改引用，弹窗里编辑等于改主结构），
+      // grandDialog 记录当前弹的是哪组（'子表.varName'），决定显示哪张编辑表
       grandVisible: false,
       grandRows: [],
       grandTitle: '',
-      grandIndex: -1,
+      grandDialog: '',
 </#if>
 </#if>
 <#if hasExcelImport>
@@ -849,7 +872,9 @@ export default {
     openDialog(row) {
       this.form = row ? { ...defaultForm(), ...row } : defaultForm()
 <#if hasChild>
-      this.childRows = []
+<#list children as child>
+      this.${child.varName}Rows = []
+</#list>
 </#if>
       this.dialogVisible = true
 <#if hasRef>
@@ -869,34 +894,44 @@ export default {
     },
 <#if hasChild>
     async loadChildren(id) {
+<#list children as child>
+      this.${child.varName}Rows = []
+</#list>
       try {
         const res = await get${className}WithChildren(id)
-        this.childRows = (res.data && res.data.children) || []
+        // 后端 children: [{key, tableName, comment, rows}]；key 即子表 varName
+        const groups = (res.data && res.data.children) || []
+        groups.forEach(g => {
+          if (this[g.key + 'Rows'] !== undefined) {
+            this[g.key + 'Rows'] = g.rows || []
+          }
+        })
       } catch (e) {
-        this.childRows = []
+        /* 拦截器已提示；保持空明细 */
       }
     },
-    addChildRow() {
-      this.childRows.push(defaultChild())
+    addChildRow(tab) {
+      const factory = defaultChildMap[tab]
+      this[tab + 'Rows'].push(factory ? factory() : {})
     },
-<#if child.hasGrandChild>
+<#if hasGrandDialog>
     /**
      * 打开某一行的下级明细。用 $set 保障数组存在，
      * 因为后端返回的 VO 里该字段可能为 null（没有下级时）。
      */
-    openGrandRows(row) {
-      if (!row.${child.grandChild.varName}s) {
-        this.$set(row, '${child.grandChild.varName}s', [])
+    openGrandRows(childVar, gcVar, row) {
+      const field = gcVar + 's'
+      if (!row[field]) {
+        this.$set(row, field, [])
       }
-      this.grandRows = row.${child.grandChild.varName}s
-      this.grandTitle = '${child.grandChild.comment}'
+      this.grandRows = row[field]
+      this.grandDialog = childVar + '.' + gcVar
+      this.grandTitle = grandTitleMap[this.grandDialog] || '下级明细'
       this.grandVisible = true
     },
     addGrandRow() {
-      if (!this.grandRows) {
-        this.grandRows = []
-      }
-      this.grandRows.push(defaultGrand())
+      const factory = defaultGrandMap[this.grandDialog]
+      this.grandRows.push(factory ? factory() : {})
     },
 </#if>
 </#if>
@@ -906,7 +941,12 @@ export default {
       this.submitting = true
       try {
 <#if hasChild>
-        await save${className}WithChildren(this.form, this.childRows)
+        // 子表按组提交：与后端约定 null=不动该子表、[]=清空；编辑页全部组都提交（全量替换）
+        const payload = { master: this.form }
+<#list children as child>
+        payload.${child.varName}Rows = this.${child.varName}Rows
+</#list>
+        await save${className}WithChildren(payload)
         this.$message.success(this.form.id ? '更新成功' : '创建成功')
 <#else>
         if (this.form.id) {

@@ -20,11 +20,12 @@ export function getDemoOrderWithChildren(id) {
   })
 }
 
-export function saveDemoOrderWithChildren(master, children) {
+// payload = { master, ...各子表 {childVar}Rows }；子表字段 null=不动，[]=清空
+export function saveDemoOrderWithChildren(payload) {
   return request({
     url: '/api/demo/order/save-with-children',
     method: 'post',
-    data: { master, children }
+    data: payload
   })
 }
 export function exportDemoOrder(params) {

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,62 +112,75 @@ public class GenTemplateEngine {
     public Map<String, String> renderWithProject(GenTable table, List<GenTableColumn> cols,
                                                  GenTemplateModel.ProjectConfig project) {
         Long tableId = table.getId() == null ? 0L : table.getId();
-        GenTemplateModel.ChildInfo child = loadChild(table);
-        return render(table, cols, child, tplCode -> resolveFromDb(tplCode, tableId), project);
+        List<GenTemplateModel.ChildInfo> children = loadChildren(table);
+        return render(table, cols, children, tplCode -> resolveFromDb(tplCode, tableId), project);
     }
 
     /**
      * 渲染单表全部生成物（无子表，兼容旧签名）
      */
     public static Map<String, String> render(GenTable table, List<GenTableColumn> cols, TemplateResolver resolver) {
-        return render(table, cols, null, resolver);
+        return render(table, cols, (List<GenTemplateModel.ChildInfo>) null, resolver);
     }
 
     /**
-     * 加载子表配置：{@code gen_table.master_table_id = 当前表id} 的第一张表。
+     * 加载子表配置：{@code gen_table.master_table_id = 当前表id} 的**全部**子表（V4.4 一主多子）。
      *
      * <p>P3-1 起递归一层：子表自己的子表也会带出来，最多三层（订单→明细→批次）。
      * 再深就不递归了：更深的层级在真实业务里通常需要独立页面，
      * 强行塞进一个抽屉里反而难用，而且生成的代码量会翻倍。
+     *
+     * <p>V4.4 修复：原先 {@code LIMIT 1} 只取 id 最小的一张子表，
+     * 多张子表挂同一主表时其余被静默丢弃——这是详情多 tab 与级联删除的前置缺口。
      */
-    private GenTemplateModel.ChildInfo loadChild(GenTable table) {
-        return loadChild(table, 1);
+    private List<GenTemplateModel.ChildInfo> loadChildren(GenTable table) {
+        return loadChildren(table, 1);
     }
 
-    private GenTemplateModel.ChildInfo loadChild(GenTable table, int depth) {
+    private List<GenTemplateModel.ChildInfo> loadChildren(GenTable table, int depth) {
         if (table == null || table.getId() == null || depth > 2) {
-            return null;
+            return List.of();
         }
         LambdaQueryWrapper<GenTable> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(GenTable::getMasterTableId, table.getId());
         wrapper.orderByAsc(GenTable::getId);
-        wrapper.last("LIMIT 1");
-        GenTable childTable = genTableMapper.selectOne(wrapper);
-        if (childTable == null) {
-            return null;
+        List<GenTable> childTables = genTableMapper.selectList(wrapper);
+        List<GenTemplateModel.ChildInfo> result = new ArrayList<>();
+        for (GenTable childTable : childTables) {
+            LambdaQueryWrapper<GenTableColumn> colWrapper = new LambdaQueryWrapper<>();
+            colWrapper.eq(GenTableColumn::getTableId, childTable.getId());
+            colWrapper.orderByAsc(GenTableColumn::getSort);
+            List<GenTableColumn> childCols = genTableColumnMapper.selectList(colWrapper);
+            result.add(new GenTemplateModel.ChildInfo(childTable, childCols, loadChildren(childTable, depth + 1)));
         }
-        LambdaQueryWrapper<GenTableColumn> colWrapper = new LambdaQueryWrapper<>();
-        colWrapper.eq(GenTableColumn::getTableId, childTable.getId());
-        colWrapper.orderByAsc(GenTableColumn::getSort);
-        List<GenTableColumn> childCols = genTableColumnMapper.selectList(colWrapper);
-        return new GenTemplateModel.ChildInfo(childTable, childCols, loadChild(childTable, depth + 1));
+        return result;
     }
 
     /**
      * 渲染单表全部生成物（可注入模板解析器与子表信息，便于对拍测试）
      */
     public static Map<String, String> render(GenTable table, List<GenTableColumn> cols,
-                                             GenTemplateModel.ChildInfo child, TemplateResolver resolver) {
-        return render(table, cols, child, resolver, null);
+                                             List<GenTemplateModel.ChildInfo> children,
+                                             TemplateResolver resolver) {
+        return render(table, cols, children, resolver, null);
     }
 
     /**
-     * 渲染单表全部生成物（V3.0：带所属系统配置的三级回落）
+     * 渲染单表全部生成物（单子表兼容签名，V4.4 起内部转列表）
      */
     public static Map<String, String> render(GenTable table, List<GenTableColumn> cols,
-                                             GenTemplateModel.ChildInfo child, TemplateResolver resolver,
+                                             GenTemplateModel.ChildInfo child, TemplateResolver resolver) {
+        return render(table, cols, child == null ? List.of() : List.of(child), resolver, null);
+    }
+
+    /**
+     * 渲染单表全部生成物（V3.0：带所属系统配置的三级回落；V4.4：子表列表化）
+     */
+    public static Map<String, String> render(GenTable table, List<GenTableColumn> cols,
+                                             List<GenTemplateModel.ChildInfo> children,
+                                             TemplateResolver resolver,
                                              GenTemplateModel.ProjectConfig project) {
-        Map<String, Object> model = GenTemplateModel.build(table, cols, child, project);
+        Map<String, Object> model = GenTemplateModel.build(table, cols, children, project);
         boolean genService = GenTemplateModel.on(table.getGenService());
         boolean genPageApi = GenTemplateModel.on(table.getGenPageApi());
         boolean genDetailApi = GenTemplateModel.on(table.getGenDetailApi());
@@ -190,7 +204,8 @@ public class GenTemplateEngine {
         }
         if (genService) {
             put(files, "service", resolver, model);
-            put(files, "serviceImpl", resolver, model);
+            // V4.4 模板分道：按表形态派发（判据唯一实现在 GenTemplateModel.serviceImplTplCode）
+            put(files, GenTemplateModel.serviceImplTplCode(model), resolver, model);
         }
         if (genPageApi && needDto) {
             put(files, "pageDto", resolver, model);

@@ -87,3 +87,14 @@ gen:
   #          internal = 同时写入本平台 sys_menu（仅当生成目标就是本平台时使用）
   menu:
     outlet: artifact
+
+# 操作日志的 IP 归属地：先查 classpath:/ip/ip2region.db 离线库，查不到才走在线接口
+# 内网/本机不发请求；结果缓存 24h，失败负缓存 5min
+# 换成自建或商用服务时保持 {ip} 占位即可，返回体认 province/regionName/pro 与 city
+app:
+  ip-region:
+    enabled: true
+    offline: true
+    api: http://ip-api.com/json/{ip}?lang=zh-CN
+    timeout-ms: 3000
+    # proxy: http://127.0.0.1:7890   # 需要走代理才配，不配则强制直连（绕开 HTTP_PROXY）

@@ -77,6 +77,16 @@ public class SysOperLog extends BaseEntity {
     private String operIp;
 
     /**
+     * 省份（由 IP 解析，内网/本机时记「内网」「本机」）
+     */
+    private String province;
+
+    /**
+     * 城市
+     */
+    private String city;
+
+    /**
      * 耗时毫秒
      */
     private Long costMs;

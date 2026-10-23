@@ -9,17 +9,21 @@ import ${pkg}.dto.${className}PageDTO;
 </#if>
 <#if ctrlAddApi || ctrlEditApi || hasChild>import ${pkg}.dto.${className}SaveDTO;
 </#if>
-<#if hasChild>import ${pkg}.dto.${child.className}SaveDTO;
+<#if hasChild><#list children as child>import ${pkg}.dto.${child.className}SaveDTO;
 import ${pkg}.entity.${child.className};
 import ${pkg}.service.${child.className}Service;
 import ${pkg}.vo.${child.className}VO;
-</#if>
-<#if ctrlAnyApi || genTree || hasChild || hasUnique>import ${pkg}.service.${className}Service;
+<#list child.grandChildren as gc>import ${pkg}.entity.${gc.className};
+import ${pkg}.service.${gc.className}Service;
+import ${pkg}.vo.${gc.className}VO;
+</#list>
+</#list></#if>
+<#-- Service 无条件注入：page/detail 等基础方法也要走 Service，
+     曾经按开关条件注入，开关全关时方法体还在、字段没了，生成产物直接编译失败 -->
+import ${pkg}.service.${className}Service;
 import ${pkg}.entity.${className};
-</#if>
 import ${pkg}.vo.${className}VO;
-<#if ctrlAnyApi || genTree || hasChild || hasUnique>import ${rootPkg}.common.result.Result;
-</#if>
+import ${rootPkg}.common.result.Result;
 <#if hasRef || hasExcelImport || hasUnique>import ${rootPkg}.common.exception.BusinessException;
 </#if>
 <#if genLog>import ${rootPkg}.common.log.Log;
@@ -89,12 +93,16 @@ import java.time.LocalDateTime;
 @RequestMapping("/${moduleName}")
 public class ${className}Controller {
 ${''}
-<#if ctrlAnyApi || genTree || hasChild || hasUnique>    @Autowired
+    // Service 注入无条件保留（理由见 import 区注释）
+    @Autowired
     private ${className}Service ${varName}Service;
-</#if>
-<#if hasChild>    @Autowired
+<#if hasChild><#list children as child>    @Autowired
     private ${child.className}Service ${child.varName}Service;
-</#if>
+<#-- 孙表 Service：详情接口装配三级明细要用，漏注入生成的 Controller 编译不过 -->
+<#list child.grandChildren as gc>    @Autowired
+    private ${gc.className}Service ${gc.varName}Service;
+</#list>
+</#list></#if>
 <#if hasFlow>    @Autowired
     private FlowService flowService;
 </#if>
@@ -197,7 +205,7 @@ public Result<List<Map<String, Object>>> options(@RequestParam("refTable") Strin
 }
 </#if>
 <#if hasChild>${''}
-@Operation(summary = "主表详情（含子表${child.comment}）")
+@Operation(summary = "主表详情（含${childCount}张子表明细）")
 @GetMapping("/{id}/with-children")
 public Result<Map<String, Object>> detailWithChildren(@PathVariable("id") Long id) {
     ${className} entity = ${varName}Service.getById(id);
@@ -205,50 +213,61 @@ public Result<Map<String, Object>> detailWithChildren(@PathVariable("id") Long i
     if (entity == null) {
         return Result.ok(data);
     }
-    ${className}VO vo = new ${className}VO();
-    BeanUtils.copyProperties(entity, vo);
-    List<${child.className}> childRows = ${child.varName}Service.list(
-            new LambdaQueryWrapper<${child.className}>().eq(${child.className}::get${child.fkCapField}, id));
-    List<${child.className}VO> children = new ArrayList<>();
-    for (${child.className} row : childRows) {
+    ${className}VO masterVo = new ${className}VO();
+    BeanUtils.copyProperties(entity, masterVo);
+    List<Map<String, Object>> children = new ArrayList<>();
+<#list children as child>
+    // 子表：${child.comment}（整棵树一次返回，避免前端逐行发请求）
+    Map<String, Object> ${child.varName}Group = new LinkedHashMap<>();
+    ${child.varName}Group.put("key", "${child.varName}");
+    ${child.varName}Group.put("tableName", "${child.tableName}");
+    ${child.varName}Group.put("comment", "${child.comment}");
+    List<${child.className}VO> ${child.varName}List = new ArrayList<>();
+    for (${child.className} row : ${child.varName}Service.list(
+            new LambdaQueryWrapper<${child.className}>().eq(${child.className}::get${child.fkCapField}, id))) {
         ${child.className}VO childVo = new ${child.className}VO();
         BeanUtils.copyProperties(row, childVo);
-<#if child.hasGrandChild>
-        // P3-1 三级：按子表主键再查一层，整棵树一次返回，避免前端逐行发请求
-        List<${child.grandChild.className}> gRows = ${child.grandChild.varName}Service.list(
-                new LambdaQueryWrapper<${child.grandChild.className}>()
-                        .eq(${child.grandChild.className}::get${child.grandChild.fkCapField}, row.getId()));
-        List<${child.grandChild.className}> gList = new ArrayList<>();
-        for (${child.grandChild.className} g : gRows) {
-            ${child.grandChild.className}VO gVo = new ${child.grandChild.className}VO();
+<#list child.grandChildren as gc>
+        // 三级：按子表主键再查一层
+        List<${gc.className}VO> ${gc.varName}List = new ArrayList<>();
+        for (${gc.className} g : ${gc.varName}Service.list(
+                new LambdaQueryWrapper<${gc.className}>()
+                        .eq(${gc.className}::get${gc.fkCapField}, row.getId()))) {
+            ${gc.className}VO gVo = new ${gc.className}VO();
             BeanUtils.copyProperties(g, gVo);
-            gList.add(gVo);
+            ${gc.varName}List.add(gVo);
         }
-        childVo.set${child.grandChild.className}s(gList);
-</#if>
-        children.add(childVo);
+        childVo.set${gc.className}s(${gc.varName}List);
+</#list>
+        ${child.varName}List.add(childVo);
     }
-    data.put("master", vo);
+    ${child.varName}Group.put("rows", ${child.varName}List);
+    children.add(${child.varName}Group);
+</#list>
+    data.put("master", masterVo);
     data.put("children", children);
     return Result.ok(data);
 }
 
-@Operation(summary = "保存${comment}（主表 + 子表同事务）")
+@Operation(summary = "保存${comment}（主表 + 子表同事务；子表字段为 null 表示不动，空列表表示清空）")
 @PostMapping("/save-with-children")
 public Result<Void> saveWithChildren(<#if ctrlValid>@Valid </#if>@RequestBody WithChildrenDTO dto) {
-    ${varName}Service.saveWithChildren(dto.getMaster(), dto.getChildren());
+    ${varName}Service.saveWithChildren(dto.getMaster()<#list children as child>,
+                                       dto.get${child.varName?cap_first}Rows()</#list>);
     return Result.ok();
 }
 
 /**
- * 主子表保存入参
+ * 主子表保存入参：每张子表一个可空字段（null=不动该子表，[]=清空该子表）
  */
 @lombok.Data
 public static class WithChildrenDTO {
 
     private ${className}SaveDTO master;
+<#list children as child>
 
-    private List<${child.className}SaveDTO> children;
+    private List<${child.className}SaveDTO> ${child.varName}Rows;
+</#list>
 }
 </#if>
 <#if hasExcelExport && !isMiddle>${''}

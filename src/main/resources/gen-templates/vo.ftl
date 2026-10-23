@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 <#if genTree>import java.util.ArrayList;
 import java.util.List;
 </#if>
-<#if hasChild && child.hasGrandChild>import java.util.List;
-import ${child.grandChild.pkg}.vo.${child.grandChild.className}VO;
-</#if>
+<#if isChild && hasChild>import java.util.List;
+<#list children as g>import ${g.pkg}.vo.${g.className}VO;
+</#list></#if>
 
 /**
  * ${comment} VO
@@ -40,11 +40,13 @@ public class ${className}VO implements Serializable {
      */
     private List<${className}VO> children = new ArrayList<>();
 </#if>
-<#if hasChild && child.hasGrandChild>
+<#if isChild && hasChild>
+<#list children as g>
     /**
-     * P3-1 第三级明细：详情接口一次性带出来，前端不用逐行再查
+     * 第三级明细：详情接口一次性带出来，前端不用逐行再查
      */
-    private List<${child.grandChild.className}VO> ${child.grandChild.varName}s;
+    private List<${g.className}VO> ${g.varName}s;
+</#list>
 </#if>
     // <gen:end key="vo-fields">
 <#if hasMask>

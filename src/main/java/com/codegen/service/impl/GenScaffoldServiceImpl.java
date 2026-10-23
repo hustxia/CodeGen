@@ -1,5 +1,6 @@
 package com.codegen.service.impl;
 
+import com.codegen.common.log.Ip2RegionSearcher;
 import com.codegen.config.GenOutputProperties;
 import com.codegen.dto.GenScaffoldDTO;
 import com.codegen.service.GenScaffoldService;
@@ -80,6 +81,14 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         write(backendRoot, pkgPath + "/common/log/Log.java", logAnnotationJava(pkg),
                 "backend", force, vo, counter);
         write(backendRoot, pkgPath + "/common/log/LogAspect.java", logAspectJava(pkg),
+                "backend", force, vo, counter);
+        // 归属地解析器：日志切面依赖它把 IP 翻成省市，独立成类便于替换成自建接口
+        write(backendRoot, pkgPath + "/common/log/IpRegionResolver.java", ipRegionResolverJava(pkg),
+                "backend", force, vo, counter);
+        write(backendRoot, pkgPath + "/common/log/Ip2RegionSearcher.java", ip2RegionSearcherJava(pkg),
+                "backend", force, vo, counter);
+        // 离线 IP 库是二进制，跟着解析器一起发；没有它归属地就只能赌公网接口的可用性
+        writeBinary(backendRoot, "src/main/resources/ip/ip2region.db", Ip2RegionSearcher.RESOURCE,
                 "backend", force, vo, counter);
         write(backendRoot, pkgPath + "/system/OpeLog.java", operLogEntityJava(pkg),
                 "backend", force, vo, counter);
@@ -172,6 +181,38 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             }
             Files.createDirectories(target.getParent());
             Files.writeString(target, content, StandardCharsets.UTF_8);
+            vo.getFiles().add(new GenScaffoldVO.Item(relPath, side, existed ? "OVERWRITTEN" : "WRITTEN"));
+            counter[0]++;
+        } catch (IOException e) {
+            throw new IllegalStateException("写入失败: " + target + " - " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 二进制资源写入（离线 IP 库这类几 MB 的字节文件）。
+     *
+     * <p>单独开一个方法而不是把内容读成 String：二进制经 String 中转会被
+     * 字符集解码改坏，而且 8.7MB 的库用流直接拷更省内存。
+     * 资源缺失不抛异常——生成过程不该因为一个可选的增强文件整体失败。
+     */
+    private void writeBinary(Path root, String relPath, String classpathResource, String side,
+                             boolean force, GenScaffoldVO vo, int[] counter) {
+        Path target = root.resolve(relPath);
+        boolean existed = Files.exists(target);
+        if (existed && !force) {
+            vo.getFiles().add(new GenScaffoldVO.Item(relPath, side, "SKIPPED"));
+            counter[1]++;
+            return;
+        }
+        try (java.io.InputStream in = getClass().getResourceAsStream(classpathResource)) {
+            if (in == null) {
+                log.warn("脚手架资源缺失 {}，跳过 {}", classpathResource, relPath);
+                vo.getFiles().add(new GenScaffoldVO.Item(relPath, side, "SKIPPED"));
+                counter[1]++;
+                return;
+            }
+            Files.createDirectories(target.getParent());
+            Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             vo.getFiles().add(new GenScaffoldVO.Item(relPath, side, existed ? "OVERWRITTEN" : "WRITTEN"));
             counter[0]++;
         } catch (IOException e) {
@@ -761,6 +802,22 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "}\n";
     }
 
+    /**
+     * IP 归属地解析器：模板放 resources/scaffold/backend，改内容不用碰 Java 拼接。
+     */
+    private String ipRegionResolverJava(String pkg) {
+        return loadScaffoldResource("scaffold/backend/IpRegionResolver.java.tpl")
+                .replace("__PKG__", pkg);
+    }
+
+    /**
+     * 离线 IP 库查询器：与解析器配套，缺了它解析器会静默降级成纯在线。
+     */
+    private String ip2RegionSearcherJava(String pkg) {
+        return loadScaffoldResource("scaffold/backend/Ip2RegionSearcher.java.tpl")
+                .replace("__PKG__", pkg);
+    }
+
     private String logAspectJava(String pkg) {
         return "package " + pkg + ".common.log;\n\n"
                 + "import " + pkg + ".common.context.UserContext;\n"
@@ -804,6 +861,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    private OpeLogMapper opeLogMapper;\n\n"
                 + "    @Autowired\n"
                 + "    private ObjectMapper objectMapper;\n\n"
+                + "    @Autowired\n"
+                + "    private IpRegionResolver ipRegionResolver;\n\n"
                 + "    @Around(\"@annotation(operLog)\")\n"
                 + "    public Object around(ProceedingJoinPoint point, Log operLog) throws Throwable {\n"
                 + "        long start = System.currentTimeMillis();\n"
@@ -837,10 +896,12 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        MethodSignature signature = (MethodSignature) point.getSignature();\n"
                 + "        entity.setMethod(signature.getDeclaringType().getSimpleName() + \"#\" + signature.getName());\n\n"
                 + "        HttpServletRequest request = currentRequest();\n"
+                + "        String ip = null;\n"
                 + "        if (request != null) {\n"
                 + "            entity.setRequestUri(request.getRequestURI());\n"
                 + "            entity.setRequestMethod(request.getMethod());\n"
-                + "            entity.setOperIp(clientIp(request));\n"
+                + "            ip = clientIp(request);\n"
+                + "            entity.setOperIp(ip);\n"
                 + "        }\n"
                 + "        entity.setOperType(inferType(operLog.type(), request, signature.getName()));\n"
                 + "        if (operLog.saveParam()) {\n"
@@ -849,7 +910,19 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        if (operLog.saveResult() && result != null) {\n"
                 + "            entity.setJsonResult(truncate(toJson(result)));\n"
                 + "        }\n"
-                + "        opeLogMapper.insert(entity);\n"
+                + "        opeLogMapper.insert(entity);\n\n"
+                + "        // 省市由 IP 反查：审计时只看 IP 判断不了地域，但查询要走网络，\n"
+                + "        // 必须异步回填，否则每条日志都让业务接口慢一次网络往返\n"
+                + "        if (ip != null) {\n"
+                + "            Long logId = entity.getId();\n"
+                + "            ipRegionResolver.resolveAsync(ip, region -> {\n"
+                + "                OpeLog patch = new OpeLog();\n"
+                + "                patch.setId(logId);\n"
+                + "                patch.setProvince(region.province());\n"
+                + "                patch.setCity(region.city());\n"
+                + "                opeLogMapper.updateById(patch);\n"
+                + "            });\n"
+                + "        }\n"
                 + "    }\n\n"
                 + "    /**\n"
                 + "     * 文件流、Servlet 对象无法序列化，替换成类型占位\n"
@@ -963,6 +1036,14 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    private Long operUserId;\n\n"
                 + "    private String operName;\n\n"
                 + "    private String operIp;\n\n"
+                + "    /**\n"
+                + "     * 省份（由 IP 解析，内网/本机时记「内网」「本机」）\n"
+                + "     */\n"
+                + "    private String province;\n\n"
+                + "    /**\n"
+                + "     * 城市（由 IP 解析）\n"
+                + "     */\n"
+                + "    private String city;\n\n"
                 + "    private Long costMs;\n\n"
                 + "    private LocalDateTime operTime;\n"
                 + "}\n";
@@ -1452,6 +1533,15 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    path: /v3/api-docs\n"
                 + "  swagger-ui:\n"
                 + "    path: /swagger-ui.html\n\n"
+                + "# 操作日志的 IP 归属地：先查 classpath:/ip/ip2region.db 离线库，查不到才走在线接口\n"
+                + "# 内网/本机不发请求；结果缓存 24h，失败负缓存 5min\n"
+                + "app:\n"
+                + "  ip-region:\n"
+                + "    enabled: true\n"
+                + "    offline: true\n"
+                + "    api: http://ip-api.com/json/{ip}?lang=zh-CN\n"
+                + "    timeout-ms: 3000\n"
+                + "    # proxy: http://127.0.0.1:7890   # 需要走代理才配，不配则强制直连\n\n"
                 + "logging:\n"
                 + "  level:\n"
                 + "    " + pkg + ": info\n";

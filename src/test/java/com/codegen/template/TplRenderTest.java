@@ -224,24 +224,49 @@ class TplRenderTest {
             return GenTemplateModel.build(order, new ArrayList<>(GenTemplateModel.sampleCols()), child);
         }
 
+        /** 子表（明细）自身的渲染模型：孙表字段挂在子表 DTO/VO 上，不再挂主表 */
+        private Map<String, Object> childModel() {
+            GenTable item = new GenTable();
+            item.setTableName("v3_order_item");
+            item.setTableComment("订单明细");
+            item.setClassName("V3OrderItem");
+            item.setPackageName("com.demo.order");
+            item.setMasterForeignKey("order_id");
+            item.setMasterTableId(999L);
+
+            GenTable batch = new GenTable();
+            batch.setTableName("v3_order_batch");
+            batch.setTableComment("发货批次");
+            batch.setClassName("V3OrderBatch");
+            batch.setPackageName("com.demo.order");
+            batch.setMasterForeignKey("item_id");
+
+            GenTemplateModel.ChildInfo grand = new GenTemplateModel.ChildInfo(batch, List.of());
+            return GenTemplateModel.build(item, new ArrayList<>(GenTemplateModel.sampleCols()), grand);
+        }
+
         @Test
         @DisplayName("serviceImpl / saveDto / vo / controller / vuePage 都要出现第三级")
         void threeLevelWiring() {
             Map<String, Object> m = model();
 
-            String serviceImpl = render("serviceImpl.ftl", m);
+            // V4.4 起 serviceImpl 是逻辑名，物理模板按形态派发（判据与引擎同源，缺文件直接 fail）
+            String serviceImpl = render(GenTemplateModel.serviceImplTplCode(m) + ".ftl", m);
             has(serviceImpl, "saveV3OrderBatchRows", "三级保存方法");
             has(serviceImpl, "dto.getV3OrderBatchs()", "由 DTO 取下级列表");
             has(serviceImpl, "V3OrderBatchMapper v3OrderBatchMapper;", "三级 Mapper 注入");
 
-            has(render("saveDto.ftl", m), "List<V3OrderBatchSaveDTO> v3OrderBatchs", "DTO 下级列表字段");
-            has(render("vo.ftl", m), "List<V3OrderBatchVO> v3OrderBatchs", "VO 下级列表字段");
-            has(render("controller.ftl", m), "setV3OrderBatchs(gList)", "详情接口装配三级");
+            // V4.4 语义修正：孙表列表只挂子表自己的 DTO/VO，主表的不再重复（原本是死字段）
+            has(render("saveDto.ftl", childModel()), "List<V3OrderBatchSaveDTO> v3OrderBatchs", "DTO 下级列表字段");
+            has(render("vo.ftl", childModel()), "List<V3OrderBatchVO> v3OrderBatchs", "VO 下级列表字段");
+            hasNot(render("saveDto.ftl", m), "List<V3OrderBatchSaveDTO>", "主表 DTO 不带孙表列表");
+            hasNot(render("vo.ftl", m), "List<V3OrderBatchVO>", "主表 VO 不带孙表列表");
+            has(render("controller.ftl", m), "setV3OrderBatchs(", "详情接口装配三级");
 
             String vue = render("vuePage.ftl", m);
-            has(vue, "openGrandRows(row) {", "前端下级编辑入口");
-            has(vue, "defaultGrand", "下级默认行");
-            has(vue, "grandRows = row.v3OrderBatchs", "直接改引用");
+            has(vue, "openGrandRows('v3OrderItem', 'v3OrderBatch', row)", "前端下级编辑入口");
+            has(vue, "defaultGrandMap", "下级默认行");
+            has(vue, "this.grandRows = row[field]", "直接改引用");
         }
     }
 

@@ -1,8 +1,6 @@
 package com.demo.dto;
 
 import java.math.BigDecimal;
-import java.util.List;
-import com.demo.dto.DemoOrderItemAttrSaveDTO;
 
 import lombok.Data;
 
@@ -26,11 +24,6 @@ public class DemoOrderSaveDTO implements Serializable {
 
     private String orderNo;
     private BigDecimal amount;
-    /**
-     * P3-1 第三级明细：保存时随本级一起全量替换。
-     * 字段名由子表类名推导（如 OrderItemSaveDTO → orderItems）。
-     */
-    private List<DemoOrderItemAttrSaveDTO> demoOrderItemAttrs;
     // <gen:end key="dto-fields">
     // ===== 以下为手写区：写在 gen:end 之后的内容，重新生成不会被覆盖 =====
 }

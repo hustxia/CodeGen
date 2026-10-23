@@ -37,11 +37,12 @@ import request, { toPageData } from '@/utils/request'
   })
 }
 
-export function save${className}WithChildren(master, children) {
+// payload = { master, ...各子表 {childVar}Rows }；子表字段 null=不动，[]=清空
+export function save${className}WithChildren(payload) {
   return request({
     url: '${apiBase}/save-with-children',
     method: 'post',
-    data: { master, children }
+    data: payload
   })
 }
 </#if>

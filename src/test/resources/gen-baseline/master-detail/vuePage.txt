@@ -82,32 +82,35 @@
         </el-form-item>
       </el-form>
 
-      <el-divider content-position="left">订单明细</el-divider>
-      <div class="child-bar">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addChildRow">添加明细</el-button>
-        <span class="child-tip">主表与子表在同一事务中保存（先清后插）</span>
-      </div>
-      <el-table :data="childRows" border size="mini" class="child-table">
-        <el-table-column label="商品名称" min-width="130">
-          <template slot-scope="{ row }">
-            <el-input v-model="row.goodsName" size="mini" placeholder="商品名称" />
-          </template>
-        </el-table-column>
-        <el-table-column label="数量" min-width="130">
-          <template slot-scope="{ row }">
-            <el-input v-model="row.qty" size="mini" placeholder="数量" />
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="150" align="center">
-          <template slot-scope="{ row, $index }">
-            <el-button type="text" @click="openGrandRows(row)">明细属性</el-button>
-            <el-button type="text" class="danger-btn" @click="childRows.splice($index, 1)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <div class="child-tip" style="margin-top: 6px">
-        明细属性在点「确定」时与本级明细一起全量替换，弹窗里改完不必单独保存。
-      </div>
+      <el-tabs v-model="activeChildTab" type="card" class="child-tabs">
+        <el-tab-pane label="订单明细" name="demoOrderItem">
+          <div class="child-bar">
+            <el-button type="primary" icon="el-icon-plus" size="mini" @click="addChildRow('demoOrderItem')">添加明细</el-button>
+            <span class="child-tip">主表与子表在同一事务中保存（先清后插）</span>
+          </div>
+          <el-table :data="demoOrderItemRows" border size="mini" class="child-table">
+            <el-table-column label="商品名称" min-width="130">
+              <template slot-scope="{ row }">
+                <el-input v-model="row.goodsName" size="mini" placeholder="商品名称" />
+              </template>
+            </el-table-column>
+            <el-table-column label="数量" min-width="130">
+              <template slot-scope="{ row }">
+                <el-input v-model="row.qty" size="mini" placeholder="数量" />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="150" align="center">
+              <template slot-scope="{ row, $index }">
+                <el-button type="text" @click="openGrandRows('demoOrderItem', 'demoOrderItemAttr', row)">明细属性</el-button>
+                <el-button type="text" class="danger-btn" @click="demoOrderItemRows.splice($index, 1)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div class="child-tip" style="margin-top: 6px">
+            下级明细在点「确定」时与本级明细一起全量替换，弹窗里改完不必单独保存。
+          </div>
+        </el-tab-pane>
+      </el-tabs>
 
       <div slot="footer">
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -115,7 +118,7 @@
       </div>
     </el-dialog>
 
-    <!-- P3-1 三级明细编辑：直接改 childRows[i].demoOrderItemAttrs，保存时随主表一起提交 -->
+    <!-- 三级明细编辑：直接改选中行的下级数组（引用直改），保存时随主表一起提交 -->
     <el-dialog
       :title="grandTitle"
       :visible.sync="grandVisible"
@@ -123,9 +126,9 @@
       append-to-body
     >
       <div class="child-bar">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addGrandRow">添加明细属性</el-button>
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addGrandRow">添加{{ grandTitle }}</el-button>
       </div>
-      <el-table :data="grandRows" border size="mini" class="child-table">
+      <el-table v-show="grandDialog === 'demoOrderItem.demoOrderItemAttr'" :data="grandRows" border size="mini" class="child-table">
         <el-table-column label="属性名" min-width="130">
           <template slot-scope="{ row }">
             <el-input v-model="row.attrName" size="mini" placeholder="属性名" />
@@ -193,14 +196,17 @@ const defaultForm = () => ({
   orderNo: '',
   amount: '',
 })
-const defaultChild = () => ({
-  goodsName: '',
-  qty: '',
-})
-const defaultGrand = () => ({
-  attrName: '',
-  attrValue: '',
-})
+// 每张子表的新行工厂：键 = 子表 varName（与后端 children[].key 一致）
+const defaultChildMap = {
+  'demoOrderItem': () => ({ goodsName: '', qty: '' })
+}
+// 三级明细新行工厂：键 = '子表.varName'，与 grandDialog 状态对齐
+const defaultGrandMap = {
+  'demoOrderItem.demoOrderItemAttr': () => ({ attrName: '', attrValue: '' })
+}
+const grandTitleMap = {
+  'demoOrderItem.demoOrderItemAttr': '明细属性'
+}
 
 export default {
   name: 'DemoOrder',
@@ -215,13 +221,14 @@ export default {
       submitting: false,
       detailVisible: false,
       detail: {},
-      childRows: [],
-      // P3-1 三级明细：grandRows 指向 childRows 里某一行的 demoOrderItemAttrs 数组，
-      // 直接改引用，弹窗里编辑等于改主结构，无需回写拷贝
+      activeChildTab: 'demoOrderItem',
+      demoOrderItemRows: [],
+      // 三级明细：grandRows 指向选中行的下级数组（直接改引用，弹窗里编辑等于改主结构），
+      // grandDialog 记录当前弹的是哪组（'子表.varName'），决定显示哪张编辑表
       grandVisible: false,
       grandRows: [],
       grandTitle: '',
-      grandIndex: -1,
+      grandDialog: '',
       rules: {
       },
       form: defaultForm()
@@ -265,7 +272,7 @@ export default {
     },
     openDialog(row) {
       this.form = row ? { ...defaultForm(), ...row } : defaultForm()
-      this.childRows = []
+      this.demoOrderItemRows = []
       this.dialogVisible = true
       if (row && row.id) {
         this.loadChildren(row.id)
@@ -275,40 +282,51 @@ export default {
       })
     },
     async loadChildren(id) {
+      this.demoOrderItemRows = []
       try {
         const res = await getDemoOrderWithChildren(id)
-        this.childRows = (res.data && res.data.children) || []
+        // 后端 children: [{key, tableName, comment, rows}]；key 即子表 varName
+        const groups = (res.data && res.data.children) || []
+        groups.forEach(g => {
+          if (this[g.key + 'Rows'] !== undefined) {
+            this[g.key + 'Rows'] = g.rows || []
+          }
+        })
       } catch (e) {
-        this.childRows = []
+        /* 拦截器已提示；保持空明细 */
       }
     },
-    addChildRow() {
-      this.childRows.push(defaultChild())
+    addChildRow(tab) {
+      const factory = defaultChildMap[tab]
+      this[tab + 'Rows'].push(factory ? factory() : {})
     },
     /**
      * 打开某一行的下级明细。用 $set 保障数组存在，
      * 因为后端返回的 VO 里该字段可能为 null（没有下级时）。
      */
-    openGrandRows(row) {
-      if (!row.demoOrderItemAttrs) {
-        this.$set(row, 'demoOrderItemAttrs', [])
+    openGrandRows(childVar, gcVar, row) {
+      const field = gcVar + 's'
+      if (!row[field]) {
+        this.$set(row, field, [])
       }
-      this.grandRows = row.demoOrderItemAttrs
-      this.grandTitle = '明细属性'
+      this.grandRows = row[field]
+      this.grandDialog = childVar + '.' + gcVar
+      this.grandTitle = grandTitleMap[this.grandDialog] || '下级明细'
       this.grandVisible = true
     },
     addGrandRow() {
-      if (!this.grandRows) {
-        this.grandRows = []
-      }
-      this.grandRows.push(defaultGrand())
+      const factory = defaultGrandMap[this.grandDialog]
+      this.grandRows.push(factory ? factory() : {})
     },
     async submitForm() {
       const valid = await this.$refs.form.validate().catch(() => false)
       if (!valid) return
       this.submitting = true
       try {
-        await saveDemoOrderWithChildren(this.form, this.childRows)
+        // 子表按组提交：与后端约定 null=不动该子表、[]=清空；编辑页全部组都提交（全量替换）
+        const payload = { master: this.form }
+        payload.demoOrderItemRows = this.demoOrderItemRows
+        await saveDemoOrderWithChildren(payload)
         this.$message.success(this.form.id ? '更新成功' : '创建成功')
         this.dialogVisible = false
         this.fetchList()
