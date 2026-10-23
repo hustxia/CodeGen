@@ -39,6 +39,12 @@ public class GenApplyVO implements Serializable {
     private String backupDir;
 
     /**
+     * 台账写失败条数（V4.2 台账合一）：> 0 表示有文件落盘但 gen_output 没记上账，
+     * 按台账回滚时这些文件会缺失，需要人工核对
+     */
+    private Integer ledgerErrors = 0;
+
+    /**
      * 自检明细（stage=CHECK 时有值）
      */
     private GenSelfCheckVO selfCheck;

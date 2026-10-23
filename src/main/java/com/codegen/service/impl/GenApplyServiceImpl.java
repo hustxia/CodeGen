@@ -173,6 +173,8 @@ public class GenApplyServiceImpl implements GenApplyService {
         result.setSkipped(skipped);
         result.setFailed(failed);
         result.setBackupDir(resolveBackupDir(files, batchNo));
+        // 台账失败不静默（V4.2）：文件已落盘、写盘不算失败，但账没记上要让调用方看见
+        result.setLedgerErrors(genCodeService.ledgerErrorCount());
 
         GenApplyStageVO writeStage = new GenApplyStageVO("WRITE",
                 failed > 0 ? "FAILED" : "PASS",

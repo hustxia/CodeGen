@@ -54,6 +54,7 @@ import com.codegen.vo.GenScaffoldVO;
 import com.codegen.vo.GenSelfCheckVO;
 import com.codegen.vo.GenTableVO;
 import com.codegen.vo.GenVerifyVO;
+import com.codegen.vo.GenWriteResultVO;
 import com.codegen.vo.GenWriteVO;
 import com.codegen.common.exception.BusinessException;
 import com.codegen.common.result.Result;
@@ -292,14 +293,21 @@ public class GenController {
 
     @Operation(summary = "写盘（按每表前后端根目录）")
     @PostMapping("/write")
-    public Result<List<GenWriteVO>> write(@RequestBody GenWriteDTO dto, HttpServletResponse response) {
+    public Result<GenWriteResultVO> write(@RequestBody GenWriteDTO dto, HttpServletResponse response) {
         List<GenWriteVO> list = genCodeService.writeToDisk(dto);
-        // 台账失败不阻断写盘，但必须让调用方看见：文件写了、账没记上，下次回滚就对不上
+        // 台账失败不阻断写盘，但必须让调用方看见：文件写了、账没记上，下次回滚就对不上。
+        // V4.2 起失败条数直接进返回体 ledgerErrors，响应头仅保留兼容
+        GenWriteResultVO result = new GenWriteResultVO();
+        result.setFiles(list);
         int ledgerErrors = genCodeService.ledgerErrorCount();
+        result.setLedgerErrors(ledgerErrors);
+        if (!list.isEmpty()) {
+            result.setBatchNo(list.get(0).getBatchNo());
+        }
         if (ledgerErrors > 0) {
             response.setHeader("X-Gen-Ledger-Errors", String.valueOf(ledgerErrors));
         }
-        return Result.ok(list);
+        return Result.ok(result);
     }
 
     @Operation(summary = "生成自检（内存编译 + 结构检查）")
