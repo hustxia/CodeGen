@@ -274,8 +274,8 @@ public ResponseEntity<byte[]> export(@RequestBody(required = false) ${className}
             Row row = sheet.createRow(rowIndex++);
 <#list excelColumns as c>
 <#if c.hasDict>
-            // 字典列导出中文标签，与页面显示一致
-            row.createCell(${c?index}).setCellValue(dictTexts.label("${c.dictType}", String.valueOf(e.get${c.capField}())));
+            // 字典列导出中文标签，与页面显示一致；null 写空串，不能落成字面量 "null"
+            row.createCell(${c?index}).setCellValue(e.get${c.capField}() == null ? "" : dictTexts.label("${c.dictType}", String.valueOf(e.get${c.capField}())));
 <#elseif c.isNumber>
             row.createCell(${c?index}).setCellValue(cellNum(e.get${c.capField}()));
 <#else>
@@ -316,9 +316,9 @@ public Result<Map<String, Object>> importExcel(@RequestParam("file") MultipartFi
         // 表头缺失的列直接提示出来，避免用户以为导入了却全是空值
         List<String> missing = new ArrayList<>();
 <#list excelImportColumns as c>
-        Integer col${c.capField} = index.get("${c.columnComment}");
+        Integer col${c.capField} = index.get("${c.commentLabel}");
         if (col${c.capField} == null) {
-            missing.add("${c.columnComment}");
+            missing.add("${c.commentLabel}");
         }
 </#list>
         if (!missing.isEmpty()) {
@@ -370,10 +370,11 @@ public Result<Map<String, Object>> importExcel(@RequestParam("file") MultipartFi
 public ResponseEntity<byte[]> importTemplate() throws IOException {
     try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
         Sheet sheet = wb.createSheet("${comment}导入模板");
-        // 第 1 行是表头，必须与 /import 的表头匹配逻辑完全一致，否则下载的模板自己导不回去
+        // 第 1 行是表头，必须与 /import 的表头匹配逻辑完全一致，否则下载的模板自己导不回去。
+        // 导出表头/导入定位/本模板三处统一 commentLabel（剥枚举说明），改一处必须同步三处
         Row header = sheet.createRow(0);
 <#list excelImportColumns as c>
-        header.createCell(${c?index}).setCellValue("${c.columnComment}");
+        header.createCell(${c?index}).setCellValue("${c.commentLabel}");
 </#list>
         // 第 2 行是填写说明。导入逻辑按列名匹配表头、逐行校验，
         // 这一行必然过不了校验而被记进 failed，所以文案里直接写「请删除本行」。
@@ -430,12 +431,12 @@ private List<String> validateImportRow(${className} entity, int rowNum) {
 <#list excelImportColumns as c>
 <#if c.isRequired>
     if (<#if c.isString>entity.get${c.capField}() == null || entity.get${c.capField}().isBlank()<#else>entity.get${c.capField}() == null</#if>) {
-        errors.add("${c.columnComment}不能为空");
+        errors.add("${c.commentLabel}不能为空");
     }
 </#if>
 <#if c.isString && c.maxLen gt 0>
     if (entity.get${c.capField}() != null && entity.get${c.capField}().length() > ${c.maxLen}) {
-        errors.add("${c.columnComment}长度不能超过${c.maxLen}个字符");
+        errors.add("${c.commentLabel}长度不能超过${c.maxLen}个字符");
     }
 </#if>
 </#list>
@@ -595,7 +596,7 @@ public Result<Void> delete(@PathVariable("id") Long id) {
         <#list uniqueColumns as c>
         if (dto.get${c.capField}() != null && !String.valueOf(dto.get${c.capField}()).isBlank()
                 && countBy("${c.dbField}", String.valueOf(dto.get${c.capField}()), excludeId) > 0) {
-            throw new BusinessException(400, "${c.columnComment}已存在");
+            throw new BusinessException(400, "${c.commentLabel}已存在");
         }
         </#list>
         <#else>
@@ -610,7 +611,7 @@ public Result<Void> delete(@PathVariable("id") Long id) {
                 wrapper.ne(${className}::getId, excludeId);
             }
             if (${varName}Service.count(wrapper) > 0) {
-                throw new BusinessException(400, "<#list uniqueColumns as c>${c.columnComment}<#if c_has_next>+</#if></#list>组合已存在");
+                throw new BusinessException(400, "<#list uniqueColumns as c>${c.commentLabel}<#if c_has_next>+</#if></#list>组合已存在");
             }
         }
         </#if>

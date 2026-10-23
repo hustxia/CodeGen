@@ -556,7 +556,8 @@ public final class GenTemplateModel {
     /**
      * 列模型展平
      */
-    private static List<Map<String, Object>> toModel(List<GenTableColumn> cols) {        List<Map<String, Object>> list = new ArrayList<>();
+    private static List<Map<String, Object>> toModel(List<GenTableColumn> cols) {
+        List<Map<String, Object>> list = new ArrayList<>();
         for (GenTableColumn c : cols) {
             Map<String, Object> cm = new HashMap<>();
             String javaType = c.getJavaType();

@@ -139,8 +139,8 @@ public ResponseEntity<byte[]> export(@RequestBody(required = false) DemoGoodsPag
         for (DemoGoods e : rows) {
             Row row = sheet.createRow(rowIndex++);
             row.createCell(0).setCellValue(cellText(e.getGoodsName()));
-            // 字典列导出中文标签，与页面显示一致
-            row.createCell(1).setCellValue(dictTexts.label("sys_status", String.valueOf(e.getStatus())));
+            // 字典列导出中文标签，与页面显示一致；null 写空串，不能落成字面量 "null"
+            row.createCell(1).setCellValue(e.getStatus() == null ? "" : dictTexts.label("sys_status", String.valueOf(e.getStatus())));
             row.createCell(2).setCellValue(cellNum(e.getDeptId()));
             row.createCell(3).setCellValue(cellNum(e.getPrice()));
         }
