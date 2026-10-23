@@ -518,11 +518,15 @@ public final class GenTemplateModel {
         if (comment == null || comment.isBlank()) {
             return "";
         }
-        var m = COMMENT_TITLE_SPLIT.matcher(comment.trim());
+        String text = comment.trim();
+        var m = COMMENT_TITLE_SPLIT.matcher(text);
         if (m.matches() && !m.group(1).isBlank()) {
-            return m.group(1).trim();
+            text = m.group(1).trim();
         }
-        return comment.trim();
+        // 「分类ID」「客户编号」在页面上显示成「分类」「客户」更自然；
+        // 但纯粹的 "ID"/"编号" 保留原样，否则标签会变成空字符串。
+        String stripped = text.replaceAll("(?<=[\\u4e00-\\u9fa5])(ID|Id|id|编号|主键)$", "").trim();
+        return stripped.isEmpty() ? text : stripped;
     }
 
     private static int columnWidth(GenTableColumn c, String htmlType, String javaType) {

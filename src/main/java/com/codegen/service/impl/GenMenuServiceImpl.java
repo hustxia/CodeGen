@@ -10,6 +10,7 @@ import com.codegen.mapper.SysProjectMapper;
 import com.codegen.service.GenMenuService;
 import com.codegen.support.GenNaming;
 import com.codegen.support.GenPathResolver;
+import com.codegen.util.GenMenuGroup;
 import com.codegen.vo.GenMenuRegisterVO;
 import com.codegen.vo.GenMenuVO;
 import com.codegen.common.exception.BusinessException;
@@ -90,7 +91,9 @@ public class GenMenuServiceImpl implements GenMenuService {
      * 菜单计划：artifact 出口下用于生成 SQL 与路由的中间结构
      */
     private record PlannedMenu(GenTable table, String path, String component,
-                               String listPerm, List<String[]> buttons) {
+                               String listPerm, List<String[]> buttons,
+                               String projectCode, String projectName,
+                               String groupCode, String groupLabel) {
     }
 
     @Override
@@ -113,6 +116,8 @@ public class GenMenuServiceImpl implements GenMenuService {
 
         String parentPath = internal && parentId > 0 ? pathOf(parentId) : "";
         List<PlannedMenu> plans = new ArrayList<>();
+        // 目录菜单（系统层 / 分组层）本次注册内复用，避免逐表重复查询、重复插入
+        Map<String, Long> dirCache = new java.util.HashMap<>();
 
         for (Long id : dto.getIds()) {
             GenTable table = genTableMapper.selectById(id);
@@ -128,7 +133,7 @@ public class GenMenuServiceImpl implements GenMenuService {
                 continue;
             }
             if (internal) {
-                registerInternal(result, table, parentId, parentPath, roleIds, dryRun);
+                registerInternal(result, table, parentId, parentPath, roleIds, dryRun, dirCache);
             } else {
                 registerArtifact(result, table, parentId, parentPath, plans, dryRun);
             }
@@ -154,10 +159,15 @@ public class GenMenuServiceImpl implements GenMenuService {
     }
 
     /**
-     * internal 出口：写平台自身 sys_menu（原行为）
+     * internal 出口：写平台自身 sys_menu（原行为）。
+     *
+     * <p>菜单按「系统 → 业务域 → 页面」三级落库：以前所有页面直接挂在父菜单下，
+     * 80 张表就是 80 个平级兄弟节点，找不到东西。现在中间加一层业务域目录，
+     * 目录节点同名复用，反复注册不会堆出重复层级。</p>
      */
     private void registerInternal(GenMenuRegisterVO result, GenTable table, long parentId,
-                                  String parentPath, List<Long> roleIds, boolean dryRun) {
+                                  String parentPath, List<Long> roleIds, boolean dryRun,
+                                  Map<String, Long> dirCache) {
         if (table.getMenuId() != null && menuExists(table.getMenuId())) {
             String backfilled = backfillPerms(table);
             String fixedComponent = backfillComponent(table);
@@ -188,16 +198,27 @@ public class GenMenuServiceImpl implements GenMenuService {
                     table.getTableComment(), pathOf(table.getMenuId()), 2, status, note));
             return;
         }
-        String pagePath = joinPath(parentPath, projectCodeOf(table.getProjectId()), table.getModuleName(), LEAF);
+        String projectCode = projectCodeOf(table.getProjectId());
+        SysProject project = projectOf(table.getProjectId());
+        GenMenuGroup.Group group = GenMenuGroup.of(table.getTableName(), table.getTableComment());
+        String systemPath = joinPath(parentPath, projectCode, null, null);
+        String groupPath = joinPath(systemPath, null, group.code(), null);
+        String pagePath = joinPath(groupPath, null, table.getModuleName(), LEAF);
         if (dryRun) {
             result.getMenus().add(new GenMenuVO(table.getTableName(), null, table.getTableComment(),
                     pagePath, 2, "PLANNED", "预览，未落库"));
             return;
         }
         try {
+            String systemName = project != null && project.getProjectName() != null
+                    && !project.getProjectName().isBlank()
+                    ? project.getProjectName()
+                    : (projectCode == null || projectCode.isBlank() ? "业务系统" : projectCode + "系统");
+            long systemId = ensureDir(parentId, systemName, systemPath, dirCache);
+            long groupId = ensureDir(systemId, group.label(), groupPath, dirCache);
             String component = componentOf(table);
-            Long menuId = insertMenu(parentId, table.getTableComment(), pagePath, component,
-                    permsPrefix(table) + ":list", 2, nextSort(parentId));
+            Long menuId = insertMenu(groupId, table.getTableComment(), pagePath, component,
+                    permsPrefix(table) + ":list", 2, nextSort(groupId));
             long sort = 1;
             for (String[] btn : buttonsOf(table)) {
                 Long btnId = insertMenu(menuId, btn[0], null, null,
@@ -208,8 +229,8 @@ public class GenMenuServiceImpl implements GenMenuService {
             jdbcTemplate.update("UPDATE gen_table SET menu_id = ? WHERE id = ?", menuId, table.getId());
             result.getMenus().add(new GenMenuVO(table.getTableName(), menuId, table.getTableComment(),
                     pagePath, 2, "REGISTERED",
-                    "已注册菜单与 " + (sort - 1) + " 个按钮权限，并授权 " + roleIds.size() + " 个角色 "
-                            + roleIds));
+                    "已注册到「" + systemName + " / " + group.label() + "」，含 " + (sort - 1)
+                            + " 个按钮权限，授权 " + roleIds.size() + " 个角色 " + roleIds));
         } catch (Exception e) {
             log.warn("register menu failed for {}: {}", table.getTableName(), e.getMessage());
             result.getMenus().add(new GenMenuVO(table.getTableName(), null, table.getTableComment(),
@@ -218,21 +239,55 @@ public class GenMenuServiceImpl implements GenMenuService {
     }
 
     /**
+     * 确保目录菜单（系统层 / 分组层）存在并返回其 ID。
+     *
+     * <p>同名同父即复用：注册菜单是幂等操作，重复执行不能一层层堆目录。
+     * 已存在的目录不修正 path，避免把用户手工调整过的路径覆盖掉。</p>
+     */
+    private long ensureDir(long parentId, String name, String path, Map<String, Long> cache) {
+        String key = parentId + "|" + name;
+        Long cached = cache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        List<Long> exists = jdbcTemplate.queryForList(
+                "SELECT id FROM sys_menu WHERE parent_id = ? AND name = ? AND type = 1 AND deleted = 0 "
+                        + "ORDER BY id LIMIT 1", Long.class, parentId, name);
+        long id = exists.isEmpty()
+                ? insertMenu(parentId, name, path, null, null, 1, nextSort(parentId))
+                : exists.get(0);
+        cache.put(key, id);
+        return id;
+    }
+
+
+    /**
      * artifact 出口：只做计划，SQL 与路由片段随后落到目标工程
      */
     private void registerArtifact(GenMenuRegisterVO result, GenTable table, long parentId,
                                   String parentPath, List<PlannedMenu> plans, boolean dryRun) {
-        String pagePath = joinPath(parentPath, projectCodeOf(table.getProjectId()), table.getModuleName(), LEAF);
+        String projectCode = projectCodeOf(table.getProjectId());
+        SysProject project = projectOf(table.getProjectId());
+        String projectName = project != null && project.getProjectName() != null
+                && !project.getProjectName().isBlank()
+                ? project.getProjectName()
+                : (projectCode == null || projectCode.isBlank() ? "业务系统" : projectCode + "系统");
+        GenMenuGroup.Group group = GenMenuGroup.of(table.getTableName(), table.getTableComment());
+        String systemPath = joinPath(parentPath, projectCode, null, null);
+        String groupPath = joinPath(systemPath, null, group.code(), null);
+        String pagePath = joinPath(groupPath, null, table.getModuleName(), LEAF);
         String component = componentOf(table);
         List<String[]> buttons = buttonsOf(table);
         if (!dryRun) {
             plans.add(new PlannedMenu(table, pagePath, component,
-                    permsPrefix(table) + ":list", buttons));
+                    permsPrefix(table) + ":list", buttons,
+                    projectCode, projectName, group.code(), group.label()));
         }
         result.getMenus().add(new GenMenuVO(table.getTableName(), table.getMenuId(),
                 table.getTableComment(), pagePath, 2,
                 dryRun ? "PLANNED" : "GENERATED",
-                (dryRun ? "预览" : "已产出") + "菜单 SQL 与 " + buttons.size() + " 个按钮权限（父菜单 "
+                (dryRun ? "预览" : "已产出") + "菜单 SQL 与 " + buttons.size() + " 个按钮权限（"
+                        + projectName + " / " + group.label() + "，父菜单 "
                         + parentId + "，角色 " + result.getRoleId() + "）"));
     }
 
@@ -328,30 +383,60 @@ public class GenMenuServiceImpl implements GenMenuService {
      * internal 出口的行：菜单表里的 path 才是权威来源
      */
     private List<Map<String, Object>> loadRowsFromDb() {
-        String sql = "SELECT t.table_comment, t.class_name, t.module_name, t.project_id, m.path "
+        String sql = "SELECT t.table_comment, t.table_name, t.class_name, t.module_name, t.project_id, m.path "
                 + "FROM gen_table t JOIN sys_menu m ON m.id = t.menu_id "
                 + "WHERE t.deleted = 0 AND m.deleted = 0 AND m.status = 1 "
                 + "AND t.gen_frontend = 1 AND t.gen_vue_page = 1 "
                 + "ORDER BY m.sort, t.id";
-        return jdbcTemplate.queryForList(sql);
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Map<String, Object> row : jdbcTemplate.queryForList(sql)) {
+            Map<String, Object> copy = new java.util.LinkedHashMap<>(row);
+            decorateGroup(copy);
+            rows.add(copy);
+        }
+        return rows;
     }
 
     /**
-     * artifact 出口的行：目标工程没有菜单表，path 由「系统编码 + 模块名」推导
+     * artifact 出口的行：目标工程没有菜单表，path 由「系统编码 + 业务域 + 模块名」推导
      */
     private List<Map<String, Object>> loadRowsFromTables() {
-        String sql = "SELECT table_comment, class_name, module_name, project_id FROM gen_table "
+        String sql = "SELECT table_name, table_comment, class_name, module_name, project_id FROM gen_table "
                 + "WHERE deleted = 0 AND master_table_id IS NULL "
                 + "AND gen_frontend = 1 AND gen_vue_page = 1 ORDER BY id";
         List<Map<String, Object>> rows = new ArrayList<>();
         for (Map<String, Object> row : jdbcTemplate.queryForList(sql)) {
             Map<String, Object> copy = new java.util.LinkedHashMap<>(row);
-            Object projectId = row.get("project_id");
-            String code = projectCodeOf(projectId == null ? null : ((Number) projectId).longValue());
-            copy.put("path", joinPath("", code, String.valueOf(row.get("module_name")), LEAF));
+            decorateGroup(copy);
             rows.add(copy);
         }
         return rows;
+    }
+
+    /**
+     * 补齐「系统 + 业务域」两组字段，并把它们并进页面 path。
+     *
+     * <p>路由必须是三段：{@code /<系统>/<业务域>/<模块>/list}。菜单树和前端路由共用同一份
+     * 推导结果，否则菜单显示三级、点进去却是另一条路径，两边会对不上。</p>
+     */
+    private void decorateGroup(Map<String, Object> row) {
+        Object projectId = row.get("project_id");
+        String code = projectCodeOf(projectId == null ? null : ((Number) projectId).longValue());
+        SysProject project = projectOf(projectId == null ? null : ((Number) projectId).longValue());
+        String projectName = project != null && project.getProjectName() != null
+                && !project.getProjectName().isBlank()
+                ? project.getProjectName()
+                : (code == null || code.isBlank() ? "业务系统" : code + "系统");
+        GenMenuGroup.Group group = GenMenuGroup.of(
+                String.valueOf(row.get("table_name")), String.valueOf(row.get("table_comment")));
+        row.put("project_code", code == null ? "" : code);
+        row.put("project_name", projectName);
+        row.put("group_code", group.code());
+        row.put("group_label", group.label());
+        if (row.get("path") == null) {
+            row.put("path", "/" + (code == null ? "" : code) + "/" + group.code() + "/"
+                    + row.get("module_name") + "/" + LEAF);
+        }
     }
 
     /**
@@ -408,40 +493,92 @@ public class GenMenuServiceImpl implements GenMenuService {
         sb.append("/* eslint-disable */\n");
         sb.append("// 该文件由代码生成器自动维护，请勿手工编辑。\n");
         sb.append("// 注册/删除菜单后会自动重建；要移除某个生成页面，请先删除表配置。\n");
+        sb.append("// 结构为三级：系统 → 业务域 → 页面，菜单树与路由共用同一套分组推导。\n");
         if (!skipped.isEmpty()) {
             sb.append("// 以下模块的页面尚未落盘，暂不生成路由（生成后重新执行「重建路由」即可纳入）：")
                     .append(String.join("、", skipped)).append("\n");
         }
         if (!rows.isEmpty()) {
-            sb.append("import Layout from '@/layout/index.vue'\n\n");
+            sb.append("import Layout from '@/layout/index.vue'\n");
+            // 业务域分组层是纯容器：只透传 router-view，绝不能再挂 Layout，
+            // 否则系统内每层都会渲染一份侧边栏，页面出现双重菜单
+            sb.append("const GroupView = { name: 'GroupView', render: h => h('router-view') }\n\n");
         }
         sb.append("export default [\n");
+
+        // 系统 → 业务域 → 页面，用 LinkedHashMap 保住 gen_table 的原始顺序
+        java.util.Map<String, java.util.Map<String, List<Map<String, Object>>>> tree =
+                new java.util.LinkedHashMap<>();
         for (Map<String, Object> row : rows) {
-            String path = String.valueOf(row.get("path"));
-            String module = String.valueOf(row.get("module_name"));
-            String className = String.valueOf(row.get("class_name"));
-            String title = String.valueOf(row.get("table_comment"));
-            String rootPath = path;
-            String childPath = "";
-            if (path.endsWith("/" + LEAF)) {
-                rootPath = path.substring(0, path.length() - LEAF.length() - 1);
-                childPath = LEAF;
+            String system = str(row.get("project_name"), "业务系统");
+            String group = str(row.get("group_label"), "其他");
+            tree.computeIfAbsent(system, k -> new java.util.LinkedHashMap<>())
+                    .computeIfAbsent(group, k -> new ArrayList<>())
+                    .add(row);
+        }
+
+        for (Map.Entry<String, java.util.Map<String, List<Map<String, Object>>>> system : tree.entrySet()) {
+            String systemCode = "";
+            String systemPath = "";
+            for (List<Map<String, Object>> groupRows : system.getValue().values()) {
+                if (!groupRows.isEmpty()) {
+                    systemCode = str(groupRows.get(0).get("project_code"), "");
+                    systemPath = "/" + systemCode;
+                    break;
+                }
             }
             sb.append("  {\n");
-            sb.append("    path: '").append(jsEscape(rootPath)).append("',\n");
+            sb.append("    path: '").append(jsEscape(systemPath)).append("',\n");
             sb.append("    component: Layout,\n");
+            sb.append("    meta: { title: '").append(jsEscape(system.getKey())).append("' },\n");
             sb.append("    children: [\n");
-            sb.append("      {\n");
-            sb.append("        path: '").append(jsEscape(childPath)).append("',\n");
-            sb.append("        name: '").append(className).append("',\n");
-            sb.append("        component: () => import('@/views/").append(module).append("/index.vue'),\n");
-            sb.append("        meta: { title: '").append(jsEscape(title)).append("' }\n");
-            sb.append("      }\n");
-            sb.append("    ]\n");
+            boolean firstGroup = true;
+            for (Map.Entry<String, List<Map<String, Object>>> group : system.getValue().entrySet()) {
+                String groupCode = str(group.getValue().get(0).get("group_code"), "other");
+                if (!firstGroup) {
+                    sb.append(",\n");
+                }
+                firstGroup = false;
+                sb.append("      {\n");
+                sb.append("        path: '").append(jsEscape(groupCode)).append("',\n");
+                sb.append("        component: GroupView,\n");
+                sb.append("        meta: { title: '").append(jsEscape(group.getKey())).append("' },\n");
+                sb.append("        children: [\n");
+                boolean firstPage = true;
+                for (Map<String, Object> row : group.getValue()) {
+                    String path = String.valueOf(row.get("path"));
+                    String module = String.valueOf(row.get("module_name"));
+                    String className = String.valueOf(row.get("class_name"));
+                    String title = String.valueOf(row.get("table_comment"));
+                    // 组内每页都要带自己的模块名，否则同组页面全是 path: 'list'，vue-router 只认第一条
+                    String leafPath = path.endsWith("/" + LEAF)
+                            ? module + "/" + LEAF
+                            : module;
+                    if (!firstPage) {
+                        sb.append(",\n");
+                    }
+                    firstPage = false;
+                    sb.append("          {\n");
+                    sb.append("            path: '").append(jsEscape(leafPath)).append("',\n");
+                    sb.append("            name: '").append(className).append("',\n");
+                    sb.append("            component: () => import('@/views/").append(module)
+                            .append("/index.vue'),\n");
+                    sb.append("            meta: { title: '").append(jsEscape(title)).append("' }\n");
+                    sb.append("          }");
+                }
+                sb.append("\n        ]\n");
+                sb.append("      }");
+            }
+            sb.append("\n    ]\n");
             sb.append("  },\n");
         }
         sb.append("]\n");
         return sb.toString();
+    }
+
+    private String str(Object value, String fallback) {
+        String text = value == null ? "" : String.valueOf(value);
+        return text.isBlank() ? fallback : text;
     }
 
     /**
@@ -454,18 +591,58 @@ public class GenMenuServiceImpl implements GenMenuService {
         }
         StringBuilder sb = new StringBuilder();
         sb.append("-- ============================================================\n");
-        sb.append("-- 代码生成器产出的菜单注册 SQL\n");
+        sb.append("-- 代码生成器产出的菜单注册 SQL（三级结构：系统 → 业务域 → 页面）\n");
         sb.append("-- 目标工程需存在 sys_menu / sys_role_menu（字段：parent_id,name,path,component,perms,type,sort,status,deleted）\n");
         sb.append("-- 生成时间：").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("\n");
         sb.append("-- 父菜单 ID：").append(parentId).append("    授权角色 ID：").append(roleId).append("\n");
         sb.append("-- ============================================================\n\n");
         sb.append("START TRANSACTION;\n\n");
+        // 目录层先落：同名同父复用，重复执行本 SQL 不会堆出重复目录
+        java.util.Map<String, String> dirVars = new java.util.LinkedHashMap<>();
+        for (PlannedMenu plan : plans) {
+            String systemName = plan.projectName();
+            String systemPath = "/" + (plan.projectCode() == null ? "" : plan.projectCode());
+            dirVars.computeIfAbsent("SYS|" + systemName, k -> {
+                String var = "dir_sys_" + sanitizeVar(plan.projectCode());
+                sb.append("-- 【一级】").append(systemName).append('\n');
+                sb.append("SET @").append(var).append(" = (SELECT id FROM sys_menu WHERE parent_id = ")
+                        .append(parentId).append(" AND name = ").append(sqlStr(systemName))
+                        .append(" AND type = 1 AND deleted = 0 LIMIT 1);\n");
+                sb.append("INSERT INTO sys_menu (parent_id, name, path, component, perms, type, sort, status, deleted)\n");
+                sb.append("SELECT ").append(parentId).append(", ").append(sqlStr(systemName)).append(", ")
+                        .append(sqlStr(systemPath)).append(", NULL, NULL, 1, 1, 1, 0 FROM DUAL\n");
+                sb.append("WHERE @").append(var).append(" IS NULL;\n");
+                sb.append("SET @").append(var).append(" = COALESCE(@").append(var)
+                        .append(", LAST_INSERT_ID());\n\n");
+                return var;
+            });
+            String groupKey = "GRP|" + plan.projectName() + "|" + plan.groupLabel();
+            dirVars.computeIfAbsent(groupKey, k -> {
+                String var = "dir_grp_" + sanitizeVar(plan.groupCode());
+                String sysVar = dirVars.get("SYS|" + plan.projectName());
+                sb.append("-- 【二级】").append(plan.groupLabel()).append('\n');
+                sb.append("SET @").append(var).append(" = (SELECT id FROM sys_menu WHERE parent_id = @")
+                        .append(sysVar).append(" AND name = ").append(sqlStr(plan.groupLabel()))
+                        .append(" AND type = 1 AND deleted = 0 LIMIT 1);\n");
+                sb.append("INSERT INTO sys_menu (parent_id, name, path, component, perms, type, sort, status, deleted)\n");
+                sb.append("SELECT @").append(sysVar).append(", ").append(sqlStr(plan.groupLabel())).append(", ")
+                        .append(sqlStr("/" + plan.projectCode() + "/" + plan.groupCode()))
+                        .append(", NULL, NULL, 1, 1, 1, 0 FROM DUAL\n");
+                sb.append("WHERE @").append(var).append(" IS NULL;\n");
+                sb.append("SET @").append(var).append(" = COALESCE(@").append(var)
+                        .append(", LAST_INSERT_ID());\n\n");
+                return var;
+            });
+        }
+        sb.append("-- ===== 三级：页面 =====\n");
         for (PlannedMenu plan : plans) {
             GenTable table = plan.table();
             String var = "menu_" + table.getTableName().replaceAll("[^A-Za-z0-9_]", "_");
-            sb.append("-- ").append(table.getTableComment()).append("（").append(table.getTableName()).append("）\n");
+            String grpVar = dirVars.get("GRP|" + plan.projectName() + "|" + plan.groupLabel());
+            sb.append("-- ").append(plan.projectName()).append(" / ").append(plan.groupLabel()).append(" / ")
+                    .append(table.getTableComment()).append("（").append(table.getTableName()).append("）\n");
             sb.append("INSERT INTO sys_menu (parent_id, name, path, component, perms, type, sort, status, deleted)\n");
-            sb.append("VALUES (").append(parentId).append(", ").append(sqlStr(table.getTableComment())).append(", ")
+            sb.append("VALUES (@").append(grpVar).append(", ").append(sqlStr(table.getTableComment())).append(", ")
                     .append(sqlStr(plan.path())).append(", ").append(sqlStr(plan.component())).append(", ")
                     .append(sqlStr(plan.listPerm())).append(", 2, 1, 1, 0);\n");
             sb.append("SET @").append(var).append(" = LAST_INSERT_ID();\n");
@@ -771,5 +948,16 @@ public class GenMenuServiceImpl implements GenMenuService {
             return "NULL";
         }
         return "'" + raw.replace("'", "''") + "'";
+    }
+
+    /**
+     * SQL 变量名只允许字母数字下划线，系统编码里出现横杠/中文时不能直接拼进 {@code @var}
+     */
+    private String sanitizeVar(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "x";
+        }
+        String cleaned = raw.replaceAll("[^A-Za-z0-9_]", "_");
+        return Character.isDigit(cleaned.charAt(0)) ? "v_" + cleaned : cleaned;
     }
 }

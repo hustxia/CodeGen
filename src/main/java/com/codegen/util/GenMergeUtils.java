@@ -95,7 +95,11 @@ public final class GenMergeUtils {
             List<String> blockLines = new ArrayList<>(
                     newLines.subList(entry.getValue().startLine(), entry.getValue().endLine() + 1));
             blockLines.add(0, "");
-            int insertAt = insertPoint(oldLines, oldBlocks);
+            // style 类块只能落在文件末尾：插到「最后一个已有块之后」会掉进 <script> 里，
+            // 直接产出语法错误（vue 文件里 style 一定在 script 之后）。
+            int insertAt = entry.getKey().toLowerCase().contains("style")
+                    ? oldLines.size()
+                    : insertPoint(oldLines, oldBlocks);
             oldLines.addAll(insertAt, blockLines);
             appendedKeys.add(entry.getKey());
         }

@@ -22,6 +22,7 @@ import com.codegen.entity.GenOutput;
 import com.codegen.service.ApiCatalogService;
 import com.codegen.service.RelationDetectService;
 import com.codegen.service.DictDetectService;
+import com.codegen.service.GenRefService;
 import com.codegen.service.GenApplyService;
 import com.codegen.service.GenCodeService;
 import com.codegen.service.GenDriftService;
@@ -126,6 +127,9 @@ public class GenController {
     private DictDetectService dictDetectService;
 
     @Autowired
+    private GenRefService genRefService;
+
+    @Autowired
     private ApiCatalogService apiCatalogService;
 
     @Autowired
@@ -170,6 +174,14 @@ public class GenController {
     @PostMapping("/dict/apply")
     public Result<Integer> applyDict(@RequestBody GenDictApplyDTO dto) {
         return Result.ok(dictDetectService.apply(dto.getTableId(), dto.getDictCodes()));
+    }
+
+    @Operation(summary = "外键关联推断：xxx_id → 关联表名称列（apply=true 才落库）")
+    @PostMapping("/ref/detect")
+    public Result<List<com.codegen.vo.RefDetectItemVO>> detectRef(
+            @RequestParam(required = false) Long projectId,
+            @RequestParam(defaultValue = "false") boolean apply) {
+        return Result.ok(genRefService.detect(projectId, apply));
     }
 
     @Operation(summary = "生成输出全局配置（前端展示用）")

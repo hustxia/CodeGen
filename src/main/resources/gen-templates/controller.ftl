@@ -32,7 +32,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 </#if>
 <#if ctrlAnyApi || genTree || hasChild>import org.springframework.beans.BeanUtils;
 </#if>
-<#if ctrlAnyApi || genTree || hasChild || hasUnique || hasFlow>import org.springframework.beans.factory.annotation.Autowired;
+<#if ctrlAnyApi || genTree || hasChild || hasUnique || hasFlow || hasRef>import org.springframework.beans.factory.annotation.Autowired;
 </#if>
 <#if (ctrlAnyApi || genTree || hasChild) && ctrlPageApi>import org.springframework.util.StringUtils;
 </#if>
@@ -98,15 +98,15 @@ ${''}
 <#if hasFlow>    @Autowired
     private FlowService flowService;
 </#if>
-<#if hasRef>
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-</#if>
 <#if hasDictColumn>
     @Autowired
     private ${rootPkg}.common.util.DictTexts dictTexts;
 </#if>
     // <gen:begin key="controller-body">
+<#if hasRef>
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+</#if>
 <#if isMiddle && relationKeys?size gte 2>${''}
 @Operation(summary = "${comment}：按一个外键取另一侧的全部值（多选回显用）")
 @GetMapping("/bind-values")
@@ -178,8 +178,10 @@ public Result<List<Map<String, Object>>> options(@RequestParam("refTable") Strin
     String labelCol = label == null || !label.matches("[A-Za-z0-9_]+") ? "name" : label;
     String base = "SELECT id, " + labelCol + " AS label FROM " + refTable;
     String like = keyword == null || keyword.isBlank() ? null : "%" + keyword.trim() + "%";
+    // 无关键字是「列表页翻译 ID 为名称」，要一次拉够；有关键字是下拉搜索，20 条足够
+    int limit = like == null ? 500 : 20;
     String sql = base + " WHERE deleted = 0" + (like == null ? "" : " AND " + labelCol + " LIKE ?")
-            + " ORDER BY id DESC LIMIT 20";
+            + " ORDER BY id DESC LIMIT " + limit;
     try {
         return Result.ok(like == null
                 ? jdbcTemplate.queryForList(sql)
@@ -187,7 +189,7 @@ public Result<List<Map<String, Object>>> options(@RequestParam("refTable") Strin
     } catch (Exception e) {
         // 关联表没有 deleted 列（如关联表）时降级为不带软删条件
         String fallback = base + (like == null ? "" : " WHERE " + labelCol + " LIKE ?")
-                + " ORDER BY id DESC LIMIT 20";
+                + " ORDER BY id DESC LIMIT " + limit;
         return Result.ok(like == null
                 ? jdbcTemplate.queryForList(fallback)
                 : jdbcTemplate.queryForList(fallback, like));

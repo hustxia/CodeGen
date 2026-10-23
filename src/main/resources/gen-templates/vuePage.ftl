@@ -1,6 +1,16 @@
 <template>
   <div class="app-container">
     <!-- <gen:begin key="vue-template"> -->
+    <!-- 页头：一眼看清「我在哪个页面、这页能干什么」 -->
+    <div class="page-head">
+      <div class="page-head__main">
+        <h2 class="page-title">${comment}</h2>
+        <p class="page-desc">维护${comment}数据，可按条件筛选、编辑与导出</p>
+      </div>
+      <div class="page-head__meta">
+        <span class="meta-pill">{{ total }} 条记录</span>
+      </div>
+    </div>
 <#if vueQueryColumns?size gt 0>
     <!-- 筛选区 -->
     <el-card shadow="never" class="filter-card">
@@ -36,10 +46,13 @@
 
 </#if>
     <!-- 列表 -->
-    <el-card shadow="never">
+    <el-card shadow="never" class="table-card">
       <div slot="header" class="card-header">
-        <span>${comment}列表</span>
-        <div>
+        <div class="card-title">
+          <span class="title">${comment}</span>
+          <span class="subtitle">共 {{ total }} 条</span>
+        </div>
+        <div class="card-actions">
 <#if genAddBtn>
           <el-button v-hasPermi="['${permsPrefix}:add']" type="primary" icon="el-icon-plus" size="small" @click="openDialog()">新增${comment}</el-button>
 </#if>
@@ -55,8 +68,10 @@
       <el-table
         v-loading="loading"
         :data="list"
-        border
+        class="data-table"
         stripe
+        header-cell-class-name="table-head-cell"
+        empty-text="暂无数据"
 <#if genTree>
         row-key="id"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
@@ -64,7 +79,10 @@
       >
         <el-table-column prop="id" label="ID" width="<#if idColWidth gt 0>${idColWidth}<#else>70</#if>" />
 <#list listColumns as c>
-<#if c.isSwitch>
+<#if c.hasRef>
+        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip
+          :formatter="(row) => refText('${c.javaField}', row.${c.javaField})" />
+<#elseif c.isSwitch>
         <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="center">
           <template slot-scope="{ row }">
             <el-tag :type="row.${c.javaField} === 1 ? 'success' : 'info'" size="mini">
@@ -132,10 +150,17 @@
     </el-card>
 
 <#if hasDialog>
+<#assign twoColForm = (formColumns?size gt 6)>
     <!-- 新增/编辑弹窗 -->
-    <el-dialog :title="form.id ? '编辑${comment}' : '新增${comment}'" :visible.sync="dialogVisible" width="<#if hasChild>860px<#else>560px</#if>">
-      <el-form ref="form" :model="form" :rules="rules" label-width="110px">
+    <el-dialog :title="form.id ? '编辑${comment}' : '新增${comment}'" :visible.sync="dialogVisible" width="<#if hasChild>900px<#elseif twoColForm>760px<#else>560px</#if>" top="6vh" class="form-dialog">
+      <el-form ref="form" :model="form" :rules="rules" label-width="<#if twoColForm>96px<#else>110px</#if>">
+<#if twoColForm>
+        <el-row :gutter="20">
+</#if>
 <#list formColumns as c>
+<#if twoColForm>
+          <el-col :span="12">
+</#if>
         <el-form-item<#if c.hasLink> v-if="link.visible('${c.javaField}')"</#if> label="${c.commentLabel}" prop="${c.javaField}">
 <#if c.hasRef>
           <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> filterable remote clearable placeholder="输入关键字搜索${c.commentLabel}"
@@ -165,7 +190,13 @@
           <el-input v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> placeholder="请输入${c.commentLabel}" />
 </#if>
         </el-form-item>
+<#if twoColForm>
+          </el-col>
+</#if>
 </#list>
+<#if twoColForm>
+        </el-row>
+</#if>
 <#if genTree>
         <el-form-item label="上级节点">
           <el-cascader
@@ -279,7 +310,9 @@
 <#list listColumns as c>
         <div class="detail-row">
           <span class="detail-label">${c.commentLabel}</span>
-<#if c.isSwitch>
+<#if c.hasRef>
+          <span class="detail-value">{{ refText('${c.javaField}', detail.${c.javaField}) }}</span>
+<#elseif c.isSwitch>
           <span class="detail-value">{{ detail.${c.javaField} === 1 ? '启用' : '停用' }}</span>
 <#elseif c.hasDict>
           <span class="detail-value">{{ dictText('${c.dictType}', detail.${c.javaField}) }}</span>
@@ -467,6 +500,8 @@ export default {
 <#if hasRef>
       refOptions: {},
       refLoading: {},
+      // 列表里把 xxxId 显示成名称用的字典：{ 字段名: { id: label } }
+      refLabels: {},
 </#if>
 <#if hasChild>
       childRows: [],
@@ -520,6 +555,9 @@ export default {
   created() {
 <#if vueHasDict>
     this.loadDicts()
+</#if>
+<#if hasRef>
+    this.loadRefLabels()
 </#if>
     this.fetchList()
   },
@@ -754,6 +792,33 @@ export default {
 <#list refColumns as c>
       this.searchRef('${c.javaField}', '${c.refTable}', '${c.refLabel}', '')
 </#list>
+    },
+    /**
+     * 列表里的 xxxId 显示成名称。
+     * 关联表通常是字典/客户/产品这类小表，一次性拉成 { id: 名称 } 比逐行查省得多；
+     * 拉不到就退回显示原始 ID，页面不会因为关联表没权限/没数据而白屏。
+     */
+    loadRefLabels() {
+<#list refColumns as c>
+      this.fetchRefLabels('${c.javaField}', '${c.refTable}', '${c.refLabel}')
+</#list>
+    },
+    async fetchRefLabels(field, refTable, label) {
+      try {
+        const res = await get${className}Options(refTable, label, '')
+        const map = {}
+        ;(res.data || []).forEach(o => { map[String(o.id)] = o.label })
+        this.$set(this.refLabels, field, map)
+      } catch (e) {
+        this.$set(this.refLabels, field, {})
+      }
+    },
+    refText(field, id) {
+      if (id === null || id === undefined || id === '') {
+        return ''
+      }
+      const map = this.refLabels[field]
+      return (map && map[String(id)]) || id
     },
 </#if>
 <#if hasDetail>
@@ -999,8 +1064,80 @@ export default {
 </script>
 
 <style scoped>
+/* <gen:begin key="vue-style"> */
+.app-container {
+  padding: 0;
+  background: transparent;
+}
+
+/* ===== 页头 ===== */
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  letter-spacing: 0.2px;
+}
+
+.page-desc {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #8a94a6;
+}
+
+.page-head__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.meta-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: #eef2ff;
+  color: #4d7cfe;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ===== 卡片 ===== */
+.filter-card,
+.table-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 20px rgba(16, 24, 40, 0.05);
+}
+
 .filter-card {
   margin-bottom: 16px;
+}
+
+.filter-card >>> .el-card__body {
+  padding: 18px 18px 4px;
+}
+
+.filter-card >>> .el-form-item {
+  margin-right: 16px;
+  margin-bottom: 14px;
+}
+
+.filter-card >>> .el-form-item__label {
+  color: #5a6478;
+  font-size: 13px;
+}
+
+.table-card >>> .el-card__header {
+  padding: 16px 18px;
+  border-bottom: 1px solid #eef1f7;
 }
 
 .card-header {
@@ -1009,8 +1146,49 @@ export default {
   align-items: center;
 }
 
+.card-title {
+  display: flex;
+  align-items: baseline;
+}
+
+.card-title .title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.card-title .subtitle {
+  margin-left: 10px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.card-actions >>> .el-button + .el-button {
+  margin-left: 8px;
+}
+
+/* ===== 表格 ===== */
+.data-table >>> .table-head-cell {
+  background: #f7f9fc !important;
+  color: #5c6270;
+  font-weight: 600;
+}
+
+.data-table >>> td {
+  padding: 11px 0;
+}
+
+.data-table >>> .el-table__row:hover > td {
+  background: #f5f9ff;
+}
+
+.data-table >>> .el-button--text {
+  padding: 4px 6px;
+}
+
+/* ===== 分页 ===== */
 .pagination {
-  margin-top: 16px;
+  margin-top: 18px;
   text-align: right;
 }
 
@@ -1140,3 +1318,4 @@ export default {
 }
 </#if>
 </style>
+/* <gen:end key="vue-style"> */

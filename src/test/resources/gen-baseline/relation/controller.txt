@@ -58,10 +58,10 @@ public class DemoGoodsController {
     @Autowired
     private DemoGoodsService demoGoodsService;
     @Autowired
-    private JdbcTemplate jdbcTemplate;
-    @Autowired
     private com.codegen.common.util.DictTexts dictTexts;
     // <gen:begin key="controller-body">
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
 @Operation(summary = "分页查询商品")
 @PostMapping("/page")
@@ -98,8 +98,10 @@ public Result<List<Map<String, Object>>> options(@RequestParam("refTable") Strin
     String labelCol = label == null || !label.matches("[A-Za-z0-9_]+") ? "name" : label;
     String base = "SELECT id, " + labelCol + " AS label FROM " + refTable;
     String like = keyword == null || keyword.isBlank() ? null : "%" + keyword.trim() + "%";
+    // 无关键字是「列表页翻译 ID 为名称」，要一次拉够；有关键字是下拉搜索，20 条足够
+    int limit = like == null ? 500 : 20;
     String sql = base + " WHERE deleted = 0" + (like == null ? "" : " AND " + labelCol + " LIKE ?")
-            + " ORDER BY id DESC LIMIT 20";
+            + " ORDER BY id DESC LIMIT " + limit;
     try {
         return Result.ok(like == null
                 ? jdbcTemplate.queryForList(sql)
@@ -107,7 +109,7 @@ public Result<List<Map<String, Object>>> options(@RequestParam("refTable") Strin
     } catch (Exception e) {
         // 关联表没有 deleted 列（如关联表）时降级为不带软删条件
         String fallback = base + (like == null ? "" : " WHERE " + labelCol + " LIKE ?")
-                + " ORDER BY id DESC LIMIT 20";
+                + " ORDER BY id DESC LIMIT " + limit;
         return Result.ok(like == null
                 ? jdbcTemplate.queryForList(fallback)
                 : jdbcTemplate.queryForList(fallback, like));

@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -525,10 +526,10 @@ public class GenCodeServiceImpl implements GenCodeService {
         List<TableFiles> rendered = new ArrayList<>();
         for (GenTable table : tables) {
             applyOutputDefaults(table);
+            List<GenTableColumn> cols = columnsByTable.getOrDefault(table.getId(), List.of());
+            autoDetectRefs(table, cols);
             rendered.add(new TableFiles(table,
-                    genTemplateEngine.renderWithProject(table,
-                            columnsByTable.getOrDefault(table.getId(), List.of()),
-                            projectConfigOf(table))));
+                    genTemplateEngine.renderWithProject(table, cols, projectConfigOf(table))));
         }
         return rendered;
     }
@@ -560,7 +561,78 @@ public class GenCodeServiceImpl implements GenCodeService {
         LambdaQueryWrapper<GenTableColumn> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(GenTableColumn::getTableId, table.getId());
         wrapper.orderByAsc(GenTableColumn::getSort);
-        return genTemplateEngine.renderWithProject(table, columnService.list(wrapper), projectConfigOf(table));
+        List<GenTableColumn> cols = columnService.list(wrapper);
+        autoDetectRefs(table, cols);
+        return genTemplateEngine.renderWithProject(table, cols, projectConfigOf(table));
+    }
+
+    /**
+     * 外键列自动识别：{@code xxx_id} 且没配 ref_table 的列，按同库同名表猜一个关联表 + 名称列。
+     *
+     * <p>为什么必须要有这一步：真实业务表的关联列往往是裸 {@code product_id}，
+     * 没人会手工给几十张表逐个配 ref_table。不识别的话列表页只能显示一串数字 ID，
+     * 用户根本看不出这行是哪个产品/哪个客户。</p>
+     *
+     * <p>只在本次渲染生效（不落库）：自动推导会有猜错的可能，
+     * 猜错了用户在表配置里显式填 ref_table 即可覆盖，不需要先擦掉一份错误的落库结果。</p>
+     */
+    private void autoDetectRefs(GenTable table, List<GenTableColumn> cols) {
+        if (table == null || cols == null || cols.isEmpty()) {
+            return;
+        }
+        for (GenTableColumn col : cols) {
+            if (col.getRefTable() != null && !col.getRefTable().isBlank()) {
+                continue;
+            }
+            String column = col.getColumnName() == null ? "" : col.getColumnName().toLowerCase(Locale.ROOT);
+            if (!column.endsWith("_id") || "id".equals(column)) {
+                continue;
+            }
+            String base = column.substring(0, column.length() - 3);
+            if (base.isBlank()) {
+                continue;
+            }
+            String refTable = findRefTable(table.getTableName(), base);
+            if (refTable == null) {
+                continue;
+            }
+            col.setRefTable(refTable);
+            col.setRefLabel(findRefLabel(refTable, base));
+        }
+    }
+
+    /**
+     * 找关联表：先精确同名，再找 {@code xxx_product} 这类带业务前缀的表，最后试复数形式。
+     * 同名表自己排除掉，否则 {@code parent_id} 会关联到自己。
+     */
+    private String findRefTable(String self, String base) {
+        String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() "
+                + "AND table_name <> ? AND (table_name = ? OR table_name = ? OR table_name LIKE ?) "
+                + "ORDER BY LENGTH(table_name), table_name LIMIT 1";
+        try {
+            List<String> found = jdbcTemplate.queryForList(sql, String.class,
+                    self, base, base + "s", "%\\_" + base);
+            return found.isEmpty() ? null : found.get(0);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * 找名称列：优先 name，其次 {@code xxx_name}、title、code。
+     * 都找不到返回 null，模板会退回显示原始 ID。
+     */
+    private String findRefLabel(String refTable, String base) {
+        String sql = "SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() "
+                + "AND table_name = ? AND column_name IN ('name', ?, 'title', 'code', ?) "
+                + "ORDER BY FIELD(column_name, 'name', ?, 'title', 'code', ?) LIMIT 1";
+        try {
+            List<String> found = jdbcTemplate.queryForList(sql, String.class,
+                    refTable, base + "_name", base + "_code", base + "_name", base + "_code");
+            return found.isEmpty() ? null : found.get(0);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**

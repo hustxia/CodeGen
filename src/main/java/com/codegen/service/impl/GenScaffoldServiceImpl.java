@@ -1683,52 +1683,24 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     private String frontendLayoutVue(String project) {
-        return "<template>\n"
-                + "  <el-container class=\"layout\">\n"
-                + "    <el-aside width=\"200px\" class=\"aside\">\n"
-                + "      <div class=\"logo\">" + project + "</div>\n"
-                + "      <el-menu :default-active=\"$route.path\" router background-color=\"#1f2d50\"\n"
-                + "               text-color=\"#c0c8dc\" active-text-color=\"#4d7cfe\">\n"
-                + "        <el-menu-item index=\"/index\">\n"
-                + "          <i class=\"el-icon-s-home\"></i><span>首页</span>\n"
-                + "        </el-menu-item>\n"
-                + "      </el-menu>\n"
-                + "    </el-aside>\n"
-                + "    <el-container>\n"
-                + "      <el-header class=\"header\">{{ $route.meta.title || '' }}</el-header>\n"
-                + "      <el-main>\n"
-                + "        <router-view />\n"
-                + "      </el-main>\n"
-                + "    </el-container>\n"
-                + "  </el-container>\n"
-                + "</template>\n\n"
-                + "<script>\n"
-                + "export default {\n"
-                + "  name: 'Layout'\n"
-                + "}\n"
-                + "</script>\n\n"
-                + "<style scoped>\n"
-                + ".layout {\n"
-                + "  height: 100%;\n"
-                + "}\n"
-                + ".aside {\n"
-                + "  background: #1f2d50;\n"
-                + "}\n"
-                + ".logo {\n"
-                + "  height: 56px;\n"
-                + "  line-height: 56px;\n"
-                + "  text-align: center;\n"
-                + "  color: #fff;\n"
-                + "  font-weight: 600;\n"
-                + "  letter-spacing: 1px;\n"
-                + "}\n"
-                + ".header {\n"
-                + "  display: flex;\n"
-                + "  align-items: center;\n"
-                + "  background: #fff;\n"
-                + "  border-bottom: 1px solid #eef1f7;\n"
-                + "}\n"
-                + "</style>\n";
+        String name = project == null || project.isBlank() ? "业务系统" : project;
+        String initial = name.length() > 1 ? name.substring(0, 1) : name;
+        return loadScaffoldResource("scaffold/web/layout.vue")
+                .replace("__PROJECT_INITIAL__", initial)
+                .replace("__PROJECT__", name);
+    }
+
+    /**
+     * 读脚手架资源（classpath 下的静态模板），缺失时抛业务异常而不是静默写空文件。
+     */
+    private String loadScaffoldResource(String path) {
+        org.springframework.core.io.ClassPathResource resource =
+                new org.springframework.core.io.ClassPathResource(path);
+        try (java.io.InputStream in = resource.getInputStream()) {
+            return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("脚手架资源缺失：" + path, e);
+        }
     }
 
     private String frontendHomeVue(String project) {
@@ -1779,10 +1751,10 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "  {\n"
                 + "    path: '/',\n"
                 + "    component: Layout,\n"
-                + "    redirect: '/index',\n"
+                + "    redirect: '/home',\n"
                 + "    children: [\n"
                 + "      {\n"
-                + "        path: 'index',\n"
+                + "        path: 'home',\n"
                 + "        name: 'Home',\n"
                 + "        component: () => import('@/views/index.vue'),\n"
                 + "        meta: { title: '首页' }\n"
