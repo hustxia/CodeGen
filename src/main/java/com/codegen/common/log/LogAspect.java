@@ -46,10 +46,15 @@ public class LogAspect {
     private static final int MAX_TEXT = 2000;
 
     /**
-     * 字段名命中这些关键词就整段替换，不看值。
+     * 敏感字段的「键 + 值」整对匹配。
+     *
+     * <p>必须连值一起吃掉：只匹配字段名再拼回去，会得到
+     * {@code {"password":"****":"root123"}}——值还在，JSON 还坏了。
+     * 值分两种：带引号的字符串（允许内部转义）与裸值（数字/布尔/null）。
      */
     private static final Pattern SENSITIVE = Pattern.compile(
-            "(?i)(password|passwd|pwd|token|secret|authorization|credential)");
+            "(?i)\"(password|passwd|pwd|token|secret|authorization|credential)\"\\s*:\\s*"
+                    + "(\"(?:[^\"\\\\]|\\\\.)*\"|[^,}\\]\\s]+)");
 
     @Autowired
     private SysOperLogMapper operLogMapper;
@@ -157,12 +162,23 @@ public class LogAspect {
             return null;
         }
         try {
-            String json = objectMapper.writeValueAsString(value);
-            // 按字段名脱敏：值内容不做正则替换，否则正常业务文本也会被误伤
-            return SENSITIVE.matcher(json).replaceAll(m -> m.group() + "\":\"****");
+            return maskSensitive(objectMapper.writeValueAsString(value));
         } catch (Exception e) {
             return String.valueOf(value);
         }
+    }
+
+    /**
+     * 按字段名脱敏。只换值不换键：正常业务文本里出现 "password" 三个字不会被误伤。
+     *
+     * <p>独立成静态方法是为了能直接单测——脱敏失效是「看起来有、其实没有」，
+     * 只在接口上肉眼验一遍很容易漏（见 audit A-01）。
+     */
+    static String maskSensitive(String json) {
+        if (json == null) {
+            return null;
+        }
+        return SENSITIVE.matcher(json).replaceAll(m -> "\"" + m.group(1) + "\":\"****\"");
     }
 
     /**

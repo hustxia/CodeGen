@@ -255,6 +255,8 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 
         // 1) 库里有、配置没有 → 新增（继承导入时的类型/控件推断）
         int sort = maxSort;
+        // 先攒后批量插：一张宽表几十列，逐条 save 就是几十次往返
+        List<GenTableColumn> toInsert = new ArrayList<>();
         for (Map.Entry<String, GenColumnDTO> entry : dbMap.entrySet()) {
             if (BASE_MANAGED_COLUMNS.contains(entry.getKey()) || configMap.containsKey(entry.getKey())) {
                 continue;
@@ -265,9 +267,12 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             entity.setId(null);
             entity.setTableId(id);
             entity.setSort(++sort);
-            columnService.save(entity);
+            toInsert.add(entity);
             vo.getAdded().add(entry.getKey());
             vo.setAffected(vo.getAffected() + 1);
+        }
+        if (!toInsert.isEmpty()) {
+            columnService.saveBatch(toInsert);
         }
 
         // 2) 两边都有但类型不一致 → 只提示，不自动改（改类型要人判断）
@@ -284,15 +289,19 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         }
 
         // 3) 配置里有、库里没有 → 默认保留，removeMissing=true 才删除
+        List<Long> toRemove = new ArrayList<>();
         for (Map.Entry<String, GenTableColumn> entry : configMap.entrySet()) {
             if (dbMap.containsKey(entry.getKey()) || BASE_MANAGED_COLUMNS.contains(entry.getKey())) {
                 continue;
             }
             vo.getRemoved().add(entry.getKey());
             if (removeMissing) {
-                columnService.removeById(entry.getValue().getId());
+                toRemove.add(entry.getValue().getId());
                 vo.setAffected(vo.getAffected() + 1);
             }
+        }
+        if (!toRemove.isEmpty()) {
+            columnService.removeByIds(toRemove);
         }
         return vo;
     }

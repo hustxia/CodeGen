@@ -3,6 +3,9 @@ package com.codegen.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -16,11 +19,27 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
+
+    /**
+     * application.yml 里的出厂默认值。只为「克隆下来直接能跑」，
+     * 一旦用于对外环境，等于把签发权公开。
+     */
+    private static final String DEV_DEFAULT_SECRET = "codegen-platform-jwt-secret-key-2026-very-long";
+
     @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.expire-hours}")
     private Long expireHours;
+
+    @PostConstruct
+    void warnIfSecretIsDefault() {
+        if (DEV_DEFAULT_SECRET.equals(secret)) {
+            log.warn("jwt.secret 正在使用仓库内置默认值，仅适用于本机开发；"
+                    + "部署到任何共享/公网环境前请设置环境变量 JWT_SECRET（否则 token 可被伪造）");
+        }
+    }
 
     /**
      * 生成 token（HS256）

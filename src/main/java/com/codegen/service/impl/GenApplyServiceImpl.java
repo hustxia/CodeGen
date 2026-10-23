@@ -651,8 +651,17 @@ public class GenApplyServiceImpl implements GenApplyService {
     }
 
     private String resolveBackendRoot(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return outputProperties.getBackendRoot();
+        }
+        // 一次查回再按勾选顺序找第一个配了 backendRoot 的表：
+        // 循环里 selectById 会让「批量应用 30 张表」变成 30 次往返
+        Map<Long, GenTable> byId = new LinkedHashMap<>();
+        for (GenTable table : genTableMapper.selectBatchIds(ids)) {
+            byId.put(table.getId(), table);
+        }
         for (Long id : ids) {
-            GenTable table = genTableMapper.selectById(id);
+            GenTable table = byId.get(id);
             if (table != null && StringUtils.hasText(table.getBackendRoot())) {
                 return table.getBackendRoot();
             }

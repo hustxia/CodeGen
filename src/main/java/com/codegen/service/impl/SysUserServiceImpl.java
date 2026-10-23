@@ -58,6 +58,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public LoginVO login(LoginDTO dto) {
+        // 先判空：BCryptPasswordEncoder.matches(null, hash) 会抛 IllegalArgumentException，
+        // 落到全局兜底就变成 500「服务异常」，前端拿不到「用户名或密码错误」这句可读提示
+        if (dto == null || !StringUtils.hasText(dto.getUsername()) || !StringUtils.hasText(dto.getPassword())) {
+            throw new BusinessException(ResultCode.UNAUTHORIZED.getCode(), "用户名或密码错误");
+        }
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysUser::getUsername, dto.getUsername());
         SysUser user = getOne(wrapper);
@@ -111,6 +116,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public void saveUser(SysUserSaveDTO dto) {
+        if (dto == null || !StringUtils.hasText(dto.getUsername())) {
+            throw new BusinessException(400, "用户名不能为空");
+        }
+        // 这里必须拦住：密码留空会写入 NULL，该账号能建出来但永远登录不上，
+        // 而且没有任何提示（bcrypt 对空串/空值一律判不匹配）
+        if (!StringUtils.hasText(dto.getPassword())) {
+            throw new BusinessException(400, "新增用户必须设置初始密码");
+        }
         SysUser entity = new SysUser();
         BeanUtils.copyProperties(dto, entity);
         if (StringUtils.hasText(dto.getPassword())) {

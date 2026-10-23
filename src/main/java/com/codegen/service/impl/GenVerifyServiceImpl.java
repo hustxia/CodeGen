@@ -20,8 +20,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -67,8 +69,13 @@ public class GenVerifyServiceImpl implements GenVerifyService {
             throw new BusinessException(400, "请先勾选要校验的表");
         }
         GenVerifyVO vo = new GenVerifyVO();
+        // 一次查回：校验一批表时逐条 selectById 会随勾选数量线性增长
+        Map<Long, GenTable> tableById = new HashMap<>();
+        for (GenTable t : genTableMapper.selectBatchIds(ids)) {
+            tableById.put(t.getId(), t);
+        }
         for (Long id : ids) {
-            GenTable table = genTableMapper.selectById(id);
+            GenTable table = tableById.get(id);
             if (table != null) {
                 verifyTable(table, vo);
             }

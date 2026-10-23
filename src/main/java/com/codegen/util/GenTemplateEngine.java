@@ -145,12 +145,26 @@ public class GenTemplateEngine {
         wrapper.eq(GenTable::getMasterTableId, table.getId());
         wrapper.orderByAsc(GenTable::getId);
         List<GenTable> childTables = genTableMapper.selectList(wrapper);
+        if (childTables.isEmpty()) {
+            return List.of();
+        }
+        // 子表列一次查完：逐子表 selectList 会让「一主多子」每次渲染多出 N 次往返，
+        // 而主子表场景下渲染是逐文件调用的，放大效应明显
+        List<Long> childIds = new ArrayList<>(childTables.size());
+        for (GenTable childTable : childTables) {
+            childIds.add(childTable.getId());
+        }
+        LambdaQueryWrapper<GenTableColumn> colWrapper = new LambdaQueryWrapper<>();
+        colWrapper.in(GenTableColumn::getTableId, childIds);
+        colWrapper.orderByAsc(GenTableColumn::getTableId).orderByAsc(GenTableColumn::getSort);
+        Map<Long, List<GenTableColumn>> colsByChild = new LinkedHashMap<>();
+        for (GenTableColumn col : genTableColumnMapper.selectList(colWrapper)) {
+            colsByChild.computeIfAbsent(col.getTableId(), k -> new ArrayList<>()).add(col);
+        }
         List<GenTemplateModel.ChildInfo> result = new ArrayList<>();
         for (GenTable childTable : childTables) {
-            LambdaQueryWrapper<GenTableColumn> colWrapper = new LambdaQueryWrapper<>();
-            colWrapper.eq(GenTableColumn::getTableId, childTable.getId());
-            colWrapper.orderByAsc(GenTableColumn::getSort);
-            List<GenTableColumn> childCols = genTableColumnMapper.selectList(colWrapper);
+            List<GenTableColumn> childCols =
+                    colsByChild.getOrDefault(childTable.getId(), List.of());
             result.add(new GenTemplateModel.ChildInfo(childTable, childCols, loadChildren(childTable, depth + 1)));
         }
         return result;

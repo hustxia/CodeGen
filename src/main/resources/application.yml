@@ -10,8 +10,10 @@ spring:
     include: local
   datasource:
     url: jdbc:mysql://localhost:3306/gen_platform?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: root
+    # 默认值是本机开发用的，生产必须用环境变量或 application-local.yml 覆盖：
+    # 仓库里的口令等于没有口令
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jackson:
     time-zone: Asia/Shanghai
@@ -40,9 +42,11 @@ logging:
   level:
     com.codegen: info
 
+# 生产部署必须用环境变量 JWT_SECRET 覆盖：拿到这个串就能伪造任意用户的 token。
+# 默认值只为「克隆下来直接能跑」，启动时会打 WARN 提醒。
 jwt:
-  secret: codegen-platform-jwt-secret-key-2026-very-long
-  expire-hours: 24
+  secret: ${JWT_SECRET:codegen-platform-jwt-secret-key-2026-very-long}
+  expire-hours: ${JWT_EXPIRE_HOURS:24}
 
 # ============================================================
 # 代码生成器输出配置（全局默认）

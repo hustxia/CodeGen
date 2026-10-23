@@ -525,6 +525,23 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
      * 权限点前缀，与 GenMenuServiceImpl.permsPrefix / 模板 ${permsPrefix} 三方一致。
      * 任何一处规则改动都要同步另外两处，否则自检会报假警、或真实越权被漏掉。
      */
+    /**
+     * 一次查回表配置，避免在 ids 循环里逐条 selectById。
+     *
+     * <p>自检要跑十几个检查项，同一批 ids 会被反复遍历；
+     * 每项都各查一遍就会变成「检查项 × 表数」次往返。
+     */
+    private Map<Long, GenTable> tablesById(List<Long> ids) {
+        Map<Long, GenTable> byId = new HashMap<>();
+        if (ids == null || ids.isEmpty()) {
+            return byId;
+        }
+        for (GenTable table : genTableMapper.selectBatchIds(ids)) {
+            byId.put(table.getId(), table);
+        }
+        return byId;
+    }
+
     private String permsPrefixOf(GenTable table) {
         if (table.getProjectId() == null) {
             return com.codegen.support.GenNaming.permsPrefix(null, table.getTableName());
@@ -537,8 +554,9 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
     private void checkPermsConsistency(GenSelfCheckVO result, List<GenFileVO> files, List<Long> ids,
                                        List<GenTableColumn> columns) {
         Map<String, Set<String>> expected = new LinkedHashMap<>();
+        Map<Long, GenTable> tableById = tablesById(ids);
         for (Long id : ids) {
-            GenTable table = genTableMapper.selectById(id);
+            GenTable table = tableById.get(id);
             if (table == null || table.getTableName() == null) {
                 continue;
             }
@@ -631,8 +649,9 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         if (baseTables.isEmpty()) {
             return;
         }
+        Map<Long, GenTable> tableById = tablesById(ids);
         for (Long id : ids) {
-            GenTable table = genTableMapper.selectById(id);
+            GenTable table = tableById.get(id);
             if (table == null || !baseTables.contains(table.getTableName())) {
                 continue;
             }

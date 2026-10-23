@@ -189,13 +189,12 @@ public class GenCodeServiceImpl implements GenCodeService {
         // 而且同一批次内台账不会变，缓存一份没有一致性风险
         Map<String, GenDriftService.LedgerSnapshot> ledger = genDriftService.latestByPath();
         List<GenWriteVO> results = new ArrayList<>();
-        for (Long id : ids) {
-            GenTable table = genTableMapper.selectById(id);
-            if (table == null) {
-                continue;
-            }
+        for (GenTable table : loadTablesInOrder(ids)) {
+            int before = results.size();
             results.addAll(writeTable(table, overwrite, skipDrifted, batchNo, ledger));
-            boolean wrote = results.stream()
+            // 只看本表新增的结果：用累计 results 判断会让「第一张表写过」之后
+            // 每张表都被打上生成时间，last_gen_time 直接失去意义
+            boolean wrote = results.subList(before, results.size()).stream()
                     .anyMatch(r -> "WRITTEN".equals(r.getStatus()) || "MERGED".equals(r.getStatus()));
             if (wrote) {
                 jdbcTemplate.update("UPDATE gen_table SET last_gen_time = NOW(), last_gen_by = ? WHERE id = ?",
@@ -224,11 +223,7 @@ public class GenCodeServiceImpl implements GenCodeService {
         // 漂移同理：它是「磁盘 vs 上次生成」的事实，不因用户选了哪个策略而变。
         Map<String, GenDriftService.LedgerSnapshot> ledger = genDriftService.latestByPath();
         List<GenDiffVO> result = new ArrayList<>();
-        for (Long id : ids) {
-            GenTable table = genTableMapper.selectById(id);
-            if (table == null) {
-                continue;
-            }
+        for (GenTable table : loadTablesInOrder(ids)) {
             // 同 writeTable：先解析目标模块，保证后端文件判定用的是最终输出路径
             applyOutputDefaults(table);
             String backendBase = backendBaseOf(table);
@@ -508,13 +503,9 @@ public class GenCodeServiceImpl implements GenCodeService {
         }
         // 每个批次开始时清一次系统缓存，保证读到的是管理页最新的配置
         clearProjectCache();
-        List<GenTable> tables = new ArrayList<>();
-        for (Long id : ids) {
-            GenTable table = genTableMapper.selectById(id);
-            if (table == null) {
-                throw new BusinessException(404, "表配置不存在，无法生成");
-            }
-            tables.add(table);
+        List<GenTable> tables = loadTablesInOrder(ids);
+        if (tables.size() != ids.size()) {
+            throw new BusinessException(404, "表配置不存在，无法生成");
         }
         LambdaQueryWrapper<GenTableColumn> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(GenTableColumn::getTableId, ids);
@@ -532,6 +523,34 @@ public class GenCodeServiceImpl implements GenCodeService {
                     genTemplateEngine.renderWithProject(table, cols, projectConfigOf(table))));
         }
         return rendered;
+    }
+
+    /**
+     * 按入参顺序批量取表配置。
+     *
+     * <p>逐个 {@code selectById} 会把「勾 30 张表」放大成 30 次数据库往返，
+     * 而这三次调用（写盘 / 差异 / 渲染）本来就是同一批 id。
+     * 不能直接用 {@code selectBatchIds} 的返回顺序：它按主键排序，
+     * 而下游产出文件、台账、回滚都按用户勾选顺序，顺序变了对不上。
+     *
+     * <p>缺失的 id 直接跳过——调用方按需要自行判断（写盘忽略、渲染报 404）。
+     */
+    private List<GenTable> loadTablesInOrder(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
+        Map<Long, GenTable> byId = new HashMap<>();
+        for (GenTable table : genTableMapper.selectBatchIds(ids)) {
+            byId.put(table.getId(), table);
+        }
+        List<GenTable> ordered = new ArrayList<>(ids.size());
+        for (Long id : ids) {
+            GenTable table = byId.get(id);
+            if (table != null) {
+                ordered.add(table);
+            }
+        }
+        return ordered;
     }
 
     /**

@@ -118,9 +118,14 @@ public class GenMenuServiceImpl implements GenMenuService {
         List<PlannedMenu> plans = new ArrayList<>();
         // 目录菜单（系统层 / 分组层）本次注册内复用，避免逐表重复查询、重复插入
         Map<String, Long> dirCache = new java.util.HashMap<>();
+        // 表配置一次查回：注册一批菜单时逐表 selectById 会随勾选数量线性增长
+        Map<Long, GenTable> tableById = new java.util.HashMap<>();
+        for (GenTable t : genTableMapper.selectBatchIds(dto.getIds())) {
+            tableById.put(t.getId(), t);
+        }
 
         for (Long id : dto.getIds()) {
-            GenTable table = genTableMapper.selectById(id);
+            GenTable table = tableById.get(id);
             if (table == null) {
                 result.getMenus().add(new GenMenuVO("?", null, "", "", 2, "ERROR", "表配置不存在"));
                 continue;
