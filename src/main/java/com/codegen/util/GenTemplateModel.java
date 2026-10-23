@@ -197,7 +197,8 @@ public final class GenTemplateModel {
         m.put("ctrlAnyApi", genService && (genPageApi || genDetailApi || genAddApi || genEditApi || genDeleteApi));
 
         // 列集合
-        m.put("columns", toModel(biz));
+        List<Map<String, Object>> bizModels = toModel(biz);
+        m.put("columns", bizModels);
         m.put("queryColumns", toModel(queryCols));
         m.put("vueQueryColumns", toModel(vueQueryCols));
         m.put("listColumns", toModel(listCols));
@@ -227,6 +228,21 @@ public final class GenTemplateModel {
         }
         m.put("dictCodes", new ArrayList<>(dictCodes));
         m.put("vueHasDict", !dictCodes.isEmpty());
+
+        // 注释枚举：从列注释里解析出的静态选项（状态(0正常 1停用) 这类）。
+        // 生成的独立项目不一定有 sys_dict 模块，字典接口取不到值时页面会整列空白，
+        // 所以注释里写得明的枚举一律内联成前端常量，零网络请求即可回显。
+        List<Map<String, Object>> enumColumns = new ArrayList<>();
+        for (Map<String, Object> cm : bizModels) {
+            if (Boolean.TRUE.equals(cm.get("hasEnum"))) {
+                Map<String, Object> ec = new HashMap<>();
+                ec.put("javaField", cm.get("javaField"));
+                ec.put("enumJs", cm.get("enumJs"));
+                enumColumns.add(ec);
+            }
+        }
+        m.put("enumColumns", enumColumns);
+        m.put("vueHasEnum", !enumColumns.isEmpty());
 
         // 导包标记
         m.put("entityHasBigDecimal", hasType(biz, "BigDecimal"));
@@ -514,6 +530,10 @@ public final class GenTemplateModel {
     private static final java.util.regex.Pattern COMMENT_TITLE_SPLIT =
             java.util.regex.Pattern.compile("^([^:：（(]+)[:：（(].+$");
 
+    /** 「上级分类ID，0=顶级 1=一级」这类逗号枚举尾巴：主标题同样只取前半段 */
+    private static final java.util.regex.Pattern COMMENT_ENUM_TAIL =
+            java.util.regex.Pattern.compile("^([^,，:：（(]{1,40})[,，]\\s*\\d+\\s*[-=:：]?.+$");
+
     private static String commentLabel(String comment) {
         if (comment == null || comment.isBlank()) {
             return "";
@@ -522,11 +542,94 @@ public final class GenTemplateModel {
         var m = COMMENT_TITLE_SPLIT.matcher(text);
         if (m.matches() && !m.group(1).isBlank()) {
             text = m.group(1).trim();
+        } else {
+            var e = COMMENT_ENUM_TAIL.matcher(text);
+            if (e.matches() && !e.group(1).isBlank()) {
+                text = e.group(1).trim();
+            }
         }
         // 「分类ID」「客户编号」在页面上显示成「分类」「客户」更自然；
         // 但纯粹的 "ID"/"编号" 保留原样，否则标签会变成空字符串。
         String stripped = text.replaceAll("(?<=[\\u4e00-\\u9fa5])(ID|Id|id|编号|主键)$", "").trim();
         return stripped.isEmpty() ? text : stripped;
+    }
+
+    /** 枚举项：数字 + 中文/字母文案，数字前不能紧邻数字（避免把 123ABC 拆成 23+ABC） */
+    private static final java.util.regex.Pattern ENUM_PAIR = java.util.regex.Pattern
+            .compile("(?<![\\dA-Za-z])(\\d{1,2})\\s*[-:：=]?\\s*([\\u4e00-\\u9fa5A-Za-z]{1,10})");
+
+    /**
+     * 从列注释解析枚举选项，返回 {@code [value, label]} 列表；解析不出返回空列表。
+     *
+     * <p>支持 {@code 1启用0停用}、{@code 0正常 1停用}、{@code 0-待付款 1-已付款 2-已发货}、
+     * {@code 状态(待执行/已执行)}（按顺序映射 0/1）四种写法。
+     * 纯文案斜杠写法只在列名本身是枚举语义（status/type/level/flag/state）时才采用，
+     * 避免「商品/物料名称」这类注释被误拆。
+     */
+    private static List<String[]> parseEnumOptions(String comment, String columnName, String javaType) {
+        List<String[]> out = new ArrayList<>();
+        if (comment == null || comment.isBlank()) {
+            return out;
+        }
+        String text = comment.trim();
+        var m = COMMENT_TITLE_SPLIT.matcher(text);
+        if (m.matches()) {
+            text = text.substring(m.group(1).length());
+        }
+        text = text.replaceAll("[()（）\\[\\]【】]", "").trim();
+
+        var pm = ENUM_PAIR.matcher(text);
+        java.util.Set<String> seen = new java.util.LinkedHashSet<>();
+        while (pm.find()) {
+            String v = pm.group(1);
+            if (seen.add(v)) {
+                out.add(new String[]{v, pm.group(2)});
+            }
+        }
+        if (out.size() >= 2) {
+            return out;
+        }
+
+        out.clear();
+        if (!looksEnumColumnName(columnName) || !text.contains("/")) {
+            return out;
+        }
+        String[] parts = text.split("\\s*/\\s*");
+        if (parts.length < 2 || parts.length > 6) {
+            return out;
+        }
+        for (int i = 0; i < parts.length; i++) {
+            String label = parts[i].trim();
+            if (label.isEmpty() || label.length() > 8 || label.matches(".*\\d.*")) {
+                out.clear();
+                return out;
+            }
+            out.add(new String[]{String.valueOf(i), label});
+        }
+        return out;
+    }
+
+    private static boolean looksEnumColumnName(String columnName) {
+        if (columnName == null) {
+            return false;
+        }
+        String n = columnName.toLowerCase(java.util.Locale.ROOT);
+        return n.endsWith("status") || n.endsWith("state") || n.endsWith("type")
+                || n.endsWith("level") || n.endsWith("flag") || n.endsWith("kind");
+    }
+
+    /** 枚举转前端常量：数值列给数字字面量，否则给字符串（el-select 用严格比较，类型错了就不回显） */
+    private static String enumJs(List<String[]> opts, boolean isNumber) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < opts.size(); i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            String v = opts.get(i)[0];
+            String t = opts.get(i)[1].replace("\\", "\\\\").replace("'", "\\'");
+            sb.append("{value: ").append(isNumber ? v : "'" + v + "'").append(", label: '").append(t).append("'}");
+        }
+        return sb.append("]").toString();
     }
 
     private static int columnWidth(GenTableColumn c, String htmlType, String javaType) {
@@ -570,7 +673,15 @@ public final class GenTemplateModel {
                     ? GenUtils.inferHtmlType(c.getColumnType(), javaType, c.getColumnName())
                     : c.getHtmlType();
             String dictType = c.getDictType();
-            boolean hasDict = dictType != null && !dictType.isBlank();
+            // 注释里写明的枚举优先于字典表：生成出来的独立项目常常没有 sys_dict 数据，
+            // 字典接口取不到值时整列会显示空白，而注释是导入时就确定的真实语义
+            List<String[]> enumOpts = parseEnumOptions(c.getColumnComment(), c.getColumnName(), javaType);
+            boolean hasEnum = enumOpts.size() >= 2;
+            boolean hasDict = dictType != null && !dictType.isBlank() && !hasEnum;
+            // 枚举塞进数字框/文本框没有意义，统一升级成下拉
+            if (hasEnum && ("number".equals(htmlType) || "input".equals(htmlType))) {
+                htmlType = "select";
+            }
             cm.put("javaField", c.getJavaField());
             cm.put("capField", capitalize(c.getJavaField()));
             // 数据库列名：查重、导出表头映射等需要按真实列名拼 SQL
@@ -608,6 +719,8 @@ public final class GenTemplateModel {
             cm.put("colWidth", columnWidth(c, htmlType, javaType));
             cm.put("dictType", hasDict ? dictType.trim() : "");
             cm.put("hasDict", hasDict);
+            cm.put("hasEnum", hasEnum);
+            cm.put("enumJs", hasEnum ? enumJs(enumOpts, isNumber) : "[]");
             // P3-2 中间表外键列标记
             cm.put("relationKey", c.getRelationKey() == null ? 0 : c.getRelationKey());
             // getXxx / Xxx::getXxx 用的属性名（首字母大写），避免模板里做大小写转换

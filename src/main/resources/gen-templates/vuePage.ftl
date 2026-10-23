@@ -19,7 +19,7 @@
         <el-form-item label="${c.commentLabel}">
 <#if c.isSelect || c.isRadio>
           <el-select v-model="query.${c.javaField}" placeholder="请选择${c.commentLabel}" clearable style="width: 160px">
-            <el-option v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#else>[]</#if>" :key="d.value" :label="d.label" :value="d.value" />
+            <el-option v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#elseif c.hasEnum>enumMap.${c.javaField} || []<#else>[]</#if>" :key="d.value" :label="d.label" :value="d.value" />
           </el-select>
 <#elseif c.isSwitch>
           <el-select v-model="query.${c.javaField}" placeholder="请选择${c.commentLabel}" clearable style="width: 120px">
@@ -93,6 +93,9 @@
 <#elseif c.hasDict>
         <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip
           :formatter="(row) => dictText('${c.dictType}', row.${c.javaField})" />
+<#elseif c.hasEnum>
+        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip
+          :formatter="(row) => enumText('${c.javaField}', row.${c.javaField})" />
 <#elseif c.isDatetime>
         <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="center" show-overflow-tooltip />
 <#elseif c.isDate>
@@ -170,11 +173,11 @@
           </el-select>
 <#elseif c.isSelect>
           <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> placeholder="请选择${c.commentLabel}" clearable style="width: 100%">
-            <el-option v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#else>[]</#if>" :key="d.value" :label="d.label" :value="d.value" />
+            <el-option v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#elseif c.hasEnum>enumMap.${c.javaField} || []<#else>[]</#if>" :key="d.value" :label="d.label" :value="d.value" />
           </el-select>
 <#elseif c.isRadio>
           <el-radio-group v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if>>
-            <el-radio v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#else>[]</#if>" :key="d.value" :label="d.value">{{ d.label }}</el-radio>
+            <el-radio v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#elseif c.hasEnum>enumMap.${c.javaField} || []<#else>[]</#if>" :key="d.value" :label="d.value">{{ d.label }}</el-radio>
           </el-radio-group>
 <#elseif c.isSwitch>
           <el-switch v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> :active-value="1" :inactive-value="0" />
@@ -316,6 +319,8 @@
           <span class="detail-value">{{ detail.${c.javaField} === 1 ? '启用' : '停用' }}</span>
 <#elseif c.hasDict>
           <span class="detail-value">{{ dictText('${c.dictType}', detail.${c.javaField}) }}</span>
+<#elseif c.hasEnum>
+          <span class="detail-value">{{ enumText('${c.javaField}', detail.${c.javaField}) }}</span>
 <#else>
           <span class="detail-value">{{ detail.${c.javaField} }}</span>
 </#if>
@@ -534,6 +539,12 @@ export default {
 <#if vueHasDict>
       dicts: {<#list dictCodes as code> ${code}: []<#if code_has_next>,</#if></#list> },
 </#if>
+<#if vueHasEnum>
+      // 注释枚举内联在页面里：不依赖后端字典接口，页面秒开即可回显
+      enumMap: {
+<#list enumColumns as c>        ${c.javaField}: ${c.enumJs}<#if c_has_next>,</#if>
+</#list>      },
+</#if>
       rules: {<#list formColumns as c><#if c.hasVueRule>
         ${c.javaField}: ${c.vueRule},</#if></#list>
 <#if hasSingleUnique>
@@ -718,6 +729,13 @@ export default {
     dictText(code, value) {
       const hit = (this.dicts[code] || []).find(d => String(d.value) === String(value))
       return hit ? hit.label : (value === undefined || value === null ? '' : value)
+    },
+</#if>
+<#if vueHasEnum>
+    // 枚举翻译：值可能是数字也可能是字符串，统一按字符串比，避免 1 与 '1' 对不上
+    enumText(field, value) {
+      const hit = (this.enumMap[field] || []).find(d => String(d.value) === String(value))
+      return hit ? hit.label : (value === undefined || value === null || value === '' ? '' : value)
     },
 </#if>
 <#if genTree>

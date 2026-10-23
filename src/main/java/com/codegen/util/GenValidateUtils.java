@@ -274,6 +274,12 @@ public final class GenValidateUtils {
         if (idx > 0) {
             s = s.substring(0, idx);
         }
+        // 「上级分类ID，0=顶级 1=一级」这类逗号枚举尾巴同样剥掉（逗号后紧跟数字才算）
+        java.util.regex.Matcher tail = java.util.regex.Pattern
+                .compile("^(.+?)[,，]\\s*\\d+\\s*[-=:：]?.+$").matcher(s);
+        if (tail.matches() && !tail.group(1).isBlank()) {
+            s = tail.group(1);
+        }
         s = s.trim();
         return s.matches("^[0-9].*") ? "" : s;
     }
