@@ -1147,6 +1147,10 @@ export default {
             const failed = (this.applyResult.stages || []).filter(s => s.status === 'FAILED')
             this.$message.error(`阶段失败：${failed.map(s => s.stage).join('、')}`)
           }
+          // V4.2 台账失败不静默：文件落盘了但 gen_output 没记上账
+          if (this.applyResult.ledgerErrors > 0) {
+            this.$message.warning(`${this.applyResult.ledgerErrors} 条台账记录失败，按批次回滚前需人工核对`)
+          }
           this.fetchList()
         }
       } catch (e) { /* 拦截器已提示 */ } finally {
@@ -1410,11 +1414,19 @@ export default {
       this.writing = true
       try {
         const res = await writeGenCode(this.previewIds, this.writeOverwrite)
-        this.writeResults = res.data || []
+        // V4.2 台账合一：返回体包一层 { batchNo, ledgerErrors, files }
+        const data = res.data || {}
+        this.writeResults = data.files || []
         const written = this.writeResults.filter(r => r.status === 'WRITTEN').length
         const skipped = this.writeResults.filter(r => r.status === 'SKIPPED').length
         const errors = this.writeResults.filter(r => r.status === 'ERROR').length
-        this.$message.success(`写盘完成：写入 ${written}，跳过 ${skipped}，失败 ${errors}`)
+        const ledgerErrors = data.ledgerErrors || 0
+        if (ledgerErrors > 0) {
+          // 台账写失败不静默：文件落盘了但没记上账，回滚时这些文件会缺失
+          this.$message.warning(`写盘完成：写入 ${written}，跳过 ${skipped}，失败 ${errors}；另有 ${ledgerErrors} 条台账记录失败，回滚前需人工核对`)
+        } else {
+          this.$message.success(`写盘完成：写入 ${written}，跳过 ${skipped}，失败 ${errors}`)
+        }
       } catch (e) { /* 拦截器已提示 */ } finally {
         this.writing = false
       }
