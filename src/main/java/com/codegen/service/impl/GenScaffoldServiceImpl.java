@@ -194,6 +194,12 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             // V5.0 F-07：登录页与路由守卫（401 跳转目标从 request.js 来）
             write(frontendRoot, "src/views/login.vue", frontendLoginVue(project), "frontend", force, vo, counter);
             write(frontendRoot, "src/router/index.js", frontendRouterJs(), "frontend", force, vo, counter);
+            // 占位：route-sync 未跑前保证 webpack 能解析 import（后续被 GenMenuServiceImpl 整文件重建）
+            write(frontendRoot, "src/router/gen-routes.js",
+                    "// 该文件由代码生成器自动维护，请勿手工编辑。\n"
+                  + "// 结构为三级：系统 → 业务域 → 页面，菜单树与路由共用同一套分组推导。\n"
+                  + "export default []\n",
+                    "frontend", force, vo, counter);
             write(frontendRoot, "src/store/index.js", frontendStoreJs(), "frontend", force, vo, counter);
             write(frontendRoot, ".gitignore", frontendGitignore(), "frontend", force, vo, counter);
             write(frontendRoot, "README.md", frontendReadme(project, frontendModule, webPort, serverPort),
@@ -2296,7 +2302,10 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     private String frontendRouterJs() {
         return "import Vue from 'vue'\n"
                 + "import VueRouter from 'vue-router'\n"
-                + "import Layout from '@/layout/index.vue'\n\n"
+                + "import Layout from '@/layout/index.vue'\n"
+                // gen-routes.js 由 /gen/menu/route-sync 重建（系统 → 业务域 → 页面三级）；
+                // 侧边栏菜单树从 $router.options.routes 推导，不把它合进来菜单永远是空白
+                + "import genRoutes from './gen-routes'\n\n"
                 + "Vue.use(VueRouter)\n\n"
                 + "const routes = [\n"
                 + "  {\n"
@@ -2317,7 +2326,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        meta: { title: '首页' }\n"
                 + "      }\n"
                 + "    ]\n"
-                + "  }\n"
+                + "  },\n"
+                + "  ...genRoutes\n"
                 + "]\n\n"
                 + "const router = new VueRouter({\n"
                 + "  routes\n"
