@@ -388,7 +388,7 @@ public class GenMenuServiceImpl implements GenMenuService {
      * internal 出口的行：菜单表里的 path 才是权威来源
      */
     private List<Map<String, Object>> loadRowsFromDb() {
-        String sql = "SELECT t.table_comment, t.table_name, t.class_name, t.module_name, t.project_id, m.path "
+        String sql = "SELECT t.table_comment, t.table_name, t.class_name, t.module_name, t.project_id, t.gen_print, m.path "
                 + "FROM gen_table t JOIN sys_menu m ON m.id = t.menu_id "
                 + "WHERE t.deleted = 0 AND m.deleted = 0 AND m.status = 1 "
                 + "AND t.gen_frontend = 1 AND t.gen_vue_page = 1 "
@@ -406,7 +406,7 @@ public class GenMenuServiceImpl implements GenMenuService {
      * artifact 出口的行：目标工程没有菜单表，path 由「系统编码 + 业务域 + 模块名」推导
      */
     private List<Map<String, Object>> loadRowsFromTables() {
-        String sql = "SELECT table_name, table_comment, class_name, module_name, project_id FROM gen_table "
+        String sql = "SELECT table_name, table_comment, class_name, module_name, project_id, gen_print FROM gen_table "
                 + "WHERE deleted = 0 AND master_table_id IS NULL "
                 + "AND gen_frontend = 1 AND gen_vue_page = 1 ORDER BY id";
         List<Map<String, Object>> rows = new ArrayList<>();
@@ -576,6 +576,30 @@ public class GenMenuServiceImpl implements GenMenuService {
             }
             sb.append("\n    ]\n");
             sb.append("  },\n");
+        }
+
+        // V4.5 打印单据：无 layout 顶层路由。打印页必须脱离后台导航壳，
+        // 否则 window.print 会把侧边栏一起打出来；挂在文件末尾避免嵌进系统/业务域层级
+        List<Map<String, Object>> printRows = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            Object gp = row.get("gen_print");
+            if (gp instanceof Number n && n.intValue() == 1) {
+                printRows.add(row);
+            }
+        }
+        if (!printRows.isEmpty()) {
+            sb.append("  // V4.5 打印单据：无 layout 顶层路由\n");
+            for (Map<String, Object> row : printRows) {
+                String module = String.valueOf(row.get("module_name"));
+                String className = String.valueOf(row.get("class_name"));
+                String title = jsEscape(String.valueOf(row.get("table_comment")));
+                sb.append("  {\n");
+                sb.append("    path: '/print/").append(module).append("/:id',\n");
+                sb.append("    name: 'Print").append(className).append("',\n");
+                sb.append("    component: () => import('@/views/").append(module).append("/print.vue'),\n");
+                sb.append("    meta: { title: '").append(title).append("打印' }\n");
+                sb.append("  },\n");
+            }
         }
         sb.append("]\n");
         return sb.toString();

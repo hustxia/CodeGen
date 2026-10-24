@@ -130,5 +130,20 @@ public class GenTableVO implements Serializable {
      */
     private Map<String, Integer> projectGenDefaults;
 
+    /**
+     * V4.4 删除级联模式（表级配置原值）：null=未配置、0=阻止、1=级联、2=不处理。
+     *
+     * <p>下发的是「原值」而不是解析后的生效值，前端下拉才能如实显示「未配置」；
+     * 真正参与模板渲染的三级回落结果在生成阶段计算（{@code GenCascadeMode.resolve}）。
+     */
+    private Integer deleteCascadeMode;
+
+    /**
+     * V4.5 打印单据（表级配置原值）：null=跟随系统、1=生成、0=强制不生成。
+     * 下发原值让前端下拉能如实显示「跟随系统」；生效判定在生成阶段
+     * 走 {@code GenTemplateModel.resolveGenPrint} 三级回落。
+     */
+    private Integer genPrint;
+
     private List<GenColumnDTO> columns;
 }

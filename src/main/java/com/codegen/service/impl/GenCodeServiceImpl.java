@@ -125,15 +125,18 @@ public class GenCodeServiceImpl implements GenCodeService {
                 if (!snippetWritten) {
                     all.putIfAbsent("router-snippet.txt",
                             "// 路由注册片段（追加到 src/router/index.js 对应菜单 children）\n"
-                                    + genTemplateEngine.renderRouterSnippet(tf.table()) + "\n");
+                                    // V4.5 打印路由的挂载条件依赖系统默认配置，必须带 project 渲染
+                                    + genTemplateEngine.renderRouterSnippet(tf.table(), projectConfigOf(tf.table())) + "\n");
                     snippetWritten = true;
                 }
             }
             if (all.isEmpty()) {
                 throw new BusinessException(404, "表配置不存在，无法生成");
             }
-            // 共享文件（readme）：以 ZIP 首表解析表级覆盖，无覆盖回落全局
-            for (Map.Entry<String, String> entry : genTemplateEngine.renderShared(rendered.get(0).table().getId()).entrySet()) {
+            // 共享文件（readme）：以 ZIP 首表解析表级覆盖，无覆盖回落全局；
+            // V4.5 起传首表模型，readme 才能说明本 ZIP 是否含打印页
+            for (Map.Entry<String, String> entry : genTemplateEngine.renderShared(
+                    rendered.get(0).table(), projectConfigOf(rendered.get(0).table())).entrySet()) {
                 all.putIfAbsent(entry.getKey(), entry.getValue());
             }
             for (Map.Entry<String, String> entry : all.entrySet()) {
@@ -569,7 +572,8 @@ public class GenCodeServiceImpl implements GenCodeService {
         }
         return new GenTemplateModel.ProjectConfig(
                 project.getRootPackage(), project.getGatewayPrefix(),
-                project.getRootPackage(), project.getProjectCode());
+                project.getRootPackage(), project.getProjectCode(),
+                project.getDefaultDeleteCascadeMode(), project.getDefaultGenPrint());
     }
 
     /**

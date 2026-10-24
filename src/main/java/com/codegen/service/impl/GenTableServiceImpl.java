@@ -1,6 +1,7 @@
 package com.codegen.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -16,6 +17,7 @@ import com.codegen.service.GenMenuService;
 import com.codegen.service.GenTableColumnService;
 import com.codegen.service.DictDetectService;
 import com.codegen.service.GenTableService;
+import com.codegen.support.GenCascadeMode;
 import com.codegen.support.GenSwitchDefaults;
 import com.codegen.util.GenUtils;
 import com.codegen.vo.GenColumnSyncVO;
@@ -320,11 +322,23 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             }
             GenTable patch = new GenTable();
             patch.setId(id);
-            // 必须把 projectId 原样带回去：GenTable.projectId 是 FieldStrategy.IGNORED
-            // （为了支持「解绑系统」把 null 写进库），部分更新时若不显式带回，
-            // 批量套预设会顺手把这批表的系统归属全部清空——生成路径当场回落到全局，
-            // 表现为「套了个预设，文件全写到别的仓库去了」。V3.1 实机验证时踩到过。
-            patch.setProjectId(exist.getProjectId());
+            if (dto.getProjectId() != null) {
+                // 批量转移归属：目标系统必须存在且启用，防止把表绑到停用系统后生成路径静默回落
+                com.codegen.entity.SysProject target = projectMapper.selectById(dto.getProjectId());
+                if (target == null) {
+                    throw new BusinessException(404, "目标系统不存在：" + dto.getProjectId());
+                }
+                if (!Integer.valueOf(1).equals(target.getEnabled())) {
+                    throw new BusinessException(400, "目标系统已停用：" + target.getProjectName());
+                }
+                patch.setProjectId(dto.getProjectId());
+            } else {
+                // 必须把 projectId 原样带回去：GenTable.projectId 是 FieldStrategy.IGNORED
+                // （为了支持「解绑系统」把 null 写进库），部分更新时若不显式带回，
+                // 批量套预设会顺手把这批表的系统归属全部清空——生成路径当场回落到全局，
+                // 表现为「套了个预设，文件全写到别的仓库去了」。V3.1 实机验证时踩到过。
+                patch.setProjectId(exist.getProjectId());
+            }
             if (StringUtils.hasText(dto.getModuleName())) {
                 patch.setModuleName(dto.getModuleName().trim());
             }
@@ -440,6 +454,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         GenTable table = new GenTable();
         BeanUtils.copyProperties(dto, table);
         table.setId(null);
+        table.setDeleteCascadeMode(GenCascadeMode.sanitize(dto.getDeleteCascadeMode()));
         // V3.1 P0-3：17 个开关留空的，按「所属系统默认值 → 1」补齐。
         // 放在入库前而不是生成时：生成阶段必须尊重表级值，否则用户手动关掉的开关
         // 会被系统默认值顶回去，表现为「关了还在生成」，极难排查。
@@ -481,7 +496,30 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         }
         GenTable table = new GenTable();
         BeanUtils.copyProperties(dto, table);
+        // 越界值归一为 null（未配置），避免脏值逃进模板
+        table.setDeleteCascadeMode(GenCascadeMode.sanitize(dto.getDeleteCascadeMode()));
+        // V4.5 打印单据：只认 0/1，越界归一为 null（跟随系统）
+        Integer genPrint = dto.getGenPrint();
+        if (genPrint != null && genPrint != 0 && genPrint != 1) {
+            genPrint = null;
+        }
+        table.setGenPrint(genPrint);
         updateById(table);
+        // 「改回未配置」必须显式置 NULL：MyBatis-Plus 的 updateById 默认跳过 null 字段，
+        // 表单清空级联下拉后旧值会永远删不掉，表现为「选了未配置、保存完还是原来的值」。
+        // 不用实体上的 updateStrategy=IGNORED 兜底——本类还有 349/430 两处只改
+        // 部分字段的 updateById，那样会把它们没带上的字段一并清空。
+        if (table.getDeleteCascadeMode() == null || genPrint == null) {
+            LambdaUpdateWrapper<GenTable> clearWrapper = new LambdaUpdateWrapper<GenTable>()
+                    .eq(GenTable::getId, dto.getId());
+            if (table.getDeleteCascadeMode() == null) {
+                clearWrapper.set(GenTable::getDeleteCascadeMode, null);
+            }
+            if (genPrint == null) {
+                clearWrapper.set(GenTable::getGenPrint, null);
+            }
+            update(clearWrapper);
+        }
         removeColumns(dto.getId());
         saveColumns(dto.getId(), dto.getColumns());
     }

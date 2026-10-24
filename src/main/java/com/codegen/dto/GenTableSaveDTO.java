@@ -131,6 +131,21 @@ public class GenTableSaveDTO implements Serializable {
     private String masterForeignKey;
 
     /**
+     * V4.4 删除级联模式（仅主子表的主表可配）：
+     * null=未配置（回落所属系统默认，再回落硬编码级联）、0=阻止、1=级联、2=不处理。
+     *
+     * <p>必须可空且必须出现在 DTO 里：前端表单是多选一，清空即「改回未配置」。
+     * 越界值由 {@link com.codegen.support.GenCascadeMode#sanitize} 归一为 null。
+     */
+    private Integer deleteCascadeMode;
+
+    /**
+     * V4.5 打印单据：null=跟随系统默认（默认关）、1=生成 print.vue、0=强制不生成。
+     * 必须出现在 DTO 里：前端是三态下拉，清空即「改回跟随系统」。
+     */
+    private Integer genPrint;
+
+    /**
      * 字段配置
      */
     private List<GenColumnDTO> columns;

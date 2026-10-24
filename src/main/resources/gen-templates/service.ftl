@@ -28,6 +28,12 @@ public interface ${className}Service extends IService<${className}> {
      */
     void saveWithChildren(${className}SaveDTO master<#list children as child>,
                           List<${child.className}SaveDTO> ${child.varName}Rows</#list>);
+
+    /**
+     * V4.4 按表的删除级联模式删除主表：
+     * 级联=同事务删光全部子表（含三级）；阻止=还有子行就拒删；不处理=仅删主行。
+     */
+    void removeWithChildren(Long id);
 </#if>
     // <gen:end key="service-body">
     // ===== 以下为手写区：自定义方法写在这里，重新生成不会被覆盖 =====

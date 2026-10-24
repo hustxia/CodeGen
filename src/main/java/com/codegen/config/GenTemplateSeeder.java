@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * 模板种子器：启动时把 classpath:gen-templates/*.ftl 的 12 个全局模板落库。
+ * 模板种子器：启动时把 classpath:gen-templates/*.ftl 的全部全局模板落库。
  * 幂等：对应 tpl_code 已有启用行则跳过（保护用户在线编辑）；
  * 插入前物理清理逻辑删除残留行，避免占用 uk_code_table 唯一键。
  */
@@ -53,6 +53,8 @@ public class GenTemplateSeeder implements ApplicationRunner {
             new SeedMeta("controller", "Controller", "backend", "${backendBase}/controller/${className}Controller.java"),
             new SeedMeta("apiJs", "前端 api.js", "frontend", "src/api/${moduleName}.js"),
             new SeedMeta("vuePage", "前端页面", "frontend", "src/views/${moduleName}/index.vue"),
+            // V4.5 A4 打印单据：开关 gen_print 开启才渲染，独立于 index.vue 的单据版式页
+            new SeedMeta("printPage", "打印单据页", "frontend", "src/views/${moduleName}/print.vue"),
             new SeedMeta("routerSnippet", "路由片段", "shared", "router-snippet.txt"),
             new SeedMeta("readme", "使用说明", "shared", "README-使用说明.txt"));
 

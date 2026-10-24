@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 public class GenTemplate extends BaseEntity {
 
     /**
-     * 模板编码:entity/mapper/service/serviceImpl/pageDto/saveDto/vo/controller/apiJs/vuePage/routerSnippet/readme
+     * 模板编码:entity/mapper/service/serviceImpl{Simple,Tree,Masterdetail}/pageDto/saveDto/vo/controller/apiJs/vuePage/printPage/routerSnippet/readme
      */
     private String tplCode;
 

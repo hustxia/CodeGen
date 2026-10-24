@@ -9,3 +9,9 @@
    src/router/index.js 对应菜单的 children 中（手动合并）。
 4. 后端如使用新模块，确认该模块已配置 MybatisPlusConfig
    （PaginationInnerInterceptor），否则分页 total 恒为 0。
+5. 打印单据：<#if (genPrint)!false>本次产物含 src/views/*/print.vue（A4 打印页，
+   路由为无 layout 顶层路由 /print/<模块>/:id，已在 router-snippet.txt 里），
+   列表操作列有「打印」按钮，浏览器打印或另存为 PDF 均可。
+   <#else>本次产物不含打印页（表配置 gen_print 未开启）。</#if>
+6. 明细打印列超过 8 列时自动精简到前 8 列；如需全部列打印，
+   在表配置里把非关键列的「列表显示」关掉后重新生成。

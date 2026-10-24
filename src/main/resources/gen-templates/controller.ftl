@@ -539,11 +539,16 @@ public Result<Void> update(<#if ctrlValid>@Valid </#if>@RequestBody ${className}
 }
 </#if>
 <#if ctrlDeleteApi>${''}
-@Operation(summary = "删除${comment}")
+@Operation(summary = "删除${comment}<#if hasChild>（按表的级联模式处理明细）</#if>")
 <#if genLog>@Log(title = "${comment}", type = "DELETE")
 </#if>@DeleteMapping("/{id}")
 public Result<Void> delete(@PathVariable("id") Long id) {
+<#if hasChild>
+    // V4.4：主子表走 removeWithChildren（级联/阻止/不处理由生成配置决定），不能直接 removeById 留孤儿明细
+    ${varName}Service.removeWithChildren(id);
+<#else>
     ${varName}Service.removeById(id);
+</#if>
     return Result.ok();
 }
 </#if>

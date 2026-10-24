@@ -2,6 +2,7 @@ package com.codegen.util;
 
 import com.codegen.entity.GenTable;
 import com.codegen.entity.GenTableColumn;
+import com.codegen.support.GenCascadeMode;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -111,12 +112,43 @@ public final class GenTemplateModel {
      * @param projectCode  系统编码，用于权限点与字典编码前缀（多系统隔离）
      */
     public record ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
-                                String projectCode) {
+                                String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint) {
 
         /** 兼容 V3.0 之前的构造：无系统编码，权限点不加前缀 */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage) {
-            this(packageName, gatewayPrefix, rootPackage, null);
+            this(packageName, gatewayPrefix, rootPackage, null, null, null);
         }
+
+        /** 兼容 V3.0 构造：无级联默认值（V4.4 前的调用方） */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage, String projectCode) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null);
+        }
+
+        /** 兼容 V4.4 构造：无打印默认值（V4.5 前的调用方） */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                             String projectCode, Integer defaultDeleteCascadeMode) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null);
+        }
+    }
+
+    /**
+     * V4.5 打印单据开关的三级回落唯一实现：表级 → 系统默认 → 硬编码关。
+     *
+     * <p>刻意不进 GenSwitchDefaults 17 键体系：打印的硬编码兜底是「关」而非「开」，
+     * 塞进 17 键要改 resolve 的兜底语义。三态约定沿用 V4.4 级联模式的教训
+     * （坑库 mysql.md）：表级必须可空，NULL=跟随系统，否则系统默认层成死配置。
+     *
+     * @param tableVal   gen_table.gen_print（NULL=未配置）
+     * @param projectVal sys_project.default_gen_print（NULL=未配置）
+     */
+    public static boolean resolveGenPrint(Integer tableVal, Integer projectVal) {
+        if (tableVal != null) {
+            return tableVal == 1;
+        }
+        if (projectVal != null) {
+            return projectVal == 1;
+        }
+        return false;
     }
 
     /**
@@ -362,6 +394,23 @@ public final class GenTemplateModel {
         m.put("hasGrandDialog", childrenModel.stream()
                 .anyMatch(c -> Boolean.TRUE.equals(c.get("hasGrandChild"))));
 
+        // V4.4 删除级联模式：表级 → 系统默认 → 硬编码级联（GenCascadeMode.resolve）
+        int cascadeMode = GenCascadeMode.resolve(table.getDeleteCascadeMode(),
+                project == null ? null : project.defaultDeleteCascadeMode());
+        m.put("deleteCascadeMode", cascadeMode);
+        m.put("deleteCascadeBlock", cascadeMode == GenCascadeMode.BLOCK);
+        m.put("deleteCascadeOn", cascadeMode == GenCascadeMode.CASCADE);
+        m.put("deleteCascadeOff", cascadeMode == GenCascadeMode.NONE);
+
+        // V4.5 打印单据：表级 → 系统默认 → 硬编码关（resolveGenPrint 唯一实现）。
+        // 前置条件：开前端 + api.js（打印页 import 取数函数）+ 非从表（从表无独立页面）
+        // + 有可用取数接口（主子表 with-children / 单表详情）。
+        // 缺任何一个，开关开了也不生成——否则产物必是坏页面。
+        boolean genPrint = genFrontend && on(table.getGenApiJs()) && !isChild
+                && resolveGenPrint(table.getGenPrint(), project == null ? null : project.defaultGenPrint())
+                && (!childrenModel.isEmpty() || genDetailApi);
+        m.put("genPrint", genPrint);
+
         // 关联下拉：字段里 ref_table 非空的列
         List<Map<String, Object>> refCols = new ArrayList<>();
         for (Map<String, Object> cm : toModel(biz)) {
@@ -371,6 +420,17 @@ public final class GenTemplateModel {
         }
         m.put("refColumns", refCols);
         m.put("hasRef", !refCols.isEmpty());
+        // refText 帮助函数跟随「主表或任一子表明细列有引用」：模板的详情明细列（child.listColumns）
+        // 也会调 refText，若只按主表 hasRef 生成定义，主表无引用而子表有引用时会渲染崩溃
+        boolean childRef = childrenModel.stream().anyMatch(c -> {
+            Object childCols = c.get("listColumns");
+            if (!(childCols instanceof List<?> list)) {
+                return false;
+            }
+            return list.stream().anyMatch(x -> x instanceof Map<?, ?> col
+                    && Boolean.TRUE.equals(col.get("hasRef")));
+        });
+        m.put("hasRefHelper", !refCols.isEmpty() || childRef);
 
         // Excel：按字段开关筛列
         List<GenTableColumn> excelCols = listCols.stream()
@@ -427,6 +487,10 @@ public final class GenTemplateModel {
         // ===== P1 字段级增强的派生标记 =====
         // P1-2 操作列宽度：按按钮数算，2 字按钮约 62px，避免按钮被挤换行
         int btnCount = (genEditBtn ? 1 : 0) + (genDeleteBtn ? 1 : 0) + (genFrontend && genDetailApi ? 1 : 0);
+        // V4.5 打印单据在操作列多一个「打印」按钮
+        if (genPrint) {
+            btnCount += 1;
+        }
         // P3-3 审批流在操作列最多再塞 3 个按钮（提交/审批/驳回 + 记录），
         // 不预留宽度的话 el-table 会把「删除」挤成两行。
         if (hasFlow) {

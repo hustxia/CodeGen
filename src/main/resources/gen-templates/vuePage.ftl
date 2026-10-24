@@ -109,11 +109,14 @@
 </#if>
 </#list>
         <el-table-column prop="updateTime" label="更新时间" width="170" align="center" />
-<#if genEditBtn || genDeleteBtn || hasDetail || hasFlow>
+<#if genEditBtn || genDeleteBtn || hasDetail || hasFlow || genPrint>
         <el-table-column label="操作" width="${opColWidth}" fixed="right" align="center">
           <template slot-scope="{ row }">
 <#if hasDetail>
             <el-button type="text" @click="openDetail(row)">详情</el-button>
+</#if>
+<#if genPrint>
+            <el-button type="text" @click="handlePrintRow(row)">打印</el-button>
 </#if>
 <#if hasFlow>
             <!--
@@ -312,29 +315,92 @@
 </#if>
 
 <#if hasDetail>
-    <!-- 详情抽屉（只读） -->
-    <el-drawer title="${comment}详情" :visible.sync="detailVisible" size="420px">
+    <!-- 详情抽屉（只读）。主子表：宽抽屉 + el-tabs，tab1 主表字段，tab2..N 每张明细一张只读表；
+         数据复用 /with-children 一次拉全，不逐 tab 发请求 -->
+    <el-drawer title="${comment}详情" :visible.sync="detailVisible" size="<#if hasChild>62%<#else>420px</#if>">
+<#if hasChild>
+      <el-tabs v-model="activeDetailTab" type="card" class="detail-tabs">
+        <el-tab-pane label="主表信息" name="main">
+          <div class="detail-body">
+<#else>
       <div class="detail-body">
+</#if>
+<#if hasChild>            <div class="detail-row">
+              <span class="detail-label">ID</span>
+              <span class="detail-value">{{ detail.id }}</span>
+            </div>
+<#else>
         <div class="detail-row">
           <span class="detail-label">ID</span>
           <span class="detail-value">{{ detail.id }}</span>
         </div>
-<#list listColumns as c>
-        <div class="detail-row">
-          <span class="detail-label">${c.commentLabel}</span>
-<#if c.hasRef>
-          <span class="detail-value">{{ refText('${c.javaField}', detail.${c.javaField}) }}</span>
-<#elseif c.isSwitch>
-          <span class="detail-value">{{ detail.${c.javaField} === 1 ? '启用' : '停用' }}</span>
-<#elseif c.hasDict>
-          <span class="detail-value">{{ dictText('${c.dictType}', detail.${c.javaField}) }}</span>
-<#elseif c.hasEnum>
-          <span class="detail-value">{{ enumText('${c.javaField}', detail.${c.javaField}) }}</span>
-<#else>
-          <span class="detail-value">{{ detail.${c.javaField} }}</span>
 </#if>
-        </div>
+<#list listColumns as c>
+<#if hasChild>          <div class="detail-row">
+            <span class="detail-label">${c.commentLabel}</span>
+<#else>        <div class="detail-row">
+          <span class="detail-label">${c.commentLabel}</span>
+</#if>
+<#if c.hasRef>
+<#if hasChild>            <span class="detail-value">{{ refText('${c.javaField}', detail.${c.javaField}) }}</span>
+<#else>          <span class="detail-value">{{ refText('${c.javaField}', detail.${c.javaField}) }}</span>
+</#if>
+<#elseif c.isSwitch>
+<#if hasChild>            <span class="detail-value">{{ detail.${c.javaField} === 1 ? '启用' : '停用' }}</span>
+<#else>          <span class="detail-value">{{ detail.${c.javaField} === 1 ? '启用' : '停用' }}</span>
+</#if>
+<#elseif c.hasDict>
+<#if hasChild>            <span class="detail-value">{{ dictText('${c.dictType}', detail.${c.javaField}) }}</span>
+<#else>          <span class="detail-value">{{ dictText('${c.dictType}', detail.${c.javaField}) }}</span>
+</#if>
+<#elseif c.hasEnum>
+<#if hasChild>            <span class="detail-value">{{ enumText('${c.javaField}', detail.${c.javaField}) }}</span>
+<#else>          <span class="detail-value">{{ enumText('${c.javaField}', detail.${c.javaField}) }}</span>
+</#if>
+<#else>
+<#if hasChild>            <span class="detail-value">{{ detail.${c.javaField} }}</span>
+<#else>          <span class="detail-value">{{ detail.${c.javaField} }}</span>
+</#if>
+</#if>
+<#if hasChild>          </div>
+<#else>        </div>
+</#if>
 </#list>
+<#if hasChild>          <div class="detail-row">
+            <span class="detail-label">创建时间</span>
+            <span class="detail-value">{{ detail.createTime }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">更新时间</span>
+            <span class="detail-value">{{ detail.updateTime }}</span>
+          </div>
+          </div>
+        </el-tab-pane>
+<#list children as child>
+        <el-tab-pane label="${child.comment}" name="${child.varName}">
+          <el-table :data="detailGroupRows('${child.varName}')" border size="mini" max-height="520">
+<#list child.listColumns as c>
+            <el-table-column label="${c.commentLabel}" min-width="120" prop="${c.javaField}">
+              <template slot-scope="{ row }">
+<#if c.hasRef>
+                {{ refText('${c.javaField}', row.${c.javaField}) }}
+<#elseif c.isSwitch>
+                {{ row.${c.javaField} === 1 ? '启用' : '停用' }}
+<#elseif c.hasDict>
+                {{ dictText('${c.dictType}', row.${c.javaField}) }}
+<#elseif c.hasEnum>
+                {{ enumText('${c.javaField}', row.${c.javaField}) }}
+<#else>
+                {{ row.${c.javaField} }}
+</#if>
+              </template>
+            </el-table-column>
+</#list>
+          </el-table>
+        </el-tab-pane>
+</#list>
+      </el-tabs>
+<#else>
         <div class="detail-row">
           <span class="detail-label">创建时间</span>
           <span class="detail-value">{{ detail.createTime }}</span>
@@ -344,6 +410,7 @@
           <span class="detail-value">{{ detail.updateTime }}</span>
         </div>
       </div>
+</#if>
     </el-drawer>
 </#if>
 
@@ -518,6 +585,11 @@ export default {
 <#if hasDetail>
       detailVisible: false,
       detail: {},
+<#if hasChild>
+      // V4.4 详情多 tab：children 组数组 [{key, comment, rows}]，与 /with-children 响应同构
+      detailChildren: [],
+      activeDetailTab: 'main',
+</#if>
 </#if>
 <#if genTree>
       treeOptions: [],
@@ -525,7 +597,9 @@ export default {
 <#if hasRef>
       refOptions: {},
       refLoading: {},
-      // 列表里把 xxxId 显示成名称用的字典：{ 字段名: { id: label } }
+</#if>
+<#if hasRefHelper>
+      // 列表/详情里把 xxxId 显示成名称用的字典：{ 字段名: { id: label } }
       refLabels: {},
 </#if>
 <#if hasChild>
@@ -854,6 +928,12 @@ export default {
         this.$set(this.refLabels, field, {})
       }
     },
+</#if>
+<#if hasRefHelper>
+    /**
+     * 把 xxxId 显示成名称：主表列与子表明细列都会用到，定义跟随 hasRefHelper
+     * （主表无引用列但子表外键有引用时也必须存在，否则明细行渲染崩溃）。
+     */
     refText(field, id) {
       if (id === null || id === undefined || id === '') {
         return ''
@@ -866,6 +946,29 @@ export default {
     openDetail(row) {
       this.detail = row || {}
       this.detailVisible = true
+<#if hasChild>
+      this.activeDetailTab = 'main'
+      this.loadDetailChildren(row && row.id)
+</#if>
+    },
+</#if>
+<#if hasDetail && hasChild>
+    /**
+     * 详情抽屉的明细数据：复用 /with-children 一次拉全，不逐 tab 发请求
+     */
+    async loadDetailChildren(id) {
+      this.detailChildren = []
+      if (!id) return
+      try {
+        const res = await get${className}WithChildren(id)
+        this.detailChildren = (res.data && res.data.children) || []
+      } catch (e) {
+        /* 拦截器已提示；明细保持为空 */
+      }
+    },
+    detailGroupRows(key) {
+      const group = this.detailChildren.find(g => g.key === key)
+      return (group && group.rows) || []
     },
 </#if>
 <#if hasDialog>
@@ -934,6 +1037,14 @@ export default {
       this.grandRows.push(factory ? factory() : {})
     },
 </#if>
+</#if>
+<#if genPrint>
+    /**
+     * 打印单据：跳转独立打印页（无后台导航壳，window.print 直出 A4）
+     */
+    handlePrintRow(row) {
+      this.$router.push('/print/${moduleName}/' + row.id)
+    },
 </#if>
     async submitForm() {
       const valid = await this.$refs.form.validate().catch(() => false)

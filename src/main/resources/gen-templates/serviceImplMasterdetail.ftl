@@ -13,11 +13,19 @@ import ${pkg}.dto.${className}SaveDTO;
 import ${pkg}.dto.${child.className}SaveDTO;
 import ${pkg}.entity.${child.className};
 import ${pkg}.mapper.${child.className}Mapper;
+<#-- 孙层的实体与 Mapper 同样要导入：save${gc.className}Rows 与级联删除都直接引用这两个类型。
+     漏了 import，生成的主子表实现类 javac 会直接「找不到符号」 -->
+<#list child.grandChildren as gc>
+import ${gc.pkg}.entity.${gc.className};
+import ${gc.pkg}.mapper.${gc.className}Mapper;
+</#list>
 </#list>
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+<#if deleteCascadeBlock>import ${rootPkg}.common.exception.BusinessException;
+</#if>
 <#if genTree>import java.util.ArrayList;
 </#if>
 import java.util.List;
@@ -143,6 +151,48 @@ public class ${className}ServiceImpl extends ServiceImpl<${className}Mapper, ${c
     }
 </#list>
 </#list>
+    /**
+     * V4.4 按删除级联模式删除主表（模式由生成时配置决定，三选一渲染）：
+     * 级联=先删各子表行（含三级）再删主行；阻止=任一子表还有有效行就拒删；不处理=仅删主行。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void removeWithChildren(Long id) {
+<#if deleteCascadeBlock>
+<#list children as child>
+        Long ${child.varName}Count = ${child.varName}Mapper.selectCount(
+                new LambdaQueryWrapper<${child.className}>()
+                        .eq(${child.className}::get${child.fkCapField}, id));
+        if (${child.varName}Count != null && ${child.varName}Count > 0) {
+            throw new BusinessException("该${comment}下还有 " + ${child.varName}Count + " 条${child.comment}，请先清理明细再删除");
+        }
+</#list>
+        removeById(id);
+<#elseif deleteCascadeOn>
+<#list children as child>
+        // ${child.comment}：先清三级，再按外键逻辑删除本级
+<#if child.grandChildren?size gt 0>
+        List<${child.className}> ${child.varName}Rows = ${child.varName}Mapper.selectList(
+                new LambdaQueryWrapper<${child.className}>()
+                        .eq(${child.className}::get${child.fkCapField}, id));
+        // 孙层按主键集合一次删：逐行 delete 会让「500 条明细」变成 500 条 SQL，全压在同一个事务里
+        List<Long> ${child.varName}Ids = ${child.varName}Rows.stream()
+                .map(${child.className}::getId).toList();
+<#list child.grandChildren as gc>
+        if (!${child.varName}Ids.isEmpty()) {
+            ${gc.varName}Mapper.delete(new LambdaQueryWrapper<${gc.className}>()
+                    .in(${gc.className}::get${gc.fkCapField}, ${child.varName}Ids));
+        }
+</#list>
+</#if>
+        ${child.varName}Mapper.delete(new LambdaQueryWrapper<${child.className}>()
+                .eq(${child.className}::get${child.fkCapField}, id));
+</#list>
+        removeById(id);
+<#else>
+        removeById(id);
+</#if>
+    }
 </#if>
     // <gen:end key="service-body">
     // ===== 以下为手写区：自定义方法写在这里，重新生成不会被覆盖 =====

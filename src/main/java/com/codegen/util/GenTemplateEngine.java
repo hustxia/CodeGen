@@ -240,25 +240,47 @@ public class GenTemplateEngine {
         if (genFrontend && GenTemplateModel.on(table.getGenVuePage()) && !isChild) {
             put(files, "vuePage", resolver, model);
         }
+        // V4.5 打印单据：开关与前置条件都在 genPrint 键里算好（resolveGenPrint 唯一实现），
+        // 引擎只认结果，不再重复判定
+        if (Boolean.TRUE.equals(model.get("genPrint"))) {
+            put(files, "printPage", resolver, model);
+        }
         return files;
     }
 
     /**
-     * 渲染 ZIP 附带的共享说明文件（readme 同样走表级覆盖优先：以 ZIP 首表解析，回落全局）
+     * 渲染共享说明文件（readme 同样走表级覆盖优先：以 ZIP 首表解析，回落全局）。
+     *
+     * <p>V4.5 起传首表的渲染模型：readme 要说明「本 ZIP 是否含打印页」，
+     * 空模型说不了这句话。表级覆盖命中时配置以覆盖行为准的表为准。
      */
-    public Map<String, String> renderShared(Long tableId) {
-        ResolvedTemplate tpl = resolveFromDb("readme", tableId == null ? 0L : tableId);
+    public Map<String, String> renderShared(GenTable table, GenTemplateModel.ProjectConfig project) {
+        ResolvedTemplate tpl = resolveFromDb("readme", table == null || table.getId() == null ? 0L : table.getId());
+        Map<String, Object> model = table == null
+                ? Map.of()
+                : GenTemplateModel.build(table, List.of(), (List<GenTemplateModel.ChildInfo>) null, project);
         Map<String, String> shared = new LinkedHashMap<>();
-        shared.put(renderString(tpl.pathPattern(), Map.of()), renderString(tpl.content(), Map.of()));
+        shared.put(renderString(tpl.pathPattern(), Map.of()), renderString(tpl.content(), model));
         return shared;
     }
 
     /**
-     * 渲染路由注册片段（每表一段）
+     * 渲染路由注册片段（每表一段，兼容旧签名：不带系统配置）
      */
     public String renderRouterSnippet(GenTable table) {
+        return renderRouterSnippet(table, null);
+    }
+
+    /**
+     * 渲染路由注册片段（每表一段）。
+     *
+     * <p>V4.5 起带系统配置：打印路由挂载条件走 genPrint 键，
+     * 若系统默认开而表级未配置，不带配置渲染会丢打印路由（产物有页面没入口）。
+     */
+    public String renderRouterSnippet(GenTable table, GenTemplateModel.ProjectConfig project) {
         ResolvedTemplate tpl = resolveFromDb("routerSnippet", table.getId() == null ? 0L : table.getId());
-        return renderString(tpl.content(), GenTemplateModel.build(table, List.of()));
+        return renderString(tpl.content(),
+                GenTemplateModel.build(table, List.of(), (List<GenTemplateModel.ChildInfo>) null, project));
     }
 
     /**

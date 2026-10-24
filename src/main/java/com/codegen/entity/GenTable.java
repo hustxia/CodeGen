@@ -214,6 +214,20 @@ public class GenTable extends BaseEntity {
     private Long lastGenBy;
 
     /**
+     * V4.4 删除级联模式（仅主子表主表生效）：NULL=未配置（回落 sys_project 默认，再回落硬编码级联），
+     * 0=阻止（存在子行时拒删并提示）1=级联（同事务删除全部子表行）2=不处理（维持 removeById 现状）。
+     * 必须可空：若 NOT NULL DEFAULT 1，表级永远是 1，系统默认就成了死配置。
+     */
+    private Integer deleteCascadeMode;
+
+    /**
+     * V4.5 打印单据：NULL=跟随系统默认（默认关）1=生成 A4 打印页 print.vue 0=强制不生成。
+     * 必须可空三态（坑库 mysql.md）：NOT NULL DEFAULT 会让系统默认层被表级短路成死配置。
+     * 有效生成还需：gen_frontend=1、gen_api_js=1、非从表、有取数接口（with-children 或详情）。
+     */
+    private Integer genPrint;
+
+    /**
      * 所属系统（sys_project.id）。为空表示沿用 application.yml 的全局默认，
      * 这是 V3.0 之前的存量表兼容路径。
      *

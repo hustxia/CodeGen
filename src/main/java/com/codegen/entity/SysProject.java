@@ -87,6 +87,18 @@ public class SysProject extends BaseEntity {
     private Integer sort;
 
     /**
+     * V4.4 主子表删除级联模式的系统默认值（0=阻止 1=级联 2=不处理）。
+     * NULL = 未配置，回落硬编码级联（1）；表级 gen_table.delete_cascade_mode 优先于本字段。
+     */
+    private Integer defaultDeleteCascadeMode;
+
+    /**
+     * V4.5 打印单据的系统默认值。NULL = 未配置，回落硬编码关（0）；
+     * 表级 gen_table.gen_print 优先于本字段（表级 NULL 时才看这里）。
+     */
+    private Integer defaultGenPrint;
+
+    /**
      * 备注
      */
     private String remark;
