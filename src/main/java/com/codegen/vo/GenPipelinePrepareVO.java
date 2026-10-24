@@ -27,4 +27,7 @@ public class GenPipelinePrepareVO {
 
     @Schema(description = "lint 命中的缺列明细（空 = 全部合规）")
     private List<GenPipelineLintVO.Item> lintIssues = new ArrayList<>();
+
+    @Schema(description = "审计列补齐报告（V5.1，手动 DDL 模式：每表 SKIPPED=全齐 / PATCHED+patchedCols=已补）")
+    private List<GenPipelineAuditReportVO.Item> auditReport = new ArrayList<>();
 }

@@ -95,9 +95,15 @@ public class GenPipelineController {
         return Result.ok(pipelineService.stop(id));
     }
 
-    @Operation(summary = "生成前置 lint：目标库审计列检查，缺列给补齐 SQL")
+    @Operation(summary = "生成前置 lint：目标库审计列检查，缺列给补齐 SQL（只读 dry-run）")
     @PostMapping("/lint-db")
     public Result<GenPipelineLintVO> lint(@RequestBody com.codegen.dto.GenPipelineLintDTO dto) {
         return Result.ok(pipelineService.lint(dto.getDbName()));
+    }
+
+    @Operation(summary = "lint 一键补齐（V5.1）：逐表 ALTER 补缺审计列，幂等，执行后复检")
+    @PostMapping("/{id}/lint/fix")
+    public Result<com.codegen.vo.GenPipelineLintFixVO> fix(@PathVariable("id") Long id) {
+        return Result.ok(pipelineService.fix(id));
     }
 }

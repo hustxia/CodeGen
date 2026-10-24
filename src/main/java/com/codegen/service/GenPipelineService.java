@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.codegen.dto.GenPipelineCreateDTO;
 import com.codegen.dto.GenPipelinePageDTO;
 import com.codegen.dto.GenPipelinePrepareDTO;
+import com.codegen.vo.GenPipelineLintFixVO;
 import com.codegen.vo.GenPipelineLintVO;
 import com.codegen.vo.GenPipelinePrepareVO;
 import com.codegen.vo.GenPipelineVO;
@@ -32,8 +33,11 @@ public interface GenPipelineService {
     /** 停止：杀双进程并置 stopped */
     GenPipelineVO stop(Long id);
 
-    /** 生成前置 lint：目标库每表比对 BaseEntity 约定列 */
+    /** 生成前置 lint：目标库每表比对 BaseEntity 约定列（只读 dry-run，语义不变） */
     GenPipelineLintVO lint(String dbName);
+
+    /** lint 一键补齐（V5.1）：逐表执行 ALTER 补缺审计列，幂等，单表失败不拖垮整批，执行后复检 */
+    GenPipelineLintFixVO fix(Long id);
 
     /** SSE 进度订阅 */
     SseEmitter stream(Long id);

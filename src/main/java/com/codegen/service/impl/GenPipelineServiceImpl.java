@@ -19,9 +19,13 @@ import com.codegen.mapper.GenPipelineStepMapper;
 import com.codegen.service.GenDdlService;
 import com.codegen.service.GenPipelineService;
 import com.codegen.service.SysProjectService;
+import com.codegen.support.GenAuditColumns;
+import com.codegen.support.GenDdlPatcher;
 import com.codegen.support.PipelineAssembler;
 import com.codegen.support.PipelineSseRegistry;
 import com.codegen.vo.GenPipelineAiVO;
+import com.codegen.vo.GenPipelineAuditReportVO;
+import com.codegen.vo.GenPipelineLintFixVO;
 import com.codegen.vo.GenPipelineLintVO;
 import com.codegen.vo.GenPipelinePrepareVO;
 import com.codegen.vo.GenPipelineVO;
@@ -38,7 +42,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -53,10 +56,6 @@ public class GenPipelineServiceImpl implements GenPipelineService {
 
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private static final Pattern DB_NAME = Pattern.compile("^[a-z][a-z0-9_]{1,62}$");
-    /** BaseEntity 约定列：目标库每张业务表都必须有，否则生成物运行期才爆 SQL 错 */
-    private static final String[] AUDIT_COLS = {
-            "id", "create_time", "update_time", "create_by", "update_by", "deleted"
-    };
 
     @Autowired
     private GenPipelineMapper pipelineMapper;
@@ -162,16 +161,19 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         Long projectId = pipeline.getProjectId();
         boolean projectCreatedHere = false;
         try {
-            // 1. 组 DDL：ai 模式服务端统一补审计列；manual 模式 lint 不过即阻断
+            // 1. 组 DDL：ai 模式服务端统一补审计列；manual 模式缺列改写补齐（V5.1：只增不改，明细进 auditReport）
             String ddl;
-            GenPipelineLintVO lint = new GenPipelineLintVO();
+            List<GenPipelineAuditReportVO.Item> auditReport = new java.util.ArrayList<>();
             if (manual) {
-                lint = lintDdlText(dto.getDdlText());
-                if (!lint.isOk()) {
-                    throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
-                            "DDL 缺少审计列：" + lintBrief(lint) + "。补齐后重试，或改用 AI 模式由服务端自动补齐");
+                GenDdlPatcher.PatchResult patch = GenDdlPatcher.patch(dto.getDdlText());
+                ddl = patch.getDdl();
+                for (GenDdlPatcher.PatchItem item : patch.getItems()) {
+                    GenPipelineAuditReportVO.Item ri = new GenPipelineAuditReportVO.Item();
+                    ri.setTable(item.getTable());
+                    ri.setAction(item.getPatchedCols().isEmpty() ? "SKIPPED" : "PATCHED");
+                    ri.setPatchedCols(item.getPatchedCols());
+                    auditReport.add(ri);
                 }
-                ddl = dto.getDdlText();
                 if (!ddl.trim().toLowerCase().startsWith("create database")
                         && !ddl.trim().toLowerCase().contains("use ")) {
                     ddl = "CREATE DATABASE IF NOT EXISTS `" + pipeline.getDbName()
@@ -205,7 +207,7 @@ public class GenPipelineServiceImpl implements GenPipelineService {
             vo.setProjectId(projectId);
             vo.setDbName(result.getSchema());
             vo.setTableCount(result.getCreatedTables().size());
-            vo.setLintIssues(lint.getItems());
+            vo.setAuditReport(auditReport);
             return vo;
         } catch (RuntimeException e) {
             // 失败清残留：draft 留着会以「进行中任务」堵死同名库重试（死循环根因）
@@ -228,7 +230,7 @@ public class GenPipelineServiceImpl implements GenPipelineService {
                         "表名不合法：" + table + "（小写字母开头的 snake_case）");
             }
             sb.append("\nCREATE TABLE IF NOT EXISTS `").append(table).append("` (\n");
-            sb.append("  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',\n");
+            sb.append("  ").append(GenAuditColumns.columnDef("id")).append(",\n");
             for (GenPipelineAiVO.Column c : t.getColumns()) {
                 String name = c.getName() == null ? "" : c.getName().trim().toLowerCase();
                 if (!DB_NAME.matcher(name).matches()) {
@@ -242,11 +244,11 @@ public class GenPipelineServiceImpl implements GenPipelineService {
                 sb.append("  `").append(name).append("` ").append(type)
                         .append(" NULL COMMENT '").append(escape(c.getComment())).append("',\n");
             }
-            sb.append("  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',\n");
-            sb.append("  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',\n");
-            sb.append("  `create_by` bigint NULL COMMENT '创建人',\n");
-            sb.append("  `update_by` bigint NULL COMMENT '更新人',\n");
-            sb.append("  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',\n");
+            sb.append("  ").append(GenAuditColumns.columnDef("create_time")).append(",\n");
+            sb.append("  ").append(GenAuditColumns.columnDef("update_time")).append(",\n");
+            sb.append("  ").append(GenAuditColumns.columnDef("create_by")).append(",\n");
+            sb.append("  ").append(GenAuditColumns.columnDef("update_by")).append(",\n");
+            sb.append("  ").append(GenAuditColumns.columnDef("deleted")).append(",\n");
             sb.append("  PRIMARY KEY (`id`)\n");
             sb.append(") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='")
                     .append(escape(t.getTableComment())).append("';\n");
@@ -346,7 +348,7 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         }
     }
 
-    // ==================== lint ====================
+    // ==================== lint / fix ====================
 
     @Override
     public GenPipelineLintVO lint(String dbName) {
@@ -360,55 +362,80 @@ public class GenPipelineServiceImpl implements GenPipelineService {
             List<String> cols = jdbcTemplate.queryForList(
                     "SELECT column_name FROM information_schema.columns WHERE table_schema = ? AND table_name = ?",
                     String.class, dbName, table);
-            List<String> missing = new java.util.ArrayList<>();
-            for (String need : AUDIT_COLS) {
-                if (!cols.contains(need)) {
-                    missing.add(need);
-                }
-            }
+            List<String> missing = GenAuditColumns.missingIn(cols);
             if (!missing.isEmpty()) {
                 vo.setOk(false);
                 GenPipelineLintVO.Item item = new GenPipelineLintVO.Item();
                 item.setTable(table);
                 item.setMissingCols(missing);
-                item.setFixSql("ALTER TABLE `" + table + "` " + fixColumns(missing) + ";");
+                item.setFixSql("ALTER TABLE `" + table + "` " + fixSqlOf(missing) + ";");
                 vo.getItems().add(item);
             }
         }
         return vo;
     }
 
-    private String fixColumns(List<String> missing) {
+    /**
+     * 一键补齐（V5.1 P0-2）：对缺审计列的表逐表执行 ALTER（定义走 GenAuditColumns 单一实现）。
+     * 幂等：执行前现查 information_schema，重复点击第二轮全 SKIPPED；并发撞上 Duplicate column
+     * 也按跳过处理。单表失败记入报告并继续其余表，最后复检给结论。
+     */
+    @Override
+    public GenPipelineLintFixVO fix(Long id) {
+        GenPipeline pipeline = mustGet(id);
+        String dbName = pipeline.getDbName();
+        GenPipelineLintFixVO vo = new GenPipelineLintFixVO();
+        List<String> tables = jdbcTemplate.queryForList(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_type='BASE TABLE'",
+                String.class, dbName);
+        vo.setTableCount(tables.size());
+        for (String table : tables) {
+            GenPipelineLintFixVO.Item item = new GenPipelineLintFixVO.Item();
+            item.setTable(table);
+            List<String> cols = jdbcTemplate.queryForList(
+                    "SELECT column_name FROM information_schema.columns WHERE table_schema = ? AND table_name = ?",
+                    String.class, dbName, table);
+            List<String> missing = GenAuditColumns.missingIn(cols);
+            if (missing.isEmpty()) {
+                item.setAction("SKIPPED");
+                vo.getItems().add(item);
+                continue;
+            }
+            item.setMissingCols(missing);
+            // 注意 1：jdbc execute 不能带尾分号（冒烟实测 bad SQL grammar），分号只用于 lint 展示
+            // 注意 2：jdbcTemplate 是平台默认连接，必须显式限定库名，否则 ALTER 打到平台库报「表不存在」
+            String alterSql = "ALTER TABLE `" + dbName + "`.`" + table + "` " + fixSqlOf(missing);
+            try {
+                jdbcTemplate.execute(alterSql);
+                item.setAction("PATCHED");
+                item.setPatchedCols(missing);
+            } catch (Exception e) {
+                String msg = e.getMessage() == null ? "" : e.getMessage();
+                if (msg.contains("Duplicate column name")) {
+                    // 并发双击窗口：列刚被另一请求加上，按幂等跳过而非失败
+                    item.setAction("SKIPPED");
+                    item.setError("并发重复执行：列已存在，按幂等跳过");
+                } else {
+                    // 一表失败不拖垮整批；原因如实进报告
+                    item.setAction("FAILED");
+                    item.setError(msg.isBlank() ? e.getClass().getSimpleName() : msg);
+                    log.warn("lint fix 补列失败 {}.{}: {}", dbName, table, msg);
+                }
+            }
+            vo.getItems().add(item);
+        }
+        vo.setOk(lint(dbName).isOk());
+        return vo;
+    }
+
+    /** ALTER 片段拼接（单一实现 GenAuditColumns.alterFragment） */
+    private String fixSqlOf(List<String> missing) {
         StringBuilder sb = new StringBuilder();
         for (String col : missing) {
             if (sb.length() > 0) {
                 sb.append(", ");
             }
-            switch (col) {
-                case "id" -> sb.append("ADD COLUMN `id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST");
-                case "create_time" -> sb.append("ADD COLUMN `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'");
-                case "update_time" -> sb.append("ADD COLUMN `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'");
-                case "create_by" -> sb.append("ADD COLUMN `create_by` bigint NULL COMMENT '创建人'");
-                case "update_by" -> sb.append("ADD COLUMN `update_by` bigint NULL COMMENT '更新人'");
-                case "deleted" -> sb.append("ADD COLUMN `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除'");
-                default -> sb.append("ADD COLUMN `").append(col).append("` varchar(255) NULL");
-            }
-        }
-        return sb.toString();
-    }
-
-    /**
-     * 手动 DDL 的 lint：逐条 CREATE TABLE 检查审计列是否写了。
-     * 文本级检查够用——这一步的目的是「在执行前给出可读的补齐建议」。
-     */
-    /** lint 失败的人话摘要：表名 + 缺失列，直接进报错信息，别让用户再去调 lint 接口 */
-    private String lintBrief(GenPipelineLintVO lint) {
-        StringBuilder sb = new StringBuilder();
-        for (GenPipelineLintVO.Item item : lint.getItems()) {
-            if (sb.length() > 0) {
-                sb.append("；");
-            }
-            sb.append(item.getTable()).append(" 缺 ").append(String.join("/", item.getMissingCols()));
+            sb.append(GenAuditColumns.alterFragment(col));
         }
         return sb.toString();
     }
@@ -425,31 +452,6 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         } catch (Exception ex) {
             log.warn("清理失败流水线残留失败 pipelineId={}: {}", pipeline.getId(), ex.getMessage());
         }
-    }
-
-    private GenPipelineLintVO lintDdlText(String ddlText) {
-        GenPipelineLintVO vo = new GenPipelineLintVO();
-        Pattern createTable = Pattern.compile("(?is)CREATE\\s+TABLE\\s+(IF\\s+NOT\\s+EXISTS\\s+)?`?(\\w+)`?\\s*\\((.*?)\\)\\s*ENGINE", Pattern.DOTALL);
-        Matcher m = createTable.matcher(ddlText);
-        while (m.find()) {
-            String table = m.group(2).toLowerCase();
-            String body = m.group(3).toLowerCase();
-            List<String> missing = new java.util.ArrayList<>();
-            for (String need : AUDIT_COLS) {
-                if (!body.contains("`" + need + "`") && !body.contains(need + " ")) {
-                    missing.add(need);
-                }
-            }
-            if (!missing.isEmpty()) {
-                vo.setOk(false);
-                GenPipelineLintVO.Item item = new GenPipelineLintVO.Item();
-                item.setTable(table);
-                item.setMissingCols(missing);
-                item.setFixSql("ALTER TABLE `" + table + "` " + fixColumns(missing) + ";");
-                vo.getItems().add(item);
-            }
-        }
-        return vo;
     }
 
     // ==================== SSE ====================
