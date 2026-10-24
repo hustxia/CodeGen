@@ -273,6 +273,12 @@ export function applyGenDict(tableId, dictCodes) {
   return request({ url: '/gen/dict/apply', method: 'post', data: { tableId, dictCodes } })
 }
 
+// DDL 文本一键导入：不执行 DDL，直接解析表/列/注释注册生成配置并自动建字典，
+// 返回逐表校验报告（列数比对、缺注释、字典漏建预警）
+export function importFromDdl(ddl, applyDict = true) {
+  return request({ url: '/gen/ddl/import', method: 'post', data: { ddl, applyDict } })
+}
+
 /* ---------- P2-5：接口目录 ---------- */
 
 // 按表聚合接口清单（权限码、前端方法名与真实生成物一致）

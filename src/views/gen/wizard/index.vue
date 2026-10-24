@@ -23,6 +23,7 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" icon="el-icon-search" @click="fetchTables">查询</el-button>
+            <el-button type="success" icon="el-icon-document-copy" @click="ddlDialogVisible = true">从 DDL 导入</el-button>
           </el-form-item>
         </el-form>
         <el-table
@@ -291,11 +292,57 @@
         </el-button>
       </div>
     </el-card>
+
+    <!-- DDL 一键导入弹窗：粘贴建表语句 → 解析注册表配置 + 自动建字典 → 逐表校验报告 -->
+    <el-dialog title="从 DDL 导入表配置" :visible.sync="ddlDialogVisible" width="820px" top="5vh">
+      <el-alert type="info" :closable="false" class="ddl-tip">
+        粘贴建表语句（支持多张表），平台直接从文本解析表/列/注释并注册生成配置，自动识别字典——
+        不执行 DDL，目标库里还没有这些表也能先配好。已注册过的表自动跳过。
+      </el-alert>
+      <el-input
+        v-model="ddlText"
+        type="textarea"
+        :rows="10"
+        placeholder="CREATE TABLE `demo_order` (&#10;  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',&#10;  `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态:1待支付 2已支付 3已取消',&#10;  PRIMARY KEY (`id`)&#10;) COMMENT='订单表';"
+        class="ddl-textarea"
+      />
+      <div style="margin: 10px 0">
+        <el-checkbox v-model="ddlApplyDict">自动识别并落库字典（按列注释里的枚举说明）</el-checkbox>
+        <el-button type="primary" icon="el-icon-magic-stick" :loading="ddlLoading" :disabled="!ddlText.trim()" @click="doImportDdl">
+          解析并导入
+        </el-button>
+      </div>
+      <template v-if="ddlReport.length">
+        <el-divider content-position="left">导入报告</el-divider>
+        <el-table :data="ddlReport" border size="mini" max-height="300">
+          <el-table-column prop="tableName" label="表名" width="160" />
+          <el-table-column prop="status" label="状态" width="90">
+            <template slot-scope="{ row }">
+              <el-tag :type="ddlStatusTag(row.status)" size="mini">{{ ddlStatusText(row.status) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="columnCount" label="列数" width="60" />
+          <el-table-column prop="dictCount" label="字典" width="60" />
+          <el-table-column label="校验结果" min-width="280">
+            <template slot-scope="{ row }">
+              <template v-if="row.status === 'SAVED' && !row.warnings.length">
+                <span class="ddl-ok">✓ 表/列/字典全部校验通过</span>
+              </template>
+              <div v-for="(w, i) in row.warnings" :key="i" class="ddl-warning">⚠ {{ w }}</div>
+              <div v-if="row.message && row.status !== 'SAVED'" class="ddl-warning">{{ row.message }}</div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </template>
+      <div slot="footer">
+        <el-button @click="ddlDialogVisible = false">关 闭</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getGenTablePage, diffGenCode, writeGenCode, registerGenMenu } from '@/api/gen'
+import { getGenTablePage, diffGenCode, writeGenCode, registerGenMenu, importFromDdl } from '@/api/gen'
 import { verifyGenOutput } from '@/api/genOutput'
 import { getEnabledMenuTree } from '@/api/system'
 import {
@@ -337,7 +384,13 @@ export default {
       parentMenuId: 0,
       parentOptions: [],
       menuLoading: false,
-      menuResult: null
+      menuResult: null,
+      // DDL 一键导入弹窗
+      ddlDialogVisible: false,
+      ddlText: '',
+      ddlApplyDict: true,
+      ddlLoading: false,
+      ddlReport: []
     }
   },
   computed: {
@@ -439,6 +492,39 @@ export default {
     },
     onSelectionChange(rows) {
       this.selectedTables = rows
+    },
+    async doImportDdl() {
+      this.ddlLoading = true
+      try {
+        const res = await importFromDdl(this.ddlText, this.ddlApplyDict)
+        this.ddlReport = res.data || []
+        const saved = this.ddlReport.filter(r => r.status === 'SAVED').length
+        const exists = this.ddlReport.filter(r => r.status === 'EXISTS').length
+        const failed = this.ddlReport.filter(r => r.status === 'FAILED').length
+        const warned = this.ddlReport.filter(r => r.status === 'SAVED' && r.warnings.length).length
+        if (saved) {
+          this.$message.success(`导入 ${saved} 张表` +
+            (warned ? `（${warned} 张有校验警告，请看报告）` : '') +
+            (exists ? `，跳过已存在 ${exists} 张` : '') +
+            (failed ? `，失败 ${failed} 张` : ''))
+          // 刷新第①步表格，让新导入的表直接出现在勾选列表里
+          this.tableQuery.page = 1
+          this.tableQuery.tableName = ''
+          await this.fetchTables()
+        } else if (exists && !failed) {
+          this.$message.info('所有表都已注册过，未做改动')
+        } else if (failed) {
+          this.$message.error(`导入失败 ${failed} 张，请看报告里的失败原因`)
+        }
+      } finally {
+        this.ddlLoading = false
+      }
+    },
+    ddlStatusText(s) {
+      return { SAVED: '已导入', EXISTS: '已存在', FAILED: '失败' }[s] || s
+    },
+    ddlStatusTag(s) {
+      return { SAVED: 'success', EXISTS: 'info', FAILED: 'danger' }[s] || 'info'
     },
     removePicked(id) {
       const table = this.selectedTables.find(t => t.id === id)
@@ -643,4 +729,8 @@ export default {
 .verify-stats { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
 .final-tip { margin-top: 14px; color: var(--cg-text-regular); }
 .wizard-foot { display: flex; margin-top: 18px; }
+.ddl-tip { margin-bottom: 12px; }
+.ddl-textarea { margin-bottom: 4px; font-family: monospace; }
+.ddl-warning { color: var(--cg-warning); font-size: 12px; line-height: 1.7; }
+.ddl-ok { color: var(--cg-success); font-size: 12px; }
 </style>
