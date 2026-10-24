@@ -46,7 +46,7 @@
               v-model="form.ddlText"
               type="textarea"
               :rows="10"
-              placeholder="粘贴 CREATE DATABASE / CREATE TABLE 语句（每张表需包含 id/create_time/update_time/create_by/update_by/deleted 审计列，缺失会被 lint 阻断并给出补齐 SQL）"
+              placeholder="粘贴 CREATE DATABASE / CREATE TABLE 语句。缺少审计列（id/create_time/update_time/create_by/update_by/deleted）时由服务端自动补齐：只增不改，补齐明细随后如实展示"
             />
           </el-form-item>
           <el-form-item>
@@ -107,7 +107,7 @@
         <template v-else>
           <el-input v-model="form.ddlText" type="textarea" :rows="14" />
           <div class="confirm-bar">
-            <span>执行前将按 BaseEntity 约定检查审计列，缺列会被阻断并给出补齐 SQL。</span>
+            <span>执行前将按 BaseEntity 约定检查审计列，缺列由服务端自动补齐（只增不改），补齐明细在下一步展示。</span>
             <el-button type="primary" size="small" :loading="dbLoading" @click="onPrepareDb">建库建表</el-button>
           </div>
         </template>
@@ -151,6 +151,59 @@
             >停止</el-button>
             <el-button size="small" icon="el-icon-refresh" @click="refreshDetail">刷新</el-button>
           </div>
+        </div>
+
+        <!-- V5.1：手动 DDL 补齐明细徽标（如实展示补了什么） -->
+        <el-alert v-if="patchedReport.length" type="success" :closable="true" class="tip-bar">
+          <template slot="title">
+            建库时已自动补齐审计列（只增不改）：
+            <el-tag
+              v-for="p in patchedReport"
+              :key="p.table"
+              size="mini"
+              type="success"
+              style="margin: 0 6px 4px 0"
+            >{{ p.table }} 补 {{ p.cols.join('/') }}</el-tag>
+          </template>
+        </el-alert>
+
+        <!-- V5.1：审计列检查 + 一键补齐（构建前把缺列表修到合规） -->
+        <div v-if="detail && ['await_confirm', 'failed'].includes(detail.status)" class="lint-card">
+          <div class="lint-head">
+            <span class="lint-title">审计列检查（目标库 {{ detail.dbName }}）</span>
+            <div>
+              <el-button size="mini" icon="el-icon-search" :loading="lintLoading" @click="onLint">检查</el-button>
+              <el-button
+                size="mini"
+                type="primary"
+                icon="el-icon-magic-stick"
+                :disabled="fixDisabled"
+                :loading="fixLoading"
+                @click="onLintFix"
+              >一键补齐</el-button>
+            </div>
+          </div>
+          <el-table v-if="lintItems.length" :data="lintItems" size="mini" border>
+            <el-table-column prop="table" label="表名" width="200" />
+            <el-table-column label="缺失列" min-width="240">
+              <template slot-scope="{ row }">
+                <template v-if="row.missingCols && row.missingCols.length">
+                  <el-tag v-for="c in row.missingCols" :key="c" size="mini" style="margin-right: 4px">{{ c }}</el-tag>
+                </template>
+                <span v-else class="meta">—</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="补齐结果" min-width="200">
+              <template slot-scope="{ row }">
+                <el-tag v-if="row.action === 'PATCHED'" size="mini" type="success">已补 {{ (row.patchedCols || []).length }} 列</el-tag>
+                <el-tag v-else-if="row.action === 'SKIPPED'" size="mini" type="info">{{ row.error || '合规，跳过' }}</el-tag>
+                <el-tag v-else-if="row.action === 'FAILED'" size="mini" type="danger" :title="row.error">失败：{{ row.error }}</el-tag>
+                <el-tag v-else-if="row.missingCols && row.missingCols.length" size="mini" type="warning">待补齐</el-tag>
+                <span v-else class="meta">—</span>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div v-else-if="lintChecked" class="audit-note">全部合规，可直接开始构建</div>
         </div>
 
         <!-- 三轨步骤：全局轨 / 后端轨 / 前端轨 -->
@@ -258,7 +311,7 @@
 </template>
 
 <script>
-import { aiModel, createPipeline, preparePipelineDb, runPipeline, getPipeline, getPipelinePage, stopPipeline, getConfig } from '@/api/pipeline'
+import { aiModel, createPipeline, preparePipelineDb, runPipeline, getPipeline, getPipelinePage, stopPipeline, getConfig, lintDb, fixPipelineLint } from '@/api/pipeline'
 import { getToken } from '@/utils/auth'
 
 const STATUS_TEXT = {
@@ -300,10 +353,27 @@ export default {
       pageData: [],
       page: { page: 1, size: 10, total: 0 },
       es: null,
+      prepareResult: null,
+      lintChecked: false,
+      lintLoading: false,
+      fixLoading: false,
+      lintItems: [],
       STATUS_TEXT,
       STATUS_TYPE,
       STEP_ICON,
       TYPE_OPTIONS: ['bigint', 'int', 'varchar(32)', 'varchar(64)', 'varchar(128)', 'varchar(255)', 'decimal(18,2)', 'text', 'datetime', 'date', 'tinyint']
+    }
+  },
+  computed: {
+    /* V5.1：建库时被补齐的表（PATCHED），供结果区徽标展示 */
+    patchedReport() {
+      const list = (this.prepareResult && this.prepareResult.auditReport) || []
+      return list.filter(i => i.action === 'PATCHED').map(i => ({ table: i.table, cols: i.patchedCols || [] }))
+    },
+    /* V5.1：没有待补/失败的表时禁用一键补齐（含未检查状态） */
+    fixDisabled() {
+      if (!this.lintChecked) return true
+      return !this.lintItems.some(i => (i.action ? i.action === 'FAILED' : (i.missingCols || []).length > 0))
     }
   },
   created() {
@@ -372,10 +442,12 @@ export default {
         // 任务先落库（建模结果一并带上），prepare-db 只带确认后的表结构
         const created = await createPipeline({ ...this.form, tables: this.tables })
         const pipelineId = created.data.id
-        await preparePipelineDb(pipelineId, {
+        const prep = await preparePipelineDb(pipelineId, {
           tables: this.form.mode === 'ai' ? this.tables : null,
           ddlText: this.form.mode === 'manual' ? this.form.ddlText : null
         })
+        this.prepareResult = prep.data || null
+        this.resetLint()
         await this.loadDetail(pipelineId)
         this.step = 2
         this.fetchPage()
@@ -422,9 +494,45 @@ export default {
       }
     },
     openDetail(row) {
+      this.prepareResult = null
+      this.resetLint()
       this.loadDetail(row.id)
       this.step = 2
     },
+
+    /* ---------- V5.1 审计列检查/一键补齐 ---------- */
+    resetLint() {
+      this.lintChecked = false
+      this.lintItems = []
+    },
+    async onLint() {
+      if (!this.detail) return
+      this.lintLoading = true
+      try {
+        const res = await lintDb(this.detail.dbName)
+        this.lintItems = (res.data && res.data.items) || []
+        this.lintChecked = true
+      } finally {
+        this.lintLoading = false
+      }
+    },
+    async onLintFix() {
+      if (!this.detail) return
+      this.fixLoading = true
+      try {
+        const res = await fixPipelineLint(this.detail.id)
+        this.lintItems = (res.data && res.data.items) || []
+        this.lintChecked = true
+        if (res.data && res.data.ok) {
+          this.$message.success('补齐完成，复检全部合规')
+        } else {
+          this.$message.warning('部分表补齐失败，详见补齐结果列')
+        }
+      } finally {
+        this.fixLoading = false
+      }
+    },
+
     async refreshDetail() {
       if (this.detail) await this.loadDetail(this.detail.id)
     },
@@ -502,4 +610,7 @@ export default {
 .fail-bar { margin-top: 10px; }
 .history-card { margin-top: 12px; }
 .danger-text { color: #f56c6c; }
+.lint-card { border: 1px solid #ebeef5; border-radius: 4px; padding: 12px; margin-bottom: 14px; }
+.lint-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.lint-title { font-size: 14px; font-weight: 600; }
 </style>

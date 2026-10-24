@@ -52,7 +52,12 @@ export function stopPipeline(id) {
   return request({ url: `/gen/pipeline/${id}/stop`, method: 'post' })
 }
 
-// 生成前置 lint：目标库审计列检查
+// 生成前置 lint：目标库审计列检查（只读 dry-run）
 export function lintDb(dbName) {
   return request({ url: '/gen/pipeline/lint-db', method: 'post', data: { dbName } })
+}
+
+// lint 一键补齐（V5.1）：逐表 ALTER 补缺审计列，幂等，执行后复检
+export function fixPipelineLint(id) {
+  return request({ url: `/gen/pipeline/${id}/lint/fix`, method: 'post' })
 }
