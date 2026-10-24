@@ -158,52 +158,59 @@ public class GenPipelineServiceImpl implements GenPipelineService {
                     "任务状态为 " + pipeline.getStatus() + "，不允许建库");
         }
         boolean manual = "manual".equals(pipeline.getMode());
-
-        // 1. 组 DDL：ai 模式服务端统一补审计列；manual 模式 lint 不过即阻断
-        String ddl;
-        GenPipelineLintVO lint = new GenPipelineLintVO();
-        if (manual) {
-            lint = lintDdlText(dto.getDdlText());
-            if (!lint.isOk()) {
-                throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
-                        "DDL 缺少审计列（详见 lint 接口报告），请补齐后重试");
-            }
-            ddl = dto.getDdlText();
-            if (!ddl.trim().toLowerCase().startsWith("create database")
-                    && !ddl.trim().toLowerCase().contains("use ")) {
-                ddl = "CREATE DATABASE IF NOT EXISTS `" + pipeline.getDbName()
-                        + "` DEFAULT CHARACTER SET utf8mb4;\n" + ddl;
-            }
-        } else {
-            ddl = buildDdl(pipeline.getDbName(), dto.getTables());
-        }
-
-        // 2. 建系统台账（projectCode=库名；路径/包名由流水线约定推导）
         Long projectId = pipeline.getProjectId();
-        if (projectId == null) {
-            projectId = createProject(pipeline);
-            pipeline.setProjectId(projectId);
+        boolean projectCreatedHere = false;
+        try {
+            // 1. 组 DDL：ai 模式服务端统一补审计列；manual 模式 lint 不过即阻断
+            String ddl;
+            GenPipelineLintVO lint = new GenPipelineLintVO();
+            if (manual) {
+                lint = lintDdlText(dto.getDdlText());
+                if (!lint.isOk()) {
+                    throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                            "DDL 缺少审计列：" + lintBrief(lint) + "。补齐后重试，或改用 AI 模式由服务端自动补齐");
+                }
+                ddl = dto.getDdlText();
+                if (!ddl.trim().toLowerCase().startsWith("create database")
+                        && !ddl.trim().toLowerCase().contains("use ")) {
+                    ddl = "CREATE DATABASE IF NOT EXISTS `" + pipeline.getDbName()
+                            + "` DEFAULT CHARACTER SET utf8mb4;\n" + ddl;
+                }
+            } else {
+                ddl = buildDdl(pipeline.getDbName(), dto.getTables());
+            }
+
+            // 2. 建系统台账（projectCode=库名；路径/包名由流水线约定推导）
+            if (projectId == null) {
+                projectId = createProject(pipeline);
+                projectCreatedHere = true;
+                pipeline.setProjectId(projectId);
+                pipelineMapper.updateById(pipeline);
+            }
+
+            // 3. 执行 DDL + 导入表配置（挂到新系统）
+            GenDdlExecuteDTO exec = new GenDdlExecuteDTO();
+            exec.setDdl(ddl);
+            exec.setSchema(pipeline.getDbName());
+            exec.setAutoImport(true);
+            exec.setAllowDestructive(false);
+            exec.setProjectId(projectId);
+            var result = ddlService.execute(exec);
+
+            pipeline.setStatus("await_confirm");
             pipelineMapper.updateById(pipeline);
+
+            GenPipelinePrepareVO vo = new GenPipelinePrepareVO();
+            vo.setProjectId(projectId);
+            vo.setDbName(result.getSchema());
+            vo.setTableCount(result.getCreatedTables().size());
+            vo.setLintIssues(lint.getItems());
+            return vo;
+        } catch (RuntimeException e) {
+            // 失败清残留：draft 留着会以「进行中任务」堵死同名库重试（死循环根因）
+            cleanupDraft(pipeline, projectCreatedHere);
+            throw e;
         }
-
-        // 3. 执行 DDL + 导入表配置（挂到新系统）
-        GenDdlExecuteDTO exec = new GenDdlExecuteDTO();
-        exec.setDdl(ddl);
-        exec.setSchema(pipeline.getDbName());
-        exec.setAutoImport(true);
-        exec.setAllowDestructive(false);
-        exec.setProjectId(projectId);
-        var result = ddlService.execute(exec);
-
-        pipeline.setStatus("await_confirm");
-        pipelineMapper.updateById(pipeline);
-
-        GenPipelinePrepareVO vo = new GenPipelinePrepareVO();
-        vo.setProjectId(projectId);
-        vo.setDbName(result.getSchema());
-        vo.setTableCount(result.getCreatedTables().size());
-        vo.setLintIssues(lint.getItems());
-        return vo;
     }
 
     /**
@@ -393,6 +400,32 @@ public class GenPipelineServiceImpl implements GenPipelineService {
      * 手动 DDL 的 lint：逐条 CREATE TABLE 检查审计列是否写了。
      * 文本级检查够用——这一步的目的是「在执行前给出可读的补齐建议」。
      */
+    /** lint 失败的人话摘要：表名 + 缺失列，直接进报错信息，别让用户再去调 lint 接口 */
+    private String lintBrief(GenPipelineLintVO lint) {
+        StringBuilder sb = new StringBuilder();
+        for (GenPipelineLintVO.Item item : lint.getItems()) {
+            if (sb.length() > 0) {
+                sb.append("；");
+            }
+            sb.append(item.getTable()).append(" 缺 ").append(String.join("/", item.getMissingCols()));
+        }
+        return sb.toString();
+    }
+
+    /** 建库失败后的残留清理：draft/步骤必删；本次新建的台账一并删（有表保护，删不掉就留着记日志） */
+    private void cleanupDraft(GenPipeline pipeline, boolean projectCreatedHere) {
+        try {
+            stepMapper.delete(new LambdaQueryWrapper<GenPipelineStep>()
+                    .eq(GenPipelineStep::getPipelineId, pipeline.getId()));
+            pipelineMapper.deleteById(pipeline.getId());
+            if (projectCreatedHere && pipeline.getProjectId() != null) {
+                projectService.delete(pipeline.getProjectId());
+            }
+        } catch (Exception ex) {
+            log.warn("清理失败流水线残留失败 pipelineId={}: {}", pipeline.getId(), ex.getMessage());
+        }
+    }
+
     private GenPipelineLintVO lintDdlText(String ddlText) {
         GenPipelineLintVO vo = new GenPipelineLintVO();
         Pattern createTable = Pattern.compile("(?is)CREATE\\s+TABLE\\s+(IF\\s+NOT\\s+EXISTS\\s+)?`?(\\w+)`?\\s*\\((.*?)\\)\\s*ENGINE", Pattern.DOTALL);

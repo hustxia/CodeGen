@@ -37,6 +37,14 @@ public class GenPipelineController {
     private GenPipelineService pipelineService;
     @Autowired
     private AiModelService aiModelService;
+    @Autowired
+    private com.codegen.config.GenPipelineProperties pipelineProps;
+
+    @Operation(summary = "向导配置：AI 建模是否可用（未配 LLM key 时前端直接禁用 AI 选项）")
+    @GetMapping("/config")
+    public Result<java.util.Map<String, Object>> config() {
+        return Result.ok(java.util.Map.of("aiEnabled", pipelineProps.getAi().isEnabled()));
+    }
 
     @Operation(summary = "AI 领域建模：名称+一句话描述 → 候选表结构")
     @PostMapping("/ai-model")
