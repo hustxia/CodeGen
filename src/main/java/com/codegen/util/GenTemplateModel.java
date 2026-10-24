@@ -110,24 +110,33 @@ public final class GenTemplateModel {
      * @param gatewayPrefix 接口前缀，表级为空时用
      * @param rootPackage  基座根包名（工程级，表上不存）
      * @param projectCode  系统编码，用于权限点与字典编码前缀（多系统隔离）
+     * @param projectStructure V5.5 工程结构：null=单模块，"multi"=多模块（模块归属唯一实现在 GenPathResolver.moduleRelPrefix）
      */
     public record ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
-                                String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint) {
+                                String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
+                                String projectStructure) {
 
         /** 兼容 V3.0 之前的构造：无系统编码，权限点不加前缀 */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage) {
-            this(packageName, gatewayPrefix, rootPackage, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, null, null, null, null);
         }
 
         /** 兼容 V3.0 构造：无级联默认值（V4.4 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage, String projectCode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null);
         }
 
         /** 兼容 V4.4 构造：无打印默认值（V4.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null);
+        }
+
+        /** 兼容 V4.5 构造：无工程结构（V5.5 前的调用方） */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                             String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
+                    defaultGenPrint, null);
         }
     }
 
@@ -317,16 +326,22 @@ public final class GenTemplateModel {
         m.put("pageDtoHasBigDecimal", hasType(biz, "BigDecimal"));
         m.put("pageDtoHasLocalDateTime", hasType(biz, "LocalDateTime"));
         m.put("pageDtoHasLocalDate", hasType(biz, "LocalDate"));
+        // V5.0 修复：排班/考勤类表有 time 列（映射 LocalTime），
+        // pageDto/saveDto/vo/controller 的导包标记此前漏了 LocalTime，
+        // 生成物自检满屏 cannot find symbol: class LocalTime
+        m.put("pageDtoHasLocalTime", hasType(biz, "LocalTime"));
         m.put("pageDtoHasImport", hasType(biz, "BigDecimal") || hasType(biz, "LocalDateTime")
-                || hasType(biz, "LocalDate"));
+                || hasType(biz, "LocalDate") || hasType(biz, "LocalTime"));
         m.put("saveDtoHasBigDecimal", hasType(formCols, "BigDecimal"));
         m.put("saveDtoHasLocalDateTime", hasType(formCols, "LocalDateTime"));
         m.put("saveDtoHasLocalDate", hasType(formCols, "LocalDate"));
+        m.put("saveDtoHasLocalTime", hasType(formCols, "LocalTime"));
         m.put("saveDtoHasImport", hasType(formCols, "BigDecimal") || hasType(formCols, "LocalDateTime")
-                || hasType(formCols, "LocalDate"));
+                || hasType(formCols, "LocalDate") || hasType(formCols, "LocalTime"));
         m.put("listHasBigDecimal", hasType(listCols, "BigDecimal"));
         m.put("listHasLocalDateTime", hasType(listCols, "LocalDateTime"));
         m.put("listHasLocalDate", hasType(listCols, "LocalDate"));
+        m.put("listHasLocalTime", hasType(listCols, "LocalTime"));
 
         // 前端函数串
         StringJoiner fns = new StringJoiner(", ");

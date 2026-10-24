@@ -60,4 +60,28 @@ public final class GenNaming {
         }
         return projectCode.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]", "_");
     }
+
+    /**
+     * V5.5 多模块 stem：rootPackage 最后一段，归一为合法 Maven artifactId 片段。
+     *
+     * <p>为什么用 rootPackage 而不是系统编码/工程名：scaffold（建工程）发生在
+     * sys_project 记录存在之前，那时拿不到 projectCode；backendModule 又允许
+     * 用户手填、不能保证与 apply 侧一致。rootPackage 是两边都必填的稳定锚点——
+     * {@code com.wms} 的 stem 就是 {@code wms}，scaffold 生成的
+     * {@code wms-common} 与 apply 侧路径前缀天然同名。
+     *
+     * <p>scaffold 与 apply 两侧都必须调这里，禁止各自拼 {@code <code>-common}
+     * 字符串——两边一漂，生成物就落进不存在的模块目录，编译必然失败。
+     */
+    public static String multiModuleStem(String rootPackage) {
+        if (rootPackage == null || rootPackage.isBlank()) {
+            return "";
+        }
+        String last = rootPackage.trim();
+        int dot = last.lastIndexOf('.');
+        if (dot >= 0) {
+            last = last.substring(dot + 1);
+        }
+        return normalize(last);
+    }
 }

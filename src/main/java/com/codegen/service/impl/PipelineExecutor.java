@@ -18,6 +18,7 @@ import com.codegen.service.GenTableService;
 import com.codegen.service.SysProjectService;
 import com.codegen.support.PipelineAssembler;
 import com.codegen.support.PipelineSseRegistry;
+import com.codegen.vo.GenApplyStageVO;
 import com.codegen.vo.GenScaffoldVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -114,10 +115,11 @@ public class PipelineExecutor {
         if (pipeline == null) {
             return;
         }
-        // 重跑：全部步骤重置为 pending（所有落盘动作幂等，整线重跑安全）
+        // 重跑：全部步骤重置为 pending（所有落盘动作幂等，整线重跑安全）。
+        // failed 也要重置——否则上一次的失败消息会一直挂在进度条上误导人
         List<GenPipelineStep> steps = stepsOf(pipelineId);
         for (GenPipelineStep s : steps) {
-            if (!"success".equals(s.getStatus()) && !"skipped".equals(s.getStatus())) {
+            if ("pending".equals(s.getStatus())) {
                 continue;
             }
             s.setStatus("pending");
@@ -262,6 +264,30 @@ public class PipelineExecutor {
         dto.setSkipCheck(false);
         dto.setDryRun(false);
         var vo = applyService.apply(dto);
+        // V5.0 修复：apply 在自检不通过时只返回 passed=false（不抛异常），
+        // 此前这里从不校验，把「写盘 0 个文件」包装成自检通过继续往下跑，
+        // 直到打包步才以 CreateProcess error=267 的形式炸出来。
+        if (!Boolean.TRUE.equals(vo.getPassed())) {
+            StringBuilder detail = new StringBuilder("自检未通过，未写盘：");
+            var stages = vo.getStages() == null ? List.<GenApplyStageVO>of() : vo.getStages();
+            for (GenApplyStageVO stage : stages) {
+                if ("CHECK".equals(stage.getStage()) && stage.getMessage() != null) {
+                    detail.append(stage.getMessage());
+                    break;
+                }
+            }
+            var check = vo.getSelfCheck();
+            if (check != null && check.getIssues() != null) {
+                long errors = check.getIssues().stream()
+                        .filter(i -> "ERROR".equals(i.getSeverity())).count();
+                detail.append("（").append(errors).append(" 个编译错误，首条：");
+                check.getIssues().stream().filter(i -> "ERROR".equals(i.getSeverity()))
+                        .findFirst().ifPresent(i -> detail.append(i.getFile()).append(" - ")
+                                .append(abbreviate(i.getMessage(), 160)));
+                detail.append("）");
+            }
+            throw new IllegalStateException(detail.toString());
+        }
         return "生成 " + tables.size() + " 张表，写盘 " + vo.getWritten() + " 个文件，自检通过";
     }
 
@@ -269,6 +295,13 @@ public class PipelineExecutor {
     private String stepPackageBackend(GenPipeline pipeline) {
         var project = projectService.getById(pipeline.getProjectId());
         Path backendDir = Paths.get(project.getBackendRoot(), project.getProjectCode() + "-server");
+        // 前置校验：工程目录/pom 缺失时给可读报错。
+        // 不校验的话 ProcessBuilder 会抛 CreateProcess error=267（目录名称无效），
+        // 完全看不出是「代码没生成」还是「根目录配错」。
+        if (!Files.exists(backendDir.resolve("pom.xml"))) {
+            throw new IllegalStateException("后端工程不存在或缺 pom.xml：" + backendDir
+                    + "（请检查脚手架/代码生成步骤是否成功，以及系统台账的 backend_root 配置）");
+        }
         String mvn = resolveMaven();
         CommandResult r = runCommand(pipeline, "package_backend", backendDir.toFile(),
                 mvn, "-f", backendDir.resolve("pom.xml").toString(), "-DskipTests", "package");
@@ -282,6 +315,9 @@ public class PipelineExecutor {
     private String stepDeployBackend(GenPipeline pipeline) {
         var project = projectService.getById(pipeline.getProjectId());
         Path target = Paths.get(project.getBackendRoot(), project.getProjectCode() + "-server", "target");
+        if (!Files.isDirectory(target)) {
+            throw new IllegalStateException("后端构建产物目录不存在：" + target + "（打包步骤可能未成功）");
+        }
         Path jar = findJar(target);
         String java = resolveJava();
 
@@ -326,6 +362,9 @@ public class PipelineExecutor {
     private String stepDeployFrontend(GenPipeline pipeline) {
         var project = projectService.getById(pipeline.getProjectId());
         Path webDir = Paths.get(project.getFrontendRoot(), project.getProjectCode() + "-web");
+        if (!Files.exists(webDir.resolve("package.json"))) {
+            throw new IllegalStateException("前端工程不存在：" + webDir + "（请检查脚手架步骤是否成功）");
+        }
         Path log = logFile(pipeline, "deploy_frontend");
         try {
             ProcessBuilder pb = new ProcessBuilder("cmd", "/c", props.getNpm(),
@@ -350,12 +389,33 @@ public class PipelineExecutor {
         if (!backendUp) {
             throw new IllegalStateException("后端端口 " + pipeline.getBackendPort() + " 未就绪");
         }
-        HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+        // V5.0 修复：必须显式 HTTP_1_1。HttpClient 默认 HTTP_2 会发 h2c Upgrade，
+        // webpack-dev-server（Express）对这种升级请求挂死不响应（裸 Socket 同 URI 毫秒级 200），
+        // 健康检查因此永远超时——dev server 编译背锅纯属冤案
+        HttpClient client = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(5)).build();
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + pipeline.getFrontendPort()))
-                .timeout(Duration.ofSeconds(10))
+                .timeout(Duration.ofSeconds(20))
                 .GET().build();
-        HttpResponse<Void> resp = client.send(req, HttpResponse.BodyHandlers.discarding());
+        // dev server 首次请求会触发 webpack 全量编译（实测 2.5min+），
+        // 一次超时不算失败，重试等编译完成——健康检查要验证「最终可用」，不是「瞬时可用」。
+        // 12 次 × 20s ≈ 4min 预算，覆盖冷启动全量编译
+        HttpResponse<Void> resp = null;
+        IllegalStateException last = null;
+        for (int i = 0; i < 12; i++) {
+            try {
+                resp = client.send(req, HttpResponse.BodyHandlers.discarding());
+                break;
+            } catch (java.net.http.HttpTimeoutException e) {
+                last = new IllegalStateException("前端首次编译超时，重试 " + (i + 1) + "/12");
+                Thread.sleep(3000);
+            }
+        }
+        if (resp == null) {
+            throw last != null ? last : new IllegalStateException("前端请求失败");
+        }
         if (resp.statusCode() >= 500) {
             throw new IllegalStateException("前端 dev server 异常：HTTP " + resp.statusCode());
         }
@@ -368,6 +428,10 @@ public class PipelineExecutor {
         step.setStatus(status);
         if (message != null) {
             step.setMessage(abbreviate(message, 1000));
+        } else if ("running".equals(status)) {
+            // 重跑进入 running 时清掉上一轮的失败消息，避免进度条挂着旧报错
+            step.setMessage(null);
+            step.setLogExcerpt(null);
         }
         if (logExcerpt != null) {
             step.setLogExcerpt(logExcerpt);

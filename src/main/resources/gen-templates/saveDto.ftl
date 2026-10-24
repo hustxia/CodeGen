@@ -6,6 +6,8 @@ package ${pkg}.dto;
 </#if>
 <#if saveDtoHasLocalDate>import java.time.LocalDate;
 </#if>
+<#if saveDtoHasLocalTime>import java.time.LocalTime;
+</#if>
 <#if isChild && hasChild>import java.util.List;
 <#list children as g>import ${g.pkg}.dto.${g.className}SaveDTO;
 </#list></#if>

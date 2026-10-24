@@ -6,6 +6,8 @@ package ${pkg}.dto;
 </#if>
 <#if pageDtoHasLocalDate>import java.time.LocalDate;
 </#if>
+<#if pageDtoHasLocalTime>import java.time.LocalTime;
+</#if>
 <#if pageDtoHasImport>${''}
 </#if>
 import ${rootPkg}.common.page.PageQuery;

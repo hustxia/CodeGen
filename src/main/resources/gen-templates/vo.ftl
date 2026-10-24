@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 </#if>
 <#if listHasLocalDate>import java.time.LocalDate;
 </#if>
+<#if listHasLocalTime>import java.time.LocalTime;
+</#if>
 <#if genTree>import java.util.ArrayList;
 import java.util.List;
 </#if>

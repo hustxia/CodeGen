@@ -132,6 +132,11 @@ public class SysProjectServiceImpl implements SysProjectService {
         if (!StringUtils.hasText(target.getSelfcheckClasspath())) {
             target.setSelfcheckClasspath(source.getSelfcheckClasspath());
         }
+        // V5.5 工程结构：复制系统连结构一起带（目标工程目录都复制了，结构不一致会出现
+        // 多模块配置配着单模块路径的错位系统）
+        if (!StringUtils.hasText(target.getProjectStructure())) {
+            target.setProjectStructure(source.getProjectStructure());
+        }
         // 生成开关默认值：整组复制，否则新系统还得再点 17 次
         if (target.getDefaultGenEntity() == null) {
             target.setDefaultGenEntity(source.getDefaultGenEntity());

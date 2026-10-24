@@ -9,6 +9,7 @@ import com.codegen.mapper.GenTableMapper;
 import com.codegen.mapper.GenTemplateMapper;
 import com.codegen.config.GenOutputProperties;
 import com.codegen.common.exception.BusinessException;
+import com.codegen.support.GenPathResolver;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
@@ -209,41 +210,41 @@ public class GenTemplateEngine {
 
         Map<String, String> files = new LinkedHashMap<>();
         if (GenTemplateModel.on(table.getGenEntity())) {
-            put(files, "entity", resolver, model);
+            put(files, "entity", resolver, model, project);
         }
         // ServiceImpl 继承 ServiceImpl<XxxMapper, Xxx>，Mapper 是硬依赖：
         // 关了 mapper 开关也要生成，否则生成的 ServiceImpl 必然编译失败（自检会报 cannot find symbol）
         if (GenTemplateModel.on(table.getGenMapper()) || genService) {
-            put(files, "mapper", resolver, model);
+            put(files, "mapper", resolver, model, project);
         }
         if (genService) {
-            put(files, "service", resolver, model);
+            put(files, "service", resolver, model, project);
             // V4.4 模板分道：按表形态派发（判据唯一实现在 GenTemplateModel.serviceImplTplCode）
-            put(files, GenTemplateModel.serviceImplTplCode(model), resolver, model);
+            put(files, GenTemplateModel.serviceImplTplCode(model), resolver, model, project);
         }
         if (genPageApi && needDto) {
-            put(files, "pageDto", resolver, model);
+            put(files, "pageDto", resolver, model, project);
         }
         if ((genAddApi || genEditApi) && needDto) {
-            put(files, "saveDto", resolver, model);
+            put(files, "saveDto", resolver, model, project);
         }
         // VO 除了 Controller 自己用，主表的 with-children 也会引用从表 VO
         if (GenTemplateModel.on(table.getGenController()) || isChild) {
-            put(files, "vo", resolver, model);
+            put(files, "vo", resolver, model, project);
         }
         if (GenTemplateModel.on(table.getGenController()) && !isChild) {
-            put(files, "controller", resolver, model);
+            put(files, "controller", resolver, model, project);
         }
         if (genFrontend && GenTemplateModel.on(table.getGenApiJs()) && !isChild) {
-            put(files, "apiJs", resolver, model);
+            put(files, "apiJs", resolver, model, project);
         }
         if (genFrontend && GenTemplateModel.on(table.getGenVuePage()) && !isChild) {
-            put(files, "vuePage", resolver, model);
+            put(files, "vuePage", resolver, model, project);
         }
         // V4.5 打印单据：开关与前置条件都在 genPrint 键里算好（resolveGenPrint 唯一实现），
         // 引擎只认结果，不再重复判定
         if (Boolean.TRUE.equals(model.get("genPrint"))) {
-            put(files, "printPage", resolver, model);
+            put(files, "printPage", resolver, model, project);
         }
         return files;
     }
@@ -297,13 +298,22 @@ public class GenTemplateEngine {
         }
     }
 
+    /**
+     * 渲染单个模板并入结果表。V5.5：多模块系统在这里按模板归属插入模块目录前缀
+     * （{@code <stem>-domain/service/...}）——预览、写盘、ZIP 全部消费这把 relPath，
+     * 在源头插一次即可三处一致（模块归属唯一实现在 GenPathResolver.moduleRelPrefix）。
+     */
     private static void put(Map<String, String> files, String tplCode, TemplateResolver resolver,
-                            Map<String, Object> model) {
+                            Map<String, Object> model, GenTemplateModel.ProjectConfig project) {
         ResolvedTemplate tpl = resolver.resolve(tplCode);
         if (tpl == null) {
             throw new BusinessException(500, "模板缺失：" + tplCode);
         }
-        files.put(renderString(tpl.pathPattern(), model), renderString(tpl.content(), model));
+        String path = renderString(tpl.pathPattern(), model);
+        String prefix = GenPathResolver.moduleRelPrefix(tplCode,
+                project == null ? null : project.projectStructure(),
+                project == null ? null : project.rootPackage());
+        files.put(prefix.isEmpty() ? path : prefix + path, renderString(tpl.content(), model));
     }
 
     /**

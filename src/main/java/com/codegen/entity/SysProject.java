@@ -99,6 +99,17 @@ public class SysProject extends BaseEntity {
     private Integer defaultGenPrint;
 
     /**
+     * V5.5 工程结构：NULL = 单模块（现状），"multi" = Maven 多模块
+     * （parent + common/domain/service/bootstrap，微服务就绪单体）。
+     *
+     * <p>系统级唯一来源，不进表级回落；三态可空延续 V4.4 教训
+     * （NOT NULL DEFAULT 会杀死回落层）。模块命名规则唯一实现在
+     * {@link com.codegen.support.GenNaming#multiModuleStem}，scaffold 与
+     * apply 两侧都必须调它，禁止各自拼 {@code <code>-common} 字符串。
+     */
+    private String projectStructure;
+
+    /**
      * 备注
      */
     private String remark;

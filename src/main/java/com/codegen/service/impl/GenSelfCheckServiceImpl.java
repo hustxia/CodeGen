@@ -460,6 +460,38 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
                         // 读不出来就交给 classpath 兜底
                     }
                 }
+                // V5.0 修复（人事系统自检 12 个 cannot find symbol）：基座类互相引用
+                // （Result → ResultCode），只补「被生成物 import 到的类」会漏掉链路中间人。
+                // 漏掉的类走 -classpath 源码根隐式编译，而隐式编译不参与注解处理，
+                // Lombok 的 @Getter/@AllArgsConstructor 全部失效，基座类自己先编译不过。
+                // 这里把基座包（rootPkg）下所有源码整包补成显式编译单元，
+                // 已在 classToPath 里的（生成物本身）自动跳过。
+                Path pkgDir = srcRoot.resolve(rootPkg.replace('.', '/'));
+                if (Files.isDirectory(pkgDir)) {
+                    try (Stream<Path> walk = Files.walk(pkgDir)) {
+                        for (Path javaFile : (Iterable<Path>) walk
+                                .filter(p -> p.toString().endsWith(".java"))::iterator) {
+                            try {
+                                String content = Files.readString(javaFile, StandardCharsets.UTF_8);
+                                Matcher pkgM = PACKAGE_PATTERN.matcher(content);
+                                String pkg = pkgM.find() ? pkgM.group(1) : rootPkg;
+                                String clsName = javaFile.getFileName().toString().replaceFirst("\\.java$", "");
+                                String fqcn = pkg + "." + clsName;
+                                if (classToPath.containsKey(fqcn)) {
+                                    continue;
+                                }
+                                units.add(new StringSource(fqcn, content));
+                                classToPath.put(fqcn, (backendRootOverride != null ? backendRootOverride : outputProperties.getBackendRoot())
+                                        + "/" + srcRoot.relativize(javaFile).toString()
+                                                .replace('\\', '/'));
+                            } catch (Exception ignored) {
+                                // 单个文件读不出来就交给 classpath 兜底
+                            }
+                        }
+                    } catch (Exception ignored) {
+                        // 遍历失败不影响主流程
+                    }
+                }
             }
 
             StringWriter compilerOut = new StringWriter();

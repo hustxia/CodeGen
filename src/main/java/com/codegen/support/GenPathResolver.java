@@ -149,4 +149,61 @@ public final class GenPathResolver {
                 ? output.getFrontendPath().trim()
                 : "";
     }
+
+    /* =========================================================
+     * V5.5 多模块工程（project_structure = 'multi'）
+     *
+     * 模块拆分线即未来微服务拆分线：domain（entity+mapper）、service
+     * （controller+service+dto/vo）、common（基座）、bootstrap（启动壳）。
+     * 归属规则只有这一份实现；预览（GenTemplateEngine.put 加前缀）、
+     * 写盘（GenCodeServiceImpl 判定后端文件）都调这里，不许各自判断。
+     * ========================================================= */
+
+    /**
+     * 是否多模块工程：工程结构显式为 "multi" 才算，null/其他一律单模块。
+     *
+     * <p>吃 String 而不是 SysProject：调用方两侧——脚手架（GenScaffoldDTO，建工程时
+     * 还没有 SysProject 记录）与模板引擎（GenTemplateModel.ProjectConfig，util 层
+     * 刻意不依赖 entity）——手里都只有字符串。
+     */
+    public static boolean isMulti(String projectStructure) {
+        return projectStructure != null && "multi".equalsIgnoreCase(projectStructure.trim());
+    }
+
+    /**
+     * 模板编码 → 模块归属。返回 null 表示该产物不属于任何后端子模块
+     * （前端产物 apiJs/vuePage/printPage），多模块时原样落 backendRoot。
+     */
+    public static String moduleOfTpl(String tplCode) {
+        if (tplCode == null) {
+            return null;
+        }
+        // serviceImpl* 前缀判断必须在 service 之前（serviceImplSimple 也归 service）
+        if (tplCode.equals("entity") || tplCode.equals("mapper")) {
+            return "domain";
+        }
+        if (tplCode.equals("controller") || tplCode.equals("service")
+                || tplCode.startsWith("serviceImpl")
+                || tplCode.equals("pageDto") || tplCode.equals("saveDto") || tplCode.equals("vo")) {
+            return "service";
+        }
+        return null;
+    }
+
+    /**
+     * 多模块时的相对路径前缀：{@code <stem>-<module>/}，插在产物 relPath 最前面
+     * （backendBase 是包路径 src/main/java/...，模块目录在其工程根一层）。
+     * 单模块、非后端产物（moduleOfTpl 为 null）、stem 为空时返回空串。
+     */
+    public static String moduleRelPrefix(String tplCode, String projectStructure, String rootPackage) {
+        if (!isMulti(projectStructure)) {
+            return "";
+        }
+        String module = moduleOfTpl(tplCode);
+        if (module == null) {
+            return "";
+        }
+        String stem = GenNaming.multiModuleStem(rootPackage);
+        return stem.isEmpty() ? "" : stem + "-" + module + "/";
+    }
 }

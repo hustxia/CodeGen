@@ -4,6 +4,8 @@ import com.codegen.common.log.Ip2RegionSearcher;
 import com.codegen.config.GenOutputProperties;
 import com.codegen.dto.GenScaffoldDTO;
 import com.codegen.service.GenScaffoldService;
+import com.codegen.support.GenNaming;
+import com.codegen.support.GenPathResolver;
 import com.codegen.vo.GenScaffoldCheckVO;
 import com.codegen.vo.GenScaffoldVO;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +51,14 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         Path backendRoot = resolveRoot(dto.getBackendRoot(), outputProperties.getBackendRoot(), backendModule);
         Path frontendRoot = resolveRoot(dto.getFrontendRoot(), outputProperties.getFrontendRoot(), frontendModule);
 
+        // V5.5 多模块：模块 stem 唯一实现在 GenNaming.multiModuleStem（rootPackage 最后一段），
+        // 与 apply 侧 GenPathResolver.moduleRelPrefix 必须算出同名，否则生成物落进不存在的模块目录
+        boolean multi = GenPathResolver.isMulti(dto.getProjectStructure());
+        String stem = GenNaming.multiModuleStem(pkg);
+        // 基座类（common/system 包）落 common 模块；启动类/yml/db 脚本落 bootstrap 模块；单模块两者都是 backendRoot
+        Path commonRoot = multi ? backendRoot.resolve(stem + "-common") : backendRoot;
+        Path bootRoot = multi ? backendRoot.resolve(stem + "-bootstrap") : backendRoot;
+
         GenScaffoldVO vo = new GenScaffoldVO();
         vo.setBackendPath(backendRoot.toString());
         vo.setFrontendPath(Boolean.TRUE.equals(dto.getWithFrontend()) ? frontendRoot.toString() : null);
@@ -57,73 +67,112 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         int[] counter = new int[]{0, 0};
 
         // ---------- 后端 ----------
-        write(backendRoot, "pom.xml", pomXml(dto, project, pkg, backendModule, serverPort), "backend", force, vo, counter);
+        if (multi) {
+            // 多模块：聚合 pom + 4 个子模块 pom；依赖拆分原则——common 承载全部基座依赖，
+            // domain 只加 mybatis-plus，service 加 web 层与业务依赖，bootstrap 只做启动壳
+            String parentArtifactId = backendModule + "-parent";
+            write(backendRoot, "pom.xml", pomMultiParent(project, pkg, stem, backendModule), "backend", force, vo, counter);
+            write(backendRoot, stem + "-common/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "common",
+                    dep("org.springframework.boot", "spring-boot-starter-web", null)
+                            + dep("org.springframework.boot", "spring-boot-starter-validation", null)
+                            + dep("org.springframework.boot", "spring-boot-starter-aop", null)
+                            + dep("com.baomidou", "mybatis-plus-spring-boot3-starter", "${mybatis-plus.version}")
+                            // OpeLogController/MaskUtils 的 @Operation/@Schema 注解在这层
+                            + dep("org.springdoc", "springdoc-openapi-starter-webmvc-ui", "2.3.0")
+                            + dep("org.projectlombok", "lombok", "${lombok.version}"),
+                    false), "backend", force, vo, counter);
+            write(backendRoot, stem + "-domain/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "domain",
+                    internalDep(pkg, stem, "common")
+                            + dep("com.baomidou", "mybatis-plus-spring-boot3-starter", "${mybatis-plus.version}")
+                            + dep("org.projectlombok", "lombok", "${lombok.version}"),
+                    false), "backend", force, vo, counter);
+            write(backendRoot, stem + "-service/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "service",
+                    internalDep(pkg, stem, "domain")
+                            + dep("org.springframework.boot", "spring-boot-starter-web", null)
+                            + dep("org.springframework.boot", "spring-boot-starter-validation", null)
+                            + dep("org.springdoc", "springdoc-openapi-starter-webmvc-ui", "2.3.0")
+                            + dep("org.apache.poi", "poi-ooxml", "5.2.5")
+                            + dep("org.projectlombok", "lombok", "${lombok.version}")
+                            + extraDepsXml(dto),
+                    false), "backend", force, vo, counter);
+            write(backendRoot, stem + "-bootstrap/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "bootstrap",
+                    internalDep(pkg, stem, "service")
+                            + "        <dependency>\n"
+                            + "            <groupId>com.mysql</groupId>\n"
+                            + "            <artifactId>mysql-connector-j</artifactId>\n"
+                            + "            <scope>runtime</scope>\n"
+                            + "        </dependency>\n",
+                    true), "backend", force, vo, counter);
+        } else {
+            write(backendRoot, "pom.xml", pomXml(dto, project, pkg, backendModule, serverPort), "backend", force, vo, counter);
+        }
 
         String pkgPath = "src/main/java/" + pkg.replace('.', '/');
         String appClass = toClassName(project);
-        write(backendRoot, pkgPath + "/" + appClass + "Application.java",
+        // 启动类与运行配置归 bootstrap；包名不变（仍是 <pkg> 根），@SpringBootApplication 默认扫描覆盖全部模块
+        write(bootRoot, pkgPath + "/" + appClass + "Application.java",
                 applicationJava(pkg, appClass), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/result/Result.java", resultJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/result/ResultCode.java", resultCodeJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/exception/BusinessException.java",
+        write(commonRoot, pkgPath + "/common/result/Result.java", resultJava(pkg), "backend", force, vo, counter);
+        write(commonRoot, pkgPath + "/common/result/ResultCode.java", resultCodeJava(pkg), "backend", force, vo, counter);
+        write(commonRoot, pkgPath + "/common/exception/BusinessException.java",
                 businessExceptionJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/exception/GlobalExceptionHandler.java",
+        write(commonRoot, pkgPath + "/common/exception/GlobalExceptionHandler.java",
                 globalExceptionHandlerJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/context/UserContext.java", userContextJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/entity/BaseEntity.java", baseEntityJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/page/PageQuery.java", pageQueryJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/config/MybatisPlusConfig.java",
+        write(commonRoot, pkgPath + "/common/context/UserContext.java", userContextJava(pkg), "backend", force, vo, counter);
+        write(commonRoot, pkgPath + "/common/entity/BaseEntity.java", baseEntityJava(pkg), "backend", force, vo, counter);
+        write(commonRoot, pkgPath + "/common/page/PageQuery.java", pageQueryJava(pkg), "backend", force, vo, counter);
+        write(commonRoot, pkgPath + "/common/config/MybatisPlusConfig.java",
                 mybatisPlusConfigJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/datascope/DataScopeInterceptor.java",
+        write(commonRoot, pkgPath + "/common/datascope/DataScopeInterceptor.java",
                 dataScopeInterceptorJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/datascope/DataScopeRegistry.java",
+        write(commonRoot, pkgPath + "/common/datascope/DataScopeRegistry.java",
                 dataScopeRegistryJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/log/Log.java", logAnnotationJava(pkg),
+        write(commonRoot, pkgPath + "/common/log/Log.java", logAnnotationJava(pkg),
                 "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/log/LogAspect.java", logAspectJava(pkg),
+        write(commonRoot, pkgPath + "/common/log/LogAspect.java", logAspectJava(pkg),
                 "backend", force, vo, counter);
         // 归属地解析器：日志切面依赖它把 IP 翻成省市，独立成类便于替换成自建接口
-        write(backendRoot, pkgPath + "/common/log/IpRegionResolver.java", ipRegionResolverJava(pkg),
+        write(commonRoot, pkgPath + "/common/log/IpRegionResolver.java", ipRegionResolverJava(pkg),
                 "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/log/Ip2RegionSearcher.java", ip2RegionSearcherJava(pkg),
+        write(commonRoot, pkgPath + "/common/log/Ip2RegionSearcher.java", ip2RegionSearcherJava(pkg),
                 "backend", force, vo, counter);
         // 离线 IP 库是二进制，跟着解析器一起发；没有它归属地就只能赌公网接口的可用性
-        writeBinary(backendRoot, "src/main/resources/ip/ip2region.db", Ip2RegionSearcher.RESOURCE,
+        writeBinary(commonRoot, "src/main/resources/ip/ip2region.db", Ip2RegionSearcher.RESOURCE,
                 "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/system/OpeLog.java", operLogEntityJava(pkg),
+        write(commonRoot, pkgPath + "/system/OpeLog.java", operLogEntityJava(pkg),
                 "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/system/OpeLogMapper.java", operLogMapperJava(pkg),
+        write(commonRoot, pkgPath + "/system/OpeLogMapper.java", operLogMapperJava(pkg),
                 "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/system/OpeLogController.java", operLogControllerJava(pkg),
+        write(commonRoot, pkgPath + "/system/OpeLogController.java", operLogControllerJava(pkg),
                 "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/config/LongIdJacksonConfig.java",
+        write(commonRoot, pkgPath + "/common/config/LongIdJacksonConfig.java",
                 longIdJacksonConfigJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/config/TimeJacksonConfig.java",
+        write(commonRoot, pkgPath + "/common/config/TimeJacksonConfig.java",
                 timeJacksonConfigJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/util/DictTexts.java",
+        write(commonRoot, pkgPath + "/common/util/DictTexts.java",
                 dictTextsJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/handler/AuditMetaObjectHandler.java",
+        write(commonRoot, pkgPath + "/common/handler/AuditMetaObjectHandler.java",
                 auditMetaObjectHandlerJava(pkg), "backend", force, vo, counter);
-        write(backendRoot, pkgPath + "/common/util/MaskUtils.java", maskUtilsJava(pkg),
+        write(commonRoot, pkgPath + "/common/util/MaskUtils.java", maskUtilsJava(pkg),
                 "backend", force, vo, counter);
         if (Boolean.TRUE.equals(dto.getWithAuth())) {
-            write(backendRoot, pkgPath + "/common/config/AuthContextFilter.java",
+            write(commonRoot, pkgPath + "/common/config/AuthContextFilter.java",
                     authContextFilterJava(pkg), "backend", force, vo, counter);
             // V5.0 F-07：登录基座闭环——以前 filter「非空 token 即放行」是占位实现，
             // 401 拦得住陌生人却发不出合法 token，登录页成了摆设
-            write(backendRoot, pkgPath + "/common/auth/TokenStore.java",
+            write(commonRoot, pkgPath + "/common/auth/TokenStore.java",
                     tokenStoreJava(pkg), "backend", force, vo, counter);
-            write(backendRoot, pkgPath + "/common/auth/AuthController.java",
+            write(commonRoot, pkgPath + "/common/auth/AuthController.java",
                     authControllerJava(pkg), "backend", force, vo, counter);
-            write(backendRoot, "db/init_sys_user.sql", seedSql(),
+            write(bootRoot, "db/init_sys_user.sql", seedSql(),
                     "backend", force, vo, counter);
         }
-        write(backendRoot, "src/main/resources/application.yml", applicationYml(dto, pkg, project, serverPort),
+        write(bootRoot, "src/main/resources/application.yml", applicationYml(dto, pkg, project, serverPort),
                 "backend", force, vo, counter);
-        write(backendRoot, "src/main/resources/application-local.yml.example",
+        write(bootRoot, "src/main/resources/application-local.yml.example",
                 applicationLocalExample(pkg), "backend", force, vo, counter);
-        write(backendRoot, ".gitignore", backendGitignore(), "backend", force, vo, counter);
-        write(backendRoot, "README.md", backendReadme(project, pkg, backendModule, serverPort),
+        write(bootRoot, ".gitignore", backendGitignore(), "backend", force, vo, counter);
+        write(bootRoot, "README.md", backendReadme(project, pkg, backendModule, serverPort),
                 "backend", force, vo, counter);
 
         // ---------- 前端 ----------
@@ -165,13 +214,18 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     /**
-     * 解析输出根：入参绝对路径优先；否则相对配置的 root 拼模块目录。
+     * 解析输出根：根目录（无论显式传入还是配置回落）一律按「容器根」处理，
+     * 工程固定落在 {@code <root>/<module>} 子目录。
+     *
+     * <p>V5.0 修复（人事系统 pipeline 撞 CreateProcess error=267）：此前显式传入
+     * 的绝对路径被当作工程根本身，脚手架把 45 个文件直接写进容器根、污染既有工程；
+     * 而流水线打包步按 {@code <root>/<module>/pom.xml} 找工程、自检按
+     * {@code <root>/<module>/src/main/java} 找基座类源码根——同一份 backendRoot
+     * 三种理解。现全链路统一为「容器根 + 模块子目录」，谁都不许再特立独行。
      */
     private Path resolveRoot(String dtoRoot, String configRoot, String module) {
         if (StringUtils.hasText(dtoRoot)) {
-            Path p = Paths.get(dtoRoot.trim()).toAbsolutePath().normalize();
-            // 显式给了绝对路径就以它为工程根，不再拼模块名
-            return p;
+            return Paths.get(dtoRoot.trim()).toAbsolutePath().normalize().resolve(module);
         }
         if (!StringUtils.hasText(configRoot)) {
             throw new IllegalStateException("未配置输出根目录：请在 gen.output.backend-root / frontend-root 配置，或显式传入路径");
@@ -365,6 +419,168 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         }
         sb.append("        </dependency>\n");
         return sb.toString();
+    }
+
+    /**
+     * V5.5 多模块：内部模块依赖坐标（{@code <rootPackage-stem>} groupId + {@code <stem>-<module>}）。
+     * 版本由聚合 pom 的 dependencyManagement 统一管，子模块不写 version。
+     */
+    private String internalDep(String pkg, String stem, String module) {
+        return dep(pkg, stem + "-" + module, null);
+    }
+
+    private String extraDepsXml(GenScaffoldDTO dto) {
+        StringBuilder extras = new StringBuilder();
+        if (dto.getExtraDependencies() != null) {
+            for (String coord : dto.getExtraDependencies()) {
+                String[] parts = coord.split(":");
+                if (parts.length >= 2) {
+                    String ver = parts.length >= 3 ? "<version>" + parts[2] + "</version>" : "";
+                    extras.append("        <dependency>\n")
+                          .append("            <groupId>").append(parts[0]).append("</groupId>\n")
+                          .append("            <artifactId>").append(parts[1]).append("</artifactId>\n")
+                          .append("            ").append(ver).append("\n")
+                          .append("        </dependency>\n");
+                }
+            }
+        }
+        return extras.toString();
+    }
+
+    /**
+     * V5.5 多模块聚合 pom：packaging=pom + modules + 版本管理（spring-boot BOM + 内部模块 + 编译插件管理）。
+     *
+     * <p>-parameters 编译参数放 pluginManagement：子模块 build 引用即继承，
+     * 单模块 pom 那段「缺 -parameters 全部带参接口 500」的教训在多模块同样成立。
+     */
+    private String pomMultiParent(String project, String pkg, String stem, String backendModule) {
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
+                + "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + "         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\n"
+                + "    <modelVersion>4.0.0</modelVersion>\n\n"
+                + "    <groupId>" + pkg + "</groupId>\n"
+                + "    <artifactId>" + backendModule + "-parent</artifactId>\n"
+                + "    <version>1.0.0</version>\n"
+                + "    <packaging>pom</packaging>\n"
+                + "    <name>" + backendModule + "-parent</name>\n"
+                + "    <description>" + project + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务就绪单体）</description>\n\n"
+                + "    <modules>\n"
+                + "        <module>" + stem + "-common</module>\n"
+                + "        <module>" + stem + "-domain</module>\n"
+                + "        <module>" + stem + "-service</module>\n"
+                + "        <module>" + stem + "-bootstrap</module>\n"
+                + "    </modules>\n\n"
+                + "    <properties>\n"
+                + "        <java.version>21</java.version>\n"
+                + "        <maven.compiler.source>21</maven.compiler.source>\n"
+                + "        <maven.compiler.target>21</maven.compiler.target>\n"
+                + "        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\n"
+                + "        <spring-boot.version>3.2.5</spring-boot.version>\n"
+                + "        <mybatis-plus.version>3.5.5</mybatis-plus.version>\n"
+                + "        <lombok.version>1.18.30</lombok.version>\n"
+                + "    </properties>\n\n"
+                + "    <dependencyManagement>\n"
+                + "        <dependencies>\n"
+                + "            <dependency>\n"
+                + "                <groupId>org.springframework.boot</groupId>\n"
+                + "                <artifactId>spring-boot-dependencies</artifactId>\n"
+                + "                <version>${spring-boot.version}</version>\n"
+                + "                <type>pom</type>\n"
+                + "                <scope>import</scope>\n"
+                + "            </dependency>\n"
+                + "            <dependency>\n"
+                + "                <groupId>" + pkg + "</groupId>\n"
+                + "                <artifactId>" + stem + "-common</artifactId>\n"
+                + "                <version>${project.version}</version>\n"
+                + "            </dependency>\n"
+                + "            <dependency>\n"
+                + "                <groupId>" + pkg + "</groupId>\n"
+                + "                <artifactId>" + stem + "-domain</artifactId>\n"
+                + "                <version>${project.version}</version>\n"
+                + "            </dependency>\n"
+                + "            <dependency>\n"
+                + "                <groupId>" + pkg + "</groupId>\n"
+                + "                <artifactId>" + stem + "-service</artifactId>\n"
+                + "                <version>${project.version}</version>\n"
+                + "            </dependency>\n"
+                + "        </dependencies>\n"
+                + "    </dependencyManagement>\n\n"
+                + "    <build>\n"
+                + "        <pluginManagement>\n"
+                + "            <plugins>\n"
+                + "                <!-- 必须保留 -parameters：Spring MVC 靠参数名绑定 @RequestParam/@PathVariable。\n"
+                + "                     缺了会运行时 \"Name for argument of type [X] not specified\" —— 所有带参接口 500 -->\n"
+                + "                <plugin>\n"
+                + "                    <groupId>org.apache.maven.plugins</groupId>\n"
+                + "                    <artifactId>maven-compiler-plugin</artifactId>\n"
+                + "                    <version>3.13.0</version>\n"
+                + "                    <configuration>\n"
+                + "                        <compilerArgs>\n"
+                + "                            <arg>-parameters</arg>\n"
+                + "                        </compilerArgs>\n"
+                + "                        <annotationProcessorPaths>\n"
+                + "                            <path>\n"
+                + "                                <groupId>org.projectlombok</groupId>\n"
+                + "                                <artifactId>lombok</artifactId>\n"
+                + "                                <version>${lombok.version}</version>\n"
+                + "                            </path>\n"
+                + "                        </annotationProcessorPaths>\n"
+                + "                    </configuration>\n"
+                + "                </plugin>\n"
+                + "            </plugins>\n"
+                + "        </pluginManagement>\n"
+                + "    </build>\n"
+                + "</project>\n";
+    }
+
+    /**
+     * V5.5 多模块子模块 pom：parent 指聚合（parentArtifactId 必须与聚合 pom artifactId 一致）；
+     * 依赖由调用方按模块职责传入；isBootApp=true 时挂 spring-boot-maven-plugin（只有 bootstrap 可执行打包）。
+     */
+    private String pomMultiModule(String parentGroupId, String parentArtifactId, String stem, String module,
+                                  String dependenciesXml, boolean isBootApp) {
+        String bootPlugin = isBootApp
+                ? "            <plugin>\n"
+                + "                <groupId>org.springframework.boot</groupId>\n"
+                + "                <artifactId>spring-boot-maven-plugin</artifactId>\n"
+                + "                <version>${spring-boot.version}</version>\n"
+                + "                <executions>\n"
+                + "                    <execution>\n"
+                + "                        <goals>\n"
+                + "                            <goal>repackage</goal>\n"
+                + "                        </goals>\n"
+                + "                    </execution>\n"
+                + "                </executions>\n"
+                + "            </plugin>\n"
+                : "";
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
+                + "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + "         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\n"
+                + "    <modelVersion>4.0.0</modelVersion>\n\n"
+                + "    <parent>\n"
+                + "        <groupId>" + parentGroupId + "</groupId>\n"
+                + "        <artifactId>" + parentArtifactId + "</artifactId>\n"
+                + "        <version>1.0.0</version>\n"
+                + "    </parent>\n"
+                + "    <artifactId>" + stem + "-" + module + "</artifactId>\n"
+                + "    <packaging>jar</packaging>\n"
+                + "    <name>" + stem + "-" + module + "</name>\n\n"
+                + "    <dependencies>\n"
+                + dependenciesXml
+                + "    </dependencies>\n\n"
+                + "    <build>\n"
+                + "        <finalName>${project.artifactId}</finalName>\n"
+                + "        <plugins>\n"
+                + "            <plugin>\n"
+                + "                <groupId>org.apache.maven.plugins</groupId>\n"
+                + "                <artifactId>maven-compiler-plugin</artifactId>\n"
+                + "            </plugin>\n"
+                + bootPlugin
+                + "        </plugins>\n"
+                + "    </build>\n"
+                + "</project>\n";
     }
 
     private String applicationJava(String pkg, String appClass) {

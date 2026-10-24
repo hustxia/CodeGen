@@ -175,6 +175,7 @@ CREATE TABLE `sys_project` (
   `root_package` varchar(128) DEFAULT NULL COMMENT '根包名（如 com.demo）',
   `gateway_prefix` varchar(64) DEFAULT NULL COMMENT '网关/接口前缀（如 demo）',
   `selfcheck_classpath` varchar(512) DEFAULT NULL COMMENT '该系统的依赖 classpath（支持 dir/* 通配符）',
+  `project_structure` varchar(20) DEFAULT NULL COMMENT '工程结构（standalone/container，V5.0）',
   `is_default` tinyint NOT NULL DEFAULT '0' COMMENT '1 为默认系统，新建表时预选',
   `enabled` tinyint NOT NULL DEFAULT '1' COMMENT '1 启用 0 停用',
   `sort` int NOT NULL DEFAULT '0' COMMENT '排序',

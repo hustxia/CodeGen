@@ -234,7 +234,9 @@ public class GenCodeServiceImpl implements GenCodeService {
                 if (INFO_FILES.contains(relPath)) {
                     continue;
                 }
-                boolean isBackend = relPath.startsWith(backendBase + "/");
+                // V5.5 多模块：模块目录前缀 <stem>-domain/ 在 relPath 最前面，backendBase 段
+                // 不再顶头，改 contains 判定（前端路径不会含 backendBase 包路径段）
+                boolean isBackend = relPath.contains(backendBase + "/");
                 String root = isBackend ? backendRootOf(table) : frontendRootOf(table);
                 if (!StringUtils.hasText(root)) {
                     continue;
@@ -317,7 +319,8 @@ public class GenCodeServiceImpl implements GenCodeService {
             }
 
             try {
-                boolean isBackend = relPath.startsWith(backendBase + "/");
+                // V5.5 多模块：模块目录前缀在 relPath 最前面，同 diffTable 改 contains 判定
+                boolean isBackend = relPath.contains(backendBase + "/");
                 String group = isBackend ? "backend" : "frontend";
                 String root = isBackend ? backendRootOf(table) : frontendRootOf(table);
                 if (!StringUtils.hasText(root)) {
@@ -392,7 +395,7 @@ public class GenCodeServiceImpl implements GenCodeService {
                         backupPath, prevMd5);
                 results.add(new GenWriteVO(table.getTableName(), relPath, status, message, backupPath));
             } catch (Exception e) {
-                recordOutput(batchNo, table, relPath.startsWith(backendBase + "/") ? "backend" : "frontend",
+                recordOutput(batchNo, table, relPath.contains(backendBase + "/") ? "backend" : "frontend",
                         relPath, "", "ERROR", 0, "", e.getMessage(), null, null);
                 results.add(new GenWriteVO(table.getTableName(), relPath, "ERROR", e.getMessage()));
             }
@@ -573,7 +576,8 @@ public class GenCodeServiceImpl implements GenCodeService {
         return new GenTemplateModel.ProjectConfig(
                 project.getRootPackage(), project.getGatewayPrefix(),
                 project.getRootPackage(), project.getProjectCode(),
-                project.getDefaultDeleteCascadeMode(), project.getDefaultGenPrint());
+                project.getDefaultDeleteCascadeMode(), project.getDefaultGenPrint(),
+                project.getProjectStructure());
     }
 
     /**
