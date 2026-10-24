@@ -476,10 +476,37 @@
             :disabled="!currentTable.masterTableId"
           />
         </el-form-item>
+        <el-form-item label="删除级联">
+          <el-select
+            v-model="currentTable.deleteCascadeMode"
+            clearable
+            placeholder="未配置（跟随系统默认）"
+            style="width: 190px"
+            :disabled="!!currentTable.masterTableId"
+          >
+            <el-option label="级联（同步删除全部明细）" :value="1" />
+            <el-option label="阻止（有明细时拒删）" :value="0" />
+            <el-option label="不处理（仅删主表）" :value="2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="打印单据">
+          <el-select
+            v-model="currentTable.genPrint"
+            clearable
+            placeholder="跟随系统默认（默认关）"
+            style="width: 190px"
+            :disabled="!!currentTable.masterTableId"
+          >
+            <el-option label="生成 A4 打印页" :value="1" />
+            <el-option label="不生成" :value="0" />
+          </el-select>
+        </el-form-item>
       </el-form>
       <div class="form-tip">
         目标模块命中 application.yml 的 gen.output.modules 时，后端路径/包名/网关前缀自动切成该模块；树形父字段填 parent_id 后生成 tree 接口与树表格；
         所属主表填了就是从表，保存走同事务的 save-with-children，主表页面会出现明细子表。
+        删除级联只对主表生效：从表上不可配；未配置时跟随系统默认（sys_project.default_delete_cascade_mode，再默认级联）。
+        打印单据开启后产物多一张 A4 打印页（print.vue）与列表「打印」按钮，需开前端与详情接口。
       </div>
 
       <el-divider content-position="left">生成开关矩阵</el-divider>
@@ -749,6 +776,12 @@
             <el-radio label="readonly">只读列表</el-radio>
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="所属系统">
+          <el-select v-model="batchForm.projectId" placeholder="不修改（保持原系统）" clearable filterable style="width: 320px">
+            <el-option v-for="p in projectOptions" :key="p.id" :label="`${p.projectName}（${p.projectCode}）`" :value="p.id" />
+          </el-select>
+          <span class="inline-tip">先把旧系统下导入的表转移到新系统时用</span>
+        </el-form-item>
         <el-form-item label="前端模块名">
           <el-input v-model="batchForm.moduleName" placeholder="留空不修改，如 demo_goods" style="width: 320px" />
         </el-form-item>
@@ -768,7 +801,7 @@
           <el-input v-model="batchForm.gatewayPrefix" placeholder="留空不修改，如 admin" style="width: 200px" />
         </el-form-item>
       </el-form>
-      <div class="form-tip">留空的项不会被修改。批量设置只改配置，不触发生成。</div>
+      <div class="form-tip">留空的项不会被修改。批量设置只改配置，不触发生成；改所属系统会影响包名/输出路径的继承来源。</div>
       <div slot="footer">
         <el-button @click="batchVisible = false">取 消</el-button>
         <el-button type="primary" :loading="batching" @click="handleBatchUpdate">保 存</el-button>
@@ -829,6 +862,9 @@ const defaultTableConfig = () => ({
   treeLabelColumn: '',
   masterTableId: null,
   masterForeignKey: '',
+  deleteCascadeMode: null,
+  // V4.5 打印单据：null=跟随系统默认（默认关）
+  genPrint: null,
   columns: []
 })
 
@@ -905,7 +941,9 @@ export default {
       batching: false,
       batchForm: {
         preset: '', moduleName: '', packageName: '', author: '',
-        backendRoot: '', frontendRoot: '', gatewayPrefix: ''
+        backendRoot: '', frontendRoot: '', gatewayPrefix: '',
+        // '' = 不修改；提交前转成 null，后端 DTO 才能区分「不改」与「改」
+        projectId: ''
       },
       // 生成输出全局配置（gen.output.*）
       outputConfig: {},
@@ -1189,9 +1227,12 @@ export default {
         this.$message.warning('请先勾选要批量设置的表')
         return
       }
+      // 下拉里是转移目标系统，必须是最新的：否则刚建的财务系统不出现
+      this.loadProjectOptions()
       this.batchForm = {
         preset: '', moduleName: '', packageName: '', author: '',
-        backendRoot: '', frontendRoot: '', gatewayPrefix: ''
+        backendRoot: '', frontendRoot: '', gatewayPrefix: '',
+        projectId: ''
       }
       this.batchVisible = true
     },
@@ -1200,7 +1241,9 @@ export default {
       try {
         const res = await batchUpdateGenTables({
           ids: this.selected.map(t => t.id),
-          ...this.batchForm
+          ...this.batchForm,
+          // 空串→null：后端按「null=不修改」处理，空串会被当成转移目标报错
+          projectId: this.batchForm.projectId || null
         })
         this.$message.success(`已更新 ${res.data || 0} 张表的配置`)
         this.batchVisible = false
@@ -1296,6 +1339,9 @@ export default {
     async openDbDialog() {
       this.dbVisible = true
       this.importResults = []
+      // 先刷新系统列表再取默认：默认系统可能在系统管理页刚被改过，
+      // 页面创建时拉的那份 options 是旧的，直接用会把表导进旧默认系统
+      await this.loadProjectOptions()
       // 每次打开都重设：上次导到别的系统，这次不该沿用
       this.dbProjectId = this.defaultProjectId()
       if (!this.schemas.length) {
@@ -1519,6 +1565,8 @@ export default {
       }
       this.parsing = true
       try {
+        // 预选默认系统前先刷新：默认可能刚在系统管理页被改过
+        await this.loadProjectOptions()
         const res = await parseDdl(this.ddlText)
         this.parsed = { ...defaultTableConfig(), projectId: this.defaultProjectId(), ...res.data, overwrite: false }
         this.$message.success('解析成功，请核对后保存')

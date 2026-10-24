@@ -164,9 +164,28 @@
               <el-switch v-model="form[sw.key]" :active-value="1" :inactive-value="0" />
             </div>
           </div>
+          <div
+            v-for="sw in triStateDefs"
+            :key="sw.key"
+            class="default-switch-item"
+            style="margin-top: 8px"
+          >
+            <span>{{ sw.label }}</span>
+            <el-select
+              v-model="form[sw.key]"
+              clearable
+              placeholder="未配置（关）"
+              size="mini"
+              style="width: 150px"
+            >
+              <el-option label="默认开启" :value="1" />
+              <el-option label="默认关闭" :value="0" />
+            </el-select>
+          </div>
           <div class="form-tip">
             只影响以后导入的新表：导入时按这份默认值落表，已有表的开关不会被改写
             （避免改一次系统配置把存量表全部翻掉）。表配置弹窗里的「恢复系统默认」也读这里。
+            {{ triStateDefs[0].tip }}
           </div>
         </el-form-item>
 
@@ -224,7 +243,9 @@ const defaultForm = () => ({
   defaultGenQueryForm: 1,
   defaultGenAddBtn: 1,
   defaultGenEditBtn: 1,
-  defaultGenDeleteBtn: 1
+  defaultGenDeleteBtn: 1,
+  // V4.5 打印单据默认：独立于 17 键体系（硬编码兜底是关而非开），null=未配置（关）
+  defaultGenPrint: null
 })
 
 // 与后端 GenSwitchDefaults.KEYS 一一对应，顺序也一致
@@ -248,6 +269,15 @@ const genSwitchDefs = [
   { key: 'defaultGenDeleteBtn', label: '删除按钮' }
 ]
 
+// V4.5 独立回落开关（不在 17 键 grid 里）：三态，单独渲染下拉
+const triStateDefs = [
+  {
+    key: 'defaultGenPrint',
+    label: '打印单据默认',
+    tip: '开=新表默认生成 A4 打印页；关=不生成；未配置=关'
+  }
+]
+
 export default {
   name: 'GenProject',
   data() {
@@ -258,6 +288,7 @@ export default {
       dialogVisible: false,
       form: defaultForm(),
       genSwitchDefs,
+      triStateDefs,
       // 复制来源系统 id（字符串，避免 Long 精度丢失）；空表示不复制
       copyFromId: '',
       rules: {
