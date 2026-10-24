@@ -285,6 +285,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    <dependencies>\n"
                 + dep("org.springframework.boot", "spring-boot-starter-web", null)
                 + dep("org.springframework.boot", "spring-boot-starter-validation", null)
+                + "        <!-- 基座 LogAspect（操作日志切面）依赖 AspectJ，缺了编译直接失败 -->\n"
+                + dep("org.springframework.boot", "spring-boot-starter-aop", null)
                 + dep("com.baomidou", "mybatis-plus-spring-boot3-starter", "${mybatis-plus.version}")
                 + "        <dependency>\n"
                 + "            <groupId>com.mysql</groupId>\n"
@@ -361,7 +363,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "import org.springframework.boot.SpringApplication;\n"
                 + "import org.springframework.boot.autoconfigure.SpringBootApplication;\n\n"
                 + "@SpringBootApplication\n"
-                + "@MapperScan(\"" + pkg + ".mapper\")\n"
+                + "// 基座 OpeLogMapper 在 .system 包下，业务 mapper 在 .mapper 包下，两个都要扫到\n"
+                + "@MapperScan({\"" + pkg + ".mapper\", \"" + pkg + ".system\"})\n"
                 + "public class " + appClass + "Application {\n\n"
                 + "    public static void main(String[] args) {\n"
                 + "        SpringApplication.run(" + appClass + "Application.class, args);\n"

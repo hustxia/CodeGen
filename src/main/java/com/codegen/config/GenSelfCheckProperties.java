@@ -33,13 +33,24 @@ public class GenSelfCheckProperties {
     private String processorPath;
 
     /**
-     * 解析注解处理器路径：显式配置优先，其次取 classpath 里含 lombok 的那段
+     * 解析注解处理器路径：显式配置优先，其次取全局 classpath 里含 lombok 的那段
      */
     public String resolveProcessorPath() {
         if (StringUtils.hasText(processorPath)) {
             return expandWildcards(processorPath.trim());
         }
-        String full = resolveClasspath();
+        return lombokSegmentsOf(resolveClasspath());
+    }
+
+    /**
+     * 从给定 classpath 里挑出注解处理器（lombok / mapstruct）相关段。
+     *
+     * <p>多系统下编译用的是「系统自带 classpath」（如 demo-lib/*），全局 classpath
+     * 反而可能没有 lombok（肥 jar 启动时 java.class.path 只有一根 jar）——
+     * 只按全局找处理器，系统自带 classpath 里的 lombok 就被漏掉，
+     * 基座类源码一参与编译就满屏 cannot find symbol getCode()。
+     */
+    public String lombokSegmentsOf(String full) {
         if (!StringUtils.hasText(full)) {
             return "";
         }

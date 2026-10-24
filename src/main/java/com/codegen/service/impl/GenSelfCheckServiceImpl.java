@@ -89,21 +89,24 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
      * 并在结果里提示一句，让用户自己拆开自检。
      */
     private String projectClasspathOf(List<Long> ids) {
+        com.codegen.entity.SysProject project = projectOfIds(ids);
+        return project == null ? null : project.getSelfcheckClasspath();
+    }
+
+    /**
+     * 取本批表共同所属的系统；混选多个系统或都未绑定时返回 null（回落全局配置）。
+     */
+    private com.codegen.entity.SysProject projectOfIds(List<Long> ids) {
         java.util.Set<Long> projectIds = new java.util.LinkedHashSet<>();
         for (GenTable table : genTableMapper.selectBatchIds(ids)) {
             if (table.getProjectId() != null) {
                 projectIds.add(table.getProjectId());
             }
         }
-        if (projectIds.isEmpty()) {
+        if (projectIds.isEmpty() || projectIds.size() > 1) {
             return null;
         }
-        if (projectIds.size() > 1) {
-            // 不抛异常：自检仍可继续，只是 classpath 用全局的
-            return null;
-        }
-        com.codegen.entity.SysProject project = sysProjectMapper.selectById(projectIds.iterator().next());
-        return project == null ? null : project.getSelfcheckClasspath();
+        return sysProjectMapper.selectById(projectIds.iterator().next());
     }
 
     @Autowired
@@ -166,8 +169,8 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         }
         result.setJavaCount(javaSources.size());
 
-        // 2) 真实编译
-        compile(result, javaSources, projectClasspathOf(ids));
+        // 2) 真实编译（带上所属系统：源码根/编译产物/包名都按系统解析，多系统下不再回落全局）
+        compile(result, javaSources, projectClasspathOf(ids), projectOfIds(ids));
 
         // 3) 语义提示：下拉/单选没有字典，生成出来的控件是空选项
         checkDictBinding(result, columns);
@@ -184,10 +187,13 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
     }
 
     /**
-     * 从源码里收集 import 的类名（只取以 rootPkg 开头的，第三方库交给 classpath）
+     * 从源码里收集 import 的类名（只取以工程根包开头的，第三方库交给 classpath）。
+     *
+     * <p>根包按所属系统解析：系统配了 rootPackage 用系统的，否则回落全局。
+     * 用全局根包判断多系统产物会漏收基座类（如 com.wms.common.*），
+     * 这些类本该作为编译单元一起参与编译。
      */
-    private void collectImportedTypes(String content, Set<String> out) {
-        String rootPkg = outputProperties.getRootPackage();
+    private void collectImportedTypes(String content, Set<String> out, String rootPkg) {
         Matcher m = IMPORT_PATTERN.matcher(content);
         while (m.find()) {
             String fqcn = m.group(1);
@@ -201,17 +207,32 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
     }
 
     /**
+     * 定位产物相对路径里 src/main/java 的起始下标。
+     *
+     * <p>兼容两种布局：带模块前缀（{@code ecomFinance-server/src/main/java/...}）
+     * 与不带（{@code src/main/java/...}，脚手架工程 backendRoot 即模块根）。
+     * 返回 -1 表示不是 Java 产物路径。
+     */
+    private static int srcMainJavaStart(String rel) {
+        if (rel.startsWith("src/main/java/")) {
+            return 0;
+        }
+        int idx = rel.indexOf("/src/main/java/");
+        return idx < 0 ? -1 : idx + 1;
+    }
+
+    /**
      * 由产物路径反推目标工程的编译产物目录（target/classes）
      */
-    private List<Path> backendTargetClasses(List<JavaSource> sources) {
+    private List<Path> backendTargetClasses(List<JavaSource> sources, String backendRootOverride) {
         Set<Path> roots = new LinkedHashSet<>();
         for (JavaSource source : sources) {
             String rel = source.path().replace('\\', '/');
-            int idx = rel.indexOf("/src/main/java/");
-            if (idx < 0) {
+            int start = srcMainJavaStart(rel);
+            if (start < 0) {
                 continue;
             }
-            Path moduleRoot = Path.of(outputProperties.getBackendRoot(), rel.substring(0, idx));
+            Path moduleRoot = Path.of(effectiveBackendRoot(backendRootOverride), rel.substring(0, start));
             for (String sub : new String[]{"target/classes", "build/classes/java/main"}) {
                 Path cls = moduleRoot.resolve(sub);
                 if (Files.isDirectory(cls)) {
@@ -224,6 +245,16 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
 
     private List<Path> clsRootsOf(List<Path> classRoots) {
         return classRoots;
+    }
+
+    /**
+     * 产物源码根/编译产物目录的解析基准：所属系统配了 backendRoot 用系统的，否则回落全局。
+     *
+     * <p>全局根固定指向 demo-target，多系统下拼 wms/财务的相对路径必不存在，
+     * 基座类就这样被丢出 classpath——这就是「自检满屏 package xxx.common does not exist」的根因。
+     */
+    private String effectiveBackendRoot(String backendRootOverride) {
+        return StringUtils.hasText(backendRootOverride) ? backendRootOverride : outputProperties.getBackendRoot();
     }
 
     /**
@@ -242,15 +273,16 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
     /**
      * 由产物路径反推目标工程的全部 Java 源码根
      */
-    private List<Path> backendSourceRoots(List<JavaSource> sources) {
+    private List<Path> backendSourceRoots(List<JavaSource> sources, String backendRootOverride) {
         Set<Path> roots = new LinkedHashSet<>();
         for (JavaSource source : sources) {
             String rel = source.path().replace('\\', '/');
-            int idx = rel.indexOf("/src/main/java/");
-            if (idx < 0) {
+            int start = srcMainJavaStart(rel);
+            if (start < 0) {
                 continue;
             }
-            Path abs = Path.of(outputProperties.getBackendRoot(), rel.substring(0, idx + "/src/main/java".length()));
+            Path abs = Path.of(effectiveBackendRoot(backendRootOverride),
+                    rel.substring(0, start + "src/main/java".length()));
             if (Files.isDirectory(abs)) {
                 roots.add(abs.toAbsolutePath());
             }
@@ -265,17 +297,17 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
      * 源文件并隐式编译，这样 {@code ${rootPkg}.common.*} 基座类能一起参与编译，
      * 基座类被改名/删字段导致的编译错误也就暴露出来了。
      */
-    private String withBackendSourceRoot(String classpath, List<JavaSource> sources) {
+    private String withBackendSourceRoot(String classpath, List<JavaSource> sources, String backendRootOverride) {
         // 从产物相对路径反推源码根：demo-server/src/main/java/com/demo/entity/X.java
         //   -> demo-server/src/main/java
         for (JavaSource source : sources) {
             String rel = source.path().replace('\\', '/');
-            int idx = rel.indexOf("/src/main/java/");
-            if (idx < 0) {
+            int start = srcMainJavaStart(rel);
+            if (start < 0) {
                 continue;
             }
-            String srcRoot = rel.substring(0, idx + "/src/main/java".length());
-            Path abs = Path.of(outputProperties.getBackendRoot(), srcRoot);
+            String srcRoot = rel.substring(0, start + "src/main/java".length());
+            Path abs = Path.of(effectiveBackendRoot(backendRootOverride), srcRoot);
             if (!Files.isDirectory(abs)) {
                 return classpath;
             }
@@ -298,7 +330,8 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
     /**
      * 内存编译全部 Java 产物；类路径沿用当前进程，保证依赖版本与运行时一致
      */
-    private void compile(GenSelfCheckVO result, List<JavaSource> sources, String projectClasspath) {
+    private void compile(GenSelfCheckVO result, List<JavaSource> sources, String projectClasspath,
+                         com.codegen.entity.SysProject project) {
         if (sources.isEmpty()) {
             return;
         }
@@ -328,12 +361,19 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
                             + "建议配置 gen.selfcheck.classpath 指向依赖目录（支持 lib/*）");
         }
 
+        // 所属系统的根目录/根包：产物源码根与基座类都按系统解析，不再回落全局
+        //（全局根是 demo-target，拼 wms/财务的相对路径必不存在，基座类就这样丢出 classpath）
+        String backendRootOverride = project != null && StringUtils.hasText(project.getBackendRoot())
+                ? project.getBackendRoot().trim() : null;
+        String rootPkg = project != null && StringUtils.hasText(project.getRootPackage())
+                ? project.getRootPackage().trim() : outputProperties.getRootPackage();
+
         // 生成物大量 import 目标工程的基座类（${rootPkg}.common.*），但那部分源码不属于
         // 本次生成产物。这里把目标工程【已编译的 target/classes】挂到 classpath；
         // 只有在完全没有编译产物时才退而求其次挂源码根（会隐式编译，Lombok 可能不生效）。
-        List<Path> classRoots = backendTargetClasses(sources);
+        List<Path> classRoots = backendTargetClasses(sources, backendRootOverride);
         if (classRoots.isEmpty()) {
-            classpath = withBackendSourceRoot(classpath, sources);
+            classpath = withBackendSourceRoot(classpath, sources, backendRootOverride);
         } else {
             for (Path clsRoot : classRoots) {
                 classpath = classpath.isEmpty()
@@ -358,7 +398,12 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
             }
             // 处理器路径单独给：只靠 -classpath 时，JDK 21 有时探测不到 lombok 的 processor，
             // 结果就是"明明有 lombok 却满屏 cannot find symbol getXxx()"。显式指定最稳。
+            // 全局找不到处理器时，再从实际使用的（系统自带）classpath 里找——
+            // 肥 jar 启动时全局 classpath 没有 lombok，而 demo-lib/* 里有。
             String processorPath = selfCheckProperties.resolveProcessorPath();
+            if (!StringUtils.hasText(processorPath)) {
+                processorPath = selfCheckProperties.lombokSegmentsOf(classpath);
+            }
             if (StringUtils.hasText(processorPath)) {
                 options.add("-processorpath");
                 options.add(processorPath);
@@ -378,7 +423,7 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
                 }
                 units.add(new StringSource(className, source.content()));
                 classToPath.put(className, source.path());
-                collectImportedTypes(source.content(), externalClassNames);
+                collectImportedTypes(source.content(), externalClassNames, rootPkg);
             }
             if (units.isEmpty()) {
                 return;
@@ -391,7 +436,7 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
             // 原因：基座类（Result/PageQuery/BaseEntity…）自身大量依赖 Lombok 的 @Data，
             // 把它们当源码重复编译时，注解处理链路和 mvn 不完全一致，会误报
             // cannot find symbol getXxx()——明明是编译通过的代码。
-            List<Path> srcRoots = new ArrayList<>(backendSourceRoots(sources));
+            List<Path> srcRoots = new ArrayList<>(backendSourceRoots(sources, backendRootOverride));
             if (!classRoots.isEmpty()) {
                 // 有已编译产物就完全信任它，不再补编译任何外部源码
                 srcRoots = List.of();
@@ -408,7 +453,7 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
                     try {
                         String content = Files.readString(javaFile, StandardCharsets.UTF_8);
                         units.add(new StringSource(fqcn, content));
-                        classToPath.put(fqcn, outputProperties.getBackendRoot()
+                        classToPath.put(fqcn, (backendRootOverride != null ? backendRootOverride : outputProperties.getBackendRoot())
                                 + "/" + srcRoot.relativize(javaFile).toString()
                                         .replace('\\', '/'));
                     } catch (Exception ignored) {
