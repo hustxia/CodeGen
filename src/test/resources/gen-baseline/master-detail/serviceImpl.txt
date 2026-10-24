@@ -9,6 +9,8 @@ import com.demo.dto.DemoOrderSaveDTO;
 import com.demo.dto.DemoOrderItemSaveDTO;
 import com.demo.entity.DemoOrderItem;
 import com.demo.mapper.DemoOrderItemMapper;
+import com.demo.entity.DemoOrderItemAttr;
+import com.demo.mapper.DemoOrderItemAttrMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,6 +91,28 @@ public class DemoOrderServiceImpl extends ServiceImpl<DemoOrderMapper, DemoOrder
             row.setItemId(parentId);
             mapper.insert(row);
         }
+    }
+    /**
+     * V4.4 按删除级联模式删除主表（模式由生成时配置决定，三选一渲染）：
+     * 级联=先删各子表行（含三级）再删主行；阻止=任一子表还有有效行就拒删；不处理=仅删主行。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void removeWithChildren(Long id) {
+        // 订单明细：先清三级，再按外键逻辑删除本级
+        List<DemoOrderItem> demoOrderItemRows = demoOrderItemMapper.selectList(
+                new LambdaQueryWrapper<DemoOrderItem>()
+                        .eq(DemoOrderItem::getOrderId, id));
+        // 孙层按主键集合一次删：逐行 delete 会让「500 条明细」变成 500 条 SQL，全压在同一个事务里
+        List<Long> demoOrderItemIds = demoOrderItemRows.stream()
+                .map(DemoOrderItem::getId).toList();
+        if (!demoOrderItemIds.isEmpty()) {
+            demoOrderItemAttrMapper.delete(new LambdaQueryWrapper<DemoOrderItemAttr>()
+                    .in(DemoOrderItemAttr::getItemId, demoOrderItemIds));
+        }
+        demoOrderItemMapper.delete(new LambdaQueryWrapper<DemoOrderItem>()
+                .eq(DemoOrderItem::getOrderId, id));
+        removeById(id);
     }
     // <gen:end key="service-body">
     // ===== 以下为手写区：自定义方法写在这里，重新生成不会被覆盖 =====

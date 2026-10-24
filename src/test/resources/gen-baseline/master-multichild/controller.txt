@@ -232,11 +232,12 @@ public Result<Void> update(@RequestBody DemoOrderSaveDTO dto) {
     return Result.ok();
 }
 
-@Operation(summary = "删除订单")
+@Operation(summary = "删除订单（按表的级联模式处理明细）")
 @Log(title = "订单", type = "DELETE")
 @DeleteMapping("/{id}")
 public Result<Void> delete(@PathVariable("id") Long id) {
-    demoOrderService.removeById(id);
+    // V4.4：主子表走 removeWithChildren（级联/阻止/不处理由生成配置决定），不能直接 removeById 留孤儿明细
+    demoOrderService.removeWithChildren(id);
     return Result.ok();
 }
     // <gen:end key="controller-body">

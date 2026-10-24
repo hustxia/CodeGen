@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * 更新后请把 {@code src/test/resources/gen-baseline/} 的 diff 一起提交，
  * 让「模板变了什么」在 review 里可见。
  */
-@DisplayName("产物黄金基线：12 个模板 × 3 个场景逐字符比对")
+@DisplayName("产物黄金基线：13 个模板 × 4 个场景逐字符比对")
 class GenTemplateBaselineTest {
 
     private static final String UPDATE_FLAG = "gen.baseline.update";
@@ -59,7 +59,7 @@ class GenTemplateBaselineTest {
     /** 模板与产物一一对应，顺序固定，保证失败信息与 diff 稳定 */
     private static final List<String> TEMPLATES = List.of(
             "entity", "mapper", "service", "serviceImpl", "pageDto", "saveDto",
-            "vo", "controller", "apiJs", "vuePage", "routerSnippet", "readme");
+            "vo", "controller", "apiJs", "vuePage", "printPage", "routerSnippet", "readme");
 
     private static Path tplDir;
     private static Path baselineRoot;
@@ -352,6 +352,9 @@ class GenTemplateBaselineTest {
         t.setGenEditBtn(1);
         t.setGenDeleteBtn(1);
         t.setGenLog(1);
+        // V4.5 打印单据：基线场景全部开着渲染（4 场景 × 13 模板 = 52 份），
+        // 单表场景打印 = 详情键值页，正好覆盖 printPage 的无子表分支
+        t.setGenPrint(1);
         return t;
     }
 

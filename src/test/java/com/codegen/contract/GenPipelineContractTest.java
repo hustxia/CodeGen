@@ -92,6 +92,12 @@ class GenPipelineContractTest {
         jdbcTemplate.update("DELETE FROM gen_table_column WHERE table_id IN "
                 + "(SELECT id FROM gen_table WHERE table_name LIKE 'ct_goods_%')");
         jdbcTemplate.update("DELETE FROM gen_table WHERE table_name LIKE 'ct_goods_%'");
+        // V4.4 夹具同样按前缀清理（子表靠 master_table_id 关联，直接删行即可）
+        jdbcTemplate.update("DELETE FROM gen_output WHERE table_name LIKE 'ct\\_order\\_%' ESCAPE '\\\\'");
+        jdbcTemplate.update("DELETE FROM gen_table_column WHERE table_id IN "
+                + "(SELECT id FROM gen_table WHERE table_name LIKE 'ct\\_order\\_%' ESCAPE '\\\\')");
+        jdbcTemplate.update("DELETE FROM gen_table WHERE table_name LIKE 'ct\\_order\\_%' ESCAPE '\\\\'");
+        jdbcTemplate.update("DELETE FROM sys_project WHERE project_code LIKE 'ct\\_proj\\_%' ESCAPE '\\\\'");
         table = newTable();
     }
 
@@ -298,6 +304,306 @@ class GenPipelineContractTest {
         assertEquals(pickedBefore, md5(picked), "勾选的文件没有还原");
         assertFalse(md5(untouched).equals(untouchedBefore),
                 "未勾选的文件也被回滚了——选择性回滚退化成了整批回滚");
+    }
+
+    // ------------------------------------------------------------------
+    // V4.4：一主多子 + 删除级联三档（渲染契约）
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("级联模式：removeWithChildren 覆盖每张子表与孙层，controller 删除端点改走级联")
+    void cascadeDeleteCleansEveryChildAndGrand() throws Exception {
+        String tag = "cascade";
+        GenTable master = newMasterWithChildren(tag);
+        setMode(master, 1);
+        String itemVar = decap("CtOrderItem" + uuidSafe(tag));
+        String attrVar = decap("CtOrderItemAttr" + uuidSafe(tag));
+        String logVar = decap("CtOrderLog" + uuidSafe(tag));
+        String impl = previewContent(master, "ServiceImpl.java");
+        // 每张子表都要按外键删
+        assertTrue(impl.contains(itemVar + "Mapper.delete"), "级联实现缺第一张子表的删除");
+        assertTrue(impl.contains(logVar + "Mapper.delete"), "级联实现缺第二张子表的删除——多子化退回了单子表");
+        // 孙层必须先于子表清掉
+        assertTrue(impl.contains(attrVar + "Mapper.delete"), "级联实现缺孙层删除，三级明细会变孤儿");
+        // 孙层的实体与 Mapper 必须在 import 里：模板漏了就「找不到符号」，生成的主子表实现类直接编译不过
+        String attrClass = "CtOrderItemAttr" + uuidSafe(tag);
+        assertTrue(impl.contains("import com.demo.entity." + attrClass + ";"),
+                "缺孙层实体 import，生成的主子表实现类编译不过");
+        assertTrue(impl.contains("import com.demo.mapper." + attrClass + "Mapper;"),
+                "缺孙层 Mapper import，生成的主子表实现类编译不过");
+        // 孙层按主键集合一次删，不能逐行 delete（500 条明细会变成 500 条 SQL）
+        assertTrue(impl.contains(itemVar + "Ids.isEmpty()"), "孙层删除缺空集合守卫，空 IN 会报 SQL 语法错");
+        assertFalse(impl.contains("Row : " + itemVar + "Rows"),
+                "孙层退回了逐行 delete，明细多时会生成 N 条 SQL");
+        assertTrue(impl.contains("removeById(id)"), "级联实现最后没有删主行");
+        String ctrl = previewContent(master, "Controller.java");
+        assertTrue(ctrl.contains("removeWithChildren(id)"),
+                "主子表的删除端点必须走 removeWithChildren，直接 removeById 会留孤儿明细");
+    }
+
+    @Test
+    @DisplayName("阻止模式：存在子行时抛 BusinessException 拒删")
+    void blockModeRejectsDelete() throws Exception {
+        String tag = "block";
+        GenTable master = newMasterWithChildren(tag);
+        setMode(master, 0);
+        String itemVar = decap("CtOrderItem" + uuidSafe(tag));
+        String logVar = decap("CtOrderLog" + uuidSafe(tag));
+        String impl = previewContent(master, "ServiceImpl.java");
+        assertTrue(impl.contains("selectCount"), "阻止模式必须先数子行");
+        assertTrue(impl.contains("BusinessException"), "阻止模式必须抛业务异常");
+        assertFalse(impl.contains(itemVar + "Mapper.delete") || impl.contains(logVar + "Mapper.delete"),
+                "阻止模式不允许出现子表删除——那是级联模式的行为");
+    }
+
+    @Test
+    @DisplayName("不处理模式：维持 removeById 现状，不碰子表（存量行为逃生门）")
+    void noneModeKeepsLegacyDelete() throws Exception {
+        String tag = "legacy";
+        GenTable master = newMasterWithChildren(tag);
+        setMode(master, 2);
+        String itemVar = decap("CtOrderItem" + uuidSafe(tag));
+        String logVar = decap("CtOrderLog" + uuidSafe(tag));
+        String impl = previewContent(master, "ServiceImpl.java");
+        assertTrue(impl.contains("removeWithChildren"), "接口方法必须存在，否则 controller 编译不过");
+        assertFalse(impl.contains(itemVar + "Mapper.delete") || impl.contains(logVar + "Mapper.delete"),
+                "不处理模式不允许删子表——这档是给存量行为留的逃生门");
+        assertFalse(impl.contains("BusinessException"), "不处理模式不应阻止删除");
+    }
+
+    @Test
+    @DisplayName("模式回落：表级未配置时用系统默认，表级配置优先于系统默认")
+    void cascadeModeFallsBackToProjectDefault() throws Exception {
+        GenTable master = newMasterWithChildren("fallback");
+        // 系统默认=不处理(2)，表级 NULL → 应维持现状（不出现子表删除）
+        Long projectId = newProjectWithCascade(2);
+        jdbcTemplate.update("UPDATE gen_table SET project_id = ? WHERE id = ?", projectId, master.getId());
+        String itemVar = decap("CtOrderItem" + uuidSafe("fallback"));
+        String impl = previewContent(master, "ServiceImpl.java");
+        assertFalse(impl.contains(itemVar + "Mapper.delete"),
+                "表级 NULL 应回落系统默认(2=不处理)，实际却按级联生成了");
+
+        // 表级显式=阻止(0) → 覆盖系统默认
+        setMode(master, 0);
+        impl = previewContent(master, "ServiceImpl.java");
+        assertTrue(impl.contains("BusinessException"), "表级配置应优先于系统默认，实际未按阻止模式生成");
+    }
+
+    @Test
+    @DisplayName("多子详情：/with-children 每张子表一个 group，前端详情抽屉多 tab 取数")
+    void multiChildDetailGroups() throws Exception {        String tag = "detail";
+        GenTable master = newMasterWithChildren(tag);
+        String itemVar = decap("CtOrderItem" + uuidSafe(tag));
+        String logVar = decap("CtOrderLog" + uuidSafe(tag));
+        String ctrl = previewContent(master, "Controller.java");
+        assertTrue(ctrl.contains(itemVar + "Group"), "详情接口缺第一张子表的 group");
+        assertTrue(ctrl.contains(logVar + "Group"), "详情接口缺第二张子表的 group——一主多子退回了单子");
+        assertTrue(ctrl.contains("data.put(\"children\", children)"), "详情接口没有组装 children");
+
+        String vue = previewContent(master, "index.vue");
+        assertTrue(vue.contains("detailGroupRows('" + itemVar + "')"), "详情抽屉缺第一张明细 tab 的取数");
+        assertTrue(vue.contains("detailGroupRows('" + logVar + "')"), "详情抽屉缺第二张明细 tab 的取数");
+        assertTrue(vue.contains("activeDetailTab"), "详情抽屉没有 tabs 状态");
+    }
+
+    // ------------------------------------------------------------------
+    // V4.5 打印单据契约
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("打印单据：print.vue A4 版式 + 各子表明细块与合计 + 无 layout 路由 + 开关真实生效")
+    void printPageContainsA4Layout() throws Exception {
+        String tag = "print";
+        GenTable master = newMasterWithChildren(tag);
+        String itemVar = decap("CtOrderItem" + uuidSafe(tag));
+        String logVar = decap("CtOrderLog" + uuidSafe(tag));
+        String attrVar = decap("CtOrderItemAttr" + uuidSafe(tag));
+        String module = master.getModuleName();
+        String className = master.getClassName();
+        jdbcTemplate.update("UPDATE gen_table SET gen_print = 1 WHERE id = ?", master.getId());
+
+        // print.vue 版式全要素
+        String print = previewContent(master, "print.vue");
+        assertTrue(print.contains("@page"), "打印页缺 @page 规则");
+        assertTrue(print.contains("size: A4 portrait"), "打印页缺 A4 纸张声明");
+        assertTrue(print.contains("table-header-group"), "明细表头缺跨页自动重复声明");
+        assertTrue(print.contains("break-inside: avoid"), "明细行缺防拦腰截断声明");
+        // 主子表：每张子表一个明细块 + 孙表平铺块
+        assertTrue(print.contains("rowsOf('" + itemVar + "')"), "打印页缺订单明细块");
+        assertTrue(print.contains("rowsOf('" + logVar + "')"), "打印页缺操作日志块——一主多子退回了单子");
+        assertTrue(print.contains("rowsOf('" + itemVar + "." + attrVar + "')"), "打印页缺孙表平铺块");
+        // 数值列合计（Integer → plain 累加）
+        assertTrue(print.contains("colSum('" + itemVar + "', 'qty')"), "明细块缺数值列合计");
+
+        // 入口接线：操作列打印按钮 + 无 layout 顶层路由
+        String vue = previewContent(master, "index.vue");
+        assertTrue(vue.contains("handlePrintRow(row)"), "列表操作列缺打印按钮");
+        // 路由片段是 ZIP 共享文件（GenCodeServiceImpl.generateZip 挂载），预览接口不返回，必须走 ZIP 断言
+        String snippet = zipContent(master.getId(), "router-snippet.txt");
+        assertTrue(snippet.contains("/print/" + module + "/:id"), "路由片段缺无 layout 打印路由");
+        assertTrue(snippet.contains("Print" + className), "打印路由组件名缺失");
+
+        // 系统默认回落：表级 NULL + sys_project.default_gen_print=1 → 路由片段仍要挂打印路由
+        long projectId = System.nanoTime();
+        jdbcTemplate.update("INSERT INTO sys_project (id, project_code, project_name, default_gen_print) "
+                + "VALUES (?, ?, ?, 1)", projectId, "ct_proj_print_" + projectId, "契约打印系统");
+        jdbcTemplate.update("UPDATE gen_table SET gen_print = NULL, project_id = ? WHERE id = ?",
+                projectId, master.getId());
+        String snippetWithDefault = zipContent(master.getId(), "router-snippet.txt");
+        assertTrue(snippetWithDefault.contains("Print" + className),
+                "系统默认开(1)而表级未配置时，路由片段丢了打印路由——回落链断了");
+
+        // 关闭真实生效：表级 0 → 产物无 print.vue、无打印按钮、无打印路由
+        jdbcTemplate.update("UPDATE gen_table SET gen_print = 0, project_id = NULL WHERE id = ?", master.getId());
+        JsonNode res = callJson(post("/gen/preview")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ids\":[\"" + master.getId() + "\"]}"));
+        assertEquals(200, res.path("code").asInt(), "预览失败：" + res.path("msg").asText());
+        Map<String, String> files = new java.util.LinkedHashMap<>();
+        for (JsonNode file : res.path("data")) {
+            files.put(file.path("path").asText(), file.path("content").asText());
+        }
+        assertTrue(files.keySet().stream().noneMatch(p -> p.endsWith("print.vue")),
+                "gen_print=0 时不应生成 print.vue：路径=" + files.keySet());
+        String vueOff = files.entrySet().stream().filter(e -> e.getKey().endsWith("index.vue"))
+                .map(Map.Entry::getValue).findFirst().orElse("");
+        assertFalse(vueOff.contains("handlePrintRow"), "gen_print=0 时列表不应有打印按钮");
+        String snippetOff = zipContent(master.getId(), "router-snippet.txt");
+        assertFalse(snippetOff.contains("Print" + className), "gen_print=0 时路由片段不应含打印路由");
+        assertFalse(snippetOff.contains("/print/"), "gen_print=0 时路由片段不应含 /print/ 路径");
+    }
+
+    // ------------------------------------------------------------------
+    // V4.4 夹具
+    // ------------------------------------------------------------------
+
+    /**
+     * 建一主两子（其一含孙表）的夹具：主表 ct_order_*，子表 ct_order_item_*（带孙表
+     * ct_order_item_attr_*）与 ct_order_log_*。返回主表配置（gen_table 行）。
+     */
+    private GenTable newMasterWithChildren(String tag) {
+        String suffix = tag + "_" + System.nanoTime();
+        GenTable master = new GenTable();
+        master.setTableName("ct_order_" + suffix);
+        master.setTableComment("契约订单");
+        master.setClassName("CtOrder" + uuidSafe(tag));
+        master.setModuleName("ctOrder" + uuidSafe(tag));
+        master.setPackageName("com.demo");
+        master.setBackendPath("demo-server/src/main/java/com/demo");
+        master.setBackendRoot(workDir.toString());
+        master.setFrontendRoot(workDir.toString());
+        master.setGatewayPrefix("demo");
+        master.setAuthor("contract-test");
+        genTableMapper.insert(master);
+        insertColumn(master.getId(), "id", "主键", "bigint", "id", "Long", 1, 1, 1);
+        insertColumn(master.getId(), "order_no", "订单号", "varchar(32)", "orderNo", "String", 0, 2, 2);
+
+        // 子表1：明细（含孙表：属性）
+        GenTable item = childTable("ct_order_item_" + suffix, "CtOrderItem" + uuidSafe(tag),
+                "CtOrderItem" + uuidSafe(tag), master.getId(), "order_id");
+        insertColumn(item.getId(), "id", "主键", "bigint", "id", "Long", 1, 1, 1);
+        // isList 必须是 1（on() 严格判 1），否则打印明细块/编辑列表都不会带上该列
+        insertColumn(item.getId(), "goods_name", "商品名", "varchar(100)", "goodsName", "String", 0, 1, 2);
+        // V4.5 打印契约需要数值列验证合计行（Integer → plain 累加）
+        insertColumn(item.getId(), "qty", "数量", "int", "qty", "Integer", 0, 1, 3);
+        GenTable attr = childTable("ct_order_item_attr_" + suffix, "CtOrderItemAttr" + uuidSafe(tag),
+                "CtOrderItemAttr" + uuidSafe(tag), item.getId(), "item_id");
+        insertColumn(attr.getId(), "id", "主键", "bigint", "id", "Long", 1, 1, 1);
+        insertColumn(attr.getId(), "attr_name", "属性名", "varchar(50)", "attrName", "String", 0, 1, 2);
+
+        // 子表2：日志（单层）
+        GenTable log = childTable("ct_order_log_" + suffix, "CtOrderLog" + uuidSafe(tag),
+                "CtOrderLog" + uuidSafe(tag), master.getId(), "order_id");
+        insertColumn(log.getId(), "id", "主键", "bigint", "id", "Long", 1, 1, 1);
+        insertColumn(log.getId(), "log_text", "日志", "varchar(200)", "logText", "String", 0, 1, 2);
+        return master;
+    }
+
+    private GenTable childTable(String tableName, String className, String moduleName,
+                                Long masterTableId, String fk) {
+        GenTable t = new GenTable();
+        t.setTableName(tableName);
+        t.setTableComment(tableName.contains("item_attr") ? "明细属性" : tableName.contains("item") ? "订单明细" : "操作日志");
+        t.setClassName(className);
+        t.setModuleName(moduleName);
+        t.setPackageName("com.demo");
+        t.setBackendPath("demo-server/src/main/java/com/demo");
+        t.setBackendRoot(workDir.toString());
+        t.setFrontendRoot(workDir.toString());
+        t.setGatewayPrefix("demo");
+        t.setAuthor("contract-test");
+        t.setMasterTableId(masterTableId);
+        t.setMasterForeignKey(fk);
+        t.setMasterDepth(1);
+        genTableMapper.insert(t);
+        return t;
+    }
+
+    private void insertColumn(Long tableId, String name, String comment, String dbType,
+                              String javaField, String javaType, int isPk, int isList, int sort) {
+        genTableColumnMapper.insert(column(tableId, name, comment, dbType, javaField, javaType, isPk, isList, sort));
+    }
+
+    private Long newProjectWithCascade(int defaultMode) {
+        long id = System.nanoTime();
+        String code = "ct_proj_" + id;
+        jdbcTemplate.update("INSERT INTO sys_project (id, project_code, project_name, default_delete_cascade_mode) "
+                + "VALUES (?, ?, ?, ?)", id, code, "契约系统", defaultMode);
+        return id;
+    }
+
+    private void setMode(GenTable master, int mode) {
+        jdbcTemplate.update("UPDATE gen_table SET delete_cascade_mode = ? WHERE id = ?", mode, master.getId());
+    }
+
+    /** 预览产物里取「路径以 suffix 结尾」的文件内容（如 ServiceImpl.java / Controller.java / index.vue） */
+    private String previewContent(GenTable master, String suffix) throws Exception {
+        JsonNode res = callJson(post("/gen/preview")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ids\":[\"" + master.getId() + "\"]}"));
+        assertEquals(200, res.path("code").asInt(), "预览失败：" + res.path("msg").asText());
+        for (JsonNode file : res.path("data")) {
+            String path = file.path("path").asText();
+            if (path.endsWith(suffix)) {
+                return file.path("content").asText();
+            }
+        }
+        throw new AssertionError("预览产物里找不到 *" + suffix + "（表 " + master.getTableName() + "）");
+    }
+
+    /**
+     * ZIP 产物里取文件内容。路由片段 / README 这类共享文件只在 ZIP 组装时挂载
+     * （GenCodeServiceImpl.generateZip），预览接口不返回——断言它们必须走 ZIP。
+     */
+    private String zipContent(Long tableId, String fileName) throws Exception {
+        MvcResult result = mockMvc.perform(post("/gen/download")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ids\":[\"" + tableId + "\"]}")).andReturn();
+        byte[] bytes = result.getResponse().getContentAsByteArray();
+        assertTrue(bytes.length > 4 && bytes[0] != '{',
+                "下载接口未返回 ZIP（表 " + tableId + "）：" + result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(bytes));
+        try {
+            java.util.zip.ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.getName().equals(fileName)) {
+                    return new String(zis.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            }
+        } finally {
+            zis.close();
+        }
+        throw new AssertionError("ZIP 产物里找不到 " + fileName + "（表 " + tableId + "）");
+    }
+
+    /** 首字母小写（与 GenTemplateModel.decap 同规则），用于从夹具类名推导模板变量名 */
+    private static String decap(String name) {
+        return Character.toLowerCase(name.charAt(0)) + name.substring(1);
+    }
+
+    /** 模块/类名后缀：nanoTime 已含数字，这里只把 tag 首字母大写保证标识符合法 */
+    private static String uuidSafe(String tag) {
+        return Character.toUpperCase(tag.charAt(0)) + tag.substring(1);
     }
 
     // ------------------------------------------------------------------

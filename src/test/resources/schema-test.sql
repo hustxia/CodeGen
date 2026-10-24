@@ -41,6 +41,8 @@ CREATE TABLE `gen_table` (
   `menu_id` bigint DEFAULT NULL COMMENT '已注册菜单ID(sys_menu.id)',
   `last_gen_time` datetime DEFAULT NULL COMMENT '最近一次写盘时间',
   `last_gen_by` bigint DEFAULT NULL COMMENT '最近一次写盘操作人',
+  `delete_cascade_mode` tinyint DEFAULT NULL COMMENT '删除级联模式：NULL=未配置(回落系统默认) 0=阻止(有子行拒删) 1=级联(同删全部子表) 2=不处理(现状)',
+  `gen_print` tinyint DEFAULT NULL COMMENT '打印单据:NULL=跟随系统默认 1=生成 0=不生成',
   `deleted` tinyint NOT NULL DEFAULT '0' COMMENT '逻辑删除:0否1是',
   `create_by` bigint DEFAULT NULL COMMENT '创建人',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -199,6 +201,8 @@ CREATE TABLE `sys_project` (
   `default_gen_add_btn` tinyint DEFAULT NULL COMMENT '生成开关默认值：NULL 表示未配置，回落 1',
   `default_gen_edit_btn` tinyint DEFAULT NULL COMMENT '生成开关默认值：NULL 表示未配置，回落 1',
   `default_gen_delete_btn` tinyint DEFAULT NULL COMMENT '生成开关默认值：NULL 表示未配置，回落 1',
+  `default_delete_cascade_mode` tinyint DEFAULT NULL COMMENT '系统级默认删除级联模式，空=1(级联)',
+  `default_gen_print` tinyint DEFAULT NULL COMMENT '打印单据默认:NULL=未配置(关) 1=默认生成 0=默认不生成',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_project_code` (`project_code`,`deleted`),
   KEY `idx_default` (`is_default`)

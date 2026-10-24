@@ -66,9 +66,10 @@
           :formatter="(row) => refText('deptId', row.deptId)" />
         <el-table-column prop="price" label="价格" width="110" align="right" show-overflow-tooltip />
         <el-table-column prop="updateTime" label="更新时间" width="170" align="center" />
-        <el-table-column label="操作" width="216" fixed="right" align="center">
+        <el-table-column label="操作" width="278" fixed="right" align="center">
           <template slot-scope="{ row }">
             <el-button type="text" @click="openDetail(row)">详情</el-button>
+            <el-button type="text" @click="handlePrintRow(row)">打印</el-button>
             <el-button v-hasPermi="['demo_goods:edit']" type="text" @click="openDialog(row)">编辑</el-button>
             <el-button v-hasPermi="['demo_goods:remove']" type="text" class="danger-btn" @click="handleDelete(row)">删除</el-button>
           </template>
@@ -118,7 +119,8 @@
       </div>
     </el-dialog>
 
-    <!-- 详情抽屉（只读） -->
+    <!-- 详情抽屉（只读）。主子表：宽抽屉 + el-tabs，tab1 主表字段，tab2..N 每张明细一张只读表；
+         数据复用 /with-children 一次拉全，不逐 tab 发请求 -->
     <el-drawer title="商品详情" :visible.sync="detailVisible" size="420px">
       <div class="detail-body">
         <div class="detail-row">
@@ -191,7 +193,7 @@ export default {
       detail: {},
       refOptions: {},
       refLoading: {},
-      // 列表里把 xxxId 显示成名称用的字典：{ 字段名: { id: label } }
+      // 列表/详情里把 xxxId 显示成名称用的字典：{ 字段名: { id: label } }
       refLabels: {},
       dicts: { sys_status: [] },
       rules: {
@@ -282,6 +284,10 @@ export default {
         this.$set(this.refLabels, field, {})
       }
     },
+    /**
+     * 把 xxxId 显示成名称：主表列与子表明细列都会用到，定义跟随 hasRefHelper
+     * （主表无引用列但子表外键有引用时也必须存在，否则明细行渲染崩溃）。
+     */
     refText(field, id) {
       if (id === null || id === undefined || id === '') {
         return ''
@@ -300,6 +306,12 @@ export default {
       this.$nextTick(() => {
         if (this.$refs.form) this.$refs.form.clearValidate()
       })
+    },
+    /**
+     * 打印单据：跳转独立打印页（无后台导航壳，window.print 直出 A4）
+     */
+    handlePrintRow(row) {
+      this.$router.push('/print/goods/' + row.id)
     },
     async submitForm() {
       const valid = await this.$refs.form.validate().catch(() => false)
