@@ -2,15 +2,25 @@ package com.codegen.service.impl;
 
 import com.codegen.common.exception.BusinessException;
 import com.codegen.dto.GenDdlExecuteDTO;
+import com.codegen.dto.GenDdlImportDTO;
+import com.codegen.dto.GenColumnDTO;
+import com.codegen.dto.GenTableSaveDTO;
 import com.codegen.service.GenDdlService;
+import com.codegen.service.DictDetectService;
+import com.codegen.service.DictService;
 import com.codegen.service.GenTableService;
+import com.codegen.util.GenUtils;
+import com.codegen.vo.DictDetectItemVO;
 import com.codegen.vo.GenDdlExecuteVO;
+import com.codegen.vo.GenDdlImportVO;
 import com.codegen.vo.GenImportVO;
+import com.codegen.vo.GenTableVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -66,6 +76,12 @@ public class GenDdlServiceImpl implements GenDdlService {
 
     @Autowired
     private GenTableService genTableService;
+
+    @Autowired
+    private DictDetectService dictDetectService;
+
+    @Autowired
+    private DictService dictService;
 
     @Override
     public List<String> splitStatements(String ddl) {
@@ -295,6 +311,166 @@ public class GenDdlServiceImpl implements GenDdlService {
                 vo.getStatements().add(new GenDdlExecuteVO.Statement(0, "自动导入表配置", "FAILED",
                         rootMessage(e)));
             }
+        }
+        return vo;
+    }
+
+    /**
+     * DDL 文本一键导入：不执行 DDL，直接从建表语句解析表/列/注释注册生成配置。
+     *
+     * <p>与 {@link #execute} 的 autoImport（执行到库后从 information_schema 回读）互补：
+     * 这里走 {@link GenUtils#parseDdl} 纯文本解析，DDL 尚未落到目标库也能先把
+     * 表配置和字典准备好。逐表回报、单表失败不影响其他表；已注册的表跳过并标 EXISTS。
+     *
+     * <p>「确保字典信息正确导入」的双重校验：
+     * <ol>
+     *   <li>回读落库列数，与 DDL 解析列数比对；</li>
+     *   <li>导入前从同一份 DDL 识别字典候选，导入后回读各候选列的 dict_type 是否已回填，
+     *       未回填的列入 dictMissingColumns 预警。</li>
+     * </ol>
+     */
+    @Override
+    public List<GenDdlImportVO> importFromDdl(GenDdlImportDTO dto) {
+        List<String> statements = split(dto.getDdl());
+        boolean applyDict = !Boolean.FALSE.equals(dto.getApplyDict());
+        List<GenDdlImportVO> report = new ArrayList<>();
+        for (String stmt : statements) {
+            Matcher m = CREATE_TABLE.matcher(stmt);
+            if (!m.find()) {
+                continue; // 忽略 SET / USE / CREATE DATABASE 等非建表语句
+            }
+            report.add(importOneFromDdl(m.group(2), stmt, dto.getProjectId(), applyDict));
+        }
+        if (report.isEmpty()) {
+            throw new BusinessException(400, "DDL 中未解析到 CREATE TABLE 语句");
+        }
+        return report;
+    }
+
+    private GenDdlImportVO importOneFromDdl(String tableName, String stmt, Long projectId, boolean applyDict) {
+        GenDdlImportVO vo = new GenDdlImportVO();
+        vo.setTableName(tableName);
+        try {
+            if (genTableService.existsByTableName(tableName)) {
+                vo.setStatus("EXISTS");
+                vo.setMessage("表已注册过生成配置，跳过");
+                return vo;
+            }
+            GenTableSaveDTO parsed = GenUtils.parseDdl(stmt);
+            parsed.setTableName(tableName);
+            // 与 DB 导入 importOne 对齐：包名/路径留空，走「表级 → 系统 → 全局」回落链
+            parsed.setPackageName("");
+            parsed.setBackendPath("");
+            parsed.setGatewayPrefix("");
+            parsed.setBackendRoot("");
+            parsed.setFrontendRoot("");
+            parsed.setProjectId(projectId);
+            parsed.setOverwrite(false);
+
+            // 导入前快照：缺列注释清单、表注释是否缺失。
+            // parseColumn 对缺注释的列会回落填充列名，因此「注释 == 列名」即视为缺失
+            // （列名是 ASCII 标识符，真实注释恰好等于列名的概率可忽略）。
+            List<String> missingComments = new ArrayList<>();
+            for (GenColumnDTO c : parsed.getColumns()) {
+                if (!StringUtils.hasText(c.getColumnComment())
+                        || c.getColumnComment().equals(c.getColumnName())) {
+                    missingComments.add(c.getColumnName());
+                }
+            }
+            boolean noTableComment = !StringUtils.hasText(parsed.getTableComment())
+                    || parsed.getTableComment().equals(tableName);
+            vo.setTableComment(parsed.getTableComment());
+
+            // 字典候选：与落库用同一份 DDL 文本识别，供导入后回读比对
+            List<DictDetectItemVO> candidates = applyDict
+                    ? dictDetectService.detectFromDdl(tableName, stmt)
+                    : List.of();
+
+            Long tableId = genTableService.saveConfig(parsed);
+
+            int dictCount = 0;
+            if (applyDict && !candidates.isEmpty()) {
+                try {
+                    dictCount = dictDetectService.apply(tableId, null);
+                } catch (Exception e) {
+                    vo.getWarnings().add("自动建字典失败（已跳过）：" + rootMessage(e));
+                }
+            }
+
+            // ==== 正确性校验：回读落库结果，与 DDL 逐项比对 ====
+            GenTableVO saved = genTableService.detail(tableId);
+            List<GenColumnDTO> savedCols = saved.getColumns() == null ? List.of() : saved.getColumns();
+            vo.setColumnCount(savedCols.size());
+            if (savedCols.size() != parsed.getColumns().size()) {
+                vo.getWarnings().add("落库列数(" + savedCols.size() + ") 与 DDL 解析列数("
+                        + parsed.getColumns().size() + ") 不一致，请检查表配置");
+            }
+            if (!StringUtils.hasText(saved.getTableComment())) {
+                vo.getWarnings().add("落库后表注释为空");
+            }
+            vo.setMissingCommentColumns(missingComments);
+            if (!missingComments.isEmpty()) {
+                vo.getWarnings().add(missingComments.size() + " 个字段缺列注释："
+                        + String.join(", ", missingComments));
+            }
+            if (noTableComment) {
+                vo.getWarnings().add("表缺少 COMMENT 注释");
+            }
+
+            // 字典回填校验：候选列的 dict_type 是否都已落库
+            java.util.Map<String, String> colDictType = new java.util.HashMap<>();
+            for (GenColumnDTO c : savedCols) {
+                colDictType.put(c.getColumnName(), c.getDictType());
+            }
+            List<String> dictMissing = new ArrayList<>();
+            for (DictDetectItemVO it : candidates) {
+                if (!StringUtils.hasText(colDictType.get(it.getColumnName()))) {
+                    dictMissing.add(it.getColumnName());
+                }
+            }
+            vo.setDictCount(dictCount);
+            vo.setDictMissingColumns(dictMissing);
+            if (!dictMissing.isEmpty()) {
+                vo.getWarnings().add("疑似枚举但字典未落库：" + String.join(", ", dictMissing)
+                        + "，请到字典识别里手工确认");
+            }
+
+            // 空字典绑定校验：*_status 这类列会被 inferDictType 预设绑定 sys_status 等通用字典，
+            // 但预设不会创建字典项——绑了个空字典，生成的下拉框就是空的，注释里的真实枚举也被跳过。
+            // 这里把「绑定了字典但字典没有任何选项」的列点名列出，确保字典信息真正可用。
+            java.util.Set<String> boundDicts = new java.util.LinkedHashSet<>();
+            for (GenColumnDTO c : savedCols) {
+                if (StringUtils.hasText(c.getDictType())) {
+                    boundDicts.add(c.getDictType());
+                }
+            }
+            List<String> emptyDictColumns = new ArrayList<>();
+            for (String code : boundDicts) {
+                boolean hasItems;
+                try {
+                    hasItems = !dictService.listData(code).isEmpty();
+                } catch (Exception e) {
+                    hasItems = true; // 查询失败不误报，交给其它校验兜底
+                }
+                if (!hasItems) {
+                    for (GenColumnDTO c : savedCols) {
+                        if (code.equals(c.getDictType())) {
+                            emptyDictColumns.add(c.getColumnName());
+                        }
+                    }
+                }
+            }
+            if (!emptyDictColumns.isEmpty()) {
+                vo.getWarnings().add("以下列绑定的字典没有任何选项（注释枚举可能未被采纳）："
+                        + String.join(", ", emptyDictColumns) + "，请到字典管理里补齐或改绑专属字典");
+            }
+
+            vo.setStatus("SAVED");
+            vo.setMessage("导入成功" + (dictCount > 0 ? "，自动识别 " + dictCount + " 个字典" : ""));
+        } catch (Exception e) {
+            vo.setStatus("FAILED");
+            vo.setMessage(rootMessage(e));
+            log.warn("DDL 导入表 {} 失败：{}", tableName, rootMessage(e));
         }
         return vo;
     }

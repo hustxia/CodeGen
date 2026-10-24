@@ -429,4 +429,11 @@ public class GenController {
     public Result<GenDdlExecuteVO> executeDdl(@Valid @RequestBody GenDdlExecuteDTO dto) {
         return Result.ok(genDdlService.execute(dto));
     }
+
+    @Operation(summary = "DDL 文本一键导入：解析表/列/字典并出校验报告（不执行 DDL）")
+    @PostMapping("/ddl/import")
+    public Result<List<com.codegen.vo.GenDdlImportVO>> importFromDdl(
+            @Valid @RequestBody com.codegen.dto.GenDdlImportDTO dto) {
+        return Result.ok(genDdlService.importFromDdl(dto));
+    }
 }

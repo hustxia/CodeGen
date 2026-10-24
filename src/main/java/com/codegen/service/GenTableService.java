@@ -78,6 +78,11 @@ public interface GenTableService extends IService<GenTable> {
     List<GenImportVO> importTables(String schema, List<String> tableNames, Long projectId);
 
     /**
+     * 表名是否已注册过生成配置（含逻辑删除残留以外的有效行）
+     */
+    boolean existsByTableName(String tableName);
+
+    /**
      * 把 17 个生成开关恢复成「所属系统的默认值」（系统没配则按 1）。
      *
      * <p>只动开关，不动包名/路径/字段配置——用户点这个按钮的意图是

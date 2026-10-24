@@ -17,4 +17,10 @@ public interface GenDdlService {
      * 执行 DDL，可选自动导入表配置
      */
     GenDdlExecuteVO execute(GenDdlExecuteDTO dto);
+
+    /**
+     * DDL 文本一键导入：不执行 DDL，直接解析建表语句注册生成配置，
+     * 自动识别字典，并回读落库结果出「字典信息是否正确导入」的逐表校验报告。
+     */
+    java.util.List<com.codegen.vo.GenDdlImportVO> importFromDdl(com.codegen.dto.GenDdlImportDTO dto);
 }

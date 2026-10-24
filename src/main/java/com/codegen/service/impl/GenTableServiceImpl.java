@@ -702,6 +702,11 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
     }
 
     @Override
+    public boolean existsByTableName(String tableName) {
+        return getByTableName(tableName) != null;
+    }
+
+    @Override
     public List<GenDbTableVO> listDbTables(String schema) {
         validateSchema(schema);
         String sql = "SELECT table_name, IFNULL(table_comment,'') AS table_comment FROM information_schema.tables "
