@@ -68,4 +68,7 @@ public class GenScaffoldDTO {
 
     @Schema(description = "额外 pom 依赖坐标，形如 com.foo:bar:1.0.0")
     private List<String> extraDependencies;
+
+    @Schema(description = "网关前缀：api.js 路径 /api/{gatewayPrefix}，为空默认 demo；前端代理会剥掉它直连后端")
+    private String gatewayPrefix;
 }

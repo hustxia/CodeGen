@@ -179,7 +179,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         if (Boolean.TRUE.equals(dto.getWithFrontend())) {
             write(frontendRoot, "package.json", frontendPackageJson(project, frontendModule),
                     "frontend", force, vo, counter);
-            write(frontendRoot, "vue.config.js", frontendVueConfig(webPort, serverPort),
+            write(frontendRoot, "vue.config.js", frontendVueConfig(webPort, serverPort,
+                    StringUtils.hasText(dto.getGatewayPrefix()) ? dto.getGatewayPrefix().trim() : "demo"),
                     "frontend", force, vo, counter);
             write(frontendRoot, "babel.config.js", frontendBabelConfig(), "frontend", force, vo, counter);
             write(frontendRoot, ".env.development",
@@ -2092,7 +2093,9 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "}\n";
     }
 
-    private String frontendVueConfig(int webPort, int serverPort) {
+    private String frontendVueConfig(int webPort, int serverPort, String gatewayPrefix) {
+        // api.js 的路径带 /api/{gatewayPrefix}（给网关预留），本地直连后端没有网关，
+        // 代理必须把这段前缀剥掉，否则后端收到 /api/demo/xxx 全部 404
         return "const { defineConfig } = require('@vue/cli-service')\n\n"
                 + "module.exports = defineConfig({\n"
                 + "  transpileDependencies: true,\n"
@@ -2105,7 +2108,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "      '/dev-api': {\n"
                 + "        target: 'http://127.0.0.1:" + serverPort + "',\n"
                 + "        changeOrigin: true,\n"
-                + "        pathRewrite: { '^/dev-api': '' }\n"
+                + "        // http-proxy-middleware 多条 pathRewrite 不保证顺序执行，合并成一条正则\n"
+                + "        pathRewrite: { '^/dev-api(/api/" + gatewayPrefix + ")?': '' }\n"
                 + "      }\n"
                 + "    }\n"
                 + "  }\n"
