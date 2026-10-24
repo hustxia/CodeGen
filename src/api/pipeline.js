@@ -7,6 +7,11 @@ function toPageQuery(params) {
 
 /* ---------- V5.0 一句话建系统 ---------- */
 
+// 向导配置：AI 建模是否可用（未配 LLM key 时前端直接禁用 AI 选项）
+export function getConfig() {
+  return request({ url: '/gen/pipeline/config', method: 'get' })
+}
+
 // AI 领域建模：名称+一句话描述 → 候选表结构
 export function aiModel(data) {
   return request({

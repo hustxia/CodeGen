@@ -34,9 +34,12 @@
           </el-form-item>
           <el-form-item label="建模方式">
             <el-radio-group v-model="form.mode">
-              <el-radio label="ai">AI 生成表结构</el-radio>
+              <el-radio label="ai" :disabled="!aiEnabled">AI 生成表结构</el-radio>
               <el-radio label="manual">手动粘贴 DDL</el-radio>
             </el-radio-group>
+            <div v-if="!aiEnabled" style="font-size:12px;color:#909399;line-height:1.6;">
+              AI 建模未启用（服务端未配置 LLM key），请在「手动粘贴 DDL」中完成建表
+            </div>
           </el-form-item>
           <el-form-item v-if="form.mode === 'manual'" label="建表 DDL">
             <el-input
@@ -255,11 +258,11 @@
 </template>
 
 <script>
-import { aiModel, createPipeline, preparePipelineDb, runPipeline, getPipeline, getPipelinePage, stopPipeline } from '@/api/pipeline'
+import { aiModel, createPipeline, preparePipelineDb, runPipeline, getPipeline, getPipelinePage, stopPipeline, getConfig } from '@/api/pipeline'
 import { getToken } from '@/utils/auth'
 
 const STATUS_TEXT = {
-  draft: '建模中',
+  draft: '待建库',
   await_confirm: '待构建',
   running: '运行中',
   success: '成功',
@@ -287,6 +290,7 @@ export default {
   data() {
     return {
       step: 0,
+      aiEnabled: false,
       form: { systemName: '', systemDesc: '', dbName: '', mode: 'ai', ddlText: '' },
       tables: [],
       aiLoading: false,
@@ -304,6 +308,13 @@ export default {
   },
   created() {
     this.fetchPage()
+    // AI 可用性前置下发：未配 LLM key 时直接禁用 AI 选项，不让用户点了才报错
+    getConfig().then(res => {
+      this.aiEnabled = !!(res.data && res.data.aiEnabled)
+      if (!this.aiEnabled && this.form.mode === 'ai') {
+        this.form.mode = 'manual'
+      }
+    }).catch(() => {})
   },
   beforeDestroy() {
     this.closeSse()
@@ -312,6 +323,9 @@ export default {
     /* ---------- 第①步 ---------- */
     async onAiModel() {
       if (!this.form.systemName.trim()) return this.$message.warning('请输入系统名称')
+      if (this.form.mode === 'ai' && !this.aiEnabled) {
+        return this.$message.warning('AI 建模未启用（服务端未配置 LLM key），请使用手动粘贴 DDL')
+      }
       if (this.form.mode === 'manual') {
         if (!this.form.ddlText.trim()) return this.$message.warning('请粘贴 DDL')
         this.step = 1
