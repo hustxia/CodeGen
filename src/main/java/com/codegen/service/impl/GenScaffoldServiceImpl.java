@@ -109,6 +109,14 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         if (Boolean.TRUE.equals(dto.getWithAuth())) {
             write(backendRoot, pkgPath + "/common/config/AuthContextFilter.java",
                     authContextFilterJava(pkg), "backend", force, vo, counter);
+            // V5.0 F-07：登录基座闭环——以前 filter「非空 token 即放行」是占位实现，
+            // 401 拦得住陌生人却发不出合法 token，登录页成了摆设
+            write(backendRoot, pkgPath + "/common/auth/TokenStore.java",
+                    tokenStoreJava(pkg), "backend", force, vo, counter);
+            write(backendRoot, pkgPath + "/common/auth/AuthController.java",
+                    authControllerJava(pkg), "backend", force, vo, counter);
+            write(backendRoot, "db/init_sys_user.sql", seedSql(),
+                    "backend", force, vo, counter);
         }
         write(backendRoot, "src/main/resources/application.yml", applicationYml(dto, pkg, project, serverPort),
                 "backend", force, vo, counter);
@@ -134,6 +142,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             write(frontendRoot, "src/utils/request.js", frontendRequestJs(), "frontend", force, vo, counter);
             write(frontendRoot, "src/layout/index.vue", frontendLayoutVue(project), "frontend", force, vo, counter);
             write(frontendRoot, "src/views/index.vue", frontendHomeVue(project), "frontend", force, vo, counter);
+            // V5.0 F-07：登录页与路由守卫（401 跳转目标从 request.js 来）
+            write(frontendRoot, "src/views/login.vue", frontendLoginVue(project), "frontend", force, vo, counter);
             write(frontendRoot, "src/router/index.js", frontendRouterJs(), "frontend", force, vo, counter);
             write(frontendRoot, "src/store/index.js", frontendStoreJs(), "frontend", force, vo, counter);
             write(frontendRoot, ".gitignore", frontendGitignore(), "frontend", force, vo, counter);
@@ -1442,6 +1452,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
     private String authContextFilterJava(String pkg) {
         return "package " + pkg + ".common.config;\n\n"
+                + "import " + pkg + ".common.auth.TokenStore;\n"
                 + "import " + pkg + ".common.context.UserContext;\n"
                 + "import " + pkg + ".common.result.Result;\n"
                 + "import " + pkg + ".common.result.ResultCode;\n"
@@ -1450,6 +1461,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "import jakarta.servlet.ServletException;\n"
                 + "import jakarta.servlet.http.HttpServletRequest;\n"
                 + "import jakarta.servlet.http.HttpServletResponse;\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
                 + "import org.springframework.core.Ordered;\n"
                 + "import org.springframework.core.annotation.Order;\n"
                 + "import org.springframework.http.MediaType;\n"
@@ -1469,6 +1481,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "@Order(Ordered.HIGHEST_PRECEDENCE + 10)\n"
                 + "public class AuthContextFilter extends OncePerRequestFilter {\n\n"
                 + "    private static final String BEARER_PREFIX = \"Bearer \";\n\n"
+                + "    @Autowired\n"
+                + "    private TokenStore tokenStore;\n\n"
                 + "    /** 无需 token 即可访问的路径前缀 */\n"
                 + "    private static final List<String> WHITE_LIST = List.of(\n"
                 + "            \"/auth/login\",\n"
@@ -1492,13 +1506,13 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        boolean hasToken = StringUtils.hasText(authorization) && authorization.startsWith(BEARER_PREFIX);\n\n"
                 + "        if (hasToken) {\n"
                 + "            String token = authorization.substring(BEARER_PREFIX.length());\n"
-                + "            try {\n"
-                + "                // 此处按项目实际的 token 解析方式替换；骨架先做「非空即放行 + 写入占位用户」\n"
-                + "                UserContext.setUsername(\"token-user\");\n"
-                + "            } catch (Exception e) {\n"
+                + "            // V5.0 F-07：token 由 /auth/login 签发，TokenStore 校验有效性（过期/登出即 401）\n"
+                + "            String username = tokenStore.usernameOf(token);\n"
+                + "            if (username == null) {\n"
                 + "                writeUnauthorized(response, \"登录状态已失效，请重新登录\");\n"
                 + "                return;\n"
                 + "            }\n"
+                + "            UserContext.setUsername(username);\n"
                 + "            try {\n"
                 + "                filterChain.doFilter(request, response);\n"
                 + "            } finally {\n"
@@ -1533,6 +1547,200 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        response.getWriter().write(objectMapper.writeValueAsString(body));\n"
                 + "    }\n"
                 + "}\n";
+    }
+
+    /**
+     * V5.0 F-07：登录令牌内存存储。
+     * 骨架级实现（重启即失效），接真实项目换 Redis/JWT——但「登录能发出合法 token」
+     * 这件事必须开箱即用，否则 withAuth 生成的 401 拦截只是把所有人拦在门外。
+     */
+    private String tokenStoreJava(String pkg) {
+        return "package " + pkg + ".common.auth;\n\n"
+                + "import org.springframework.stereotype.Component;\n\n"
+                + "import java.time.Instant;\n"
+                + "import java.util.Map;\n"
+                + "import java.util.UUID;\n"
+                + "import java.util.concurrent.ConcurrentHashMap;\n\n"
+                + "/**\n"
+                + " * 登录令牌内存存储：/auth/login 签发，AuthContextFilter 校验。\n"
+                + " * 骨架级实现（重启即全员下线），接真实项目请换 Redis/JWT。\n"
+                + " */\n"
+                + "@Component\n"
+                + "public class TokenStore {\n\n"
+                + "    private static final long TTL_SECONDS = 24 * 3600L;\n\n"
+                + "    private final Map<String, Entry> store = new ConcurrentHashMap<>();\n\n"
+                + "    public String create(String username) {\n"
+                + "        String token = UUID.randomUUID().toString().replace(\"-\", \"\");\n"
+                + "        store.put(token, new Entry(username, Instant.now().plusSeconds(TTL_SECONDS)));\n"
+                + "        return token;\n"
+                + "    }\n\n"
+                + "    public String usernameOf(String token) {\n"
+                + "        Entry entry = store.get(token);\n"
+                + "        if (entry == null) {\n"
+                + "            return null;\n"
+                + "        }\n"
+                + "        if (Instant.now().isAfter(entry.expireAt())) {\n"
+                + "            store.remove(token);\n"
+                + "            return null;\n"
+                + "        }\n"
+                + "        return entry.username();\n"
+                + "    }\n\n"
+                + "    public void remove(String token) {\n"
+                + "        store.remove(token);\n"
+                + "    }\n\n"
+                + "    private record Entry(String username, Instant expireAt) {\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    private String authControllerJava(String pkg) {
+        return "package " + pkg + ".common.auth;\n\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
+                + "import org.springframework.jdbc.core.JdbcTemplate;\n"
+                + "import org.springframework.util.StringUtils;\n"
+                + "import org.springframework.web.bind.annotation.GetMapping;\n"
+                + "import org.springframework.web.bind.annotation.PostMapping;\n"
+                + "import org.springframework.web.bind.annotation.RequestBody;\n"
+                + "import org.springframework.web.bind.annotation.RequestHeader;\n"
+                + "import org.springframework.web.bind.annotation.RequestMapping;\n"
+                + "import org.springframework.web.bind.annotation.RestController;\n\n"
+                + "import java.nio.charset.StandardCharsets;\n"
+                + "import java.security.MessageDigest;\n"
+                + "import java.util.HashMap;\n"
+                + "import java.util.List;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * 登录基座：POST /auth/login、POST /auth/logout、GET /auth/me。\n"
+                + " * 密码存 SHA-256（种子 SQL 里用 MySQL SHA2 写入，两边口径一致）。\n"
+                + " * 接真实项目请升级 BCrypt + 验证码 + 锁定策略。\n"
+                + " */\n"
+                + "@RestController\n"
+                + "@RequestMapping(\"/auth\")\n"
+                + "public class AuthController {\n\n"
+                + "    @Autowired\n"
+                + "    private JdbcTemplate jdbcTemplate;\n\n"
+                + "    @Autowired\n"
+                + "    private TokenStore tokenStore;\n\n"
+                + "    @PostMapping(\"/login\")\n"
+                + "    public Map<String, Object> login(@RequestBody Map<String, String> body) {\n"
+                + "        String username = body.getOrDefault(\"username\", \"\");\n"
+                + "        String password = body.getOrDefault(\"password\", \"\");\n"
+                + "        if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {\n"
+                + "            return Map.of(\"code\", 400, \"msg\", \"用户名或密码不能为空\");\n"
+                + "        }\n"
+                + "        List<Map<String, Object>> users = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT id, username, password FROM sys_user WHERE username = ? AND deleted = 0\",\n"
+                + "                username);\n"
+                + "        if (users.isEmpty() || !sha256(password).equalsIgnoreCase(\n"
+                + "                String.valueOf(users.get(0).get(\"password\")))) {\n"
+                + "            return Map.of(\"code\", 400, \"msg\", \"用户名或密码错误\");\n"
+                + "        }\n"
+                + "        String token = tokenStore.create(username);\n"
+                + "        Map<String, Object> data = new HashMap<>();\n"
+                + "        data.put(\"token\", token);\n"
+                + "        data.put(\"username\", username);\n"
+                + "        return Map.of(\"code\", 200, \"msg\", \"success\", \"data\", data);\n"
+                + "    }\n\n"
+                + "    @PostMapping(\"/logout\")\n"
+                + "    public Map<String, Object> logout(@RequestHeader(value = \"Authorization\", required = false) String authorization) {\n"
+                + "        if (StringUtils.hasText(authorization) && authorization.startsWith(\"Bearer \")) {\n"
+                + "            tokenStore.remove(authorization.substring(7));\n"
+                + "        }\n"
+                + "        return Map.of(\"code\", 200, \"msg\", \"success\");\n"
+                + "    }\n\n"
+                + "    @GetMapping(\"/me\")\n"
+                + "    public Map<String, Object> me(@RequestHeader(value = \"Authorization\", required = false) String authorization) {\n"
+                + "        if (!StringUtils.hasText(authorization) || !authorization.startsWith(\"Bearer \")) {\n"
+                + "            return Map.of(\"code\", 401, \"msg\", \"未登录\");\n"
+                + "        }\n"
+                + "        String username = tokenStore.usernameOf(authorization.substring(7));\n"
+                + "        if (username == null) {\n"
+                + "            return Map.of(\"code\", 401, \"msg\", \"登录状态已失效\");\n"
+                + "        }\n"
+                + "        return Map.of(\"code\", 200, \"msg\", \"success\", \"data\", Map.of(\"username\", username));\n"
+                + "    }\n\n"
+                + "    private String sha256(String text) {\n"
+                + "        try {\n"
+                + "            MessageDigest digest = MessageDigest.getInstance(\"SHA-256\");\n"
+                + "            byte[] hash = digest.digest(text.getBytes(StandardCharsets.UTF_8));\n"
+                + "            StringBuilder sb = new StringBuilder();\n"
+                + "            for (byte b : hash) {\n"
+                + "                sb.append(String.format(\"%02x\", b));\n"
+                + "            }\n"
+                + "            return sb.toString();\n"
+                + "        } catch (Exception e) {\n"
+                + "            throw new IllegalStateException(\"SHA-256 不可用\", e);\n"
+                + "        }\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    private String seedSql() {
+        return "-- 骨架自带登录基座：admin / admin123\n"
+                + "-- 由建系统流水线在建库后自动执行；手工部署时也可以手动跑本文件\n"
+                + "CREATE TABLE IF NOT EXISTS sys_user (\n"
+                + "  id bigint NOT NULL AUTO_INCREMENT COMMENT '主键',\n"
+                + "  username varchar(64) NOT NULL COMMENT '登录名',\n"
+                + "  password varchar(64) NOT NULL COMMENT '密码（SHA-256）',\n"
+                + "  nickname varchar(64) NULL COMMENT '昵称',\n"
+                + "  create_time datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',\n"
+                + "  update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',\n"
+                + "  create_by bigint NULL COMMENT '创建人',\n"
+                + "  update_by bigint NULL COMMENT '更新人',\n"
+                + "  deleted tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',\n"
+                + "  PRIMARY KEY (id),\n"
+                + "  UNIQUE KEY uk_username (username)\n"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统用户';\n\n"
+                + "INSERT IGNORE INTO sys_user (username, password, nickname)\n"
+                + "VALUES ('admin', SHA2('admin123', 256), '管理员');\n";
+    }
+
+    private String frontendLoginVue(String project) {
+        return "<template>\n"
+                + "  <div class=\"login-wrap\">\n"
+                + "    <el-card class=\"login-card\">\n"
+                + "      <h2>" + project + "</h2>\n"
+                + "      <el-form @submit.native.prevent=\"doLogin\">\n"
+                + "        <el-form-item>\n"
+                + "          <el-input v-model=\"form.username\" placeholder=\"用户名\" />\n"
+                + "        </el-form-item>\n"
+                + "        <el-form-item>\n"
+                + "          <el-input v-model=\"form.password\" type=\"password\" placeholder=\"密码\" show-password />\n"
+                + "        </el-form-item>\n"
+                + "        <el-button type=\"primary\" :loading=\"loading\" native-type=\"submit\" style=\"width:100%\">登 录</el-button>\n"
+                + "      </el-form>\n"
+                + "      <p class=\"tip\">默认账号 admin / admin123</p>\n"
+                + "    </el-card>\n"
+                + "  </div>\n"
+                + "</template>\n\n"
+                + "<script>\n"
+                + "import request from '@/utils/request'\n\n"
+                + "export default {\n"
+                + "  name: 'Login',\n"
+                + "  data() {\n"
+                + "    return { form: { username: 'admin', password: '' }, loading: false }\n"
+                + "  },\n"
+                + "  methods: {\n"
+                + "    async doLogin() {\n"
+                + "      if (!this.form.username || !this.form.password) return\n"
+                + "      this.loading = true\n"
+                + "      try {\n"
+                + "        const res = await request.post('/auth/login', this.form)\n"
+                + "        localStorage.setItem('token', res.data.token)\n"
+                + "        localStorage.setItem('username', res.data.username)\n"
+                + "        this.$router.push('/')\n"
+                + "      } finally {\n"
+                + "        this.loading = false\n"
+                + "      }\n"
+                + "    }\n"
+                + "  }\n"
+                + "}\n"
+                + "</script>\n\n"
+                + "<style scoped>\n"
+                + ".login-wrap { display: flex; align-items: center; justify-content: center; height: 100vh; background: #f0f2f5; }\n"
+                + ".login-card { width: 360px; text-align: center; }\n"
+                + ".tip { color: #999; font-size: 12px; margin-bottom: 0; }\n"
+                + "</style>\n";
     }
 
     private String applicationYml(GenScaffoldDTO dto, String pkg, String project, int serverPort) {
@@ -1876,6 +2084,12 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "Vue.use(VueRouter)\n\n"
                 + "const routes = [\n"
                 + "  {\n"
+                + "    path: '/login',\n"
+                + "    name: 'Login',\n"
+                + "    component: () => import('@/views/login.vue'),\n"
+                + "    meta: { title: '登录' }\n"
+                + "  },\n"
+                + "  {\n"
                 + "    path: '/',\n"
                 + "    component: Layout,\n"
                 + "    redirect: '/home',\n"
@@ -1891,6 +2105,15 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "]\n\n"
                 + "const router = new VueRouter({\n"
                 + "  routes\n"
+                + "})\n\n"
+                + "// 未登录一律踢到 /login；401 时 request.js 会清 token 并跳这里\n"
+                + "router.beforeEach((to, from, next) => {\n"
+                + "  const token = localStorage.getItem('token')\n"
+                + "  if (to.path !== '/login' && !token) {\n"
+                + "    next('/login')\n"
+                + "  } else {\n"
+                + "    next()\n"
+                + "  }\n"
                 + "})\n\n"
                 + "export default router\n";
     }

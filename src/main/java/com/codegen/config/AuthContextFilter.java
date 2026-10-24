@@ -69,7 +69,15 @@ public class AuthContextFilter extends OncePerRequestFilter {
             return;
         }
 
+        // V5.0：SSE（EventSource）无法自定义请求头，允许 access_token 查询参数兜底。
+        // 只在 header 缺失时生效，优先级仍是 Authorization 头
         String authorization = request.getHeader("Authorization");
+        if (!StringUtils.hasText(authorization) || !authorization.startsWith(BEARER_PREFIX)) {
+            String queryToken = request.getParameter("access_token");
+            if (StringUtils.hasText(queryToken)) {
+                authorization = BEARER_PREFIX + queryToken;
+            }
+        }
         boolean hasToken = StringUtils.hasText(authorization) && authorization.startsWith(BEARER_PREFIX);
 
         if (hasToken) {

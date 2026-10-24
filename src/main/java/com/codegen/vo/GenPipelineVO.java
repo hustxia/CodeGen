@@ -1,5 +1,6 @@
 package com.codegen.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -67,6 +68,7 @@ public class GenPipelineVO {
     private Long frontendPid;
 
     @Schema(description = "创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
     @Schema(description = "步骤明细（按 stepOrder 升序）")
@@ -102,9 +104,11 @@ public class GenPipelineVO {
         private String logExcerpt;
 
         @Schema(description = "开始时间")
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime startedAt;
 
         @Schema(description = "结束时间")
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime finishedAt;
     }
 }

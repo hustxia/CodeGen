@@ -92,6 +92,26 @@ gen:
   menu:
     outlet: artifact
 
+  # ============================================================
+  # V5.0「一句话建系统」流水线
+  # AI 的 base-url/api-key/model 放 application-local.yml（不入库）；
+  # enabled=false 时前端自动降级「手动粘贴 DDL」，不影响其余步骤。
+  # ============================================================
+  pipeline:
+    ai:
+      enabled: false
+      # base-url: https://api.xxx.com/v1
+      # api-key: sk-xxx
+      # model: gpt-4o-mini
+      timeout-seconds: 30
+    # java-home: C:/Users/xiayuhong/.jdks/temurin-21   # 打包后端用，留空用当前进程
+    # maven: C:/dev/maven/bin/mvn.cmd                  # 留空回落 gen.output.maven
+    npm: npm
+    backend-port-base: 8140
+    frontend-port-base: 9040
+    deploy-timeout-seconds: 120
+    log-dir: logs/pipeline
+
 # 操作日志的 IP 归属地：先查 classpath:/ip/ip2region.db 离线库，查不到才走在线接口
 # 内网/本机不发请求；结果缓存 24h，失败负缓存 5min
 # 换成自建或商用服务时保持 {ip} 占位即可，返回体认 province/regionName/pro 与 city

@@ -185,8 +185,11 @@ public final class GenTemplateModel {
                 "com.demo");
         String className = table.getClassName();
         String module = orDefault(table.getModuleName(), "");
+        // V5.0 F-09：删掉 "demo" 硬编码回落——空前缀就空前缀。
+        // 以前空前缀会被兜成 demo，生成物 apiBase 出现 /api/demo，
+        // 目标工程没有这个网关段时全部 404，排查起来像「代码生成器抽风」。
         String prefix = firstText(table.getGatewayPrefix(), project == null ? null : project.gatewayPrefix(),
-                "demo");
+                "");
         String backendBase = orDefault(table.getBackendPath(), "src/main/java/" + pkg.replace('.', '/'));
         // 根包名不进 gen_table（它是工程级属性），所以只看系统 → 全局静态值
         String effectiveRootPkg = firstText(project == null ? null : project.rootPackage(), rootPkg);
@@ -226,7 +229,9 @@ public final class GenTemplateModel {
         m.put("moduleName", module);
         m.put("gatewayPrefix", prefix);
         m.put("author", orDefault(table.getAuthor(), ""));
-        m.put("apiBase", "/api/" + prefix + "/" + module);
+        // F-09：空前缀 → /{module}（与后端 @RequestMapping("/${moduleName}") 直连，代理只剥 /dev-api）；
+        // 有前缀 → /api/{prefix}/{module}（网关段原样保留，代理剥 /dev-api/api/{prefix}）
+        m.put("apiBase", prefix.isEmpty() ? "/" + module : "/api/" + prefix + "/" + module);
 
         // 原始开关
         m.put("genEntity", on(table.getGenEntity()));

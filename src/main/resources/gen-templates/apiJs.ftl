@@ -1,6 +1,6 @@
 import request, { toPageData } from '@/utils/request'
 
-// ${comment}接口：${tableName}（经网关 /api/${gatewayPrefix}）
+// ${comment}接口：${tableName}<#if gatewayPrefix?? && gatewayPrefix != ''>（经网关 /api/${gatewayPrefix}）</#if>
 // <gen:begin key="api-fns">
 <#if genPageApi>function toPageQuery(params) {
   const { page, size, ...query } = params || {}
