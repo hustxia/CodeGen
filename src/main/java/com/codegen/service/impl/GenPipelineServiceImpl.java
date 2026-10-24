@@ -153,7 +153,8 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     @Override
     public GenPipelinePrepareVO prepareDb(Long id, GenPipelinePrepareDTO dto) {
         GenPipeline pipeline = mustGet(id);
-        if (!"draft".equals(pipeline.getStatus()) && !"await_confirm".equals(pipeline.getStatus())) {
+        if (!"draft".equals(pipeline.getStatus()) && !"await_confirm".equals(pipeline.getStatus())
+                && !"failed".equals(pipeline.getStatus())) {
             throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
                     "任务状态为 " + pipeline.getStatus() + "，不允许建库");
         }

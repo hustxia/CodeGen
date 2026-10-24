@@ -202,40 +202,74 @@ public class GenDdlServiceImpl implements GenDdlService {
         validateSchema(schema);
         vo.setSchema(schema);
 
-        // 2. 逐条执行
-        int idx = 0;
-        for (String stmt : statements) {
-            idx++;
-            String summary = summarize(stmt);
-            if (isDestructive(stmt) && !allowDestructive) {
-                vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "BLOCKED",
-                        "危险语句已拦截（DROP/TRUNCATE/ALTER DROP）。确认无误请勾选「允许破坏性语句」后重试"));
-                vo.setBlockedCount(vo.getBlockedCount() + 1);
-                continue;
-            }
-            if (dryRun) {
-                vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "DRY", null));
-                vo.setSuccessCount(vo.getSuccessCount() + 1);
-                continue;
-            }
-            try {
-                execOne(schema, stmt);
-                vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "OK", null));
-                vo.setSuccessCount(vo.getSuccessCount() + 1);
-            } catch (Exception e) {
-                String msg = rootMessage(e);
-                if (isIdempotentError(e)) {
-                    // 迁移脚本重复执行：列/表已存在属于预期内，不算失败
-                    vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "SKIPPED",
-                            "已存在，跳过：" + msg));
-                    vo.setSkippedCount(vo.getSkippedCount() + 1);
-                } else {
-                    vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "FAILED", msg));
-                    vo.setFailedCount(vo.getFailedCount() + 1);
-                    log.warn("DDL 执行失败 [{}]: {} - {}", idx, summary, msg);
+        // 2. 逐条执行 —— 必须单连接：HikariCP 每次借还连接都会把 catalog 重置回默认库，
+        //    且 Connector/J 的 setCatalog 在本环境下静默无效（实测建表落错库）；
+        //    同一条连接上用 USE 切库是唯一可靠做法，整段脚本一起执行完再归还。
+        jdbcTemplate.execute((ConnectionCallback<Void>) conn -> {
+            // 记住原库：执行完必须切回去，否则连接带着目标库回池（Hikari 感知不到裸 USE），
+            // 后续请求复用到该连接就会打错库（实测登录报 Unknown database）
+            String originalDb = null;
+            try (Statement st0 = conn.createStatement();
+                 java.sql.ResultSet rs = st0.executeQuery("SELECT DATABASE()")) {
+                if (rs.next()) {
+                    originalDb = rs.getString(1);
                 }
             }
-        }
+            try {
+                try (Statement st = conn.createStatement()) {
+                int idx = 0;
+                for (String stmt : statements) {
+                    idx++;
+                    String summary = summarize(stmt);
+                    if (isDestructive(stmt) && !allowDestructive) {
+                        vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "BLOCKED",
+                                "危险语句已拦截（DROP/TRUNCATE/ALTER DROP）。确认无误请勾选「允许破坏性语句」后重试"));
+                        vo.setBlockedCount(vo.getBlockedCount() + 1);
+                        continue;
+                    }
+                    if (dryRun) {
+                        vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "DRY", null));
+                        vo.setSuccessCount(vo.getSuccessCount() + 1);
+                        continue;
+                    }
+                    // 每条语句前切库：目标库可能由本脚本前一条 CREATE DATABASE 刚创建，
+                    // 库未建时 USE 失败不致命（回落当前库执行，下一条语句前会再切）
+                    try {
+                        st.execute("USE `" + schema + "`");
+                    } catch (Exception ignored) {
+                        // ignore
+                    }
+                    try {
+                        st.execute(stmt);
+                        vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "OK", null));
+                        vo.setSuccessCount(vo.getSuccessCount() + 1);
+                    } catch (Exception e) {
+                        String msg = rootMessage(e);
+                        if (isIdempotentError(e)) {
+                            // 迁移脚本重复执行：列/表已存在属于预期内，不算失败
+                            vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "SKIPPED",
+                                    "已存在，跳过：" + msg));
+                            vo.setSkippedCount(vo.getSkippedCount() + 1);
+                        } else {
+                            vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "FAILED", msg));
+                            vo.setFailedCount(vo.getFailedCount() + 1);
+                            log.warn("DDL 执行失败 [{}]: {} - {}", idx, summary, msg);
+                        }
+                    }
+                }
+                }
+            } finally {
+                // 归还前切回原库，别让带毒连接回池
+                if (originalDb != null && !originalDb.isBlank()) {
+                    try (Statement st = conn.createStatement()) {
+                        st.execute("USE `" + originalDb + "`");
+                    } catch (Exception ignored) {
+                        // ignore
+                    }
+                }
+            }
+            return null;
+        });
 
         // 3. 收集 DDL 里出现的表名
         Set<String> tables = new LinkedHashSet<>();
@@ -263,35 +297,6 @@ public class GenDdlServiceImpl implements GenDdlService {
             }
         }
         return vo;
-    }
-
-    /**
-     * 用原生 Statement 执行，避免 PreparedStatement 对 DDL 的额外限制；
-     * 每条语句前切到目标库，保证未写库名的 CREATE TABLE 落到正确位置。
-     */
-    private void execOne(String schema, String sql) {
-        jdbcTemplate.execute((ConnectionCallback<Void>) conn -> {
-            String oldCatalog = conn.getCatalog();
-            try (Statement st = conn.createStatement()) {
-                if (schema != null && !schema.equalsIgnoreCase(oldCatalog)) {
-                    try {
-                        conn.setCatalog(schema);
-                    } catch (Exception ignored) {
-                        // 库不存在时忽略，后续语句会以真实错误返回
-                    }
-                }
-                st.execute(sql);
-            } finally {
-                try {
-                    if (oldCatalog != null) {
-                        conn.setCatalog(oldCatalog);
-                    }
-                } catch (Exception ignored) {
-                    // 连接池归还时由驱动处理
-                }
-            }
-            return null;
-        });
     }
 
     private String detectSchema(List<String> statements) {
