@@ -70,7 +70,10 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         if (multi) {
             // 多模块：聚合 pom + 4 个子模块 pom；依赖拆分原则——common 承载全部基座依赖，
             // domain 只加 mybatis-plus，service 加 web 层与业务依赖，bootstrap 只做启动壳
-            String parentArtifactId = backendModule + "-parent";
+            // V5.5 收尾修复：artifactId 必须匹配 Maven id 模式（[A-Za-z0-9_\-.]+），
+            // backendModule 默认取 projectName（用户常中文命名），中文直进 artifactId 产物 mvn 直接拒读。
+            // 聚合坐标统一用 stem（rootPackage 最后一段，纯合法字符）；可读名放 <name>。
+            String parentArtifactId = stem + "-parent";
             write(backendRoot, "pom.xml", pomMultiParent(project, pkg, stem, backendModule), "backend", force, vo, counter);
             write(backendRoot, stem + "-common/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "common",
                     dep("org.springframework.boot", "spring-boot-starter-web", null)
@@ -467,7 +470,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\n"
                 + "    <modelVersion>4.0.0</modelVersion>\n\n"
                 + "    <groupId>" + pkg + "</groupId>\n"
-                + "    <artifactId>" + backendModule + "-parent</artifactId>\n"
+                + "    <artifactId>" + stem + "-parent</artifactId>\n"
                 + "    <version>1.0.0</version>\n"
                 + "    <packaging>pom</packaging>\n"
                 + "    <name>" + backendModule + "-parent</name>\n"

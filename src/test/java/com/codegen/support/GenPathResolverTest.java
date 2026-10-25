@@ -224,6 +224,61 @@ class GenPathResolverTest {
         }
     }
 
+    @Nested
+    @DisplayName("V5.5 多模块：模块归属与相对路径前缀")
+    class MultiModule {
+
+        @Test
+        @DisplayName("moduleOfTpl：entity/mapper→domain，controller/service 系/dto/vo→service，前端产物 null")
+        void moduleOfTplMapping() {
+            assertEquals("domain", GenPathResolver.moduleOfTpl("entity"));
+            assertEquals("domain", GenPathResolver.moduleOfTpl("mapper"));
+            assertEquals("service", GenPathResolver.moduleOfTpl("controller"));
+            assertEquals("service", GenPathResolver.moduleOfTpl("service"));
+            // serviceImpl* 前缀判断必须在 service 之前，三个分道模板都归 service
+            assertEquals("service", GenPathResolver.moduleOfTpl("serviceImplSimple"));
+            assertEquals("service", GenPathResolver.moduleOfTpl("serviceImplTree"));
+            assertEquals("service", GenPathResolver.moduleOfTpl("serviceImplMasterdetail"));
+            assertEquals("service", GenPathResolver.moduleOfTpl("pageDto"));
+            assertEquals("service", GenPathResolver.moduleOfTpl("saveDto"));
+            assertEquals("service", GenPathResolver.moduleOfTpl("vo"));
+            // 前端/共享产物不属于后端子模块，多模块时原样落 backendRoot
+            assertEquals(null, GenPathResolver.moduleOfTpl("apiJs"));
+            assertEquals(null, GenPathResolver.moduleOfTpl("vuePage"));
+            assertEquals(null, GenPathResolver.moduleOfTpl("printPage"));
+            assertEquals(null, GenPathResolver.moduleOfTpl("routerSnippet"));
+            assertEquals(null, GenPathResolver.moduleOfTpl("readme"));
+            assertEquals(null, GenPathResolver.moduleOfTpl(null));
+        }
+
+        @Test
+        @DisplayName("moduleRelPrefix：multi 时 <stem>-<module>/，单模块与前端产物为空串")
+        void moduleRelPrefix() {
+            // multi：后端产物带模块前缀（stem = rootPackage 最后一段）
+            assertEquals("scm-domain/", GenPathResolver.moduleRelPrefix("entity", "multi", "com.demo.scm"));
+            assertEquals("scm-service/", GenPathResolver.moduleRelPrefix("controller", "multi", "com.demo.scm"));
+            // multi：前端产物仍落 backendRoot，无前缀
+            assertEquals("", GenPathResolver.moduleRelPrefix("vuePage", "multi", "com.demo.scm"));
+            // 单模块（null / mono / micro）：一律无前缀，行为零变化
+            assertEquals("", GenPathResolver.moduleRelPrefix("entity", null, "com.demo.scm"));
+            assertEquals("", GenPathResolver.moduleRelPrefix("entity", "mono", "com.demo.scm"));
+            assertEquals("", GenPathResolver.moduleRelPrefix("entity", "micro", "com.demo.scm"));
+            // rootPackage 只有一段时 stem 取该段本身
+            assertEquals("com-domain/", GenPathResolver.moduleRelPrefix("entity", "multi", "com"));
+        }
+
+        @Test
+        @DisplayName("isMulti：仅 'multi'（忽略大小写与首尾空格）为真")
+        void isMulti() {
+            assertEquals(true, GenPathResolver.isMulti("multi"));
+            assertEquals(true, GenPathResolver.isMulti(" MULTI "));
+            assertEquals(false, GenPathResolver.isMulti(null));
+            assertEquals(false, GenPathResolver.isMulti(""));
+            assertEquals(false, GenPathResolver.isMulti("mono"));
+            assertEquals(false, GenPathResolver.isMulti("micro"));
+        }
+    }
+
     private static String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value;
     }

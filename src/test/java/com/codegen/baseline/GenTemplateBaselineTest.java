@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * 更新后请把 {@code src/test/resources/gen-baseline/} 的 diff 一起提交，
  * 让「模板变了什么」在 review 里可见。
  */
-@DisplayName("产物黄金基线：13 个模板 × 4 个场景逐字符比对")
+@DisplayName("产物黄金基线：13 个模板 × 5 个场景逐字符比对")
 class GenTemplateBaselineTest {
 
     private static final String UPDATE_FLAG = "gen.baseline.update";
@@ -101,6 +101,12 @@ class GenTemplateBaselineTest {
     @DisplayName("master-multichild：一主两子（其一含三级）的 12 个产物")
     void masterMultichild() {
         compare("master-multichild", modelMasterMultichild());
+    }
+
+    @Test
+    @DisplayName("multi：多模块结构（simple 同表，projectStructure='multi'）的 13 个产物")
+    void multi() {
+        compare("multi", modelMulti());
     }
 
     // ------------------------------------------------------------------
@@ -234,6 +240,18 @@ class GenTemplateBaselineTest {
         cols.add(col("tag_name", "标签名称", "varchar(50)", "tagName", "String", 0, 1, 1, "LIKE", 1, 1, 2));
         cols.add(col("sort_no", "排序", "int", "sortNo", "Integer", 0, 0, 0, "EQ", 1, 1, 3));
         return GenTemplateModel.build(table, cols);
+    }
+
+    /** V5.5 多模块场景：与 simple 同表同列，仅 projectStructure='multi'，钉住模块前缀差异 */
+    private static Map<String, Object> modelMulti() {
+        GenTable table = baseTable("demo_tag", "标签", "DemoTag", "tag");
+        List<GenTableColumn> cols = new ArrayList<>();
+        cols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        cols.add(col("tag_name", "标签名称", "varchar(50)", "tagName", "String", 0, 1, 1, "LIKE", 1, 1, 2));
+        cols.add(col("sort_no", "排序", "int", "sortNo", "Integer", 0, 0, 0, "EQ", 1, 1, 3));
+        GenTemplateModel.ProjectConfig project = new GenTemplateModel.ProjectConfig(
+                null, null, "com.codegen", "demo", null, null, "multi");
+        return GenTemplateModel.build(table, cols, (java.util.List<GenTemplateModel.ChildInfo>) null, project);
     }
 
     private static Map<String, Object> modelRelation() {
@@ -388,7 +406,7 @@ class GenTemplateBaselineTest {
             return;
         }
         List<String> known = new ArrayList<>();
-        for (String caseName : List.of("simple", "relation", "master-detail", "master-multichild")) {
+        for (String caseName : List.of("simple", "relation", "master-detail", "master-multichild", "multi")) {
             for (String tpl : TEMPLATES) {
                 known.add(caseName + "/" + tpl + ".txt");
             }

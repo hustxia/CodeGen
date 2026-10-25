@@ -213,6 +213,12 @@ public class SysProjectServiceImpl implements SysProjectService {
         // 默认标记只走 setDefault，避免这里被改成 0 导致一个默认都没有
         project.setIsDefault(old.getIsDefault());
         projectMapper.updateById(project);
+        // V5.5 收尾修复：projectStructure 是三态字段（null=单模块/跟随默认），
+        // updateById 默认 NOT_NULL 策略不写 null，「multi 改回单模块」保存不上。
+        // 显式再写一次该列：null 时生成 SET project_structure=NULL，非 null 重复写同值无害。
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getProjectStructure, project.getProjectStructure()));
     }
 
     @Override
