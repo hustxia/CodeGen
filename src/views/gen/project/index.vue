@@ -153,6 +153,18 @@
           </div>
         </el-form-item>
 
+        <el-form-item label="流程引擎">
+          <el-select v-model="form.flowEngine" clearable placeholder="默认：内置简易流" style="width: 300px">
+            <el-option label="内置简易流（状态机直线流）" value="" />
+            <el-option label="Activiti 8 引擎（BPMN/待办中心）" value="activiti" />
+          </el-select>
+          <div class="form-tip">
+            绑定了流程编码（flow_code）的表按此引擎生成产物：内置流零依赖、够用直线审批；
+            Activiti 引擎自动翻译节点定义为 BPMN 并部署，交付待办中心与完整审批历史（依赖经 Alfresco 仓库拉取）；
+            保存后下次脚手架生成生效
+          </div>
+        </el-form-item>
+
         <el-form-item label="网关前缀">
           <el-input v-model="form.gatewayPrefix" placeholder="如 crm，接口路径会是 /api/crm/..." />
         </el-form-item>
@@ -261,7 +273,9 @@ const defaultForm = () => ({
   // V4.5 打印单据默认：独立于 17 键体系（硬编码兜底是关而非开），null=未配置（关）
   defaultGenPrint: null,
   // 工程结构：null/''=单模块，'multi'=Maven 多模块（微服务就绪单体），'micro'=微服务设施（V6.0：五模块+Nacos/Gateway/Feign）
-  projectStructure: ''
+  projectStructure: '',
+  // V6.1 流程引擎：null/''=内置简易流，'activiti'=Activiti 8（BPMN 翻译+待办中心）
+  flowEngine: ''
 })
 
 // 与后端 GenSwitchDefaults.KEYS 一一对应，顺序也一致
