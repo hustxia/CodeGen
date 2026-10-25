@@ -140,13 +140,16 @@
         </el-form-item>
 
         <el-form-item label="工程结构">
-          <el-select v-model="form.projectStructure" clearable placeholder="默认：单模块" style="width: 260px">
+          <el-select v-model="form.projectStructure" clearable placeholder="默认：单模块" style="width: 300px">
             <el-option label="单模块（跟随默认）" value="" />
             <el-option label="多模块（微服务就绪）" value="multi" />
+            <el-option label="微服务设施（Nacos/网关/Feign）" value="micro" />
           </el-select>
           <div class="form-tip">
             多模块生成 parent + common/domain/service/bootstrap 四个子模块，模块边界即未来微服务拆分线；
-            保存后下次生成生效
+            微服务设施在多模块基础上追加 gateway 网关模块与 OpenFeign 骨架，内置 Nacos 开关
+            （默认关=与多模块行为一致，开=注册中心+负载均衡）；
+            保存后下次脚手架生成生效
           </div>
         </el-form-item>
 
@@ -257,7 +260,7 @@ const defaultForm = () => ({
   defaultGenDeleteBtn: 1,
   // V4.5 打印单据默认：独立于 17 键体系（硬编码兜底是关而非开），null=未配置（关）
   defaultGenPrint: null,
-  // V5.5 工程结构：null/''=单模块，'multi'=Maven 多模块（微服务就绪单体）
+  // 工程结构：null/''=单模块，'multi'=Maven 多模块（微服务就绪单体），'micro'=微服务设施（V6.0：五模块+Nacos/Gateway/Feign）
   projectStructure: ''
 })
 
