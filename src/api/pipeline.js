@@ -73,3 +73,8 @@ export function lintDb(dbName) {
 export function fixPipelineLint(id) {
   return request({ url: `/gen/pipeline/${id}/lint/fix`, method: 'post' })
 }
+
+// V5.2 数据初始化：存量系统补跑 seed（只补台账中 0 行的表，幂等）
+export function seedPipeline(id) {
+  return request({ url: `/gen/pipeline/${id}/seed`, method: 'post', timeout: 300000 })
+}

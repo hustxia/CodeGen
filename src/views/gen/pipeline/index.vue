@@ -121,6 +121,15 @@
           </div>
         </template>
 
+        <!-- V5.2 数据初始化（两种模式共用） -->
+        <div class="seed-bar">
+          <el-radio-group v-model="form.seedMode" size="small">
+            <el-radio label="rule">规则生成示例数据（推荐）</el-radio>
+            <el-radio label="off">跳过</el-radio>
+          </el-radio-group>
+          <div class="seed-tip">规则生成：建表后按外键依赖自动灌入中文示例数据（主数据 12 行、单据 8 行、明细跟随主表），枚举/唯一/必填约束全部满足，单次上限 2000 行。</div>
+        </div>
+
         <div style="margin-top: 12px">
           <el-button size="small" icon="el-icon-back" @click="step = 0">上一步</el-button>
         </div>
@@ -355,7 +364,7 @@ export default {
       aiEnabled: false,
       aiScale: 'quick',
       aiProgressText: '',
-      form: { systemName: '', systemDesc: '', dbName: '', mode: 'ai', ddlText: '' },
+      form: { systemName: '', systemDesc: '', dbName: '', mode: 'ai', ddlText: '', seedMode: 'rule' },
       tables: [],
       aiLoading: false,
       dbLoading: false,
@@ -645,6 +654,14 @@ export default {
 .table-block { margin-bottom: 16px; border: 1px solid #ebeef5; border-radius: 4px; padding: 10px; }
 .table-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
 .audit-note { color: #909399; font-size: 12px; margin-top: 6px; }
+.seed-bar {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid #d9ecff;
+  border-radius: 4px;
+  background: #ecf5ff;
+}
+.seed-tip { color: #909399; font-size: 12px; margin-top: 8px; line-height: 1.6; }
 .progress-head {
   display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
 }
