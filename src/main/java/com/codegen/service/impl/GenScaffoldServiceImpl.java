@@ -72,6 +72,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         int[] counter = new int[]{0, 0};
         String appClass = toClassName(project);
 
+        boolean activiti = "activiti".equalsIgnoreCase(
+                StringUtils.hasText(dto.getFlowEngine()) ? dto.getFlowEngine().trim() : "");
         // ---------- 后端 ----------
         if (multi) {
             // 多模块：聚合 pom + 4 个子模块 pom；依赖拆分原则——common 承载全部基座依赖，
@@ -80,7 +82,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             // backendModule 默认取 projectName（用户常中文命名），中文直进 artifactId 产物 mvn 直接拒读。
             // 聚合坐标统一用 stem（rootPackage 最后一段，纯合法字符）；可读名放 <name>。
             String parentArtifactId = stem + "-parent";
-            write(backendRoot, "pom.xml", pomMultiParent(project, pkg, stem, backendModule, micro), "backend", force, vo, counter);
+            write(backendRoot, "pom.xml", pomMultiParent(project, pkg, stem, backendModule, micro, activiti), "backend", force, vo, counter);
             write(backendRoot, stem + "-common/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "common",
                     dep("org.springframework.boot", "spring-boot-starter-web", null)
                             + dep("org.springframework.boot", "spring-boot-starter-validation", null)
@@ -115,6 +117,10 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                                     + dep("com.alibaba.cloud", "spring-cloud-starter-alibaba-nacos-config", null)
                                     + dep("org.springframework.cloud", "spring-cloud-starter-loadbalancer", null)
                                 : "")
+                            // V6.1：流程引擎在启动壳层装配（Runner/引擎服务都在 common，随依赖可达）
+                            + (activiti
+                                ? dep("org.activiti", "activiti-spring-boot-starter", "${activiti.version}")
+                                : "")
                             + "        <dependency>\n"
                             + "            <groupId>com.mysql</groupId>\n"
                             + "            <artifactId>mysql-connector-j</artifactId>\n"
@@ -140,14 +146,14 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                         remoteSampleClientJava(pkg, stem), "backend", force, vo, counter);
             }
         } else {
-            write(backendRoot, "pom.xml", pomXml(dto, project, pkg, backendModule, serverPort), "backend", force, vo, counter);
+            write(backendRoot, "pom.xml", pomXml(dto, project, pkg, backendModule, serverPort, activiti), "backend", force, vo, counter);
         }
 
         String pkgPath = "src/main/java/" + pkg.replace('.', '/');
         // 启动类与运行配置归 bootstrap；包名不变（仍是 <pkg> 根），@SpringBootApplication 默认扫描覆盖全部模块；
         // micro 时启动类追加 @EnableFeignClients 扫 remote 包（跨服务调用骨架）
         write(bootRoot, pkgPath + "/" + appClass + "Application.java",
-                applicationJava(pkg, appClass, micro), "backend", force, vo, counter);
+                applicationJava(pkg, appClass, micro, activiti), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/result/Result.java", resultJava(pkg), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/result/ResultCode.java", resultCodeJava(pkg), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/exception/BusinessException.java",
@@ -202,6 +208,40 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                     authControllerJava(pkg), "backend", force, vo, counter);
             write(bootRoot, "db/init_sys_user.sql", seedSql(),
                     "backend", force, vo, counter);
+        }
+        // V6.1 流程基座（恒写）：修复 controller.ftl 引用 ${pkg}.common.flow.FlowService
+        // 而基座从未生成的历史断裂——绑定 flow_code 的表生成产物此前编译不过。
+        // 引擎实现二选一：builtin=移植平台简易流（无第三方依赖）；activiti=引擎实现 + 部署 Runner
+        write(commonRoot, pkgPath + "/common/flow/FlowService.java",
+                flowServiceJava(pkg), "backend", force, vo, counter);
+        write(commonRoot, pkgPath + "/common/flow/FlowRecord.java",
+                flowRecordJava(pkg), "backend", force, vo, counter);
+        if (activiti) {
+            write(commonRoot, pkgPath + "/common/flow/ActivitiFlowService.java",
+                    activitiFlowServiceJava(pkg), "backend", force, vo, counter);
+            write(commonRoot, pkgPath + "/common/flow/FlowDeployRunner.java",
+                    flowDeployRunnerJava(pkg), "backend", force, vo, counter);
+        } else {
+            write(commonRoot, pkgPath + "/common/flow/BuiltinFlowService.java",
+                    builtinFlowServiceJava(pkg), "backend", force, vo, counter);
+        }
+        write(commonRoot, pkgPath + "/common/flow/FlowController.java",
+                flowControllerJava(pkg), "backend", force, vo, counter);
+        // 产物库流程表：DDL 恒写；绑定流程的定义 INSERT 由调用方经 flowDefs 下发（平台不直连产物库）
+        write(bootRoot, "db/init_sys_flow.sql", initSysFlowSql(dto.getFlowDefs()),
+                "backend", force, vo, counter);
+        // V6.2 部署物：genDeploy 开启才生成（缺省关闭 → 存量产物与旧版逐文件一致）
+        if (Boolean.TRUE.equals(dto.getGenDeploy())) {
+            write(bootRoot, "Dockerfile", dockerfileText(), "backend", force, vo, counter);
+            write(bootRoot, ".dockerignore", dockerignoreText(), "backend", force, vo, counter);
+            write(bootRoot, "docker-compose.yml", dockerComposeYml(project, serverPort, micro),
+                    "backend", force, vo, counter);
+            write(bootRoot, "deploy/ci-github-actions.yml.example", ciGithubActionsText(),
+                    "backend", force, vo, counter);
+            write(bootRoot, "deploy/Jenkinsfile.example", jenkinsfileText(),
+                    "backend", force, vo, counter);
+            vo.getNextSteps().add("部署物：docker build -t " + project.toLowerCase() + " . 后 docker compose up -d"
+                    + "（基础镜像可经 --build-arg 覆盖；CI 用 deploy/ 下的 .example 改名即用）");
         }
         write(bootRoot, "src/main/resources/application.yml",
                 applicationYml(dto, pkg, project, serverPort, stem, micro),
@@ -355,9 +395,951 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         return sb.length() == 0 ? "App" : sb.toString();
     }
 
+    // ============================ V6.1 流程基座 ============================
+
+    /** 产物 FlowService 接口：双引擎共用契约（submit/approve/reject/records/state + todo/done/taskDetail） */
+    private String flowServiceJava(String pkg) {
+        return "package " + pkg + ".common.flow;\n\n"
+                + "import java.util.List;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * V6.1 审批流统一契约：内置简易流（BuiltinFlowService）与 Activiti 引擎（ActivitiFlowService）\n"
+                + " * 二选一装配，controller.ftl 的四端点与本类的 todo/done/taskDetail 契约保持不变。\n"
+                + " */\n"
+                + "public interface FlowService {\n\n"
+                + "    void submit(String flowCode, Long bizId, String comment);\n\n"
+                + "    void approve(String flowCode, Long bizId, String comment);\n\n"
+                + "    void reject(String flowCode, Long bizId, String comment);\n\n"
+                + "    List<FlowRecord> records(String flowCode, Long bizId);\n\n"
+                + "    Map<String, Object> state(String flowCode, Long bizId);\n\n"
+                + "    /** 我的待办：引擎各自实现（builtin=当前状态+角色匹配；activiti=TaskService 候选查询） */\n"
+                + "    List<Map<String, Object>> todo();\n\n"
+                + "    /** 我的已办 */\n"
+                + "    List<Map<String, Object>> done();\n\n"
+                + "    /** 任务详情：任务 + 业务单据 + 审批记录聚合 */\n"
+                + "    Map<String, Object> taskDetail(String taskId);\n"
+                + "}\n";
+    }
+
+    /** 产物 FlowRecord：与平台 common.flow.FlowRecord 同构（records 兼容视图的投影目标） */
+    private String flowRecordJava(String pkg) {
+        return "package " + pkg + ".common.flow;\n\n"
+                + "import java.time.LocalDateTime;\n\n"
+                + "/** 审批流水（双引擎投影目标：builtin 直读 sys_flow_task，activiti 由 ACT_HI_* 投影） */\n"
+                + "public class FlowRecord {\n"
+                + "    private Long id;\n"
+                + "    private String flowCode;\n"
+                + "    private String bizTable;\n"
+                + "    private Long bizId;\n"
+                + "    private String fromStatus;\n"
+                + "    private String toStatus;\n"
+                + "    private String action;\n"
+                + "    private String comment;\n"
+                + "    private Long operUserId;\n"
+                + "    private String operName;\n"
+                + "    private LocalDateTime operTime;\n\n"
+                + "    public Long getId() { return id; }\n"
+                + "    public void setId(Long v) { this.id = v; }\n"
+                + "    public String getFlowCode() { return flowCode; }\n"
+                + "    public void setFlowCode(String v) { this.flowCode = v; }\n"
+                + "    public String getBizTable() { return bizTable; }\n"
+                + "    public void setBizTable(String v) { this.bizTable = v; }\n"
+                + "    public Long getBizId() { return bizId; }\n"
+                + "    public void setBizId(Long v) { this.bizId = v; }\n"
+                + "    public String getFromStatus() { return fromStatus; }\n"
+                + "    public void setFromStatus(String v) { this.fromStatus = v; }\n"
+                + "    public String getToStatus() { return toStatus; }\n"
+                + "    public void setToStatus(String v) { this.toStatus = v; }\n"
+                + "    public String getAction() { return action; }\n"
+                + "    public void setAction(String v) { this.action = v; }\n"
+                + "    public String getComment() { return comment; }\n"
+                + "    public void setComment(String v) { this.comment = v; }\n"
+                + "    public Long getOperUserId() { return operUserId; }\n"
+                + "    public void setOperUserId(Long v) { this.operUserId = v; }\n"
+                + "    public String getOperName() { return operName; }\n"
+                + "    public void setOperName(String v) { this.operName = v; }\n"
+                + "    public LocalDateTime getOperTime() { return operTime; }\n"
+                + "    public void setOperTime(LocalDateTime v) { this.operTime = v; }\n"
+                + "}\n";
+    }
+
+    /** 产物 BuiltinFlowService：平台 FlowServiceImpl 移植 + todo/done（M1 直线流语义） */
+    private String builtinFlowServiceJava(String pkg) {
+        return "package " + pkg + ".common.flow;\n\n"
+                + "import " + pkg + ".common.context.UserContext;\n"
+                + "import " + pkg + ".common.exception.BusinessException;\n"
+                + "import com.fasterxml.jackson.core.type.TypeReference;\n"
+                + "import com.fasterxml.jackson.databind.ObjectMapper;\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
+                + "import org.springframework.jdbc.core.JdbcTemplate;\n"
+                + "import org.springframework.stereotype.Service;\n"
+                + "import org.springframework.transaction.annotation.Transactional;\n"
+                + "import org.springframework.util.StringUtils;\n\n"
+                + "import java.util.ArrayList;\n"
+                + "import java.util.LinkedHashMap;\n"
+                + "import java.util.List;\n"
+                + "import java.util.Map;\n"
+                + "import java.util.regex.Pattern;\n\n"
+                + "/**\n"
+                + " * 内置简易流实现（V2.2 语义 + V6.1 待办扩展）。\n"
+                + " * 安全：table_name/status_col 走白名单正则——流程定义被改出注入串也进不了 SQL。\n"
+                + " */\n"
+                + "@Service\n"
+                + "public class BuiltinFlowService implements FlowService {\n\n"
+                + "    private static final Pattern IDENT = Pattern.compile(\"^[A-Za-z0-9_]{1,64}$\");\n"
+                + "    private static final String DRAFT = \"0\";\n"
+                + "    private static final String PENDING = \"1\";\n\n"
+                + "    @Autowired\n"
+                + "    private JdbcTemplate jdbcTemplate;\n\n"
+                + "    @Autowired\n"
+                + "    private ObjectMapper objectMapper;\n\n"
+                + "    @Override\n"
+                + "    @Transactional(rollbackFor = Exception.class)\n"
+                + "    public void submit(String flowCode, Long bizId, String comment) {\n"
+                + "        Def def = loadDef(flowCode);\n"
+                + "        String current = currentStatus(def, bizId);\n"
+                + "        if (!DRAFT.equals(current)) {\n"
+                + "            throw new BusinessException(400, \"只有草稿状态可以提交，当前状态：\" + current);\n"
+                + "        }\n"
+                + "        String to = resolveSubmitTarget(def);\n"
+                + "        move(def, bizId, current, to, \"SUBMIT\", comment);\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    @Transactional(rollbackFor = Exception.class)\n"
+                + "    public void approve(String flowCode, Long bizId, String comment) {\n"
+                + "        Def def = loadDef(flowCode);\n"
+                + "        String current = currentStatus(def, bizId);\n"
+                + "        Map<String, Object> node = findNode(def, current);\n"
+                + "        if (node == null) {\n"
+                + "            throw new BusinessException(400, \"当前状态没有配置审批节点：\" + current);\n"
+                + "        }\n"
+                + "        checkRole(node);\n"
+                + "        String to = str(node.get(\"to\"));\n"
+                + "        if (!StringUtils.hasText(to)) {\n"
+                + "            throw new BusinessException(400, \"流程节点缺少目标状态，请检查流程定义\");\n"
+                + "        }\n"
+                + "        move(def, bizId, current, to, \"APPROVE\", comment);\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    @Transactional(rollbackFor = Exception.class)\n"
+                + "    public void reject(String flowCode, Long bizId, String comment) {\n"
+                + "        Def def = loadDef(flowCode);\n"
+                + "        String current = currentStatus(def, bizId);\n"
+                + "        Map<String, Object> node = findNode(def, current);\n"
+                + "        if (node == null) {\n"
+                + "            throw new BusinessException(400, \"当前状态没有配置审批节点：\" + current);\n"
+                + "        }\n"
+                + "        checkRole(node);\n"
+                + "        String to = str(node.get(\"rejectTo\"));\n"
+                + "        if (!StringUtils.hasText(to)) {\n"
+                + "            to = DRAFT;\n"
+                + "        }\n"
+                + "        move(def, bizId, current, to, \"REJECT\", comment);\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    public List<FlowRecord> records(String flowCode, Long bizId) {\n"
+                + "        if (!StringUtils.hasText(flowCode) || bizId == null) {\n"
+                + "            return List.of();\n"
+                + "        }\n"
+                + "        return jdbcTemplate.query(\n"
+                + "                \"SELECT id, flow_code, biz_table, biz_id, from_status, to_status, action, comment, \"\n"
+                + "                        + \"oper_user_id, oper_name, oper_time FROM sys_flow_task \"\n"
+                + "                        + \"WHERE flow_code = ? AND biz_id = ? ORDER BY oper_time, id\",\n"
+                + "                (rs, i) -> {\n"
+                + "                    FlowRecord vo = new FlowRecord();\n"
+                + "                    vo.setId(rs.getLong(\"id\"));\n"
+                + "                    vo.setFlowCode(rs.getString(\"flow_code\"));\n"
+                + "                    vo.setBizTable(rs.getString(\"biz_table\"));\n"
+                + "                    vo.setBizId(rs.getLong(\"biz_id\"));\n"
+                + "                    vo.setFromStatus(rs.getString(\"from_status\"));\n"
+                + "                    vo.setToStatus(rs.getString(\"to_status\"));\n"
+                + "                    vo.setAction(rs.getString(\"action\"));\n"
+                + "                    vo.setComment(rs.getString(\"comment\"));\n"
+                + "                    long uid = rs.getLong(\"oper_user_id\");\n"
+                + "                    vo.setOperUserId(rs.wasNull() ? null : uid);\n"
+                + "                    vo.setOperName(rs.getString(\"oper_name\"));\n"
+                + "                    if (rs.getTimestamp(\"oper_time\") != null) {\n"
+                + "                        vo.setOperTime(rs.getTimestamp(\"oper_time\").toLocalDateTime());\n"
+                + "                    }\n"
+                + "                    return vo;\n"
+                + "                }, flowCode, bizId);\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    public Map<String, Object> state(String flowCode, Long bizId) {\n"
+                + "        Def def = loadDef(flowCode);\n"
+                + "        Map<String, Object> data = new LinkedHashMap<>();\n"
+                + "        data.put(\"flowCode\", def.code);\n"
+                + "        data.put(\"flowName\", def.name);\n"
+                + "        String current = bizId == null ? DRAFT : currentStatus(def, bizId);\n"
+                + "        data.put(\"status\", current);\n"
+                + "        data.put(\"nodes\", def.nodes);\n"
+                + "        List<String> actions = new ArrayList<>();\n"
+                + "        if (DRAFT.equals(current)) {\n"
+                + "            actions.add(\"SUBMIT\");\n"
+                + "        } else {\n"
+                + "            Map<String, Object> node = findNode(def, current);\n"
+                + "            if (node != null && StringUtils.hasText(str(node.get(\"to\"))) && roleMatched(node)) {\n"
+                + "                actions.add(\"APPROVE\");\n"
+                + "                actions.add(\"REJECT\");\n"
+                + "            }\n"
+                + "        }\n"
+                + "        data.put(\"actions\", actions);\n"
+                + "        return data;\n"
+                + "    }\n\n"
+                + "    /** 我的待办：当前状态停在审批节点的单据（产物基座暂无角色体系，登录用户可见全部） */\n"
+                + "    @Override\n"
+                + "    public List<Map<String, Object>> todo() {\n"
+                + "        List<Map<String, Object>> result = new ArrayList<>();\n"
+                + "        for (Def def : allDefs()) {\n"
+                + "            for (Map<String, Object> node : def.nodes) {\n"
+                + "                String from = str(node.get(\"from\"));\n"
+                + "                if (!StringUtils.hasText(str(node.get(\"roleCode\"))) || !StringUtils.hasText(from)) {\n"
+                + "                    continue;\n"
+                + "                }\n"
+                + "                result.addAll(jdbcTemplate.queryForList(\n"
+                + "                        \"SELECT id AS bizId, '\" + def.code + \"' AS flowCode, '\" + def.name\n"
+                + "                                + \"' AS flowName, '\" + from + \"' AS nodeName FROM \" + def.tableName\n"
+                + "                                + \" WHERE \" + def.statusCol + \" = ? ORDER BY id DESC LIMIT 200\", from));\n"
+                + "            }\n"
+                + "        }\n"
+                + "        return result;\n"
+                + "    }\n\n"
+                + "    /** 我的已办：sys_flow_task 里我操作过的流水 */\n"
+                + "    @Override\n"
+                + "    public List<Map<String, Object>> done() {\n"
+                + "        return jdbcTemplate.queryForList(\n"
+                + "                \"SELECT flow_code AS flowCode, biz_table AS bizTable, biz_id AS bizId, \"\n"
+                + "                        + \"action, comment, oper_time AS operTime FROM sys_flow_task \"\n"
+                + "                        + \"WHERE oper_user_id = ? ORDER BY oper_time DESC LIMIT 200\",\n"
+                + "                UserContext.getUserId());\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    public Map<String, Object> taskDetail(String taskId) {\n"
+                + "        // 内置流没有独立任务域：taskId 约定为 flowCode:bizId（前端从待办行拼出来）\n"
+                + "        int idx = taskId == null ? -1 : taskId.indexOf(':');\n"
+                + "        if (idx <= 0) {\n"
+                + "            throw new BusinessException(400, \"任务标识非法，期待 flowCode:bizId\");\n"
+                + "        }\n"
+                + "        String flowCode = taskId.substring(0, idx);\n"
+                + "        Long bizId = Long.valueOf(taskId.substring(idx + 1));\n"
+                + "        Def def = loadDef(flowCode);\n"
+                + "        Map<String, Object> data = new LinkedHashMap<>();\n"
+                + "        data.put(\"flowCode\", flowCode);\n"
+                + "        data.put(\"bizId\", bizId);\n"
+                + "        data.put(\"bizTable\", def.tableName);\n"
+                + "        data.put(\"state\", state(flowCode, bizId));\n"
+                + "        data.put(\"records\", records(flowCode, bizId));\n"
+                + "        return data;\n"
+                + "    }\n\n"
+                + "    private void move(Def def, Long bizId, String from, String to, String action, String comment) {\n"
+                + "        int n = jdbcTemplate.update(\"UPDATE \" + def.tableName + \" SET \" + def.statusCol\n"
+                + "                + \" = ? WHERE id = ?\", to, bizId);\n"
+                + "        if (n == 0) {\n"
+                + "            throw new BusinessException(404, \"单据不存在：\" + bizId);\n"
+                + "        }\n"
+                + "        String operName = UserContext.getUsername();\n"
+                + "        jdbcTemplate.update(\n"
+                + "                \"INSERT INTO sys_flow_task(flow_code, biz_table, biz_id, from_status, to_status, action, \"\n"
+                + "                        + \"comment, oper_user_id, oper_name) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)\",\n"
+                + "                def.code, def.tableName, bizId, from, to, action, comment,\n"
+                + "                UserContext.getUserId(), StringUtils.hasText(operName) ? operName : \"system\");\n"
+                + "    }\n\n"
+                + "    private String resolveSubmitTarget(Def def) {\n"
+                + "        Map<String, Object> node = findNode(def, DRAFT);\n"
+                + "        if (node != null && StringUtils.hasText(str(node.get(\"to\")))) {\n"
+                + "            return str(node.get(\"to\"));\n"
+                + "        }\n"
+                + "        return PENDING;\n"
+                + "    }\n\n"
+                + "    private Map<String, Object> findNode(Def def, String from) {\n"
+                + "        for (Map<String, Object> node : def.nodes) {\n"
+                + "            if (from.equals(str(node.get(\"from\")))) {\n"
+                + "                return node;\n"
+                + "            }\n"
+                + "        }\n"
+                + "        return null;\n"
+                + "    }\n\n"
+                + "    private void checkRole(Map<String, Object> node) {\n"
+                + "        // TODO 产物角色体系引入后按 roleCode 校验（当前基座无角色，恒放行）\n"
+                + "    }\n\n"
+                + "    private boolean roleMatched(Map<String, Object> node) {\n"
+                + "        return true;\n"
+                + "    }\n\n"
+                + "    private String currentStatus(Def def, Long bizId) {\n"
+                + "        List<String> list = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT \" + def.statusCol + \" FROM \" + def.tableName + \" WHERE id = ?\",\n"
+                + "                String.class, bizId);\n"
+                + "        if (list.isEmpty()) {\n"
+                + "            throw new BusinessException(404, \"单据不存在：\" + bizId);\n"
+                + "        }\n"
+                + "        return list.get(0) == null ? DRAFT : list.get(0);\n"
+                + "    }\n\n"
+                + "    private List<Def> allDefs() {\n"
+                + "        List<Map<String, Object>> rows = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT flow_code, flow_name, table_name, status_col, nodes FROM sys_flow_def \"\n"
+                + "                        + \"WHERE deleted = 0 AND enabled = 1\");\n"
+                + "        List<Def> defs = new ArrayList<>();\n"
+                + "        for (Map<String, Object> r : rows) {\n"
+                + "            try {\n"
+                + "                defs.add(toDef(r));\n"
+                + "            } catch (Exception ignore) {\n"
+                + "                // 单条定义坏了不拖垮整个待办列表\n"
+                + "            }\n"
+                + "        }\n"
+                + "        return defs;\n"
+                + "    }\n\n"
+                + "    private Def loadDef(String flowCode) {\n"
+                + "        if (!StringUtils.hasText(flowCode)) {\n"
+                + "            throw new BusinessException(400, \"流程编码不能为空\");\n"
+                + "        }\n"
+                + "        List<Map<String, Object>> rows = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT flow_code, flow_name, table_name, status_col, nodes, enabled \"\n"
+                + "                        + \"FROM sys_flow_def WHERE flow_code = ? AND deleted = 0\", flowCode.trim());\n"
+                + "        if (rows.isEmpty()) {\n"
+                + "            throw new BusinessException(404, \"流程不存在：\" + flowCode);\n"
+                + "        }\n"
+                + "        Def def = toDef(rows.get(0));\n"
+                + "        Object enabled = rows.get(0).get(\"enabled\");\n"
+                + "        if (enabled != null && ((Number) enabled).intValue() != 1) {\n"
+                + "            throw new BusinessException(400, \"流程已停用：\" + flowCode);\n"
+                + "        }\n"
+                + "        return def;\n"
+                + "    }\n\n"
+                + "    private Def toDef(Map<String, Object> r) {\n"
+                + "        Def def = new Def();\n"
+                + "        def.code = str(r.get(\"flow_code\"));\n"
+                + "        def.name = str(r.get(\"flow_name\"));\n"
+                + "        def.tableName = str(r.get(\"table_name\"));\n"
+                + "        def.statusCol = str(r.get(\"status_col\"));\n"
+                + "        if (!IDENT.matcher(def.tableName).matches()) {\n"
+                + "            throw new BusinessException(400, \"流程绑定的表名非法：\" + def.tableName);\n"
+                + "        }\n"
+                + "        if (!IDENT.matcher(def.statusCol).matches()) {\n"
+                + "            throw new BusinessException(400, \"流程绑定的状态列非法：\" + def.statusCol);\n"
+                + "        }\n"
+                + "        def.nodes = parseNodes(str(r.get(\"nodes\")));\n"
+                + "        return def;\n"
+                + "    }\n\n"
+                + "    private List<Map<String, Object>> parseNodes(String json) {\n"
+                + "        if (!StringUtils.hasText(json)) {\n"
+                + "            return List.of();\n"
+                + "        }\n"
+                + "        try {\n"
+                + "            List<Map<String, Object>> list = objectMapper.readValue(json, new TypeReference<>() {\n"
+                + "            });\n"
+                + "            return list == null ? List.of() : list;\n"
+                + "        } catch (Exception e) {\n"
+                + "            throw new BusinessException(400, \"流程节点 JSON 解析失败：\" + e.getMessage());\n"
+                + "        }\n"
+                + "    }\n\n"
+                + "    private static String str(Object o) {\n"
+                + "        return o == null ? \"\" : String.valueOf(o).trim();\n"
+                + "    }\n\n"
+                + "    private static final class Def {\n"
+                + "        String code;\n"
+                + "        String name;\n"
+                + "        String tableName;\n"
+                + "        String statusCol;\n"
+                + "        List<Map<String, Object>> nodes = List.of();\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    /** 产物 ActivitiFlowService：引擎桥接（提交=start，通过=complete+approved=true，驳回=complete+false 回网关） */
+    private String activitiFlowServiceJava(String pkg) {
+        return "package " + pkg + ".common.flow;\n\n"
+                + "import " + pkg + ".common.context.UserContext;\n"
+                + "import " + pkg + ".common.exception.BusinessException;\n"
+                + "import com.fasterxml.jackson.core.type.TypeReference;\n"
+                + "import com.fasterxml.jackson.databind.ObjectMapper;\n"
+                + "import org.activiti.engine.HistoryService;\n"
+                + "import org.activiti.engine.RuntimeService;\n"
+                + "import org.activiti.engine.TaskService;\n"
+                + "import org.activiti.engine.history.HistoricTaskInstance;\n"
+                + "import org.activiti.engine.task.Task;\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
+                + "import org.springframework.jdbc.core.JdbcTemplate;\n"
+                + "import org.springframework.stereotype.Service;\n"
+                + "import org.springframework.transaction.annotation.Transactional;\n"
+                + "import org.springframework.util.StringUtils;\n\n"
+                + "import java.util.ArrayList;\n"
+                + "import java.util.HashMap;\n"
+                + "import java.util.LinkedHashMap;\n"
+                + "import java.util.List;\n"
+                + "import java.util.Map;\n"
+                + "import java.util.regex.Pattern;\n\n"
+                + "/**\n"
+                + " * V6.1 Activiti 引擎实现。对外契约与 BuiltinFlowService 完全一致。\n"
+                + " * 业务状态列仍同步维护（flow_status 同值），保证既有列表查询/打印不感知引擎切换。\n"
+                + " */\n"
+                + "@Service\n"
+                + "public class ActivitiFlowService implements FlowService {\n\n"
+                + "    private static final Pattern IDENT = Pattern.compile(\"^[A-Za-z0-9_]{1,64}$\");\n"
+                + "    private static final String DRAFT = \"0\";\n\n"
+                + "    @Autowired\n"
+                + "    private RuntimeService runtimeService;\n\n"
+                + "    @Autowired\n"
+                + "    private TaskService taskService;\n\n"
+                + "    @Autowired\n"
+                + "    private HistoryService historyService;\n\n"
+                + "    @Autowired\n"
+                + "    private JdbcTemplate jdbcTemplate;\n\n"
+                + "    @Autowired\n"
+                + "    private ObjectMapper objectMapper;\n\n"
+                + "    @Override\n"
+                + "    @Transactional(rollbackFor = Exception.class)\n"
+                + "    public void submit(String flowCode, Long bizId, String comment) {\n"
+                + "        Def def = loadDef(flowCode);\n"
+                + "        String current = currentStatus(def, bizId);\n"
+                + "        if (!DRAFT.equals(current)) {\n"
+                + "            throw new BusinessException(400, \"只有草稿状态可以提交，当前状态：\" + current);\n"
+                + "        }\n"
+                + "        setIdentity();\n"
+                + "        Map<String, Object> vars = new HashMap<>();\n"
+                + "        vars.put(\"bizId\", bizId);\n"
+                + "        vars.put(\"approved\", false);\n"
+                + "        runtimeService.startProcessInstanceByKey(flowCode, String.valueOf(bizId), vars);\n"
+                + "        writeTask(def, bizId, current, str(firstTo(def)), \"SUBMIT\", comment);\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    @Transactional(rollbackFor = Exception.class)\n"
+                + "    public void approve(String flowCode, Long bizId, String comment) {\n"
+                + "        complete(flowCode, bizId, true, comment);\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    @Transactional(rollbackFor = Exception.class)\n"
+                + "    public void reject(String flowCode, Long bizId, String comment) {\n"
+                + "        complete(flowCode, bizId, false, comment);\n"
+                + "    }\n\n"
+                + "    private void complete(String flowCode, Long bizId, boolean approved, String comment) {\n"
+                + "        Def def = loadDef(flowCode);\n"
+                + "        setIdentity();\n"
+                + "        Task task = taskService.createTaskQuery()\n"
+                + "                .processInstanceBusinessKey(String.valueOf(bizId)).singleResult();\n"
+                + "        if (task == null) {\n"
+                + "            throw new BusinessException(400, \"该单据没有进行中的审批任务\");\n"
+                + "        }\n"
+                + "        String from = String.valueOf(taskService.getVariable(task.getId(), \"nodeStatus\"));\n"
+                + "        Map<String, Object> vars = new HashMap<>();\n"
+                + "        vars.put(\"approved\", approved);\n"
+                + "        taskService.complete(task.getId(), vars);\n"
+                + "        // 状态列跟随网关走向：通过=节点 to；驳回=rejectTo 或草稿（与 BPMN 网关条件一一对应）\n"
+                + "        String to;\n"
+                + "        if (approved) {\n"
+                + "            Map<String, Object> node = findNode(def, from);\n"
+                + "            to = node == null ? null : str(node.get(\"to\"));\n"
+                + "        } else {\n"
+                + "            Map<String, Object> node = findNode(def, from);\n"
+                + "            to = node != null && StringUtils.hasText(str(node.get(\"rejectTo\")))\n"
+                + "                    ? str(node.get(\"rejectTo\")) : DRAFT;\n"
+                + "        }\n"
+                + "        writeTask(def, bizId, from, to == null ? from : to, approved ? \"APPROVE\" : \"REJECT\", comment);\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    public List<FlowRecord> records(String flowCode, Long bizId) {\n"
+                + "        // 兼容视图：ACT_HI_TASKINST 投影成 FlowRecord（旧前端零感知）\n"
+                + "        List<FlowRecord> list = new ArrayList<>();\n"
+                + "        for (HistoricTaskInstance h : historyService.createHistoricTaskInstanceQuery()\n"
+                + "                .processInstanceBusinessKey(String.valueOf(bizId))\n"
+                + "                .processDefinitionKey(flowCode)\n"
+                + "                .finished().orderByHistoricTaskInstanceEndTime().asc().list()) {\n"
+                + "            FlowRecord vo = new FlowRecord();\n"
+                + "            vo.setFlowCode(flowCode);\n"
+                + "            vo.setBizId(bizId);\n"
+                + "            vo.setBizTable(h.getFormKey());\n"
+                + "            vo.setAction(h.getDeleteReason() != null ? \"REJECT\" : \"APPROVE\");\n"
+                + "            vo.setComment(h.getDescription());\n"
+                + "            vo.setOperName(h.getAssignee());\n"
+                + "            if (h.getEndTime() != null) {\n"
+                + "                vo.setOperTime(h.getEndTime().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());\n"
+                + "            }\n"
+                + "            list.add(vo);\n"
+                + "        }\n"
+                + "        // 引擎历史之外保留 sys_flow_task 直写流水（SUBMIT 行等），按时间合并\n"
+                + "        list.addAll(new BuiltinQuery().records(flowCode, bizId));\n"
+                + "        list.sort((a, b) -> a.getOperTime() == null || b.getOperTime() == null ? 0\n"
+                + "                : a.getOperTime().compareTo(b.getOperTime()));\n"
+                + "        return list;\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    public Map<String, Object> state(String flowCode, Long bizId) {\n"
+                + "        Def def = loadDef(flowCode);\n"
+                + "        Map<String, Object> data = new LinkedHashMap<>();\n"
+                + "        data.put(\"flowCode\", flowCode);\n"
+                + "        data.put(\"flowName\", def.name);\n"
+                + "        data.put(\"status\", bizId == null ? DRAFT : currentStatus(def, bizId));\n"
+                + "        data.put(\"nodes\", def.nodes);\n"
+                + "        return data;\n"
+                + "    }\n\n"
+                + "    /** 我的待办：全部进行中的引擎任务（产物基座暂无角色体系，登录用户可见全部） */\n"
+                + "    @Override\n"
+                + "    public List<Map<String, Object>> todo() {\n"
+                + "        setIdentity();\n"
+                + "        List<Map<String, Object>> result = new ArrayList<>();\n"
+                + "        for (Task t : taskService.createTaskQuery().list()) {\n"
+                + "                Map<String, Object> row = new LinkedHashMap<>();\n"
+                + "                row.put(\"taskId\", t.getId());\n"
+                + "                row.put(\"flowCode\", t.getProcessDefinitionId().split(\":\")[0]);\n"
+                + "                row.put(\"bizId\", tService(t));\n"
+                + "                row.put(\"nodeName\", t.getName());\n"
+                + "                row.put(\"createTime\", t.getCreateTime());\n"
+                + "                result.add(row);\n"
+                + "        }\n"
+                + "        return result;\n"
+                + "    }\n\n"
+                + "    private Object tService(Task t) {\n"
+                + "        Object bizId = runtimeService.getVariable(t.getProcessInstanceId(), \"bizId\");\n"
+                + "        return bizId == null ? t.getBusinessKey() : bizId;\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    public List<Map<String, Object>> done() {\n"
+                + "        List<Map<String, Object>> result = new ArrayList<>();\n"
+                + "        for (HistoricTaskInstance h : historyService.createHistoricTaskInstanceQuery()\n"
+                + "                .taskAssignee(UserContext.getUsername()).finished()\n"
+                + "                .orderByHistoricTaskInstanceEndTime().desc().list()) {\n"
+                + "            Map<String, Object> row = new LinkedHashMap<>();\n"
+                + "            row.put(\"flowCode\", h.getProcessDefinitionId().split(\":\")[0]);\n"
+                + "            row.put(\"bizId\", h.getBusinessKey());\n"
+                + "            row.put(\"nodeName\", h.getName());\n"
+                + "            if (h.getEndTime() != null) {\n"
+                + "                row.put(\"operTime\", h.getEndTime().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());\n"
+                + "            }\n"
+                + "            result.add(row);\n"
+                + "        }\n"
+                + "        return result;\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    public Map<String, Object> taskDetail(String taskId) {\n"
+                + "        Task t = taskService.createTaskQuery().taskId(taskId).singleResult();\n"
+                + "        if (t == null) {\n"
+                + "            throw new BusinessException(404, \"任务不存在或已办结\");\n"
+                + "        }\n"
+                + "        Map<String, Object> data = new LinkedHashMap<>();\n"
+                + "        data.put(\"taskId\", t.getId());\n"
+                + "        data.put(\"nodeName\", t.getName());\n"
+                + "        data.put(\"flowCode\", t.getProcessDefinitionId().split(\":\")[0]);\n"
+                + "        data.put(\"bizId\", t.getBusinessKey());\n"
+                + "        return data;\n"
+                + "    }\n\n"
+                + "    private void setIdentity() {\n"
+                + "        String name = UserContext.getUsername();\n"
+                + "        org.activiti.engine.impl.identity.Authentication.setAuthenticatedUserId(\n"
+                + "                StringUtils.hasText(name) ? name : \"system\");\n"
+                + "    }\n\n"
+                + "    private String firstTo(Def def) {\n"
+                + "        for (Map<String, Object> node : def.nodes) {\n"
+                + "            if (DRAFT.equals(str(node.get(\"from\")))) {\n"
+                + "                return str(node.get(\"to\"));\n"
+                + "            }\n"
+                + "        }\n"
+                + "        return \"1\";\n"
+                + "    }\n\n"
+                + "    private Map<String, Object> findNode(Def def, String from) {\n"
+                + "        for (Map<String, Object> node : def.nodes) {\n"
+                + "            if (from.equals(str(node.get(\"from\")))) {\n"
+                + "                return node;\n"
+                + "            }\n"
+                + "        }\n"
+                + "        return null;\n"
+                + "    }\n\n"
+                + "    private static String str(Object o) {\n"
+                + "        return o == null ? \"\" : String.valueOf(o).trim();\n"
+                + "    }\n\n"
+                + "    private void writeTask(Def def, Long bizId, String from, String to, String action, String comment) {\n"
+                + "        jdbcTemplate.update(\"UPDATE \" + def.tableName + \" SET \" + def.statusCol\n"
+                + "                + \" = ? WHERE id = ?\", to, bizId);\n"
+                + "        jdbcTemplate.update(\n"
+                + "                \"INSERT INTO sys_flow_task(flow_code, biz_table, biz_id, from_status, to_status, action, \"\n"
+                + "                        + \"comment, oper_user_id, oper_name) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)\",\n"
+                + "                def.code, def.tableName, bizId, from, to, action, comment,\n"
+                + "                UserContext.getUserId(), UserContext.getUsername());\n"
+                + "    }\n\n"
+                + "    private String currentStatus(Def def, Long bizId) {\n"
+                + "        List<String> list = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT \" + def.statusCol + \" FROM \" + def.tableName + \" WHERE id = ?\",\n"
+                + "                String.class, bizId);\n"
+                + "        return list.isEmpty() ? DRAFT : (list.get(0) == null ? DRAFT : list.get(0));\n"
+                + "    }\n\n"
+                + "    private Def loadDef(String flowCode) {\n"
+                + "        if (!StringUtils.hasText(flowCode) || !IDENT.matcher(flowCode.trim()).matches()) {\n"
+                + "            throw new BusinessException(400, \"流程编码非法：\" + flowCode);\n"
+                + "        }\n"
+                + "        List<Map<String, Object>> rows = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT flow_code, flow_name, table_name, status_col, nodes FROM sys_flow_def \"\n"
+                + "                        + \"WHERE flow_code = ? AND deleted = 0 AND enabled = 1\", flowCode.trim());\n"
+                + "        if (rows.isEmpty()) {\n"
+                + "            throw new BusinessException(404, \"流程不存在或未启用：\" + flowCode);\n"
+                + "        }\n"
+                + "        Map<String, Object> r = rows.get(0);\n"
+                + "        Def def = new Def();\n"
+                + "        def.code = String.valueOf(r.get(\"flow_code\"));\n"
+                + "        def.name = String.valueOf(r.get(\"flow_name\"));\n"
+                + "        def.tableName = String.valueOf(r.get(\"table_name\"));\n"
+                + "        def.statusCol = String.valueOf(r.get(\"status_col\"));\n"
+                + "        try {\n"
+                + "            def.nodes = objectMapper.readValue(String.valueOf(r.get(\"nodes\")),\n"
+                + "                    new TypeReference<List<Map<String, Object>>>() {\n"
+                + "                    });\n"
+                + "        } catch (Exception e) {\n"
+                + "            throw new BusinessException(400, \"流程节点 JSON 解析失败：\" + e.getMessage());\n"
+                + "        }\n"
+                + "        return def;\n"
+                + "    }\n\n"
+                + "    /** records 合并用的直读小工具（复用 sys_flow_task 行结构） */\n"
+                + "    private class BuiltinQuery {\n"                + "        List<FlowRecord> records(String flowCode, Long bizId) {\n"
+                + "            List<FlowRecord> list = new ArrayList<>();\n"
+                + "            for (Map<String, Object> row : jdbcTemplate.queryForList(\n"
+                + "                    \"SELECT action, comment, oper_name, oper_time FROM sys_flow_task \"\n"
+                + "                            + \"WHERE flow_code = ? AND biz_id = ? ORDER BY oper_time, id\", flowCode, bizId)) {\n"
+                + "                FlowRecord vo = new FlowRecord();\n"
+                + "                vo.setFlowCode(flowCode);\n"
+                + "                vo.setBizId(bizId);\n"
+                + "                vo.setBizTable(ActivitiFlowService.this.loadDef(flowCode).tableName);\n"
+                + "                vo.setAction(String.valueOf(row.get(\"action\")));\n"
+                + "                vo.setComment((String) row.get(\"comment\"));\n"
+                + "                vo.setOperName((String) row.get(\"oper_name\"));\n"
+                + "                Object t = row.get(\"oper_time\");\n"
+                + "                if (t instanceof java.sql.Timestamp ts) {\n"
+                + "                    vo.setOperTime(ts.toLocalDateTime());\n"
+                + "                }\n"
+                + "                list.add(vo);\n"
+                + "            }\n"
+                + "            return list;\n"
+                + "        }\n"
+                + "    }\n\n"
+                + "    /** 流程定义的内存视图（与 BuiltinFlowService 同构） */\n"
+                + "    private static final class Def {\n"
+                + "        String code;\n"
+                + "        String name;\n"
+                + "        String tableName;\n"
+                + "        String statusCol;\n"
+                + "        List<Map<String, Object>> nodes = List.of();\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    /** 产物 FlowDeployRunner：启动时把 sys_flow_def.bpmn_xml 幂等部署进引擎（hash 相同跳过） */
+    private String flowDeployRunnerJava(String pkg) {
+        return "package " + pkg + ".common.flow;\n\n"
+                + "import com.fasterxml.jackson.databind.ObjectMapper;\n"
+                + "import org.activiti.engine.RepositoryService;\n"
+                + "import org.activiti.engine.repository.Deployment;\n"
+                + "import org.slf4j.Logger;\n"
+                + "import org.slf4j.LoggerFactory;\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
+                + "import org.springframework.boot.ApplicationArguments;\n"
+                + "import org.springframework.boot.ApplicationRunner;\n"
+                + "import org.springframework.jdbc.core.JdbcTemplate;\n"
+                + "import org.springframework.stereotype.Component;\n"
+                + "import org.springframework.util.StringUtils;\n\n"
+                + "import java.nio.charset.StandardCharsets;\n"
+                + "import java.security.MessageDigest;\n"
+                + "import java.util.HexFormat;\n"
+                + "import java.util.List;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * 启动部署器：逐条 sys_flow_def 检查 bpmn_xml 的 sha256，与已部署 hash 不同才重新部署。\n"
+                + " * 幂等：重启零部署；平台改流程定义后重新生成/重导 init_sys_flow.sql 即自动升级版本。\n"
+                + " */\n"
+                + "@Component\n"
+                + "public class FlowDeployRunner implements ApplicationRunner {\n\n"
+                + "    private static final Logger log = LoggerFactory.getLogger(FlowDeployRunner.class);\n\n"
+                + "    @Autowired\n"
+                + "    private RepositoryService repositoryService;\n\n"
+                + "    @Autowired\n"
+                + "    private JdbcTemplate jdbcTemplate;\n\n"
+                + "    @Override\n"
+                + "    public void run(ApplicationArguments args) {\n"
+                + "        List<Map<String, Object>> defs;\n"
+                + "        try {\n"
+                + "            defs = jdbcTemplate.queryForList(\n"
+                + "                    \"SELECT id, flow_code, flow_name, bpmn_xml, bpmn_hash FROM sys_flow_def \"\n"
+                + "                            + \"WHERE deleted = 0 AND enabled = 1 AND bpmn_xml IS NOT NULL\");\n"
+                + "        } catch (Exception e) {\n"
+                + "            log.warn(\"流程定义表不可读，跳过 BPMN 部署: {}\", e.getMessage());\n"
+                + "            return;\n"
+                + "        }\n"
+                + "        for (Map<String, Object> def : defs) {\n"
+                + "            String xml = (String) def.get(\"bpmn_xml\");\n"
+                + "            String code = String.valueOf(def.get(\"flow_code\"));\n"
+                + "            if (!StringUtils.hasText(xml)) {\n"
+                + "                continue;\n"
+                + "            }\n"
+                + "            String hash = sha256(xml);\n"
+                + "            if (hash.equals(def.get(\"bpmn_hash\"))) {\n"
+                + "                continue;\n"
+                + "            }\n"
+                + "            try {\n"
+                + "                Deployment d = repositoryService.createDeployment()\n"
+                + "                        .key(code + \"-\" + hash.substring(0, 8))\n"
+                + "                        .name(String.valueOf(def.get(\"flow_name\")))\n"
+                + "                        .addString(code + \".bpmn20.xml\", xml)\n"
+                + "                        .deploy();\n"
+                + "                jdbcTemplate.update(\"UPDATE sys_flow_def SET bpmn_hash = ? WHERE id = ?\",\n"
+                + "                        hash, ((Number) def.get(\"id\")).longValue());\n"
+                + "                log.info(\"BPMN 流程已部署: {} -> deployment {}\", code, d.getId());\n"
+                + "            } catch (Exception e) {\n"
+                + "                log.error(\"BPMN 部署失败（不阻断启动）: {} - {}\", code, e.getMessage());\n"
+                + "            }\n"
+                + "        }\n"
+                + "    }\n\n"
+                + "    private String sha256(String text) {\n"
+                + "        try {\n"
+                + "            byte[] digest = MessageDigest.getInstance(\"SHA-256\")\n"
+                + "                    .digest(text.getBytes(StandardCharsets.UTF_8));\n"
+                + "            return HexFormat.of().formatHex(digest);\n"
+                + "        } catch (Exception e) {\n"
+                + "            throw new IllegalStateException(e);\n"
+                + "        }\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    /** 产物 FlowController：全局 /flow 端点（apiJs.ftl 的 body 风格四端点契约 + V6.1 三端点） */
+    private String flowControllerJava(String pkg) {
+        return "package " + pkg + ".common.flow;\n\n"
+                + "import " + pkg + ".common.result.Result;\n"
+                + "import io.swagger.v3.oas.annotations.Operation;\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
+                + "import org.springframework.web.bind.annotation.*;\n\n"
+                + "import java.util.List;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * 全局审批流端点：前端 flowSubmit/flowApprove 等走 body 风格（flowCode+bizId），\n"
+                + " * 与各业务 controller 的 /{module}/flow/* 路径风格互补，两套并存契约都成立。\n"
+                + " */\n"
+                + "@RestController\n"
+                + "@RequestMapping(\"/flow\")\n"
+                + "public class FlowController {\n\n"
+                + "    @Autowired\n"
+                + "    private FlowService flowService;\n\n"
+                + "    @Operation(summary = \"提交审批\")\n"
+                + "    @PostMapping(\"/submit\")\n"
+                + "    public Result<Void> submit(@RequestBody Map<String, Object> body) {\n"
+                + "        flowService.submit((String) body.get(\"flowCode\"), asLong(body.get(\"bizId\")),\n"
+                + "                (String) body.get(\"comment\"));\n"
+                + "        return Result.ok();\n"
+                + "    }\n\n"
+                + "    @Operation(summary = \"审批通过\")\n"
+                + "    @PostMapping(\"/approve\")\n"
+                + "    public Result<Void> approve(@RequestBody Map<String, Object> body) {\n"
+                + "        flowService.approve((String) body.get(\"flowCode\"), asLong(body.get(\"bizId\")),\n"
+                + "                (String) body.get(\"comment\"));\n"
+                + "        return Result.ok();\n"
+                + "    }\n\n"
+                + "    @Operation(summary = \"审批驳回\")\n"
+                + "    @PostMapping(\"/reject\")\n"
+                + "    public Result<Void> reject(@RequestBody Map<String, Object> body) {\n"
+                + "        flowService.reject((String) body.get(\"flowCode\"), asLong(body.get(\"bizId\")),\n"
+                + "                (String) body.get(\"comment\"));\n"
+                + "        return Result.ok();\n"
+                + "    }\n\n"
+                + "    @Operation(summary = \"审批记录\")\n"
+                + "    @GetMapping(\"/records\")\n"
+                + "    public Result<List<FlowRecord>> records(@RequestParam String flowCode,\n"
+                + "                                            @RequestParam Long bizId) {\n"
+                + "        return Result.ok(flowService.records(flowCode, bizId));\n"
+                + "    }\n\n"
+                + "    @Operation(summary = \"流程状态\")\n"
+                + "    @GetMapping(\"/state\")\n"
+                + "    public Result<Map<String, Object>> state(@RequestParam String flowCode,\n"
+                + "                                             @RequestParam(required = false) Long bizId) {\n"
+                + "        return Result.ok(flowService.state(flowCode, bizId));\n"
+                + "    }\n\n"
+                + "    @Operation(summary = \"我的待办（V6.1）\")\n"
+                + "    @GetMapping(\"/todo\")\n"
+                + "    public Result<List<Map<String, Object>>> todo() {\n"
+                + "        return Result.ok(flowService.todo());\n"
+                + "    }\n\n"
+                + "    @Operation(summary = \"我的已办（V6.1）\")\n"
+                + "    @GetMapping(\"/done\")\n"
+                + "    public Result<List<Map<String, Object>>> done() {\n"
+                + "        return Result.ok(flowService.done());\n"
+                + "    }\n\n"
+                + "    @Operation(summary = \"任务详情（V6.1）\")\n"
+                + "    @GetMapping(\"/task/{taskId}\")\n"
+                + "    public Result<Map<String, Object>> taskDetail(@PathVariable String taskId) {\n"
+                + "        return Result.ok(flowService.taskDetail(taskId));\n"
+                + "    }\n\n"
+                + "    private Long asLong(Object v) {\n"
+                + "        return v == null ? null : Long.valueOf(String.valueOf(v));\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    /**
+     * 产物库流程表 DDL + 定义 INSERT。恒写（builtin 也要表）；bpmn_xml/bpmn_hash 只在 activiti 定义里有值。
+     */
+    private String initSysFlowSql(java.util.List<com.codegen.dto.GenScaffoldDTO.FlowDef> defs) {
+        StringBuilder sql = new StringBuilder(1024);
+        sql.append("-- V6.1 产物流程表（幂等：CREATE TABLE IF NOT EXISTS）\n")
+                .append("CREATE TABLE IF NOT EXISTS `sys_flow_def` (\n")
+                .append("  `id` bigint NOT NULL,\n")
+                .append("  `flow_code` varchar(64) NOT NULL COMMENT '流程编码',\n")
+                .append("  `flow_name` varchar(64) NOT NULL COMMENT '流程名称',\n")
+                .append("  `table_name` varchar(64) NOT NULL COMMENT '业务表名',\n")
+                .append("  `status_col` varchar(64) NOT NULL DEFAULT 'status' COMMENT '状态列',\n")
+                .append("  `nodes` varchar(1024) NOT NULL COMMENT '节点 JSON [{from,to,roleCode,rejectTo}]',\n")
+                .append("  `bpmn_xml` mediumtext NULL COMMENT 'V6.1 自动翻译的 BPMN XML',\n")
+                .append("  `bpmn_hash` varchar(64) DEFAULT NULL COMMENT '已部署的 bpmn_xml sha256（幂等部署标记）',\n")
+                .append("  `enabled` tinyint NOT NULL DEFAULT 1,\n")
+                .append("  `remark` varchar(255) DEFAULT NULL,\n")
+                .append("  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n")
+                .append("  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n")
+                .append("  `deleted` tinyint NOT NULL DEFAULT 0,\n")
+                .append("  PRIMARY KEY (`id`),\n")
+                .append("  UNIQUE KEY `uk_flow_code` (`flow_code`, `deleted`)\n")
+                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程定义';\n\n")
+                .append("CREATE TABLE IF NOT EXISTS `sys_flow_task` (\n")
+                .append("  `id` bigint NOT NULL,\n")
+                .append("  `flow_code` varchar(64) NOT NULL,\n")
+                .append("  `biz_table` varchar(64) NOT NULL,\n")
+                .append("  `biz_id` bigint NOT NULL,\n")
+                .append("  `from_status` varchar(20) DEFAULT NULL,\n")
+                .append("  `to_status` varchar(20) DEFAULT NULL,\n")
+                .append("  `action` varchar(20) NOT NULL,\n")
+                .append("  `comment` varchar(255) DEFAULT NULL,\n")
+                .append("  `oper_user_id` bigint DEFAULT NULL,\n")
+                .append("  `oper_name` varchar(64) DEFAULT NULL,\n")
+                .append("  `oper_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n")
+                .append("  PRIMARY KEY (`id`),\n")
+                .append("  KEY `idx_flow_biz` (`flow_code`, `biz_id`)\n")
+                .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='审批流水';\n");
+        if (defs == null) {
+            return sql.toString();
+        }
+        for (com.codegen.dto.GenScaffoldDTO.FlowDef d : defs) {
+            if (d.getFlowCode() == null || !d.getFlowCode().matches("[A-Za-z0-9_]{1,64}")) {
+                continue;
+            }
+            String nodesJson = "[]";
+            try {
+                nodesJson = new com.fasterxml.jackson.databind.ObjectMapper()
+                        .writeValueAsString(d.getNodes() == null ? List.of() : d.getNodes());
+            } catch (Exception ignore) {
+                // 序列化失败按空节点下发，产物侧报错可读
+            }
+            String bpmn = d.getBpmnXml() == null ? "NULL" : "'" + escSql(d.getBpmnXml()) + "'";
+            sql.append("\n-- 流程定义：").append(d.getFlowName() == null ? d.getFlowCode() : d.getFlowName())
+                    .append("\nINSERT INTO sys_flow_def (id, flow_code, flow_name, table_name, status_col, nodes, bpmn_xml, enabled)\n")
+                    .append("SELECT ").append(snowflakeish()).append(", '").append(escSql(d.getFlowCode()))
+                    .append("', '").append(escSql(d.getFlowName() == null ? d.getFlowCode() : d.getFlowName()))
+                    .append("', '").append(escSql(d.getTableName() == null ? "" : d.getTableName()))
+                    .append("', '").append(escSql(d.getStatusCol() == null || d.getStatusCol().isEmpty()
+                            ? "status" : d.getStatusCol()))
+                    .append("', '").append(escSql(nodesJson)).append("', ")
+                    .append(bpmn).append(", 1\n")
+                    .append("WHERE NOT EXISTS (SELECT 1 FROM sys_flow_def WHERE flow_code = '")
+                    .append(escSql(d.getFlowCode())).append(" AND deleted = 0);\n");
+        }
+        return sql.toString();
+    }
+
+    /** SQL 字面量转义（单引号与反斜杠） */
+    private static String escSql(String s) {
+        return s == null ? "" : s.replace("\\", "\\\\").replace("'", "\\'");
+    }
+
+    /** 轻量 id：时间戳左移 8 位 + 3 位随机，够产物定义行用且不依赖雪花框架 */
+    private static String snowflakeish() {
+        return String.valueOf(System.currentTimeMillis() * 1000 % 1_000_000_000_000L * 1000
+                + java.util.concurrent.ThreadLocalRandom.current().nextInt(1000));
+    }
+
+    // ============================ V6.2 部署物 ============================
+
+    private String dockerfileText() {
+        return "# V6.2 多阶段构建：maven 编译 + JRE 运行；基础镜像走 ARG 便于内网替换\n"
+                + "ARG BUILD_IMAGE=maven:3.9-eclipse-temurin-21\n"
+                + "ARG RUN_IMAGE=eclipse-temurin:21-jre\n\n"
+                + "FROM ${BUILD_IMAGE} AS build\n"
+                + "WORKDIR /src\n"
+                + "COPY pom.xml .\n"
+                + "COPY src ./src\n"
+                + "RUN mvn -q package -DskipTests\n\n"
+                + "FROM ${RUN_IMAGE}\n"
+                + "WORKDIR /app\n"
+                + "# 非 root 运行\n"
+                + "RUN useradd -r -u 1001 appuser\n"
+                + "USER appuser\n"
+                + "COPY --from=build /src/target/*.jar app.jar\n"
+                + "ENV JAVA_OPTS=\"\"\n"
+                + "EXPOSE 8080\n"
+                + "ENTRYPOINT [\"sh\", \"-c\", \"java $JAVA_OPTS -jar app.jar --server.port=${SERVER_PORT:-8080}\"]\n";
+    }
+
+    private String dockerignoreText() {
+        return "target/\nlogs/\ndb/\ndeploy/\n*.log\n.idea/\n*.iml\n";
+    }
+
+    private String dockerComposeYml(String project, int serverPort, boolean micro) {
+        String svc = "services:\n"
+                + "  mysql:\n"
+                + "    image: mysql:8.0\n"
+                + "    environment:\n"
+                + "      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}\n"
+                + "      MYSQL_DATABASE: " + project.replace('-', '_') + "\n"
+                + "    volumes:\n"
+                + "      - mysql-data:/var/lib/mysql\n"
+                + "    healthcheck:\n"
+                + "      test: [\"CMD\", \"mysqladmin\", \"ping\", \"-h\", \"localhost\"]\n"
+                + "      interval: 5s\n"
+                + "      retries: 20\n\n"
+                + "  app:\n"
+                + "    build: .\n"
+                + "    ports:\n"
+                + "      - \"" + serverPort + ":" + serverPort + "\"\n"
+                + "    environment:\n"
+                + "      SERVER_PORT: \"" + serverPort + "\"\n"
+                + "      DB_URL: jdbc:mysql://mysql:3306/" + project.replace('-', '_')
+                + "?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true\n"
+                + "      DB_USERNAME: root\n"
+                + "      DB_PASSWORD: ${DB_PASSWORD:-root}\n"
+                + "    depends_on:\n"
+                + "      mysql:\n"
+                + "        condition: service_healthy\n";
+        String microSvc = micro
+                ? "\n# V6.0 micro：启用网关注释本段（gateway 端口=服务端口+1，路由见其 application.yml）\n"
+                + "#  gateway:\n"
+                + "#    build: ../gateway 相对路径按实际模块调整\n"
+                + "#    ports:\n"
+                + "#      - \"" + (serverPort + 1) + ":" + (serverPort + 1) + "\"\n"
+                + "#    environment:\n"
+                + "#      SPRING_CLOUD_NACOS_DISCOVERY_ENABLED: \"true\"\n"
+                + "#  nacos:\n"
+                + "#    image: nacos/nacos-server:v2.3.2\n"
+                + "#    environment:\n"
+                + "#      MODE: standalone\n" : "";
+        return svc + microSvc + "\nvolumes:\n  mysql-data:\n";
+    }
+
+    private String ciGithubActionsText() {
+        return "# 改名为 ci-github-actions.yml 放 .github/workflows/ 即激活（V6.2 部署物）\n"
+                + "name: build\n"
+                + "on: [push]\n"
+                + "jobs:\n"
+                + "  backend:\n"
+                + "    runs-on: ubuntu-latest\n"
+                + "    steps:\n"
+                + "      - uses: actions/checkout@v4\n"
+                + "      - uses: actions/setup-java@v4\n"
+                + "        with: { distribution: temurin, java-version: '21' }\n"
+                + "      - run: mvn -B package -DskipTests\n";
+    }
+
+    private String jenkinsfileText() {
+        return "// 改名为 Jenkinsfile 放仓库根即激活（V6.2 部署物）\n"
+                + "pipeline {\n"
+                + "  agent any\n"
+                + "  stages {\n"
+                + "    stage('Build') { steps { sh 'mvn -B package -DskipTests' } }\n"
+                + "  }\n"
+                + "}\n";
+    }
+
     // ============================ 模板内容 ============================
 
-    private String pomXml(GenScaffoldDTO dto, String project, String pkg, String module, int serverPort) {
+    private String pomXml(GenScaffoldDTO dto, String project, String pkg, String module, int serverPort, boolean activiti) {
         StringBuilder extras = new StringBuilder();
         if (dto.getExtraDependencies() != null) {
             for (String coord : dto.getExtraDependencies()) {
@@ -372,11 +1354,24 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 }
             }
         }
+        // V6.1 Activiti 8 制品不在 Maven 中央仓库，产物 pom 自带 Alfresco 仓库声明
+        String activitiRepos = activiti
+                ? "    <repositories>\n"
+                + "        <repository>\n"
+                + "            <id>alfresco</id>\n"
+                + "            <url>https://artifacts.alfresco.com/nexus/content/repositories/public/</url>\n"
+                + "            <releases><enabled>true</enabled></releases>\n"
+                + "            <snapshots><enabled>false</enabled></snapshots>\n"
+                + "        </repository>\n"
+                + "    </repositories>\n\n" : "";
+        String activitiDep = activiti
+                ? dep("org.activiti", "activiti-spring-boot-starter", "8.7.0") : "";
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
                 + "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
                 + "         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\n"
                 + "    <modelVersion>4.0.0</modelVersion>\n\n"
+                + activitiRepos
                 + "    <groupId>" + pkg + "</groupId>\n"
                 + "    <artifactId>" + module + "</artifactId>\n"
                 + "    <version>1.0.0</version>\n"
@@ -404,6 +1399,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        </dependencies>\n"
                 + "    </dependencyManagement>\n\n"
                 + "    <dependencies>\n"
+                + activitiDep
                 + dep("org.springframework.boot", "spring-boot-starter-web", null)
                 + dep("org.springframework.boot", "spring-boot-starter-validation", null)
                 + "        <!-- 基座 LogAspect（操作日志切面）依赖 AspectJ，缺了编译直接失败 -->\n"
@@ -513,9 +1509,21 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
      * <p>V6.0 micro=true：追加 spring-cloud / spring-cloud-alibaba BOM（版本矩阵复用 shop 实测：
      * Boot 3.2.5 + cloud 2023.0.1 + alibaba 2023.0.1.0）与 gateway 模块条目。
      */
-    private String pomMultiParent(String project, String pkg, String stem, String backendModule, boolean micro) {
+    private String pomMultiParent(String project, String pkg, String stem, String backendModule, boolean micro, boolean activiti) {
         String gatewayModule = micro
                 ? "        <module>" + stem + "-gateway</module>\n" : "";
+        // V6.1 Activiti 8 制品不在 Maven 中央仓库（7.1.x 起），产物 pom 必须自带 Alfresco 仓库声明
+        String activitiProps = activiti
+                ? "        <activiti.version>8.7.0</activiti.version>\n" : "";
+        String activitiRepos = activiti
+                ? "\n    <repositories>\n"
+                + "        <repository>\n"
+                + "            <id>alfresco</id>\n"
+                + "            <url>https://artifacts.alfresco.com/nexus/content/repositories/public/</url>\n"
+                + "            <releases><enabled>true</enabled></releases>\n"
+                + "            <snapshots><enabled>false</enabled></snapshots>\n"
+                + "        </repository>\n"
+                + "    </repositories>\n" : "";
         String cloudProps = micro
                 ? "        <spring-cloud.version>2023.0.1</spring-cloud.version>\n"
                 + "        <spring-cloud-alibaba.version>2023.0.1.0</spring-cloud-alibaba.version>\n" : "";
@@ -542,6 +1550,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
                 + "         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd\">\n"
                 + "    <modelVersion>4.0.0</modelVersion>\n\n"
+                + activitiRepos
                 + "    <groupId>" + pkg + "</groupId>\n"
                 + "    <artifactId>" + stem + "-parent</artifactId>\n"
                 + "    <version>1.0.0</version>\n"
@@ -564,6 +1573,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        <mybatis-plus.version>3.5.5</mybatis-plus.version>\n"
                 + "        <lombok.version>1.18.30</lombok.version>\n"
                 + cloudProps
+                + activitiProps
                 + "    </properties>\n\n"
                 + "    <dependencyManagement>\n"
                 + "        <dependencies>\n"
@@ -669,7 +1679,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "</project>\n";
     }
 
-    private String applicationJava(String pkg, String appClass, boolean micro) {
+    private String applicationJava(String pkg, String appClass, boolean micro, boolean activiti) {
         String feign = micro
                 ? "\n"
                 + "// V6.0 微服务设施：跨服务调用骨架，扫描 .remote 包；nacos 关闭时 Feign 走 url 直连\n"
@@ -677,12 +1687,16 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 : "";
         String feignImport = micro
                 ? "import org.springframework.cloud.openfeign.EnableFeignClients;\n" : "";
+        // V6.1：Activiti starter 自带 Method Security 集成，与产物 AuthContextFilter token 体系必然打架，
+        // 启动类直接排除（8.x 实际类名；exclude 属性编译期解析 Class，类名错产物直接编不过——实测踩过）
+        String excludeAttr = activiti
+                ? "(exclude = org.activiti.spring.boot.ActivitiMethodSecurityAutoConfiguration.class)" : "";
         return "package " + pkg + ";\n\n"
                 + "import org.mybatis.spring.annotation.MapperScan;\n"
                 + "import org.springframework.boot.SpringApplication;\n"
                 + "import org.springframework.boot.autoconfigure.SpringBootApplication;\n"
                 + feignImport
-                + "\n@SpringBootApplication\n"
+                + "\n@SpringBootApplication" + excludeAttr + "\n"
                 + feign
                 + "// 基座 OpeLogMapper 在 .system 包下，业务 mapper 在 .mapper 包下，两个都要扫到\n"
                 + "@MapperScan({\"" + pkg + ".mapper\", \"" + pkg + ".system\"})\n"
@@ -2162,6 +3176,13 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         String host = StringUtils.hasText(dto.getDbHost()) ? dto.getDbHost() : "127.0.0.1:3306";
         String user = StringUtils.hasText(dto.getDbUsername()) ? dto.getDbUsername() : "root";
         String pwd = StringUtils.hasText(dto.getDbPassword()) ? dto.getDbPassword() : "root";
+        boolean activiti = "activiti".equalsIgnoreCase(
+                StringUtils.hasText(dto.getFlowEngine()) ? dto.getFlowEngine().trim() : "");
+        // V6.1：Activiti 自带 Spring Security 自动装配，与 AuthContextFilter 打架——双保险：
+        // 启动类 exclude（主）+ yml exclude（兜底，改依赖不用动代码）
+        String activitiBlock = activiti
+                ? "  autoconfigure:\n"
+                + "    exclude: org.activiti.spring.boot.ActivitiMethodSecurityAutoConfiguration\n" : "";
         // V6.0 micro：Nacos 开关块留在 spring: 内部；Feign 直连默认值是顶层键，必须放 yml 末尾——
         // 插进 spring: 里会把后面的 profiles/datasource 挤成顶层键，datasource 全部失效（S8 实测翻过车）
         String microBlock = micro
@@ -2181,20 +3202,24 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    bootstrap-url: http://localhost:" + serverPort + "\n" : "";
         // V6.0 micro：注册名用 stem-bootstrap（网关 lb:// 与 Feign name 都指向它）；mono/multi 维持原名零变化
         String appName = micro ? stem + "-bootstrap" : project + "-server";
+        // V6.2 配置安全：url/username/password 改环境变量占位符——冒号后默认值=本机直跑原行为，
+        // 生产由 DB_* 环境变量覆盖，yml 本身不再含可提交泄露的明文密码
         return "server:\n"
                 + "  port: " + serverPort + "\n\n"
                 + "spring:\n"
                 + "  application:\n"
                 + "    name: " + appName + "\n"
                 + microBlock
+                + activitiBlock
                 + "  profiles:\n"
                 + "    # 本机私有配置（数据库密码等）放 application-local.yml，不提交仓库\n"
                 + "    include: local\n"
                 + "  datasource:\n"
-                + "    url: jdbc:mysql://" + host + "/" + db
-                + "?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true\n"
-                + "    username: " + user + "\n"
-                + "    password: " + pwd + "\n"
+                + "    # V6.2：环境变量优先（容器/CI 场景），冒号后默认值=本机直连（与旧版明文一致）\n"
+                + "    url: ${DB_URL:jdbc:mysql://" + host + "/" + db
+                + "?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}\n"
+                + "    username: ${DB_USERNAME:" + user + "}\n"
+                + "    password: ${DB_PASSWORD:" + pwd + "}\n"
                 + "    driver-class-name: com.mysql.cj.jdbc.Driver\n\n"
                 + "mybatis-plus:\n"
                 + "  mapper-locations: classpath*:/mapper/**/*.xml\n"

@@ -273,7 +273,39 @@ public class GenTemplateEngine {
                 : GenTemplateModel.build(table, List.of(), (List<GenTemplateModel.ChildInfo>) null, project);
         Map<String, String> shared = new LinkedHashMap<>();
         shared.put(renderString(tpl.pathPattern(), Map.of()), renderString(tpl.content(), model));
+        // V6.1：项目内任一表绑定 flow_code → 注入待办中心页 + 全局 flow api + 路由说明
+        shared.putAll(renderFlowShared(table));
         return shared;
+    }
+
+    /**
+     * V6.1 待办中心共享文件：首表所属系统内有任何绑定流程的表才产出（否则返回空 Map，零侵入）。
+     */
+    public Map<String, String> renderFlowShared(GenTable table) {
+        if (table == null || table.getProjectId() == null) {
+            return Map.of();
+        }
+        Long flowBound = genTableMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<GenTable>()
+                .eq(GenTable::getProjectId, table.getProjectId())
+                .isNotNull(GenTable::getFlowCode)
+                .ne(GenTable::getFlowCode, ""));
+        if (flowBound == null || flowBound == 0) {
+            return Map.of();
+        }
+        try {
+            ResolvedTemplate api = resolveFromDb("flowApi", 0L);
+            ResolvedTemplate page = resolveFromDb("flowTodo", 0L);
+            Map<String, String> shared = new LinkedHashMap<>();
+            shared.put(renderString(api.pathPattern(), Map.of()), renderString(api.content(), Map.of()));
+            shared.put(renderString(page.pathPattern(), Map.of()), renderString(page.content(), Map.of()));
+            shared.put("flow-router-snippet.txt",
+                    "// V6.1 待办中心路由：追加到 src/router/index.js 主布局 children\n"
+                            + "{ path: 'flow/todo', name: 'FlowTodo', component: () => import('@/views/flow/todo.vue'), meta: { title: '待办中心' } }\n");
+            return shared;
+        } catch (Exception e) {
+            // 模板缺失（老库未跑 Seeder）不阻断主产物
+            return Map.of();
+        }
     }
 
     /**

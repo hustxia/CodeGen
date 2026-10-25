@@ -110,6 +110,18 @@ public class SysProject extends BaseEntity {
     private String projectStructure;
 
     /**
+     * V6.1 产物流程引擎：NULL/builtin = 内置简易流（现状），activiti = Activiti 8 引擎。
+     *
+     * <p>三态可空同款约定（V4.4 教训）；保存时显式 SET（updateById NOT_NULL 不写 null）。
+     */
+    private String flowEngine;
+
+    /**
+     * V6.2 部署物系统默认值。NULL = 未配置，回落硬编码关（0）。
+     */
+    private Integer defaultGenDeploy;
+
+    /**
      * 备注
      */
     private String remark;

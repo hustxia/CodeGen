@@ -204,6 +204,8 @@ CREATE TABLE `sys_project` (
   `default_gen_delete_btn` tinyint DEFAULT NULL COMMENT '生成开关默认值：NULL 表示未配置，回落 1',
   `default_delete_cascade_mode` tinyint DEFAULT NULL COMMENT '系统级默认删除级联模式，空=1(级联)',
   `default_gen_print` tinyint DEFAULT NULL COMMENT '打印单据默认:NULL=未配置(关) 1=默认生成 0=默认不生成',
+  `flow_engine` varchar(16) DEFAULT NULL COMMENT '产物流程引擎：null/builtin=内置简易流，activiti=Activiti 8 引擎',
+  `default_gen_deploy` tinyint DEFAULT NULL COMMENT '部署物默认:NULL=未配置(关) 1=生成 0=不生成',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_project_code` (`project_code`,`deleted`),
   KEY `idx_default` (`is_default`)

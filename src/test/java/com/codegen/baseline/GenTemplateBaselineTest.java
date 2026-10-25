@@ -115,6 +115,12 @@ class GenTemplateBaselineTest {
         compare("micro", modelMicro());
     }
 
+    @Test
+    @DisplayName("flow：流程绑定（simple 同表 + flowCode）的 13 个产物")
+    void flow() {
+        compare("flow", modelFlow());
+    }
+
     // ------------------------------------------------------------------
     // 比对与更新
     // ------------------------------------------------------------------
@@ -256,6 +262,17 @@ class GenTemplateBaselineTest {
     /** V6.0 微服务场景：与 multi 同表同列，仅 projectStructure='micro'，钉住 apiBase 网关化差异 */
     private static Map<String, Object> modelMicro() {
         return modelWithStructure("micro");
+    }
+
+    /** V6.1 流程绑定场景：simple 同表 + flowCode，钉住 hasFlow 的 controller/apiJs 块 */
+    private static Map<String, Object> modelFlow() {
+        GenTable table = baseTable("demo_leave", "请假单", "DemoLeave", "leave");
+        table.setFlowCode("hr_leave_flow");
+        List<GenTableColumn> cols = new ArrayList<>();
+        cols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        cols.add(col("reason", "请假事由", "varchar(200)", "reason", "String", 0, 1, 1, "LIKE", 1, 1, 2));
+        cols.add(col("status", "状态", "char(1)", "status", "String", 0, 0, 0, "EQ", 1, 1, 3));
+        return GenTemplateModel.build(table, cols, (java.util.List<GenTemplateModel.ChildInfo>) null, null);
     }
 
     private static Map<String, Object> modelWithStructure(String structure) {
@@ -421,7 +438,7 @@ class GenTemplateBaselineTest {
             return;
         }
         List<String> known = new ArrayList<>();
-        for (String caseName : List.of("simple", "relation", "master-detail", "master-multichild", "multi", "micro")) {
+        for (String caseName : List.of("simple", "relation", "master-detail", "master-multichild", "multi", "micro", "flow")) {
             for (String tpl : TEMPLATES) {
                 known.add(caseName + "/" + tpl + ".txt");
             }

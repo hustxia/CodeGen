@@ -65,6 +65,38 @@ public class GenScaffoldDTO {
             + "登记系统时请把 sys_project.project_structure 设为同值")
     private String projectStructure;
 
+    @Schema(description = "V6.1 产物流程引擎：null/builtin=内置简易流，activiti=Activiti 8（产物按值装配 FlowService 实现，含引擎依赖与 ACT_ 建表）")
+    private String flowEngine;
+
+    @Schema(description = "V6.2 是否生成部署物（Dockerfile/compose/CI 模板），默认 false；系统配置请把 sys_project.default_gen_deploy 设为同值")
+    private Boolean genDeploy;
+
+    @Schema(description = "V6.1 需下发的流程定义（平台不直连产物库，由调用方查询组装）；空=只写流程表 DDL")
+    private java.util.List<FlowDef> flowDefs;
+
+    /** V6.1 流程定义下发载体：nodes 为 sys_flow_def.nodes 原样 JSON 结构，bpmnXml 由平台 GenBpmnBuilder 预先翻译 */
+    public static class FlowDef {
+        private String flowCode;
+        private String flowName;
+        private String tableName;
+        private String statusCol;
+        private java.util.List<java.util.Map<String, Object>> nodes;
+        private String bpmnXml;
+
+        public String getFlowCode() { return flowCode; }
+        public void setFlowCode(String v) { this.flowCode = v; }
+        public String getFlowName() { return flowName; }
+        public void setFlowName(String v) { this.flowName = v; }
+        public String getTableName() { return tableName; }
+        public void setTableName(String v) { this.tableName = v; }
+        public String getStatusCol() { return statusCol; }
+        public void setStatusCol(String v) { this.statusCol = v; }
+        public java.util.List<java.util.Map<String, Object>> getNodes() { return nodes; }
+        public void setNodes(java.util.List<java.util.Map<String, Object>> v) { this.nodes = v; }
+        public String getBpmnXml() { return bpmnXml; }
+        public void setBpmnXml(String v) { this.bpmnXml = v; }
+    }
+
     @Schema(description = "是否覆盖已存在的文件，默认 false（存在即跳过，保证可重复执行）")
     private Boolean force = Boolean.FALSE;
 

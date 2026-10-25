@@ -161,6 +161,14 @@ public final class GenTemplateModel {
     }
 
     /**
+     * V6.2 部署物开关的三级回落唯一实现：系统级 → 硬编码关。
+     * 与 resolveGenPrint 同款语义；部署物无表级开关（Dockerfile 是工程级产物，按系统给）。
+     */
+    public static boolean resolveGenDeploy(Integer projectVal) {
+        return projectVal != null && projectVal == 1;
+    }
+
+    /**
      * 构建完整渲染模型（无子表）
      */
     public static Map<String, Object> build(GenTable table, List<GenTableColumn> cols) {

@@ -55,6 +55,9 @@ public class GenTemplateSeeder implements ApplicationRunner {
             new SeedMeta("vuePage", "前端页面", "frontend", "src/views/${moduleName}/index.vue"),
             // V4.5 A4 打印单据：开关 gen_print 开启才渲染，独立于 index.vue 的单据版式页
             new SeedMeta("printPage", "打印单据页", "frontend", "src/views/${moduleName}/print.vue"),
+            // V6.1 审批流：批次内任一表绑定 flow_code 时由 renderFlowShared 注入（待办中心 + 全局 flow api）
+            new SeedMeta("flowApi", "审批流前端接口", "frontend", "src/api/flow.js"),
+            new SeedMeta("flowTodo", "待办中心页", "frontend", "src/views/flow/todo.vue"),
             new SeedMeta("routerSnippet", "路由片段", "shared", "router-snippet.txt"),
             new SeedMeta("readme", "使用说明", "shared", "README-使用说明.txt"));
 

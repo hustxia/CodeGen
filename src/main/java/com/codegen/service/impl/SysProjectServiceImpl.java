@@ -219,6 +219,14 @@ public class SysProjectServiceImpl implements SysProjectService {
         projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
                 .eq(SysProject::getId, project.getId())
                 .set(SysProject::getProjectStructure, project.getProjectStructure()));
+        // V6.1 同款修复：flow_engine 三态（null=builtin 跟随默认），null 必须能存回
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getFlowEngine, project.getFlowEngine()));
+        // V6.2 同款修复：default_gen_deploy 三态
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getDefaultGenDeploy, project.getDefaultGenDeploy()));
     }
 
     @Override

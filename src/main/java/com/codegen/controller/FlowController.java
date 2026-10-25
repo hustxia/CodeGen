@@ -64,4 +64,23 @@ public class FlowController {
                                              @RequestParam(required = false) Long bizId) {
         return Result.ok(flowService.state(flowCode, bizId));
     }
+
+    /**
+     * V6.1：节点 JSON → BPMN 翻译并回写 sys_flow_def.bpmn_xml（审计/预览 + 下发产物库）。
+     * 部署发生在产物侧（启动 Runner），平台不直连产物库——端点语义是「翻译回写」而非「部署」。
+     */
+    @Operation(summary = "翻译流程定义为 BPMN 并回写（V6.1）")
+    @PostMapping("/def/{id}/bpmn")
+    public Result<Map<String, Object>> translateBpmn(@org.springframework.web.bind.annotation.PathVariable Long id) {
+        return Result.ok(flowDefBpmnService.translate(id));
+    }
+
+    @Operation(summary = "系统绑定的流程定义清单（scaffold flowDefs 组装源，V6.1）")
+    @GetMapping("/defs")
+    public Result<List<Map<String, Object>>> defs(@RequestParam Long projectId) {
+        return Result.ok(flowDefBpmnService.listForProject(projectId));
+    }
+
+    @Autowired
+    private com.codegen.service.FlowDefBpmnService flowDefBpmnService;
 }

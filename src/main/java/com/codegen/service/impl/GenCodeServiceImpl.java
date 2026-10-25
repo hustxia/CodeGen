@@ -113,6 +113,7 @@ public class GenCodeServiceImpl implements GenCodeService {
     public GenZipResult generateZip(GenDownloadDTO dto) {
         List<TableFiles> rendered = renderTables(dto == null ? null : dto.getIds());
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        List<String> files;
         try (ZipOutputStream zip = new ZipOutputStream(bos, StandardCharsets.UTF_8)) {
             // 全量条目（含共享文件），manifest 基于它生成（F15）
             Map<String, String> all = new LinkedHashMap<>();
@@ -151,14 +152,18 @@ public class GenCodeServiceImpl implements GenCodeService {
             }
             writeZipEntry(zip, "manifest.txt", manifest.toString());
             // X-Gen-Files 清单与 ZIP 写入顺序一致，manifest.txt 计入
-            List<String> files = new ArrayList<>(all.keySet());
+            files = new ArrayList<>(all.keySet());
             files.add("manifest.txt");
-            return new GenZipResult(bos.toByteArray(), files);
+            // 注意：不能在 try 块内 return bos.toByteArray()——return 表达式先于
+            // try-with-resources 的 close() 求值，EOCD（central directory）还没写，
+            // 产物是截断 ZIP（V6.2 CLI 首次暴露，V5.0 起潜伏）
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
             throw new BusinessException(500, "ZIP 打包失败：" + e.getMessage());
         }
+        // 走到这里 close() 已完成（EOCD 已写入），此刻取字节才是完整 ZIP
+        return new GenZipResult(bos.toByteArray(), files);
     }
 
     @Override

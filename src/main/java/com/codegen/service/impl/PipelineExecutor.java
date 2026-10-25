@@ -43,6 +43,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -84,6 +85,8 @@ public class PipelineExecutor {
     private final com.codegen.support.GenSeedGenerator seedGenerator;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final com.codegen.support.GenBpmnBuilder bpmnBuilder;
+    private final com.codegen.service.FlowDefBpmnService flowDefBpmnService;
 
     public PipelineExecutor(GenPipelineMapper pipelineMapper,
                             GenPipelineStepMapper stepMapper,
@@ -98,7 +101,9 @@ public class PipelineExecutor {
                             PipelineSseRegistry sseRegistry,
                             PipelineAssembler assembler,
                             com.codegen.support.GenSeedGenerator seedGenerator,
-                            JdbcTemplate jdbcTemplate) {
+                            JdbcTemplate jdbcTemplate,
+                            com.codegen.support.GenBpmnBuilder bpmnBuilder,
+                            com.codegen.service.FlowDefBpmnService flowDefBpmnService) {
         this.pipelineMapper = pipelineMapper;
         this.stepMapper = stepMapper;
         this.scaffoldService = scaffoldService;
@@ -113,6 +118,8 @@ public class PipelineExecutor {
         this.assembler = assembler;
         this.seedGenerator = seedGenerator;
         this.jdbcTemplate = jdbcTemplate;
+        this.bpmnBuilder = bpmnBuilder;
+        this.flowDefBpmnService = flowDefBpmnService;
     }
 
     /**
@@ -271,6 +278,9 @@ public class PipelineExecutor {
         dto.setWithFrontend(true);
         dto.setWithAuth(true);
         dto.setForce(false);
+        // V6.1：流程引擎与定义下发——流程定义在平台库，产物库不直连，靠 scaffold 的 db 脚本带过去
+        dto.setFlowEngine(project.getFlowEngine());
+        dto.setFlowDefs(collectFlowDefs(project.getId()));
         GenScaffoldVO vo = scaffoldService.scaffold(dto);
 
         // 种子 SQL：脚手架带出 db/init_sys_user.sql（admin/admin123），导入到目标库
@@ -290,7 +300,54 @@ public class PipelineExecutor {
                 seedNote = "（种子用户写入失败：" + abbreviate(e.getMessage(), 120) + "）";
             }
         }
+        // V6.1：流程表 DDL + 定义 INSERT 导入产物库（幂等；activiti 定义带 bpmn_xml，产物启动时自动部署）
+        Path flowSql = Paths.get(project.getBackendRoot(), dto.getBackendModule(), "db", "init_sys_flow.sql");
+        if (Files.exists(flowSql)) {
+            try {
+                GenDdlExecuteDTO flowDto = new GenDdlExecuteDTO();
+                flowDto.setDdl(Files.readString(flowSql, StandardCharsets.UTF_8));
+                flowDto.setSchema(pipeline.getDbName());
+                flowDto.setAutoImport(false);
+                var fr = ddlService.execute(flowDto);
+                log.info("流程表 SQL 已导入 {}: {} 条语句", pipeline.getDbName(), fr.getSuccessCount());
+            } catch (Exception e) {
+                log.warn("流程表 SQL 导入失败（不阻断）: {}", e.getMessage());
+            }
+        }
         return "写入 " + vo.getWritten() + " 个文件，跳过 " + vo.getSkipped() + " " + seedNote;
+    }
+
+    /**
+     * V6.1：收集本系统绑定流程的定义（gen_table.flow_code → sys_flow_def），
+     * activiti 引擎时顺带用 GenBpmnBuilder 翻译 bpmn_xml 一起下发。
+     * 组装查询唯一实现在 {@link FlowDefBpmnService#listForProject}，这里只补 bpmn 现译。
+     */
+    private List<com.codegen.dto.GenScaffoldDTO.FlowDef> collectFlowDefs(Long projectId) {
+        List<Map<String, Object>> rows = flowDefBpmnService.listForProject(projectId);
+        boolean activiti = "activiti".equalsIgnoreCase(
+                projectService.getById(projectId).getFlowEngine() == null ? ""
+                        : projectService.getById(projectId).getFlowEngine().trim());
+        List<com.codegen.dto.GenScaffoldDTO.FlowDef> defs = new ArrayList<>();
+        for (Map<String, Object> r : rows) {
+            var fd = new com.codegen.dto.GenScaffoldDTO.FlowDef();
+            fd.setFlowCode((String) r.get("flowCode"));
+            fd.setFlowName((String) r.get("flowName"));
+            fd.setTableName((String) r.get("tableName"));
+            fd.setStatusCol((String) r.get("statusCol"));
+            fd.setNodes((List<Map<String, Object>>) r.get("nodes"));
+            if (activiti && fd.getNodes() != null && !fd.getNodes().isEmpty() && r.get("bpmnXml") == null) {
+                try {
+                    fd.setBpmnXml(bpmnBuilder.build(fd.getFlowCode(), fd.getFlowName(), fd.getNodes()));
+                } catch (Exception e) {
+                    log.warn("流程 {} BPMN 翻译失败（定义仍下发，产物启动时缺 xml 不部署）: {}",
+                            fd.getFlowCode(), e.getMessage());
+                }
+            } else if (r.get("bpmnXml") != null) {
+                fd.setBpmnXml((String) r.get("bpmnXml"));
+            }
+            defs.add(fd);
+        }
+        return defs;
     }
 
     /**
