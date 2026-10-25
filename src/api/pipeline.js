@@ -12,13 +12,25 @@ export function getConfig() {
   return request({ url: '/gen/pipeline/config', method: 'get' })
 }
 
-// AI 领域建模：名称+一句话描述 → 候选表结构
+// AI 领域建模：名称+一句话描述 → 候选表结构（moduleName 非空时只设计该模块的表，供完整系统模式逐模块调用）
+// timeout 对齐后端 gen.pipeline.ai.timeout-seconds（本地 Ollama 纯 CPU 出 JSON 要 3-5 分钟，
+// 60s 会在模型还在跑时报错"挂了"，实际后端正常完成——2026-10-25 实测坑）
 export function aiModel(data) {
   return request({
     url: '/gen/pipeline/ai-model',
     method: 'post',
     data,
-    timeout: 60000
+    timeout: 600000
+  })
+}
+
+// AI 模块拆分：系统 → 业务模块清单（完整系统模式第一步，之后逐模块调 aiModel 再前端合并）
+export function aiModules(data) {
+  return request({
+    url: '/gen/pipeline/ai-modules',
+    method: 'post',
+    data,
+    timeout: 600000
   })
 }
 

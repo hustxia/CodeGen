@@ -41,6 +41,15 @@
               AI 建模未启用（服务端未配置 LLM key），请在「手动粘贴 DDL」中完成建表
             </div>
           </el-form-item>
+          <el-form-item v-if="form.mode === 'ai'" label="建模规模">
+            <el-radio-group v-model="aiScale">
+              <el-radio label="quick">精简（3-5 张，约 4 分钟）</el-radio>
+              <el-radio label="full">完整系统（50 张+，逐模块生成约 40 分钟）</el-radio>
+            </el-radio-group>
+            <div v-if="aiScale === 'full' && aiLoading" style="font-size:12px;color:#409EFF;line-height:1.6;">
+              {{ aiProgressText || '正在拆分业务模块...' }}
+            </div>
+          </el-form-item>
           <el-form-item v-if="form.mode === 'manual'" label="建表 DDL">
             <el-input
               v-model="form.ddlText"
@@ -311,7 +320,7 @@
 </template>
 
 <script>
-import { aiModel, createPipeline, preparePipelineDb, runPipeline, getPipeline, getPipelinePage, stopPipeline, getConfig, lintDb, fixPipelineLint } from '@/api/pipeline'
+import { aiModel, aiModules, createPipeline, preparePipelineDb, runPipeline, getPipeline, getPipelinePage, stopPipeline, getConfig, lintDb, fixPipelineLint } from '@/api/pipeline'
 import { getToken } from '@/utils/auth'
 
 const STATUS_TEXT = {
@@ -344,6 +353,8 @@ export default {
     return {
       step: 0,
       aiEnabled: false,
+      aiScale: 'quick',
+      aiProgressText: '',
       form: { systemName: '', systemDesc: '', dbName: '', mode: 'ai', ddlText: '' },
       tables: [],
       aiLoading: false,
@@ -402,17 +413,65 @@ export default {
         return
       }
       this.aiLoading = true
+      this.aiProgressText = ''
       try {
-        const res = await aiModel({ systemName: this.form.systemName, systemDesc: this.form.systemDesc })
-        this.tables = (res.data.tables || []).map(t => ({
-          tableName: t.tableName,
-          tableComment: t.tableComment,
-          columns: (t.columns || []).map(c => ({ name: c.name, type: c.type, comment: c.comment }))
-        }))
-        this.step = 1
+        if (this.aiScale === 'full') {
+          await this.buildFullSystem()
+        } else {
+          const res = await aiModel({ systemName: this.form.systemName, systemDesc: this.form.systemDesc })
+          this.tables = this.normalizeTables((res.data.tables || []))
+          this.step = 1
+        }
       } finally {
         this.aiLoading = false
+        this.aiProgressText = ''
       }
+    },
+
+    /** 列结构统一成编辑器需要的形状 */
+    normalizeTables(list) {
+      return (list || []).map(t => ({
+        tableName: t.tableName,
+        tableComment: t.tableComment,
+        columns: (t.columns || []).map(c => ({ name: c.name, type: c.type, comment: c.comment }))
+      }))
+    },
+
+    /**
+     * 完整系统模式：AI 先拆业务模块，再逐模块生成表结构，前端按表名合并去重。
+     * 单模块失败跳过不中断（小模型偶发超时属正常，凑够总量即可）。
+     */
+    async buildFullSystem() {
+      const base = { systemName: this.form.systemName, systemDesc: this.form.systemDesc }
+      const modRes = await aiModules(base)
+      const modules = (modRes.data && modRes.data.modules) || []
+      if (!modules.length) throw new Error('AI 未能拆分出业务模块，请重试或改用精简模式')
+      const merged = []
+      const seen = new Set()
+      let failed = 0
+      for (let i = 0; i < modules.length; i++) {
+        const m = modules[i]
+        this.aiProgressText = `正在生成模块 ${i + 1}/${modules.length}：${m.name}${m.desc ? '（' + m.desc + '）' : ''} —— 已合并 ${merged.length} 张表`
+        try {
+          const r = await aiModel({ ...base, moduleName: m.name })
+          for (const t of this.normalizeTables(r.data.tables || [])) {
+            const key = (t.tableName || '').trim().toLowerCase()
+            if (key && !seen.has(key)) {
+              seen.add(key)
+              merged.push(t)
+            }
+          }
+        } catch (e) {
+          failed++
+          console.warn('模块生成失败，已跳过:', m.name, e)
+        }
+      }
+      if (!merged.length) throw new Error('所有模块均生成失败，请检查模型服务后重试')
+      if (failed > 0) {
+        this.$message.warning(`${failed} 个模块生成失败已跳过，其余模块合并出 ${merged.length} 张表`)
+      }
+      this.tables = merged
+      this.step = 1
     },
 
     /* ---------- 第②步 ---------- */
