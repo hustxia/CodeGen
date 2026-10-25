@@ -44,7 +44,7 @@ class GenDdlPatcherTest {
     }
 
     @Test
-    @DisplayName("AC1 全缺：补齐六列（含 id+PRIMARY KEY），业务列逐字保留")
+    @DisplayName("AC1 全缺：补齐六列，已有主键(order_no)时注入非自增可空 id，业务列逐字保留")
     void patchAllMissing() {
         GenDdlPatcher.PatchResult r = GenDdlPatcher.patch(FULL_DDL);
         String out = r.getDdl();
@@ -52,9 +52,11 @@ class GenDdlPatcherTest {
         assertTrue(out.contains("`order_no` varchar(64) NOT NULL COMMENT '单号'"));
         assertTrue(out.contains("`amount` decimal(18,2) NULL COMMENT '金额'"));
         assertTrue(out.contains("PRIMARY KEY (`order_no`)"));
-        // id 列插在列定义段首位 + PRIMARY KEY 子句在尾部
-        assertTrue(out.contains("`id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',"));
-        assertTrue(out.contains("PRIMARY KEY (`id`)"));
+        // 表已有显式主键：注入非自增可空 id（BaseEntity ASSIGN_ID 应用层生成），
+        // 不追加 PRIMARY KEY(id)（MySQL 1068 不允许双主键）
+        assertTrue(out.contains(GenAuditColumns.idDefPlain() + ","));
+        assertFalse(out.contains("PRIMARY KEY (`id`)"));
+        assertFalse(out.contains("AUTO_INCREMENT"));
         // 五个审计列齐
         for (String col : new String[]{"create_time", "update_time", "create_by", "update_by", "deleted"}) {
             assertTrue(out.contains("`" + col + "`"), "缺 " + col);
@@ -65,6 +67,48 @@ class GenDdlPatcherTest {
         // 语法完整性：插入后仍是合法列定义序列（尾逗号处理正确）
         assertFalse(out.contains(",\n  ,"));
         assertFalse(out.contains(",,"));
+    }
+
+    @Test
+    @DisplayName("无主键无自增：注入自增 id + PRIMARY KEY(id)（原行为）")
+    void autoIdWhenNoPkNoAutoInc() {
+        String ddl = """
+                CREATE TABLE `t_plain` (
+                  `name` varchar(64) NULL
+                ) ENGINE=InnoDB;
+                """;
+        GenDdlPatcher.PatchResult r = GenDdlPatcher.patch(ddl);
+        String out = r.getDdl();
+        assertTrue(out.contains("`id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',"));
+        assertTrue(out.contains("PRIMARY KEY (`id`)"));
+        assertEquals(6, r.getItems().get(0).getPatchedCols().size());
+    }
+
+    @Test
+    @DisplayName("自增业务主键（MES 场景）：不再注入第二个 AUTO_INCREMENT，补非自增可空 id")
+    void plainIdWhenBusinessAutoIncPk() {
+        String ddl = """
+                CREATE TABLE `md_work_center` (
+                  `wc_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '工位ID',
+                  `wc_code` varchar(32) NOT NULL COMMENT '工位编码',
+                  `wc_name` varchar(64) NOT NULL COMMENT '工位名称',
+                  PRIMARY KEY (`wc_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                """;
+        GenDdlPatcher.PatchResult r = GenDdlPatcher.patch(ddl);
+        String out = r.getDdl();
+        // 全表只允许一个 AUTO_INCREMENT（MySQL 1075）
+        assertEquals(1, out.split("AUTO_INCREMENT", -1).length - 1, "只能有 wc_id 一个自增列");
+        // id 以非自增可空定义注入段首
+        assertTrue(out.contains(GenAuditColumns.idDefPlain() + ","));
+        assertTrue(out.indexOf(GenAuditColumns.idDefPlain()) < out.indexOf("`wc_id`"), "id 应插在业务列之前");
+        // 业务主键原样保留，不追加第二个 PRIMARY KEY
+        assertTrue(out.contains("PRIMARY KEY (`wc_id`)"));
+        assertFalse(out.contains("PRIMARY KEY (`id`)"));
+        // 其余审计列照常补齐
+        assertTrue(out.contains("`create_time`"));
+        assertTrue(out.contains("`deleted`"));
+        assertEquals(6, r.getItems().get(0).getPatchedCols().size());
     }
 
     @Test
@@ -125,7 +169,7 @@ class GenDdlPatcherTest {
     }
 
     @Test
-    @DisplayName("缺 id：id 列插段首，PRIMARY KEY 子句插段尾，且不打乱其余审计列")
+    @DisplayName("缺 id 且已有非自增主键：id 列插段首（非自增定义），不追加 PK 子句")
     void patchMissingId() {
         String ddl = """
                 CREATE TABLE `t_noid` (
@@ -135,11 +179,10 @@ class GenDdlPatcherTest {
                 """;
         GenDdlPatcher.PatchResult r = GenDdlPatcher.patch(ddl);
         String out = r.getDdl();
-        int idIdx = out.indexOf("`id` bigint NOT NULL AUTO_INCREMENT");
+        int idIdx = out.indexOf(GenAuditColumns.idDefPlain());
         int codeIdx = out.indexOf("`code` varchar(32)");
-        int pkIdx = out.indexOf("PRIMARY KEY (`id`)");
         assertTrue(idIdx >= 0 && codeIdx > idIdx, "id 应在业务列之前");
-        assertTrue(pkIdx > codeIdx, "PRIMARY KEY(id) 应在尾部");
+        assertFalse(out.contains("PRIMARY KEY (`id`)"), "已有主键时不追加 PK(id)");
         assertEquals(6, r.getItems().get(0).getPatchedCols().size());
     }
 
@@ -189,5 +232,47 @@ class GenDdlPatcherTest {
         assertTrue(r.getDdl().startsWith("-- 老库导出"));
         assertTrue(r.getDdl().contains("-- 行内注释"));
         assertEquals(5, r.getItems().get(0).getPatchedCols().size());
+    }
+
+    // ------------------------------------------------------------------
+    // 坑 38：建库/USE 判断必须语句级，子串 contains 会误判
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("坑38复现：无反引号的 mdm_warehouse 不能误判为自带 USE（事故根因）")
+    void warehouseSubstringMustNotCountAsUse() {
+        // 事故 DDL 无反引号："mdm_warehouse (" 含子串 "use "（wareh**ouse (**）
+        String ddl = """
+                CREATE TABLE mdm_warehouse (
+                  `id` bigint NOT NULL AUTO_INCREMENT,
+                  `name` varchar(64) NULL,
+                  PRIMARY KEY (`id`)
+                ) ENGINE=InnoDB COMMENT='仓库';
+                """;
+        assertTrue(ddl.toLowerCase().contains("use "), "旧判断 contains(\"use \") 确实被 'house (' 误命中——这就是事故根因");
+        assertFalse(GenDdlPatcher.hasUseStatement(ddl), "语句级判断不误判");
+        assertFalse(GenDdlPatcher.createsDatabase(ddl));
+    }
+
+    @Test
+    @DisplayName("语句级识别：CREATE DATABASE / CREATE SCHEMA / 行首 USE")
+    void recognizesCreateDatabaseAndUseStatements() {
+        assertTrue(GenDdlPatcher.createsDatabase("CREATE DATABASE IF NOT EXISTS `scm_data` DEFAULT CHARACTER SET utf8mb4;"));
+        assertTrue(GenDdlPatcher.createsDatabase("create schema `x`;"));
+        assertTrue(GenDdlPatcher.hasUseStatement("USE `scm_data`;\nCREATE TABLE t(a int) ENGINE=InnoDB;"));
+        assertTrue(GenDdlPatcher.hasUseStatement("  use scm_data;"));
+    }
+
+    @Test
+    @DisplayName("注释/普通词不误判：-- 使用说明、username、user 列")
+    void commentsAndIdentifiersDoNotFoolDetection() {
+        String ddl = """
+                -- 使用说明：先在测试库执行
+                CREATE TABLE `t_user` (
+                  `username` varchar(64) NULL
+                ) ENGINE=InnoDB COMMENT='用户';
+                """;
+        assertFalse(GenDdlPatcher.hasUseStatement(ddl));
+        assertFalse(GenDdlPatcher.createsDatabase(ddl));
     }
 }

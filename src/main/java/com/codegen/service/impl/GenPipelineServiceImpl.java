@@ -36,6 +36,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -174,8 +179,9 @@ public class GenPipelineServiceImpl implements GenPipelineService {
                     ri.setPatchedCols(item.getPatchedCols());
                     auditReport.add(ri);
                 }
-                if (!ddl.trim().toLowerCase().startsWith("create database")
-                        && !ddl.trim().toLowerCase().contains("use ")) {
+                // 坑 38：必须语句级判断。原 contains("use ") 被 "mdm_warehouse (" 的子串
+                // "use " 误命中 → CREATE DATABASE 没补 → USE 静默回落把表建进平台库
+                if (!GenDdlPatcher.createsDatabase(ddl) && !GenDdlPatcher.hasUseStatement(ddl)) {
                     ddl = "CREATE DATABASE IF NOT EXISTS `" + pipeline.getDbName()
                             + "` DEFAULT CHARACTER SET utf8mb4;\n" + ddl;
                 }
@@ -202,6 +208,16 @@ public class GenPipelineServiceImpl implements GenPipelineService {
 
             pipeline.setStatus("await_confirm");
             pipelineMapper.updateById(pipeline);
+
+            // 落盘补齐后的 DDL：流水线重试（db 步发现 0 表）时由执行器自动重放，
+            // 否则「重新执行」永远卡在 db 校验——DDL 只是本次请求的临时参数（V5.1.2）
+            try {
+                Path replay = Paths.get(props.getLogDir(), pipeline.getPipelineNo(), "db.sql");
+                Files.createDirectories(replay.getParent());
+                Files.writeString(replay, ddl, StandardCharsets.UTF_8);
+            } catch (IOException ignored) {
+                // 落盘失败不阻断主流程；重试时 stepDb 会给出可读的报错引导
+            }
 
             GenPipelinePrepareVO vo = new GenPipelinePrepareVO();
             vo.setProjectId(projectId);

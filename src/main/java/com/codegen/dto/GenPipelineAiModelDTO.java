@@ -17,4 +17,7 @@ public class GenPipelineAiModelDTO {
 
     @Schema(description = "一句话业务描述", example = "管理入库、出库、库存")
     private String systemDesc;
+
+    @Schema(description = "限定模块名（完整系统模式逐模块生成时传，空则整体建模）", example = "住院管理")
+    private String moduleName;
 }

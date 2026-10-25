@@ -55,6 +55,16 @@ public final class GenAuditColumns {
     }
 
     /**
+     * 非自增的 id 列定义：给「表已有自增业务主键（如 wc_id AUTO_INCREMENT）」的场景用。
+     * MySQL 一表只允许一个 AUTO_INCREMENT（错误 1075），不能再注入自增 id；
+     * BaseEntity 的 id 是 {@code @TableId(ASSIGN_ID)}——应用层雪花生成、不依赖数据库自增，
+     * 所以可空普通 bigint 即可满足约定；用户种子 INSERT 不写 id 也不会违反 NOT NULL。
+     */
+    public static String idDefPlain() {
+        return "`id` bigint NULL COMMENT '主键（应用层雪花ID）'";
+    }
+
+    /**
      * ALTER TABLE 的 ADD COLUMN 片段。id 列带 PRIMARY KEY FIRST：
      * 已有主键的表会执行失败并如实报错（只补缺、不改错的边界，见 V5.1 规划风险 2）。
      */

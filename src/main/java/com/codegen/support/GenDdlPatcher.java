@@ -29,7 +29,28 @@ public final class GenDdlPatcher {
     /** 声明数计数用：宽松匹配所有 CREATE TABLE 出现处 */
     private static final Pattern CREATE_TABLE_DECLARED = Pattern.compile("(?i)CREATE\\s+TABLE");
 
+    /**
+     * DDL 是否显式建库（CREATE DATABASE / CREATE SCHEMA）。
+     * 坑 38：不能用 contains("use ") 这种子串判断——"mdm_warehouse (" 恰好含子串
+     * "use "（wareh<b>ouse (</b>），会把「该补 CREATE DATABASE」误判成「用户自己会切库」，
+     * 目标库没建，后续 USE 静默回落把 43 张表全建进了平台库。必须按语句级匹配。
+     */
+    private static final Pattern CREATE_DATABASE_STMT = Pattern.compile("(?i)\\bCREATE\\s+(DATABASE|SCHEMA)\\b");
+
+    /** 行首的 USE 语句（脚本切库的标准写法）；注释行 "-- use x" 不算 */
+    private static final Pattern USE_STMT = Pattern.compile("(?im)^\\s*USE\\s+[^;\\s]+");
+
     private GenDdlPatcher() {
+    }
+
+    /** DDL 里是否包含 CREATE DATABASE / CREATE SCHEMA 语句（语句级，防子串误判） */
+    public static boolean createsDatabase(String ddl) {
+        return ddl != null && CREATE_DATABASE_STMT.matcher(ddl).find();
+    }
+
+    /** DDL 里是否有行首 USE 语句（用户自己切库，平台不必代建库） */
+    public static boolean hasUseStatement(String ddl) {
+        return ddl != null && USE_STMT.matcher(ddl).find();
     }
 
     /** 单表补齐明细：patchedCols 为空 = 六列全齐 SKIPPED */
@@ -103,8 +124,17 @@ public final class GenDdlPatcher {
                 continue; // 本段原文照抄
             }
             boolean hasId = !missing.contains("id");
+            // id 注入策略（BaseEntity 的 id 是 @TableId(ASSIGN_ID)：应用层雪花生成，不依赖数据库自增）：
+            // - 表已有自增列 = 有自己的自增业务主键（如 wc_id AUTO_INCREMENT）。MySQL 一表只允许
+            //   一个 AUTO_INCREMENT（1075）→ 注入「非自增可空 id」，业务主键原样保留
+            // - 表已有显式 PRIMARY KEY（非自增，如 PRIMARY KEY(code)）→ 同样注入非自增可空 id，
+            //   不追加 PK 子句（MySQL 不允许两个 PRIMARY KEY，1068）
+            // - 表既无自增列也无主键 → 注入自增 id + PRIMARY KEY（原行为）
+            boolean hasAutoInc = body.contains("auto_increment");
+            boolean hasExplicitPk = body.contains("primary key");
+            boolean injectAutoId = !hasId && !hasAutoInc && !hasExplicitPk;
 
-            // 1) 尾部插入：非 id 缺列 + （缺 id 时的）PRIMARY KEY 子句，紧贴最后一个非空白字符之后
+            // 1) 尾部插入：非 id 缺列 + （可注入自增 id 时的）PRIMARY KEY 子句，紧贴最后一个非空白字符之后
             //    （body 捕获组含 `)` 前的缩进空白，直接用 end(3) 会插成 ")\n  ,"）
             List<String> tailDefs = new ArrayList<>();
             for (String col : missing) {
@@ -112,7 +142,7 @@ public final class GenDdlPatcher {
                     tailDefs.add(GenAuditColumns.columnDef(col));
                 }
             }
-            if (!hasId) {
+            if (injectAutoId) {
                 tailDefs.add("PRIMARY KEY (`id`)");
             }
             String tailBlock = "";
@@ -124,8 +154,8 @@ public final class GenDdlPatcher {
                 tailAt = lastNonWs >= 0 ? lastNonWs + 1 : tailAt;
             }
 
-            // 2) 头部插入：缺 id 时把 id 列定义插到第一个列定义前
-            String headBlock = hasId ? "" : GenAuditColumns.columnDef("id") + ",\n  ";
+            // 2) 头部插入：缺 id 时把 id 列定义插到第一个列定义前（已有自增列/主键时用非自增定义）
+            String headBlock = hasId ? "" : (injectAutoId ? GenAuditColumns.columnDef("id") : GenAuditColumns.idDefPlain()) + ",\n  ";
             int headAt = hasId ? -1 : firstNonWsIndex(ddlText, m.start(3), m.end(3));
 
             // 组装：原文 [last, headAt) + headBlock + 原文 [headAt, tailAt) + tailBlock（尾部原缩进留给后续原文）

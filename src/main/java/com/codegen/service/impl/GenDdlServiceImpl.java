@@ -9,6 +9,7 @@ import com.codegen.service.GenDdlService;
 import com.codegen.service.DictDetectService;
 import com.codegen.service.DictService;
 import com.codegen.service.GenTableService;
+import com.codegen.support.GenDdlPatcher;
 import com.codegen.util.GenUtils;
 import com.codegen.vo.DictDetectItemVO;
 import com.codegen.vo.GenDdlExecuteVO;
@@ -217,6 +218,19 @@ public class GenDdlServiceImpl implements GenDdlService {
         String schema = firstNonBlank(dto.getSchema(), detectSchema(statements), currentSchema());
         validateSchema(schema);
         vo.setSchema(schema);
+
+        // 目标库预检（V5.1.4 事故）：库不存在且 DDL 也不建库时必须拒绝执行——
+        // 否则下面逐条语句前的 USE 静默失败（catch ignored）会回落到连接当前库，
+        // 把业务表全部误建进当前连接所在的库（实测 43 张表建进了平台库 gen_platform）
+        if (!dryRun && !GenDdlPatcher.createsDatabase(dto.getDdl())) {
+            Integer dbCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?",
+                    Integer.class, schema);
+            if (dbCount == null || dbCount == 0) {
+                throw new BusinessException(400, "目标库 `" + schema + "` 不存在，且 DDL 未包含 CREATE DATABASE 语句，已拒绝执行"
+                        + "（防止 USE 回落把表误建进其他库）。请在 DDL 开头补 CREATE DATABASE，或先确认库名拼写");
+            }
+        }
 
         // 2. 逐条执行 —— 必须单连接：HikariCP 每次借还连接都会把 catalog 重置回默认库，
         //    且 Connector/J 的 setCatalog 在本环境下静默无效（实测建表落错库）；

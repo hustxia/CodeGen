@@ -1,9 +1,12 @@
 package com.codegen.contract;
 
+import com.codegen.common.exception.BusinessException;
+import com.codegen.dto.GenDdlExecuteDTO;
 import com.codegen.entity.GenTable;
 import com.codegen.entity.GenTableColumn;
 import com.codegen.mapper.GenTableColumnMapper;
 import com.codegen.mapper.GenTableMapper;
+import com.codegen.service.GenDdlService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +35,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -75,6 +79,9 @@ class GenPipelineContractTest {
 
     @Autowired
     private GenTableColumnMapper genTableColumnMapper;
+
+    @Autowired
+    private GenDdlService ddlService;
 
     private final ObjectMapper json = new ObjectMapper();
 
@@ -731,6 +738,50 @@ class GenPipelineContractTest {
         List<Path> out = new ArrayList<>();
         paths.stream().distinct().forEach(p -> out.add(Path.of(p)));
         return out;
+    }
+
+    // ------------------------------------------------------------------
+    // 坑 38：目标库不存在且 DDL 不建库时，execute 必须拒绝（防 USE 回落打错库）
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("坑38：库不存在且无 CREATE DATABASE → execute 抛异常，不污染任何库")
+    void executeRefusesWhenSchemaMissingAndNoCreateDatabase() {
+        String missingDb = "gen_platform_test_no_such_db_38";
+        GenDdlExecuteDTO dto = new GenDdlExecuteDTO();
+        dto.setSchema(missingDb);
+        dto.setDdl("""
+                CREATE TABLE `ct_38_probe` (
+                  `id` bigint NOT NULL AUTO_INCREMENT,
+                  PRIMARY KEY (`id`)
+                ) ENGINE=InnoDB;
+                """);
+        BusinessException ex = assertThrows(BusinessException.class, () -> ddlService.execute(dto));
+        assertTrue(ex.getMessage().contains("不存在"), "报错要指明目标库不存在：" + ex.getMessage());
+
+        // 不变式：拒绝执行后，任何库里都不允许出现这张探针表
+        Integer hits = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'ct_38_probe'",
+                Integer.class);
+        assertEquals(0, hits, "execute 必须在执行任何语句前拒绝，探针表不允许出现在任何库");
+    }
+
+    @Test
+    @DisplayName("坑38对照：DDL 自带 CREATE DATABASE 时允许执行并真正建库")
+    void executeAllowsWhenDdlCreatesDatabase() {
+        String freshDb = "gen_platform_test_ct38";
+        GenDdlExecuteDTO dto = new GenDdlExecuteDTO();
+        dto.setSchema(freshDb);
+        dto.setDdl("CREATE DATABASE IF NOT EXISTS `" + freshDb + "` DEFAULT CHARACTER SET utf8mb4;\n"
+                + "CREATE TABLE `ct_38_probe2` ("
+                + "  `id` bigint NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`)"
+                + ") ENGINE=InnoDB;");
+        try {
+            var vo = ddlService.execute(dto);
+            assertEquals(0, vo.getFailedCount(), "自带建库语句的 DDL 应正常执行");
+        } finally {
+            jdbcTemplate.execute("DROP DATABASE IF EXISTS `" + freshDb + "`");
+        }
     }
 
     private String relOf(Path abs) {

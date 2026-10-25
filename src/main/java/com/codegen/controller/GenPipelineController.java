@@ -46,10 +46,16 @@ public class GenPipelineController {
         return Result.ok(java.util.Map.of("aiEnabled", pipelineProps.getAi().isEnabled()));
     }
 
-    @Operation(summary = "AI 领域建模：名称+一句话描述 → 候选表结构")
+    @Operation(summary = "AI 领域建模：名称+一句话描述 → 候选表结构（moduleName 非空时只设计该模块的表）")
     @PostMapping("/ai-model")
     public Result<GenPipelineAiVO> aiModel(@RequestBody @Valid GenPipelineAiModelDTO dto) {
-        return Result.ok(aiModelService.model(dto.getSystemName(), dto.getSystemDesc()));
+        return Result.ok(aiModelService.model(dto.getSystemName(), dto.getSystemDesc(), dto.getModuleName()));
+    }
+
+    @Operation(summary = "AI 模块拆分：系统 → 业务模块清单（完整系统模式第一步）")
+    @PostMapping("/ai-modules")
+    public Result<com.codegen.vo.GenPipelineAiModulesVO> aiModules(@RequestBody @Valid GenPipelineAiModelDTO dto) {
+        return Result.ok(aiModelService.modules(dto.getSystemName(), dto.getSystemDesc()));
     }
 
     @Operation(summary = "创建流水线任务（建模结果一并落库）")

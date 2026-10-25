@@ -679,10 +679,23 @@ public final class GenTemplateModel {
             java.util.regex.Pattern.compile("^([^,，:：（(]{1,40})[,，]\\s*\\d+\\s*[-=:：]?.+$");
 
     private static String commentLabel(String comment) {
+        return commentLabel(comment, null);
+    }
+
+    /**
+     * 注释 → 页面显示名，带字段名回落。
+     *
+     * <p>注释整体就是编号映射（{@code 1男 2女 0未知}、{@code 1启用0停用}）时没有标题可取，
+     * 显示名回落到列名——和「注释缺失回落列名」的导入行为保持一致，避免映射串整段上屏。
+     */
+    private static String commentLabel(String comment, String fallbackField) {
         if (comment == null || comment.isBlank()) {
             return "";
         }
         String text = comment.trim();
+        if (isPureEnumMapping(text)) {
+            return fallbackField == null || fallbackField.isBlank() ? text : fallbackField;
+        }
         var m = COMMENT_TITLE_SPLIT.matcher(text);
         if (m.matches() && !m.group(1).isBlank()) {
             text = m.group(1).trim();
@@ -696,6 +709,42 @@ public final class GenTemplateModel {
         // 但纯粹的 "ID"/"编号" 保留原样，否则标签会变成空字符串。
         String stripped = text.replaceAll("(?<=[\\u4e00-\\u9fa5])(ID|Id|id|编号|主键)$", "").trim();
         return stripped.isEmpty() ? text : stripped;
+    }
+
+    /**
+     * 判断注释是否「整体就是编号映射」、不含语义标题。
+     *
+     * <p>两种写法都算：{@code 1男 2女 0未知}（剥掉所有枚举对后只剩分隔符）、
+     * {@code 1APP-GPS 2WiFi 3考勤机 4补卡}（分词后每个词都是「数字开头+非数字」，
+     * 枚举对正则会截断 APP-GPS 这类带连字符的文案，所以补一条分词规则）。
+     * 「3个工作日内完成」这类以数字开头的普通说明不属于映射：剥对后剩正文/只有单个词。
+     */
+    static boolean isPureEnumMapping(String text) {
+        if (text == null || text.isBlank()) {
+            return false;
+        }
+        // 规则 a：剥掉所有枚举对后只剩分隔符，且至少 2 个映射对（真映射至少两组对照）。
+        // 只查剩余为空不够——「3个工作日内完成」会被 {1,10} 整段吞成一个"对"误判
+        java.util.regex.Matcher pm = ENUM_PAIR.matcher(text);
+        int pairs = 0;
+        while (pm.find()) {
+            pairs++;
+        }
+        if (pairs >= 2 && pm.reset().replaceAll(" ").replaceAll("[\\s,，、;；。]*", "").isEmpty()) {
+            return true;
+        }
+        // 规则 b：分词后每个词都是「数字开头+非数字」（1男 / 1APP-GPS / 0-待付款），
+        // 覆盖 APP-GPS 这类被枚举对正则截断、剩余不空的文案
+        String[] tokens = text.trim().split("[\\s,，、]+");
+        if (tokens.length < 2) {
+            return false;
+        }
+        for (String token : tokens) {
+            if (!token.matches("\\d{1,2}\\D.*")) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** 枚举项：数字 + 中文/字母文案，数字前不能紧邻数字（避免把 123ABC 拆成 23+ABC） */
@@ -833,9 +882,10 @@ public final class GenTemplateModel {
             cm.put("javaType", javaType);
             // 原始注释：枚举说明等仍可能在少数场景被引用
             cm.put("columnComment", c.getColumnComment());
-            // 页面显示名：剥掉注释里的枚举说明（状态:1启用0停用 -> 状态），
+            // 页面显示名：剥掉注释里的枚举说明（状态:1启用0停用 -> 状态）；
+            // 注释整体是编号映射（1男 2女 0未知）时回落列名，映射串不再整段上屏。
             // vue 模板的 label/placeholder/校验消息统一用这个，原始注释不再直接上屏
-            cm.put("commentLabel", commentLabel(c.getColumnComment()));
+            cm.put("commentLabel", commentLabel(c.getColumnComment(), c.getColumnName()));
             cm.put("columnType", c.getColumnType());
             cm.put("queryType", c.getQueryType());
             cm.put("queryOp", queryOp(c.getQueryType()));

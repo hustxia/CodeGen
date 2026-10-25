@@ -23,6 +23,7 @@ import com.codegen.vo.GenScaffoldVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -40,6 +41,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -79,6 +81,7 @@ public class PipelineExecutor {
     private final DataSourceProperties dataSourceProps;
     private final PipelineSseRegistry sseRegistry;
     private final PipelineAssembler assembler;
+    private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public PipelineExecutor(GenPipelineMapper pipelineMapper,
@@ -92,7 +95,8 @@ public class PipelineExecutor {
                             GenOutputProperties outputProps,
                             DataSourceProperties dataSourceProps,
                             PipelineSseRegistry sseRegistry,
-                            PipelineAssembler assembler) {
+                            PipelineAssembler assembler,
+                            JdbcTemplate jdbcTemplate) {
         this.pipelineMapper = pipelineMapper;
         this.stepMapper = stepMapper;
         this.scaffoldService = scaffoldService;
@@ -105,6 +109,7 @@ public class PipelineExecutor {
         this.dataSourceProps = dataSourceProps;
         this.sseRegistry = sseRegistry;
         this.assembler = assembler;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     /**
@@ -195,11 +200,34 @@ public class PipelineExecutor {
         return "manual".equals(pipeline.getMode()) ? "手动 DDL 建模" : "AI 建模（已在前端确认）";
     }
 
-    /** db：prepare-db 阶段已建库建表导入台账，这里做就绪校验 */
+    /** db：prepare-db 阶段已建库建表导入台账，这里做就绪校验；0 表时先重放 db.sql 再复检 */
     private String stepDb(GenPipeline pipeline) {
         Long count = tableService.lambdaQuery().eq(GenTable::getProjectId, pipeline.getProjectId()).count();
+        Path replay = logFile(pipeline, "db").getParent().resolve("db.sql");
+        if ((count == null || count == 0) && Files.exists(replay)) {
+            // 重放 prepare-db 落盘的 DDL（V5.1.2）：DDL 是一次性请求参数，
+            // 没有 db.sql 的旧流水线无法自动恢复，给出可读引导
+            try {
+                String ddl = Files.readString(replay, StandardCharsets.UTF_8);
+                log.info("db 步 0 表，重放 db.sql: {} ({} chars)", replay, ddl.length());
+                GenDdlExecuteDTO exec = new GenDdlExecuteDTO();
+                exec.setDdl(ddl);
+                exec.setSchema(pipeline.getDbName());
+                exec.setAutoImport(true);
+                exec.setAllowDestructive(false);
+                exec.setProjectId(pipeline.getProjectId());
+                var vo = ddlService.execute(exec);
+                log.info("db.sql 重放完成: success={} skipped={} failed={} imported={}",
+                        vo.getSuccessCount(), vo.getSkippedCount(), vo.getFailedCount(), vo.getImportedTables());
+                count = tableService.lambdaQuery().eq(GenTable::getProjectId, pipeline.getProjectId()).count();
+            } catch (IOException e) {
+                throw new IllegalStateException("重放 db.sql 读取失败：" + e.getMessage());
+            }
+        }
         if (count == null || count == 0) {
-            throw new IllegalStateException("系统中没有表配置，请先完成表结构确认");
+            log.warn("stepDb 0 表且无重放可用: replay={} exists={}", replay.toAbsolutePath(), Files.exists(replay));
+            throw new IllegalStateException("系统中没有表配置：请回到表结构确认步骤重新点「建库建表」"
+                    + "（建库建表的 DDL 不随重试保留，本流水线没有可重放的 db.sql）");
         }
         return pipeline.getDbName() + " 共 " + count + " 张业务表已导入台账";
     }
@@ -233,6 +261,7 @@ public class PipelineExecutor {
         String seedNote = "（种子用户未写入：init_sys_user.sql 缺失）";
         if (Files.exists(seed)) {
             try {
+                ensureLoginSeedColumns(pipeline.getDbName());
                 GenDdlExecuteDTO seedDto = new GenDdlExecuteDTO();
                 seedDto.setDdl(Files.readString(seed, StandardCharsets.UTF_8));
                 seedDto.setSchema(pipeline.getDbName());
@@ -245,6 +274,49 @@ public class PipelineExecutor {
             }
         }
         return "写入 " + vo.getWritten() + " 个文件，跳过 " + vo.getSkipped() + " " + seedNote;
+    }
+
+    /**
+     * 登录基座约定列补齐（坑 39）：目标库已有用户自带的 sys_user（如 password_hash /
+     * created_at 命名风格）时，脚手架约定列 password/nickname 可能缺失——
+     * 种子 INSERT (username, password, nickname) 报 Unknown column 且被容错吞掉，
+     * 结果种子没写入、登录必 500（实测 SCM 系统）。执行种子前先按约定补列，
+     * 并把已有口令哈希列（password_hash）的值迁移到 password。
+     */
+    private void ensureLoginSeedColumns(String schema) {
+        Integer hasTable = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = 'sys_user'",
+                Integer.class, schema);
+        if (hasTable == null || hasTable == 0) {
+            return; // 表不存在 → 种子 SQL 自带 CREATE TABLE，走原路径
+        }
+        List<String> fixSql = new ArrayList<>();
+        if (!columnExists(schema, "sys_user", "password")) {
+            fixSql.add("ALTER TABLE `" + schema + "`.`sys_user` ADD COLUMN `password` varchar(64) NULL COMMENT '密码（SHA-256）'");
+        }
+        if (!columnExists(schema, "sys_user", "nickname")) {
+            fixSql.add("ALTER TABLE `" + schema + "`.`sys_user` ADD COLUMN `nickname` varchar(64) NULL COMMENT '昵称'");
+        }
+        if (columnExists(schema, "sys_user", "password_hash")) {
+            fixSql.add("UPDATE `" + schema + "`.`sys_user` SET `password` = LEFT(`password_hash`, 64)"
+                    + " WHERE `password` IS NULL AND `password_hash` IS NOT NULL AND `password_hash` <> ''");
+        }
+        for (String sql : fixSql) {
+            try {
+                jdbcTemplate.execute(sql);
+                log.info("登录基座补列: {}", sql);
+            } catch (Exception e) {
+                log.warn("登录基座补列失败（不阻断）: {} - {}", sql, e.getMessage());
+            }
+        }
+    }
+
+    private boolean columnExists(String schema, String table, String column) {
+        Integer c = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns"
+                        + " WHERE table_schema = ? AND table_name = ? AND column_name = ?",
+                Integer.class, schema, table, column);
+        return c != null && c > 0;
     }
 
     /** gen：一键生成（自检→备份→写盘→菜单→路由），自检不过直接失败 */
