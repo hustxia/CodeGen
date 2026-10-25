@@ -59,9 +59,9 @@ import java.util.stream.Stream;
 @Component
 public class PipelineExecutor {
 
-    /** 步骤 key 常量（与 gen_pipeline_step 种子一致） */
+    /** 步骤 key 常量（与 gen_pipeline_step 种子一致）。V5.2 起 db 后插入 seed */
     public static final String[] STEP_KEYS = {
-            "model", "db", "scaffold", "gen",
+            "model", "db", "seed", "scaffold", "gen",
             "package_backend", "deploy_backend",
             "package_frontend", "deploy_frontend",
             "health"
@@ -81,6 +81,7 @@ public class PipelineExecutor {
     private final DataSourceProperties dataSourceProps;
     private final PipelineSseRegistry sseRegistry;
     private final PipelineAssembler assembler;
+    private final com.codegen.support.GenSeedGenerator seedGenerator;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -96,6 +97,7 @@ public class PipelineExecutor {
                             DataSourceProperties dataSourceProps,
                             PipelineSseRegistry sseRegistry,
                             PipelineAssembler assembler,
+                            com.codegen.support.GenSeedGenerator seedGenerator,
                             JdbcTemplate jdbcTemplate) {
         this.pipelineMapper = pipelineMapper;
         this.stepMapper = stepMapper;
@@ -109,6 +111,7 @@ public class PipelineExecutor {
         this.dataSourceProps = dataSourceProps;
         this.sseRegistry = sseRegistry;
         this.assembler = assembler;
+        this.seedGenerator = seedGenerator;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -153,6 +156,7 @@ public class PipelineExecutor {
                     String message = switch (step.getStepKey()) {
                         case "model" -> stepModel(pipeline);
                         case "db" -> stepDb(pipeline);
+                        case "seed" -> stepSeed(pipeline);
                         case "scaffold" -> stepScaffold(pipeline);
                         case "gen" -> stepGen(pipeline);
                         case "package_backend" -> stepPackageBackend(pipeline);
@@ -230,6 +234,19 @@ public class PipelineExecutor {
                     + "（建库建表的 DDL 不随重试保留，本流水线没有可重放的 db.sql）");
         }
         return pipeline.getDbName() + " 共 " + count + " 张业务表已导入台账";
+    }
+
+    /**
+     * seed（V5.2）：按 seed_mode 规则生成示例数据；off/NULL 直接成功跳过。
+     * 失败不阻断整条流水线是错误设计——示例数据缺失会让生成系统开箱即空，
+     * 但插数失败通常是脏数据/权限问题，重跑流水线可恢复，所以这里照常抛出。
+     */
+    private String stepSeed(GenPipeline pipeline) {
+        if (!"rule".equals(pipeline.getSeedMode())) {
+            return "已跳过（未启用数据初始化）";
+        }
+        var vo = seedGenerator.seedPipeline(pipeline);
+        return vo.getSummary();
     }
 
     /** scaffold：调既有 scaffold API 生成前后端骨架 + 执行种子 SQL（sys_user） */

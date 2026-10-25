@@ -83,6 +83,9 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     @Autowired
     private PipelineExecutor executor;
 
+    @Autowired
+    private com.codegen.support.GenSeedGenerator seedGenerator;
+
     /** 单线程执行器：M1 只允许一条流水线在跑，排队即拒绝 */
     private final ExecutorService runner = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "pipeline-runner");
@@ -127,6 +130,8 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         pipeline.setSystemDesc(dto.getSystemDesc());
         pipeline.setDbName(dbName);
         pipeline.setMode("manual".equals(dto.getMode()) ? "manual" : "ai");
+        // V5.2：数据初始化模式，只认 rule（其余含 NULL 一律 off，回落语义唯一出口在 PipelineExecutor.stepSeed）
+        pipeline.setSeedMode("rule".equals(dto.getSeedMode()) ? "rule" : "off");
         pipeline.setStatus("draft");
         pipelineMapper.insert(pipeline);
 
@@ -444,6 +449,20 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         return vo;
     }
 
+    /**
+     * V5.2 数据初始化：存量系统补跑 seed。只补台账中 0 行的表，幂等可重复调用；
+     * seed.sql 落盘到本流水线日志目录，可人工重放。
+     */
+    @Override
+    public com.codegen.vo.GenSeedVO seedExisting(Long id) {
+        GenPipeline pipeline = mustGet(id);
+        if (pipeline.getProjectId() == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                    "该任务尚未完成建库（prepare-db），没有表台账可补数");
+        }
+        return seedGenerator.seedFor(pipeline.getProjectId(), pipeline.getDbName(), pipeline.getPipelineNo());
+    }
+
     /** ALTER 片段拼接（单一实现 GenAuditColumns.alterFragment） */
     private String fixSqlOf(List<String> missing) {
         StringBuilder sb = new StringBuilder();
@@ -501,6 +520,7 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         String[][] defs = {
                 {"model", "AI 领域建模", "pipeline"},
                 {"db", "建库建表+导表", "pipeline"},
+                {"seed", "数据初始化", "pipeline"},
                 {"scaffold", "前后端骨架", "pipeline"},
                 {"gen", "代码生成+自检", "pipeline"},
                 {"package_backend", "后端打包", "backend"},

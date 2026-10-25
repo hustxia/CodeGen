@@ -39,6 +39,9 @@ public interface GenPipelineService {
     /** lint 一键补齐（V5.1）：逐表执行 ALTER 补缺审计列，幂等，单表失败不拖垮整批，执行后复检 */
     GenPipelineLintFixVO fix(Long id);
 
+    /** V5.2 数据初始化：存量系统补跑 seed（只补台账中 0 行的表，幂等） */
+    com.codegen.vo.GenSeedVO seedExisting(Long id);
+
     /** SSE 进度订阅 */
     SseEmitter stream(Long id);
 }

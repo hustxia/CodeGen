@@ -25,6 +25,7 @@ public class PipelineAssembler {
         vo.setBackendPort(head.getBackendPort());
         vo.setFrontendPort(head.getFrontendPort());
         vo.setMode(head.getMode());
+        vo.setSeedMode(head.getSeedMode());
         vo.setStatus(head.getStatus());
         vo.setCurrentStep(head.getCurrentStep());
         vo.setFailReason(head.getFailReason());

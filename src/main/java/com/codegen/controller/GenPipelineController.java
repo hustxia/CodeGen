@@ -112,4 +112,10 @@ public class GenPipelineController {
     public Result<com.codegen.vo.GenPipelineLintFixVO> fix(@PathVariable("id") Long id) {
         return Result.ok(pipelineService.fix(id));
     }
+
+    @Operation(summary = "V5.2 数据初始化：存量系统补跑 seed（只补台账中 0 行的表，幂等）")
+    @PostMapping("/{id}/seed")
+    public Result<com.codegen.vo.GenSeedVO> seed(@PathVariable("id") Long id) {
+        return Result.ok(pipelineService.seedExisting(id));
+    }
 }

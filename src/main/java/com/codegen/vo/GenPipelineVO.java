@@ -47,6 +47,9 @@ public class GenPipelineVO {
     @Schema(description = "ai / manual")
     private String mode;
 
+    @Schema(description = "V5.2 数据初始化：rule=规则生成 off=跳过（NULL=off）")
+    private String seedMode;
+
     @Schema(description = "draft/await_confirm/running/success/failed/stopped")
     private String status;
 

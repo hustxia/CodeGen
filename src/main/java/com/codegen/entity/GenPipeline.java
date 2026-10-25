@@ -44,6 +44,9 @@ public class GenPipeline extends BaseEntity {
     /** ai=AI 建模 manual=手动粘贴 DDL */
     private String mode;
 
+    /** V5.2 数据初始化：rule=规则生成 off=跳过（NULL=off） */
+    private String seedMode;
+
     /** draft/await_confirm/running/success/failed/stopped */
     private String status;
 

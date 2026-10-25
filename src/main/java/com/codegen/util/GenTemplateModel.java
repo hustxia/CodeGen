@@ -759,7 +759,7 @@ public final class GenTemplateModel {
      * 纯文案斜杠写法只在列名本身是枚举语义（status/type/level/flag/state）时才采用，
      * 避免「商品/物料名称」这类注释被误拆。
      */
-    private static List<String[]> parseEnumOptions(String comment, String columnName, String javaType) {
+    public static List<String[]> parseEnumOptions(String comment, String columnName, String javaType) {
         List<String[]> out = new ArrayList<>();
         if (comment == null || comment.isBlank()) {
             return out;
