@@ -171,6 +171,24 @@ public final class GenPathResolver {
     }
 
     /**
+     * 是否微服务设施工程：工程结构显式为 "micro" 才算（V6.0 第三态）。
+     *
+     * <p>micro 在 multi 四模块上追加 gateway 模块与 Nacos/OpenFeign 设施，
+     * 但产物（entity/mapper/controller/...）的模块归属与 multi 完全一致。
+     */
+    public static boolean isMicro(String projectStructure) {
+        return projectStructure != null && "micro".equalsIgnoreCase(projectStructure.trim());
+    }
+
+    /**
+     * 多模块或微服务设施：产物需要按模块分层落盘的两种结构。
+     * 只用于「产物归属」判断，不要拿它决定 pom/依赖——那是脚手架自己的事。
+     */
+    public static boolean isMultiLike(String projectStructure) {
+        return isMulti(projectStructure) || isMicro(projectStructure);
+    }
+
+    /**
      * 模板编码 → 模块归属。返回 null 表示该产物不属于任何后端子模块
      * （前端产物 apiJs/vuePage/printPage），多模块时原样落 backendRoot。
      */
@@ -196,7 +214,7 @@ public final class GenPathResolver {
      * 单模块、非后端产物（moduleOfTpl 为 null）、stem 为空时返回空串。
      */
     public static String moduleRelPrefix(String tplCode, String projectStructure, String rootPackage) {
-        if (!isMulti(projectStructure)) {
+        if (!isMultiLike(projectStructure)) {
             return "";
         }
         String module = moduleOfTpl(tplCode);

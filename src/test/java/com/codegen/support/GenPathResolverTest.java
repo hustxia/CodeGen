@@ -259,10 +259,11 @@ class GenPathResolverTest {
             assertEquals("scm-service/", GenPathResolver.moduleRelPrefix("controller", "multi", "com.demo.scm"));
             // multi：前端产物仍落 backendRoot，无前缀
             assertEquals("", GenPathResolver.moduleRelPrefix("vuePage", "multi", "com.demo.scm"));
-            // 单模块（null / mono / micro）：一律无前缀，行为零变化
+            // 单模块（null / mono）：一律无前缀，行为零变化
             assertEquals("", GenPathResolver.moduleRelPrefix("entity", null, "com.demo.scm"));
             assertEquals("", GenPathResolver.moduleRelPrefix("entity", "mono", "com.demo.scm"));
-            assertEquals("", GenPathResolver.moduleRelPrefix("entity", "micro", "com.demo.scm"));
+            // V6.0 起 micro 是分层结构，归属与 multi 一致（V5.5 时它还是未知值走单模块）
+            assertEquals("scm-domain/", GenPathResolver.moduleRelPrefix("entity", "micro", "com.demo.scm"));
             // rootPackage 只有一段时 stem 取该段本身
             assertEquals("com-domain/", GenPathResolver.moduleRelPrefix("entity", "multi", "com"));
         }
@@ -276,6 +277,53 @@ class GenPathResolverTest {
             assertEquals(false, GenPathResolver.isMulti(""));
             assertEquals(false, GenPathResolver.isMulti("mono"));
             assertEquals(false, GenPathResolver.isMulti("micro"));
+        }
+    }
+
+    @Nested
+    @DisplayName("V6.0 微服务设施：micro 第三态")
+    class MicroStructure {
+
+        @Test
+        @DisplayName("isMicro：仅 'micro'（忽略大小写与首尾空格）为真；multi/mono/null 均假")
+        void isMicro() {
+            assertEquals(true, GenPathResolver.isMicro("micro"));
+            assertEquals(true, GenPathResolver.isMicro(" MICRO "));
+            assertEquals(false, GenPathResolver.isMicro(null));
+            assertEquals(false, GenPathResolver.isMicro(""));
+            assertEquals(false, GenPathResolver.isMicro("multi"));
+            assertEquals(false, GenPathResolver.isMicro("mono"));
+            assertEquals(false, GenPathResolver.isMicro("Microservice"));
+        }
+
+        @Test
+        @DisplayName("isMultiLike：multi 与 micro 都要求产物分层；未知值走单模块")
+        void isMultiLike() {
+            assertEquals(true, GenPathResolver.isMultiLike("multi"));
+            assertEquals(true, GenPathResolver.isMultiLike("micro"));
+            assertEquals(false, GenPathResolver.isMultiLike(null));
+            assertEquals(false, GenPathResolver.isMultiLike("mono"));
+            assertEquals(false, GenPathResolver.isMultiLike(""));
+        }
+
+        @Test
+        @DisplayName("moduleRelPrefix：micro 的产物归属与 multi 完全一致（AC4 前提：multi 快照不动）")
+        void microPrefixMatchesMulti() {
+            for (String tpl : new String[]{"entity", "mapper", "controller", "service",
+                    "serviceImplSimple", "pageDto", "vo", "apiJs", "vuePage", "printPage"}) {
+                assertEquals(GenPathResolver.moduleRelPrefix(tpl, "multi", "com.wms"),
+                        GenPathResolver.moduleRelPrefix(tpl, "micro", "com.wms"),
+                        "micro 与 multi 归属不一致：" + tpl);
+            }
+            assertEquals("wms-domain/", GenPathResolver.moduleRelPrefix("entity", "micro", "com.wms"));
+        }
+
+        @Test
+        @DisplayName("moduleOfTpl 不含 gateway：gen 模板产物永不进 gateway 模块（gateway 只有 scaffold 产物）")
+        void noGatewayModule() {
+            assertEquals(null, GenPathResolver.moduleOfTpl("gateway"));
+            assertEquals(null, GenPathResolver.moduleOfTpl("readme"));
+            assertEquals(null, GenPathResolver.moduleOfTpl("routerSnippet"));
         }
     }
 

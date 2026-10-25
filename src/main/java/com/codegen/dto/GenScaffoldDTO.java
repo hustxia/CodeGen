@@ -60,7 +60,9 @@ public class GenScaffoldDTO {
     @Schema(description = "是否生成登录与鉴权基座（AuthContextFilter + 登录接口），默认 true")
     private Boolean withAuth = Boolean.TRUE;
 
-    @Schema(description = "V5.5 工程结构：null=单模块，multi=Maven 多模块（parent + common/domain/service/bootstrap），登记系统时请把 sys_project.project_structure 设为同值")
+    @Schema(description = "工程结构：null=单模块，multi=Maven 多模块（parent + common/domain/service/bootstrap），"
+            + "micro=微服务设施（多模块基础上追加 gateway 模块 + Nacos/OpenFeign 设施，默认关闭两栖运行），"
+            + "登记系统时请把 sys_project.project_structure 设为同值")
     private String projectStructure;
 
     @Schema(description = "是否覆盖已存在的文件，默认 false（存在即跳过，保证可重复执行）")

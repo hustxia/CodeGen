@@ -53,11 +53,16 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
         // V5.5 多模块：模块 stem 唯一实现在 GenNaming.multiModuleStem（rootPackage 最后一段），
         // 与 apply 侧 GenPathResolver.moduleRelPrefix 必须算出同名，否则生成物落进不存在的模块目录
-        boolean multi = GenPathResolver.isMulti(dto.getProjectStructure());
+        boolean multi = GenPathResolver.isMultiLike(dto.getProjectStructure());
+        // V6.0 微服务设施：multi 基础上追加 gateway 模块 + Nacos/OpenFeign 设施（默认关，两栖运行）
+        boolean micro = GenPathResolver.isMicro(dto.getProjectStructure());
         String stem = GenNaming.multiModuleStem(pkg);
         // 基座类（common/system 包）落 common 模块；启动类/yml/db 脚本落 bootstrap 模块；单模块两者都是 backendRoot
         Path commonRoot = multi ? backendRoot.resolve(stem + "-common") : backendRoot;
         Path bootRoot = multi ? backendRoot.resolve(stem + "-bootstrap") : backendRoot;
+        // V6.0：Feign 骨架归 service 模块；gateway 模块目录
+        Path serviceRoot = multi ? backendRoot.resolve(stem + "-service") : backendRoot;
+        Path gatewayRoot = backendRoot.resolve(stem + "-gateway");
 
         GenScaffoldVO vo = new GenScaffoldVO();
         vo.setBackendPath(backendRoot.toString());
@@ -65,6 +70,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
         boolean force = Boolean.TRUE.equals(dto.getForce());
         int[] counter = new int[]{0, 0};
+        String appClass = toClassName(project);
 
         // ---------- 后端 ----------
         if (multi) {
@@ -74,7 +80,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             // backendModule 默认取 projectName（用户常中文命名），中文直进 artifactId 产物 mvn 直接拒读。
             // 聚合坐标统一用 stem（rootPackage 最后一段，纯合法字符）；可读名放 <name>。
             String parentArtifactId = stem + "-parent";
-            write(backendRoot, "pom.xml", pomMultiParent(project, pkg, stem, backendModule), "backend", force, vo, counter);
+            write(backendRoot, "pom.xml", pomMultiParent(project, pkg, stem, backendModule, micro), "backend", force, vo, counter);
             write(backendRoot, stem + "-common/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "common",
                     dep("org.springframework.boot", "spring-boot-starter-web", null)
                             + dep("org.springframework.boot", "spring-boot-starter-validation", null)
@@ -95,26 +101,53 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                             + dep("org.springframework.boot", "spring-boot-starter-validation", null)
                             + dep("org.springdoc", "springdoc-openapi-starter-webmvc-ui", "2.3.0")
                             + dep("org.apache.poi", "poi-ooxml", "5.2.5")
+                            // V6.0：Feign 骨架在 .remote 包，注解依赖必须在本模块（bootstrap 只放 lb 运行时）
+                            + (micro ? dep("org.springframework.cloud", "spring-cloud-starter-openfeign", null) : "")
                             + dep("org.projectlombok", "lombok", "${lombok.version}")
                             + extraDepsXml(dto),
                     false), "backend", force, vo, counter);
             write(backendRoot, stem + "-bootstrap/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "bootstrap",
                     internalDep(pkg, stem, "service")
+                            // V6.0 微服务设施：注册/配置中心与 lb 运行时（版本由聚合 pom BOM 管理，enabled=false 时零行为；
+                            // openfeign 注解依赖在 service 模块——Feign 骨架在那层编译）
+                            + (micro
+                                ? dep("com.alibaba.cloud", "spring-cloud-starter-alibaba-nacos-discovery", null)
+                                    + dep("com.alibaba.cloud", "spring-cloud-starter-alibaba-nacos-config", null)
+                                    + dep("org.springframework.cloud", "spring-cloud-starter-loadbalancer", null)
+                                : "")
                             + "        <dependency>\n"
                             + "            <groupId>com.mysql</groupId>\n"
                             + "            <artifactId>mysql-connector-j</artifactId>\n"
                             + "            <scope>runtime</scope>\n"
                             + "        </dependency>\n",
                     true), "backend", force, vo, counter);
+            if (micro) {
+                // V6.0 微服务设施：gateway 模块（webflux，独立进程，端口=服务端口+1）
+                write(gatewayRoot, "pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "gateway",
+                        dep("org.springframework.cloud", "spring-cloud-starter-gateway", null)
+                                + dep("com.alibaba.cloud", "spring-cloud-starter-alibaba-nacos-discovery", null)
+                                + dep("org.springframework.cloud", "spring-cloud-starter-loadbalancer", null)
+                                + dep("com.alibaba.cloud", "spring-cloud-starter-alibaba-nacos-config", null)
+                                + dep("org.springframework.cloud", "spring-cloud-starter-bootstrap", null),
+                        true), "backend", force, vo, counter);
+                write(gatewayRoot, "src/main/java/" + pkg.replace('.', '/') + "/gateway/"
+                                + appClass + "GatewayApplication.java",
+                        gatewayApplicationJava(pkg, appClass), "backend", force, vo, counter);
+                write(gatewayRoot, "src/main/resources/application.yml",
+                        gatewayApplicationYml(pkg, stem, serverPort), "backend", force, vo, counter);
+                // Feign 骨架：只给约定与示例，跨服务接口按需手写（规划定案，不按表自动生成）
+                write(serviceRoot, "src/main/java/" + pkg.replace('.', '/') + "/remote/RemoteSampleClient.java",
+                        remoteSampleClientJava(pkg, stem), "backend", force, vo, counter);
+            }
         } else {
             write(backendRoot, "pom.xml", pomXml(dto, project, pkg, backendModule, serverPort), "backend", force, vo, counter);
         }
 
         String pkgPath = "src/main/java/" + pkg.replace('.', '/');
-        String appClass = toClassName(project);
-        // 启动类与运行配置归 bootstrap；包名不变（仍是 <pkg> 根），@SpringBootApplication 默认扫描覆盖全部模块
+        // 启动类与运行配置归 bootstrap；包名不变（仍是 <pkg> 根），@SpringBootApplication 默认扫描覆盖全部模块；
+        // micro 时启动类追加 @EnableFeignClients 扫 remote 包（跨服务调用骨架）
         write(bootRoot, pkgPath + "/" + appClass + "Application.java",
-                applicationJava(pkg, appClass), "backend", force, vo, counter);
+                applicationJava(pkg, appClass, micro), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/result/Result.java", resultJava(pkg), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/result/ResultCode.java", resultCodeJava(pkg), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/exception/BusinessException.java",
@@ -170,8 +203,15 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             write(bootRoot, "db/init_sys_user.sql", seedSql(),
                     "backend", force, vo, counter);
         }
-        write(bootRoot, "src/main/resources/application.yml", applicationYml(dto, pkg, project, serverPort),
+        write(bootRoot, "src/main/resources/application.yml",
+                applicationYml(dto, pkg, project, serverPort, stem, micro),
                 "backend", force, vo, counter);
+        if (micro) {
+            // V6.0：Nacos 配置中心接入模板（注释态）。说明头里写清 Boot 3 默认不读 bootstrap.yml，
+            // 真正的运行开关在 application.yml 的 spring.cloud.nacos.*——放这是为了注释态一目了然
+            write(bootRoot, "src/main/resources/bootstrap.yml", bootstrapYml(stem),
+                    "backend", force, vo, counter);
+        }
         write(bootRoot, "src/main/resources/application-local.yml.example",
                 applicationLocalExample(pkg), "backend", force, vo, counter);
         write(bootRoot, ".gitignore", backendGitignore(), "backend", force, vo, counter);
@@ -182,12 +222,14 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         if (Boolean.TRUE.equals(dto.getWithFrontend())) {
             write(frontendRoot, "package.json", frontendPackageJson(project, frontendModule),
                     "frontend", force, vo, counter);
-            write(frontendRoot, "vue.config.js", frontendVueConfig(webPort, serverPort,
+            // V6.0 micro：前端请求走网关（端口=服务端口+1），apiBase 不带 /api 前缀（网关按模块路由）
+            int proxyPort = micro ? serverPort + 1 : serverPort;
+            write(frontendRoot, "vue.config.js", frontendVueConfig(webPort, proxyPort,
                     StringUtils.hasText(dto.getGatewayPrefix()) ? dto.getGatewayPrefix().trim() : "demo"),
                     "frontend", force, vo, counter);
             write(frontendRoot, "babel.config.js", frontendBabelConfig(), "frontend", force, vo, counter);
             write(frontendRoot, ".env.development",
-                    frontendEnvDev(serverPort), "frontend", force, vo, counter);
+                    frontendEnvDev(proxyPort), "frontend", force, vo, counter);
             write(frontendRoot, ".env.production", frontendEnvProd(), "frontend", force, vo, counter);
             write(frontendRoot, "public/index.html", frontendIndexHtml(project), "frontend", force, vo, counter);
             write(frontendRoot, "src/main.js", frontendMainJs(), "frontend", force, vo, counter);
@@ -214,6 +256,11 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         vo.setSkipped(counter[1]);
 
         vo.getNextSteps().add("cd " + backendRoot + " && mvn -DskipTests package 编译验证");
+        if (micro) {
+            vo.getNextSteps().add("微服务设施：默认 nacos.enabled=false（直连运行，与多模块一致）；"
+                    + "启用注册中心先启动本机 Nacos（127.0.0.1:8848），再把两个 application.yml 里 enabled 改 true，"
+                    + "Feign 直连 url 清空即走负载均衡");
+        }
         vo.getNextSteps().add("按 application-local.yml.example 建 application-local.yml 填本机数据库密码");
         if (Boolean.TRUE.equals(dto.getWithFrontend())) {
             vo.getNextSteps().add("cd " + frontendRoot + " && npm install && npm run dev");
@@ -462,8 +509,34 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
      *
      * <p>-parameters 编译参数放 pluginManagement：子模块 build 引用即继承，
      * 单模块 pom 那段「缺 -parameters 全部带参接口 500」的教训在多模块同样成立。
+     *
+     * <p>V6.0 micro=true：追加 spring-cloud / spring-cloud-alibaba BOM（版本矩阵复用 shop 实测：
+     * Boot 3.2.5 + cloud 2023.0.1 + alibaba 2023.0.1.0）与 gateway 模块条目。
      */
-    private String pomMultiParent(String project, String pkg, String stem, String backendModule) {
+    private String pomMultiParent(String project, String pkg, String stem, String backendModule, boolean micro) {
+        String gatewayModule = micro
+                ? "        <module>" + stem + "-gateway</module>\n" : "";
+        String cloudProps = micro
+                ? "        <spring-cloud.version>2023.0.1</spring-cloud.version>\n"
+                + "        <spring-cloud-alibaba.version>2023.0.1.0</spring-cloud-alibaba.version>\n" : "";
+        String cloudBoms = micro
+                ? "            <dependency>\n"
+                + "                <groupId>org.springframework.cloud</groupId>\n"
+                + "                <artifactId>spring-cloud-dependencies</artifactId>\n"
+                + "                <version>${spring-cloud.version}</version>\n"
+                + "                <type>pom</type>\n"
+                + "                <scope>import</scope>\n"
+                + "            </dependency>\n"
+                + "            <dependency>\n"
+                + "                <groupId>com.alibaba.cloud</groupId>\n"
+                + "                <artifactId>spring-cloud-alibaba-dependencies</artifactId>\n"
+                + "                <version>${spring-cloud-alibaba.version}</version>\n"
+                + "                <type>pom</type>\n"
+                + "                <scope>import</scope>\n"
+                + "            </dependency>\n" : "";
+        String description = micro
+                ? project + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务设施：Nacos/Gateway/Feign 默认关闭）"
+                : project + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务就绪单体）";
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
                 + "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -474,12 +547,13 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    <version>1.0.0</version>\n"
                 + "    <packaging>pom</packaging>\n"
                 + "    <name>" + backendModule + "-parent</name>\n"
-                + "    <description>" + project + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务就绪单体）</description>\n\n"
+                + "    <description>" + description + "</description>\n\n"
                 + "    <modules>\n"
                 + "        <module>" + stem + "-common</module>\n"
                 + "        <module>" + stem + "-domain</module>\n"
                 + "        <module>" + stem + "-service</module>\n"
                 + "        <module>" + stem + "-bootstrap</module>\n"
+                + gatewayModule
                 + "    </modules>\n\n"
                 + "    <properties>\n"
                 + "        <java.version>21</java.version>\n"
@@ -489,6 +563,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        <spring-boot.version>3.2.5</spring-boot.version>\n"
                 + "        <mybatis-plus.version>3.5.5</mybatis-plus.version>\n"
                 + "        <lombok.version>1.18.30</lombok.version>\n"
+                + cloudProps
                 + "    </properties>\n\n"
                 + "    <dependencyManagement>\n"
                 + "        <dependencies>\n"
@@ -499,6 +574,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "                <type>pom</type>\n"
                 + "                <scope>import</scope>\n"
                 + "            </dependency>\n"
+                + cloudBoms
                 + "            <dependency>\n"
                 + "                <groupId>" + pkg + "</groupId>\n"
                 + "                <artifactId>" + stem + "-common</artifactId>\n"
@@ -593,12 +669,21 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "</project>\n";
     }
 
-    private String applicationJava(String pkg, String appClass) {
+    private String applicationJava(String pkg, String appClass, boolean micro) {
+        String feign = micro
+                ? "\n"
+                + "// V6.0 微服务设施：跨服务调用骨架，扫描 .remote 包；nacos 关闭时 Feign 走 url 直连\n"
+                + "@EnableFeignClients(basePackages = {\"" + pkg + ".remote\"})\n"
+                : "";
+        String feignImport = micro
+                ? "import org.springframework.cloud.openfeign.EnableFeignClients;\n" : "";
         return "package " + pkg + ";\n\n"
                 + "import org.mybatis.spring.annotation.MapperScan;\n"
                 + "import org.springframework.boot.SpringApplication;\n"
-                + "import org.springframework.boot.autoconfigure.SpringBootApplication;\n\n"
-                + "@SpringBootApplication\n"
+                + "import org.springframework.boot.autoconfigure.SpringBootApplication;\n"
+                + feignImport
+                + "\n@SpringBootApplication\n"
+                + feign
                 + "// 基座 OpeLogMapper 在 .system 包下，业务 mapper 在 .mapper 包下，两个都要扫到\n"
                 + "@MapperScan({\"" + pkg + ".mapper\", \"" + pkg + ".system\"})\n"
                 + "public class " + appClass + "Application {\n\n"
@@ -606,6 +691,108 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        SpringApplication.run(" + appClass + "Application.class, args);\n"
                 + "    }\n"
                 + "}\n";
+    }
+
+    /**
+     * V6.0 微服务设施：gateway 模块启动类（webflux，包名 <pkg>.gateway）。
+     */
+    private String gatewayApplicationJava(String pkg, String appClass) {
+        return "package " + pkg + ".gateway;\n\n"
+                + "import org.springframework.boot.SpringApplication;\n"
+                + "import org.springframework.boot.autoconfigure.SpringBootApplication;\n\n"
+                + "/**\n"
+                + " * 统一入口网关：路由/跨域在本层，鉴权透传不解析（token 头原样转发，各业务服务自校验）。\n"
+                + " * nacos.discovery.enabled=false 时直连本机业务服务，与多模块单体行为一致。\n"
+                + " */\n"
+                + "@SpringBootApplication\n"
+                + "public class " + appClass + "GatewayApplication {\n\n"
+                + "    public static void main(String[] args) {\n"
+                + "        SpringApplication.run(" + appClass + "GatewayApplication.class, args);\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    /**
+     * V6.0 微服务设施：gateway 路由配置。
+     *
+     * <p>M1 诚实边界：scaffold 时业务模块名还未知，且业务服务只有 <stem>-bootstrap 一个，
+     * 所以先放 catch-all（Path=/**）+ 注释态的按模块聚合示例——真拆出第二个服务再细分。
+     */
+    private String gatewayApplicationYml(String pkg, String stem, int serverPort) {
+        return "server:\n"
+                + "  port: " + (serverPort + 1) + "   # 服务端口 + 1\n\n"
+                + "spring:\n"
+                + "  application:\n"
+                + "    name: " + stem + "-gateway\n"
+                + "  cloud:\n"
+                + "    nacos:\n"
+                + "      discovery:\n"
+                + "        # 默认关：直连本机业务服务（两栖运行）；启用注册中心改 true 并先启动 Nacos\n"
+                + "        enabled: false\n"
+                + "        server-addr: 127.0.0.1:8848\n"
+                + "      config:\n"
+                + "        enabled: false\n"
+                + "        server-addr: 127.0.0.1:8848\n"
+                + "    gateway:\n"
+                + "      globalcors:\n"
+                + "        cors-configurations:\n"
+                + "          '[/**]':\n"
+                + "            allowedOriginPatterns: \"*\"\n"
+                + "            allowedMethods: \"*\"\n"
+                + "            allowedHeaders: \"*\"\n"
+                + "      routes:\n"
+                + "        # catch-all：nacos 关闭直连；开启后把 uri 改成 lb://" + stem + "-bootstrap\n"
+                + "        - id: business\n"
+                + "          uri: http://localhost:" + serverPort + "\n"
+                + "          predicates:\n"
+                + "            - Path=/**\n"
+                + "        # 拆出第二个服务后按业务模块聚合（apiBase = /{module}）：\n"
+                + "        # - id: <module>\n"
+                + "        #   uri: lb://<stem>-<service>\n"
+                + "        #   predicates:\n"
+                + "        #     - Path=/{module}/**\n";
+    }
+
+    /**
+     * V6.0 微服务设施：OpenFeign 骨架。url 有值=直连（application.yml 默认下发，
+     * nacos 关闭时可用）；清空 url 值即走注册中心负载均衡（lb://name）。
+     */
+    private String remoteSampleClientJava(String pkg, String stem) {
+        return "package " + pkg + ".remote;\n\n"
+                + "import org.springframework.cloud.openfeign.FeignClient;\n"
+                + "import org.springframework.web.bind.annotation.GetMapping;\n\n"
+                + "/**\n"
+                + " * 跨服务调用骨架（V6.0）：只给约定与示例，跨服务接口按需在此包手写，\n"
+                + " * 不做按表自动生成（跨服务契约需要人工判断 DTO 归属与事务边界）。\n"
+                + " *\n"
+                + " * <p>切换规则（见 bootstrap 模块 application.yml 的 " + stem + ".remote.bootstrap-url）：\n"
+                + " * <ul>\n"
+                + " *   <li>url 有值（默认）→ 直连 http://localhost:<port>，不依赖注册中心</li>\n"
+                + " *   <li>url 清空 → 走 lb://" + stem + "-bootstrap，需 nacos.discovery.enabled=true</li>\n"
+                + " * </ul>\n"
+                + " */\n"
+                + "@FeignClient(name = \"" + stem + "-bootstrap\", url = \"${" + stem + ".remote.bootstrap-url:}\")\n"
+                + "public interface RemoteSampleClient {\n\n"
+                + "    /** 健康检查示例：能 ping 通即链路可用，替换成真实跨服务接口即可 */\n"
+                + "    @GetMapping(\"/actuator/health\")\n"
+                + "    String health();\n"
+                + "}\n";
+    }
+
+    /**
+     * V6.0 微服务设施：Nacos 配置中心接入模板（注释态）。
+     */
+    private String bootstrapYml(String stem) {
+        return "# =====================================================================\n"
+                + "# Nacos 配置中心接入模板（V6.0，默认注释态）\n"
+                + "#\n"
+                + "# 注意：Spring Boot 3 默认不读取 bootstrap.yml，下面这行是「配置中心」的\n"
+                + "# 接入开关；运行开关（注册中心）在 application.yml 的 spring.cloud.nacos.*。\n"
+                + "# 使用：放开 spring.config.import 并确认 nacos.config.enabled=true。\n"
+                + "# =====================================================================\n"
+                + "spring:\n"
+                + "#  config:\n"
+                + "#    import: optional:nacos:" + stem + "-bootstrap.yml\n";
     }
 
     private String resultJava(String pkg) {
@@ -1969,16 +2156,37 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "</style>\n";
     }
 
-    private String applicationYml(GenScaffoldDTO dto, String pkg, String project, int serverPort) {
+    private String applicationYml(GenScaffoldDTO dto, String pkg, String project, int serverPort,
+                                  String stem, boolean micro) {
         String db = StringUtils.hasText(dto.getDbName()) ? dto.getDbName() : project.replace('-', '_');
         String host = StringUtils.hasText(dto.getDbHost()) ? dto.getDbHost() : "127.0.0.1:3306";
         String user = StringUtils.hasText(dto.getDbUsername()) ? dto.getDbUsername() : "root";
         String pwd = StringUtils.hasText(dto.getDbPassword()) ? dto.getDbPassword() : "root";
+        // V6.0 micro：Nacos 开关块留在 spring: 内部；Feign 直连默认值是顶层键，必须放 yml 末尾——
+        // 插进 spring: 里会把后面的 profiles/datasource 挤成顶层键，datasource 全部失效（S8 实测翻过车）
+        String microBlock = micro
+                ? "  cloud:\n"
+                + "    nacos:\n"
+                + "      discovery:\n"
+                + "        # 默认关：直连运行（与多模块一致）；启用注册中心改 true 并先启动本机 Nacos\n"
+                + "        enabled: false\n"
+                + "        server-addr: 127.0.0.1:8848\n"
+                + "      config:\n"
+                + "        enabled: false\n"
+                + "        server-addr: 127.0.0.1:8848\n" : "";
+        String feignBlock = micro
+                ? "\n# V6.0 跨服务调用（Feign）：url 有值=直连；启用 Nacos 后清空该值即走 lb://\n"
+                + stem + ":\n"
+                + "  remote:\n"
+                + "    bootstrap-url: http://localhost:" + serverPort + "\n" : "";
+        // V6.0 micro：注册名用 stem-bootstrap（网关 lb:// 与 Feign name 都指向它）；mono/multi 维持原名零变化
+        String appName = micro ? stem + "-bootstrap" : project + "-server";
         return "server:\n"
                 + "  port: " + serverPort + "\n\n"
                 + "spring:\n"
                 + "  application:\n"
-                + "    name: " + project + "-server\n"
+                + "    name: " + appName + "\n"
+                + microBlock
                 + "  profiles:\n"
                 + "    # 本机私有配置（数据库密码等）放 application-local.yml，不提交仓库\n"
                 + "    include: local\n"
@@ -2015,7 +2223,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    # proxy: http://127.0.0.1:7890   # 需要走代理才配，不配则强制直连\n\n"
                 + "logging:\n"
                 + "  level:\n"
-                + "    " + pkg + ": info\n";
+                + "    " + pkg + ": info\n"
+                + feignBlock;
     }
 
     private String applicationLocalExample(String pkg) {

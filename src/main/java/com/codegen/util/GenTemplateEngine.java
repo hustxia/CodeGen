@@ -149,6 +149,17 @@ public class GenTemplateEngine {
         if (childTables.isEmpty()) {
             return List.of();
         }
+        // V6.0 F-07：跨系统引用生成期拦截。多模块/微服务结构下子表产物必须与主表同模块归属，
+        // 跨系统引用是配置事故（模板/菜单/级联删除都会按「同工程」假设走），静默生成只会把事故搬进产物。
+        // 双侧均 null 视为存量数据放行（V3.0 之前的表没绑系统）。
+        for (GenTable childTable : childTables) {
+            if (table.getProjectId() != null && childTable.getProjectId() != null
+                    && !table.getProjectId().equals(childTable.getProjectId())) {
+                throw new BusinessException(400, "主子表跨系统引用：子表[" + childTable.getTableName()
+                        + "]与主表[" + table.getTableName() + "]不属于同一个系统，"
+                        + "请先在生成台账里修正子表的所属系统");
+            }
+        }
         // 子表列一次查完：逐子表 selectList 会让「一主多子」每次渲染多出 N 次往返，
         // 而主子表场景下渲染是逐文件调用的，放大效应明显
         List<Long> childIds = new ArrayList<>(childTables.size());

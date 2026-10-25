@@ -240,7 +240,13 @@ public final class GenTemplateModel {
         m.put("author", orDefault(table.getAuthor(), ""));
         // F-09：空前缀 → /{module}（与后端 @RequestMapping("/${moduleName}") 直连，代理只剥 /dev-api）；
         // 有前缀 → /api/{prefix}/{module}（网关段原样保留，代理剥 /dev-api/api/{prefix}）
-        m.put("apiBase", prefix.isEmpty() ? "/" + module : "/api/" + prefix + "/" + module);
+        // V6.0 micro：产物工程自带网关，网关按 /{module}/** 路由，前端不再拼 /api/{prefix} 段；
+        // multi/单模块行为零变化（isMicro 严格匹配 "micro"）
+        boolean microStructure = project != null
+                && "micro".equalsIgnoreCase(String.valueOf(project.projectStructure()).trim());
+        m.put("isMicro", microStructure);
+        m.put("apiBase", microStructure ? "/" + module
+                : prefix.isEmpty() ? "/" + module : "/api/" + prefix + "/" + module);
 
         // 原始开关
         m.put("genEntity", on(table.getGenEntity()));
