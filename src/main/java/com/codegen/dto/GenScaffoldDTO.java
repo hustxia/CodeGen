@@ -71,6 +71,9 @@ public class GenScaffoldDTO {
     @Schema(description = "V6.2 是否生成部署物（Dockerfile/compose/CI 模板），默认 false；系统配置请把 sys_project.default_gen_deploy 设为同值")
     private Boolean genDeploy;
 
+    @Schema(description = "V6.3 是否生成支付能力包（pay_order 表 + PaymentService 三渠道 + 收银台），默认 false；系统配置请把 sys_project.pay_enabled 设为同值")
+    private Boolean payEnabled;
+
     @Schema(description = "V6.1 需下发的流程定义（平台不直连产物库，由调用方查询组装）；空=只写流程表 DDL")
     private java.util.List<FlowDef> flowDefs;
 

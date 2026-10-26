@@ -58,6 +58,10 @@ public class GenTemplateSeeder implements ApplicationRunner {
             // V6.1 审批流：批次内任一表绑定 flow_code 时由 renderFlowShared 注入（待办中心 + 全局 flow api）
             new SeedMeta("flowApi", "审批流前端接口", "frontend", "src/api/flow.js"),
             new SeedMeta("flowTodo", "待办中心页", "frontend", "src/views/flow/todo.vue"),
+            // V6.3 支付能力包：系统 pay_enabled 开启时由 renderPayShared 注入（收银台 + 支付记录 + 全局 pay api）
+            new SeedMeta("payApi", "支付前端接口", "frontend", "src/api/pay.js"),
+            new SeedMeta("payCashier", "收银台页", "frontend", "src/views/pay/cashier.vue"),
+            new SeedMeta("payOrderPage", "支付记录页", "frontend", "src/views/pay/order.vue"),
             new SeedMeta("routerSnippet", "路由片段", "shared", "router-snippet.txt"),
             new SeedMeta("readme", "使用说明", "shared", "README-使用说明.txt"));
 

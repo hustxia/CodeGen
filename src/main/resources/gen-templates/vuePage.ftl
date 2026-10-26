@@ -129,6 +129,10 @@
             <el-button v-if="row.${flowStatusField} === '1'" type="text" class="danger-btn" @click="handleFlow('reject', row)">驳回</el-button>
             <el-button type="text" @click="openFlowRecords(row)">流程</el-button>
 </#if>
+<#if hasPayStatus>
+            <!-- V6.3 支付接入约定：待支付的行给「去支付」入口，跳收银台并携带业务定位与金额（amount 列约定为分） -->
+            <el-button v-if="row.payStatus === 0 || row.payStatus === '0'" type="text" @click="goPay(row)">去支付</el-button>
+</#if>
 <#if genEditBtn>
             <el-button v-hasPermi="['${permsPrefix}:edit']" type="text" @click="openDialog(row)">编辑</el-button>
 </#if>
@@ -1044,6 +1048,21 @@ export default {
      */
     handlePrintRow(row) {
       this.$router.push('/print/${moduleName}/' + row.id)
+    },
+</#if>
+<#if hasPayStatus>
+    /**
+     * V6.3 去支付：跳收银台，携带业务定位（businessType/businessId）、标题与金额。
+     * 金额约定取 amount 列（单位分）；表里没有 amount 列时收银台手动输入。
+     */
+    goPay(row) {
+      this.$router.push({ path: '/pay/cashier', query: {
+        subject: '${comment} ' + row.id,
+        amount: row.amount !== undefined && row.amount !== null ? (row.amount / 100).toFixed(2) : '',
+        businessType: '${tableName}',
+        businessId: row.id,
+        redirect: this.$route.fullPath
+      } })
     },
 </#if>
     async submitForm() {

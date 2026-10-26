@@ -121,6 +121,12 @@ class GenTemplateBaselineTest {
         compare("flow", modelFlow());
     }
 
+    @Test
+    @DisplayName("pay：支付接入约定（表含 pay_status/amount 列）的 13 个产物")
+    void pay() {
+        compare("pay", modelPay());
+    }
+
     // ------------------------------------------------------------------
     // 比对与更新
     // ------------------------------------------------------------------
@@ -273,6 +279,19 @@ class GenTemplateBaselineTest {
         cols.add(col("reason", "请假事由", "varchar(200)", "reason", "String", 0, 1, 1, "LIKE", 1, 1, 2));
         cols.add(col("status", "状态", "char(1)", "status", "String", 0, 0, 0, "EQ", 1, 1, 3));
         return GenTemplateModel.build(table, cols, (java.util.List<GenTemplateModel.ChildInfo>) null, null);
+    }
+
+    /** V6.3 支付接入场景：表含 pay_status + amount（分）列 + 系统 payEnabled=1，钉住 hasPayStatus 的 vuePage「去支付」块 */
+    private static Map<String, Object> modelPay() {
+        GenTable table = baseTable("demo_fee", "缴费单", "DemoFee", "fee");
+        List<GenTableColumn> cols = new ArrayList<>();
+        cols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        cols.add(col("fee_item", "缴费项目", "varchar(100)", "feeItem", "String", 0, 1, 1, "LIKE", 1, 1, 2));
+        cols.add(col("amount", "金额", "bigint", "amount", "Long", 0, 1, 0, "EQ", 1, 1, 3));
+        cols.add(col("pay_status", "支付状态", "tinyint", "payStatus", "Integer", 0, 0, 0, "EQ", 1, 1, 4));
+        GenTemplateModel.ProjectConfig project = new GenTemplateModel.ProjectConfig(
+                null, null, "com.codegen", "demo", null, null, null, 1);
+        return GenTemplateModel.build(table, cols, (java.util.List<GenTemplateModel.ChildInfo>) null, project);
     }
 
     private static Map<String, Object> modelWithStructure(String structure) {
@@ -438,7 +457,7 @@ class GenTemplateBaselineTest {
             return;
         }
         List<String> known = new ArrayList<>();
-        for (String caseName : List.of("simple", "relation", "master-detail", "master-multichild", "multi", "micro", "flow")) {
+        for (String caseName : List.of("simple", "relation", "master-detail", "master-multichild", "multi", "micro", "flow", "pay")) {
             for (String tpl : TEMPLATES) {
                 known.add(caseName + "/" + tpl + ".txt");
             }

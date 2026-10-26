@@ -32,6 +32,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class GenTemplateEngine {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GenTemplateEngine.class);
+
     private static final Configuration CFG = new Configuration(Configuration.VERSION_2_3_31);
 
     static {
@@ -49,6 +51,9 @@ public class GenTemplateEngine {
 
     @Autowired
     private GenTableColumnMapper genTableColumnMapper;
+
+    @Autowired
+    private com.codegen.mapper.SysProjectMapper sysProjectMapper;
 
     @Autowired
     private GenOutputProperties outputProperties;
@@ -275,6 +280,8 @@ public class GenTemplateEngine {
         shared.put(renderString(tpl.pathPattern(), Map.of()), renderString(tpl.content(), model));
         // V6.1：项目内任一表绑定 flow_code → 注入待办中心页 + 全局 flow api + 路由说明
         shared.putAll(renderFlowShared(table));
+        // V6.3：系统 pay_enabled=1 → 注入收银台 + 支付记录页 + 全局 pay api + 路由说明
+        shared.putAll(renderPayShared(table));
         return shared;
     }
 
@@ -304,6 +311,41 @@ public class GenTemplateEngine {
             return shared;
         } catch (Exception e) {
             // 模板缺失（老库未跑 Seeder）不阻断主产物
+            return Map.of();
+        }
+    }
+
+    /**
+     * V6.3 支付能力包共享文件：首表所属系统 pay_enabled=1 才产出（否则返回空 Map，零侵入）。
+     * 收银台（渠道选择/出码/轮询）+ 支付记录页 + 全局 pay api + 路由说明。
+     */
+    public Map<String, String> renderPayShared(GenTable table) {
+        if (table == null || table.getProjectId() == null) {
+            return Map.of();
+        }
+        com.codegen.entity.SysProject project = sysProjectMapper.selectById(table.getProjectId());
+        if (project == null || !GenTemplateModel.resolvePay(project.getPayEnabled())) {
+            log.info("renderPayShared 跳过（projectId={}，project={}，payEnabled={}）",
+                    table.getProjectId(), project == null ? "null" : project.getProjectCode(),
+                    project == null ? null : project.getPayEnabled());
+            return Map.of();
+        }
+        try {
+            ResolvedTemplate api = resolveFromDb("payApi", 0L);
+            ResolvedTemplate cashier = resolveFromDb("payCashier", 0L);
+            ResolvedTemplate orderPage = resolveFromDb("payOrderPage", 0L);
+            Map<String, String> shared = new LinkedHashMap<>();
+            shared.put(renderString(api.pathPattern(), Map.of()), renderString(api.content(), Map.of()));
+            shared.put(renderString(cashier.pathPattern(), Map.of()), renderString(cashier.content(), Map.of()));
+            shared.put(renderString(orderPage.pathPattern(), Map.of()), renderString(orderPage.content(), Map.of()));
+            shared.put("pay-router-snippet.txt",
+                    "// V6.3 收银台与支付记录路由：追加到 src/router/index.js 主布局 children\n"
+                            + "{ path: 'pay/cashier', name: 'PayCashier', component: () => import('@/views/pay/cashier.vue'), meta: { title: '收银台' } }\n"
+                            + "{ path: 'pay/order', name: 'PayOrderPage', component: () => import('@/views/pay/order.vue'), meta: { title: '支付记录' } }\n");
+            return shared;
+        } catch (Exception e) {
+            // 模板缺失（老库未跑 Seeder）不阻断主产物；但要把原因吐进日志，静默吞掉排查不动
+            log.warn("renderPayShared 注入失败（projectId={}）: {}", table.getProjectId(), e.getMessage());
             return Map.of();
         }
     }

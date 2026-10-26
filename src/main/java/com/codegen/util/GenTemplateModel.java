@@ -114,29 +114,37 @@ public final class GenTemplateModel {
      */
     public record ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                                 String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
-                                String projectStructure) {
+                                String projectStructure, Integer payEnabled) {
 
         /** 兼容 V3.0 之前的构造：无系统编码，权限点不加前缀 */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage) {
-            this(packageName, gatewayPrefix, rootPackage, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null);
         }
 
         /** 兼容 V3.0 构造：无级联默认值（V4.4 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage, String projectCode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null);
         }
 
         /** 兼容 V4.4 构造：无打印默认值（V4.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null);
         }
 
         /** 兼容 V4.5 构造：无工程结构（V5.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, null);
+                    defaultGenPrint, null, null);
+        }
+
+        /** 兼容 V6.2 构造：无支付开关（V6.3 前的调用方） */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                             String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
+                             String projectStructure) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
+                    defaultGenPrint, projectStructure, null);
         }
     }
 
@@ -165,6 +173,15 @@ public final class GenTemplateModel {
      * 与 resolveGenPrint 同款语义；部署物无表级开关（Dockerfile 是工程级产物，按系统给）。
      */
     public static boolean resolveGenDeploy(Integer projectVal) {
+        return projectVal != null && projectVal == 1;
+    }
+
+    /**
+     * V6.3 支付能力包开关的回落唯一实现：系统级 → 硬编码关。
+     * 与 resolveGenDeploy 同款语义；支付模块是系统级能力包，无表级开关
+     * （业务表经 pay_status 列约定自动接入，不需要表级绑定）。
+     */
+    public static boolean resolvePay(Integer projectVal) {
         return projectVal != null && projectVal == 1;
     }
 
@@ -484,6 +501,12 @@ public final class GenTemplateModel {
 
         // 详情抽屉：有详情接口才生成
         m.put("hasDetail", genFrontend && genDetailApi);
+
+        // V6.3 支付接入约定：业务表含 pay_status 列且系统 pay_enabled=1 → 「去支付」入口（模板条件块，无侵入）。
+        // 系统没开支付能力包时按钮不渲染（否则产物有按钮没收银台，必是死链）
+        m.put("hasPayStatus", genFrontend && resolvePay(project == null ? null : project.payEnabled())
+                && cols != null && cols.stream().anyMatch(c ->
+                "pay_status".equalsIgnoreCase(c.getColumnName())));
 
         // ===== P3-2 多对多 =====
         // 中间表本身不需要一整套 CRUD 页面：它是关系，不是实体。

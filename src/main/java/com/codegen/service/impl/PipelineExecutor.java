@@ -281,6 +281,8 @@ public class PipelineExecutor {
         // V6.1：流程引擎与定义下发——流程定义在平台库，产物库不直连，靠 scaffold 的 db 脚本带过去
         dto.setFlowEngine(project.getFlowEngine());
         dto.setFlowDefs(collectFlowDefs(project.getId()));
+        // V6.3：支付能力包开关（回落唯一实现 resolvePay）
+        dto.setPayEnabled(com.codegen.util.GenTemplateModel.resolvePay(project.getPayEnabled()));
         GenScaffoldVO vo = scaffoldService.scaffold(dto);
 
         // 种子 SQL：脚手架带出 db/init_sys_user.sql（admin/admin123），导入到目标库
@@ -312,6 +314,20 @@ public class PipelineExecutor {
                 log.info("流程表 SQL 已导入 {}: {} 条语句", pipeline.getDbName(), fr.getSuccessCount());
             } catch (Exception e) {
                 log.warn("流程表 SQL 导入失败（不阻断）: {}", e.getMessage());
+            }
+        }
+        // V6.3：pay_order 支付单表导入产物库（幂等）
+        Path paySql = Paths.get(project.getBackendRoot(), dto.getBackendModule(), "db", "pay.sql");
+        if (Files.exists(paySql)) {
+            try {
+                GenDdlExecuteDTO payDto = new GenDdlExecuteDTO();
+                payDto.setDdl(Files.readString(paySql, StandardCharsets.UTF_8));
+                payDto.setSchema(pipeline.getDbName());
+                payDto.setAutoImport(false);
+                var pr = ddlService.execute(payDto);
+                log.info("支付单表 SQL 已导入 {}: {} 条语句", pipeline.getDbName(), pr.getSuccessCount());
+            } catch (Exception e) {
+                log.warn("支付单表 SQL 导入失败（不阻断）: {}", e.getMessage());
             }
         }
         return "写入 " + vo.getWritten() + " 个文件，跳过 " + vo.getSkipped() + " " + seedNote;

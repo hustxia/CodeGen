@@ -227,6 +227,10 @@ public class SysProjectServiceImpl implements SysProjectService {
         projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
                 .eq(SysProject::getId, project.getId())
                 .set(SysProject::getDefaultGenDeploy, project.getDefaultGenDeploy()));
+        // V6.3 同款修复：pay_enabled 三态
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getPayEnabled, project.getPayEnabled()));
     }
 
     @Override

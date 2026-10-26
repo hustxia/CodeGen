@@ -74,6 +74,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
         boolean activiti = "activiti".equalsIgnoreCase(
                 StringUtils.hasText(dto.getFlowEngine()) ? dto.getFlowEngine().trim() : "");
+        // V6.3 支付能力包：系统级开关（DTO 由调用方按 sys_project.pay_enabled + resolvePay 组装）
+        boolean payEnabled = Boolean.TRUE.equals(dto.getPayEnabled());
         // ---------- 后端 ----------
         if (multi) {
             // 多模块：聚合 pom + 4 个子模块 pom；依赖拆分原则——common 承载全部基座依赖，
@@ -82,7 +84,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             // backendModule 默认取 projectName（用户常中文命名），中文直进 artifactId 产物 mvn 直接拒读。
             // 聚合坐标统一用 stem（rootPackage 最后一段，纯合法字符）；可读名放 <name>。
             String parentArtifactId = stem + "-parent";
-            write(backendRoot, "pom.xml", pomMultiParent(project, pkg, stem, backendModule, micro, activiti), "backend", force, vo, counter);
+            write(backendRoot, "pom.xml", pomMultiParent(project, pkg, stem, backendModule, micro, activiti, payEnabled), "backend", force, vo, counter);
             write(backendRoot, stem + "-common/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "common",
                     dep("org.springframework.boot", "spring-boot-starter-web", null)
                             + dep("org.springframework.boot", "spring-boot-starter-validation", null)
@@ -90,7 +92,12 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                             + dep("com.baomidou", "mybatis-plus-spring-boot3-starter", "${mybatis-plus.version}")
                             // OpeLogController/MaskUtils 的 @Operation/@Schema 注解在这层
                             + dep("org.springdoc", "springdoc-openapi-starter-webmvc-ui", "2.3.0")
-                            + dep("org.projectlombok", "lombok", "${lombok.version}"),
+                            + dep("org.projectlombok", "lombok", "${lombok.version}")
+                            // V6.3 支付模块类落 common 层，SDK 依赖随类归位（坑 41：谁 import 谁依赖）
+                            + (payEnabled
+                                ? dep("com.github.wechatpay-apiv3", "wechatpay-java", "${wechatpay.version}")
+                                    + dep("com.alipay.sdk", "alipay-sdk-java", "${alipay.version}")
+                                : ""),
                     false), "backend", force, vo, counter);
             write(backendRoot, stem + "-domain/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "domain",
                     internalDep(pkg, stem, "common")
@@ -146,14 +153,14 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                         remoteSampleClientJava(pkg, stem), "backend", force, vo, counter);
             }
         } else {
-            write(backendRoot, "pom.xml", pomXml(dto, project, pkg, backendModule, serverPort, activiti), "backend", force, vo, counter);
+            write(backendRoot, "pom.xml", pomXml(dto, project, pkg, backendModule, serverPort, activiti, payEnabled), "backend", force, vo, counter);
         }
 
         String pkgPath = "src/main/java/" + pkg.replace('.', '/');
         // 启动类与运行配置归 bootstrap；包名不变（仍是 <pkg> 根），@SpringBootApplication 默认扫描覆盖全部模块；
         // micro 时启动类追加 @EnableFeignClients 扫 remote 包（跨服务调用骨架）
         write(bootRoot, pkgPath + "/" + appClass + "Application.java",
-                applicationJava(pkg, appClass, micro, activiti), "backend", force, vo, counter);
+                applicationJava(pkg, appClass, micro, activiti, payEnabled), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/result/Result.java", resultJava(pkg), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/result/ResultCode.java", resultCodeJava(pkg), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/exception/BusinessException.java",
@@ -199,7 +206,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 "backend", force, vo, counter);
         if (Boolean.TRUE.equals(dto.getWithAuth())) {
             write(commonRoot, pkgPath + "/common/config/AuthContextFilter.java",
-                    authContextFilterJava(pkg), "backend", force, vo, counter);
+                    authContextFilterJava(pkg, payEnabled), "backend", force, vo, counter);
             // V5.0 F-07：登录基座闭环——以前 filter「非空 token 即放行」是占位实现，
             // 401 拦得住陌生人却发不出合法 token，登录页成了摆设
             write(commonRoot, pkgPath + "/common/auth/TokenStore.java",
@@ -243,8 +250,23 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             vo.getNextSteps().add("部署物：docker build -t " + project.toLowerCase() + " . 后 docker compose up -d"
                     + "（基础镜像可经 --build-arg 覆盖；CI 用 deploy/ 下的 .example 改名即用）");
         }
+        // V6.3 支付能力包：payEnabled 开启才生成（缺省关闭 → 存量产物与旧版逐文件一致）。
+        // 渠道抽象 PaymentService + wxpay/alipay/mock 三实现；回调/补偿/收银台见 docs/design/V6.3支付能力包-设计.md。
+        // 源码走 classpath 资源 scaffold-pay/*.java（__PKG__ 占位），比几千行转义字符串块可维护
+        if (payEnabled) {
+            write(bootRoot, "db/pay.sql", payResource("pay.sql", pkg), "backend", force, vo, counter);
+            for (String f : List.of("PayOrder.java", "PayOrderMapper.java", "PayOrderVO.java", "PayProps.java",
+                    "PaymentService.java", "AbstractPayService.java", "MockPayService.java",
+                    "WxPayNativeService.java", "AliPayPageService.java", "PayController.java",
+                    "PayScheduleConfig.java", "PayReconcileJob.java")) {
+                write(commonRoot, pkgPath + "/common/pay/" + f, payResource(f, pkg),
+                        "backend", force, vo, counter);
+            }
+            vo.getNextSteps().add("支付能力包：缺省 mock 渠道开箱即跑（收银台 /pay/cashier，模拟支付走与真渠道同构链路）；"
+                    + "接真渠道改 yml pay.channel 并配置 PAY_* 环境变量，零代码改动");
+        }
         write(bootRoot, "src/main/resources/application.yml",
-                applicationYml(dto, pkg, project, serverPort, stem, micro),
+                applicationYml(dto, pkg, project, serverPort, stem, micro, payEnabled),
                 "backend", force, vo, counter);
         if (micro) {
             // V6.0：Nacos 配置中心接入模板（注释态）。说明头里写清 Boot 3 默认不读 bootstrap.yml，
@@ -260,7 +282,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
         // ---------- 前端 ----------
         if (Boolean.TRUE.equals(dto.getWithFrontend())) {
-            write(frontendRoot, "package.json", frontendPackageJson(project, frontendModule),
+            write(frontendRoot, "package.json", frontendPackageJson(project, frontendModule, payEnabled),
                     "frontend", force, vo, counter);
             // V6.0 micro：前端请求走网关（端口=服务端口+1），apiBase 不带 /api 前缀（网关按模块路由）
             int proxyPort = micro ? serverPort + 1 : serverPort;
@@ -1337,9 +1359,23 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "}\n";
     }
 
+    /**
+     * V6.3 支付模块产物源码：读 classpath 资源 scaffold-pay/<file>，__PKG__ 占位替换为根包名。
+     * 支付模块约 800 行，走转义字符串块不可维护（V6.1 flow 基座规模尚可，V6.3 起改资源文件模式）。
+     */
+    private String payResource(String file, String pkg) {
+        try {
+            org.springframework.core.io.ClassPathResource resource = new org.springframework.core.io.ClassPathResource("scaffold-pay/" + file);
+            String content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            return content.replace("__PKG__", pkg);
+        } catch (java.io.IOException e) {
+            throw new com.codegen.common.exception.BusinessException(500, "支付模块源码资源缺失：scaffold-pay/" + file);
+        }
+    }
+
     // ============================ 模板内容 ============================
 
-    private String pomXml(GenScaffoldDTO dto, String project, String pkg, String module, int serverPort, boolean activiti) {
+    private String pomXml(GenScaffoldDTO dto, String project, String pkg, String module, int serverPort, boolean activiti, boolean payEnabled) {
         StringBuilder extras = new StringBuilder();
         if (dto.getExtraDependencies() != null) {
             for (String coord : dto.getExtraDependencies()) {
@@ -1366,6 +1402,10 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    </repositories>\n\n" : "";
         String activitiDep = activiti
                 ? dep("org.activiti", "activiti-spring-boot-starter", "8.7.0") : "";
+        // V6.3 支付 SDK：两渠道均中央仓库直供（无 V6.1 坑 43b 的私仓问题），版本直接内联
+        String payDeps = payEnabled
+                ? dep("com.github.wechatpay-apiv3", "wechatpay-java", "0.2.14")
+                + dep("com.alipay.sdk", "alipay-sdk-java", "4.38.200.ALL") : "";
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
                 + "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -1400,6 +1440,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    </dependencyManagement>\n\n"
                 + "    <dependencies>\n"
                 + activitiDep
+                + payDeps
                 + dep("org.springframework.boot", "spring-boot-starter-web", null)
                 + dep("org.springframework.boot", "spring-boot-starter-validation", null)
                 + "        <!-- 基座 LogAspect（操作日志切面）依赖 AspectJ，缺了编译直接失败 -->\n"
@@ -1509,7 +1550,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
      * <p>V6.0 micro=true：追加 spring-cloud / spring-cloud-alibaba BOM（版本矩阵复用 shop 实测：
      * Boot 3.2.5 + cloud 2023.0.1 + alibaba 2023.0.1.0）与 gateway 模块条目。
      */
-    private String pomMultiParent(String project, String pkg, String stem, String backendModule, boolean micro, boolean activiti) {
+    private String pomMultiParent(String project, String pkg, String stem, String backendModule, boolean micro, boolean activiti, boolean payEnabled) {
         String gatewayModule = micro
                 ? "        <module>" + stem + "-gateway</module>\n" : "";
         // V6.1 Activiti 8 制品不在 Maven 中央仓库（7.1.x 起），产物 pom 必须自带 Alfresco 仓库声明
@@ -1527,6 +1568,10 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         String cloudProps = micro
                 ? "        <spring-cloud.version>2023.0.1</spring-cloud.version>\n"
                 + "        <spring-cloud-alibaba.version>2023.0.1.0</spring-cloud-alibaba.version>\n" : "";
+        // V6.3 支付 SDK 版本属性（BOM 统一管理；两 SDK 均中央仓库直供）
+        String payProps = payEnabled
+                ? "        <wechatpay.version>0.2.14</wechatpay.version>\n"
+                + "        <alipay.version>4.38.200.ALL</alipay.version>\n" : "";
         String cloudBoms = micro
                 ? "            <dependency>\n"
                 + "                <groupId>org.springframework.cloud</groupId>\n"
@@ -1573,6 +1618,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        <mybatis-plus.version>3.5.5</mybatis-plus.version>\n"
                 + "        <lombok.version>1.18.30</lombok.version>\n"
                 + cloudProps
+                + payProps
                 + activitiProps
                 + "    </properties>\n\n"
                 + "    <dependencyManagement>\n"
@@ -1679,7 +1725,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "</project>\n";
     }
 
-    private String applicationJava(String pkg, String appClass, boolean micro, boolean activiti) {
+    private String applicationJava(String pkg, String appClass, boolean micro, boolean activiti, boolean payEnabled) {
         String feign = micro
                 ? "\n"
                 + "// V6.0 微服务设施：跨服务调用骨架，扫描 .remote 包；nacos 关闭时 Feign 走 url 直连\n"
@@ -1691,6 +1737,14 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         // 启动类直接排除（8.x 实际类名；exclude 属性编译期解析 Class，类名错产物直接编不过——实测踩过）
         String excludeAttr = activiti
                 ? "(exclude = org.activiti.spring.boot.ActivitiMethodSecurityAutoConfiguration.class)" : "";
+        // V6.3：支付模块 mapper 落 common/pay，随能力包开关进扫描范围。
+        // markerInterface=BaseMapper 是硬约束：common/pay 里还有渠道抽象接口 PaymentService（非 Mapper），
+        // 不加过滤会被 MyBatis 注册成 mapper 代理，注入时抢赢真正的渠道实现 bean，
+        // 运行期报 Invalid bound statement: PaymentService.create（V6.3 冒烟实测踩坑，坑库 #44）
+        String mapperScanBase = "basePackages = {\"" + pkg + ".mapper\", \"" + pkg + ".system\""
+                + (payEnabled ? ", \"" + pkg + ".common.pay\"" : "") + "}";
+        String mapperScanAttr = "@MapperScan(markerInterface = com.baomidou.mybatisplus.core.mapper.BaseMapper.class, "
+                + mapperScanBase + ")";
         return "package " + pkg + ";\n\n"
                 + "import org.mybatis.spring.annotation.MapperScan;\n"
                 + "import org.springframework.boot.SpringApplication;\n"
@@ -1699,7 +1753,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "\n@SpringBootApplication" + excludeAttr + "\n"
                 + feign
                 + "// 基座 OpeLogMapper 在 .system 包下，业务 mapper 在 .mapper 包下，两个都要扫到\n"
-                + "@MapperScan({\"" + pkg + ".mapper\", \"" + pkg + ".system\"})\n"
+                + mapperScanAttr + "\n"
                 + "public class " + appClass + "Application {\n\n"
                 + "    public static void main(String[] args) {\n"
                 + "        SpringApplication.run(" + appClass + "Application.class, args);\n"
@@ -2877,7 +2931,9 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "\n";
     }
 
-    private String authContextFilterJava(String pkg) {
+    private String authContextFilterJava(String pkg, boolean payEnabled) {
+        // V6.3：渠道异步通知由支付渠道服务器回调，无法携带登录 token，必须进白名单
+        String payWhiteEntry = payEnabled ? ",\n            \"/pay/notify\"" : "";
         return "package " + pkg + ".common.config;\n\n"
                 + "import " + pkg + ".common.auth.TokenStore;\n"
                 + "import " + pkg + ".common.context.UserContext;\n"
@@ -2918,7 +2974,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "            \"/v3/api-docs\",\n"
                 + "            \"/swagger-ui\",\n"
                 + "            \"/swagger-resources\",\n"
-                + "            \"/error\"\n"
+                + "            \"/error\""
+                + payWhiteEntry + "\n"
                 + "    );\n\n"
                 + "    private final ObjectMapper objectMapper = new ObjectMapper();\n\n"
                 + "    @Override\n"
@@ -3171,7 +3228,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     private String applicationYml(GenScaffoldDTO dto, String pkg, String project, int serverPort,
-                                  String stem, boolean micro) {
+                                  String stem, boolean micro, boolean payEnabled) {
         String db = StringUtils.hasText(dto.getDbName()) ? dto.getDbName() : project.replace('-', '_');
         String host = StringUtils.hasText(dto.getDbHost()) ? dto.getDbHost() : "127.0.0.1:3306";
         String user = StringUtils.hasText(dto.getDbUsername()) ? dto.getDbUsername() : "root";
@@ -3202,6 +3259,28 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    bootstrap-url: http://localhost:" + serverPort + "\n" : "";
         // V6.0 micro：注册名用 stem-bootstrap（网关 lb:// 与 Feign name 都指向它）；mono/multi 维持原名零变化
         String appName = micro ? stem + "-bootstrap" : project + "-server";
+        // V6.3 支付能力包：密钥全部环境变量占位符（复用 V6.2 机制），缺省 mock 渠道开箱即跑；
+        // 顶层键块必须放 yml 末尾（坑 40：插进 spring: 会把后续块挤成顶层键）
+        String payBlock = payEnabled
+                ? "\n# V6.3 支付能力包：渠道单选，缺省 mock（无商户资质也能全流程演示）；\n"
+                + "# 真渠道接入=改 PAY_CHANNEL + 填对应凭据环境变量，零代码改动。密钥泄露=资金风险，严禁明文入 yml\n"
+                + "pay:\n"
+                + "  channel: ${PAY_CHANNEL:mock}\n"
+                + "  wxpay:\n"
+                + "    app-id: ${PAY_WX_APPID:}\n"
+                + "    mch-id: ${PAY_WX_MCH_ID:}\n"
+                + "    merchant-serial-no: ${PAY_WX_SERIAL_NO:}\n"
+                + "    api-v3-key: ${PAY_WX_API_V3_KEY:}\n"
+                + "    private-key-path: ${PAY_WX_PRIVATE_KEY_PATH:}\n"
+                + "    notify-url: ${PAY_WX_NOTIFY_URL:}\n"
+                + "  alipay:\n"
+                + "    app-id: ${PAY_ALI_APP_ID:}\n"
+                + "    private-key: ${PAY_ALI_PRIVATE_KEY:}\n"
+                + "    alipay-public-key: ${PAY_ALI_PUBLIC_KEY:}\n"
+                + "    notify-url: ${PAY_ALI_NOTIFY_URL:}\n"
+                + "  # 回调不可达兜底：定时查单补偿（本机/内网部署靠它对账收状态）\n"
+                + "  reconcile-enabled: true\n"
+                + "  reconcile-interval-ms: 300000\n" : "";
         // V6.2 配置安全：url/username/password 改环境变量占位符——冒号后默认值=本机直跑原行为，
         // 生产由 DB_* 环境变量覆盖，yml 本身不再含可提交泄露的明文密码
         return "server:\n"
@@ -3249,7 +3328,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "logging:\n"
                 + "  level:\n"
                 + "    " + pkg + ": info\n"
-                + feignBlock;
+                + feignBlock
+                + payBlock;
     }
 
     private String applicationLocalExample(String pkg) {
@@ -3303,7 +3383,9 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "包名 `" + pkg + "`，生成物会落在 `" + pkg + ".entity / mapper / service / controller / dto / vo`。\n";
     }
 
-    private String frontendPackageJson(String project, String module) {
+    private String frontendPackageJson(String project, String module, boolean payEnabled) {
+        // V6.3：收银台二维码由前端 qrcode 生成（后端零图像依赖），随能力包开关注入依赖
+        String qrcodeDep = payEnabled ? ",\n    \"qrcode\": \"^1.5.4\"" : "";
         return "{\n"
                 + "  \"name\": \"" + module + "\",\n"
                 + "  \"version\": \"1.0.0\",\n"
@@ -3320,7 +3402,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    \"element-ui\": \"^2.15.14\",\n"
                 + "    \"vue\": \"^2.7.16\",\n"
                 + "    \"vue-router\": \"^3.6.5\",\n"
-                + "    \"vuex\": \"^3.6.2\"\n"
+                + "    \"vuex\": \"^3.6.2\""
+                + qrcodeDep + "\n"
                 + "  },\n"
                 + "  \"devDependencies\": {\n"
                 + "    \"@vue/cli-plugin-babel\": \"~5.0.8\",\n"

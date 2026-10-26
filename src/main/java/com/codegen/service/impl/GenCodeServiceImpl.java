@@ -582,7 +582,7 @@ public class GenCodeServiceImpl implements GenCodeService {
                 project.getRootPackage(), project.getGatewayPrefix(),
                 project.getRootPackage(), project.getProjectCode(),
                 project.getDefaultDeleteCascadeMode(), project.getDefaultGenPrint(),
-                project.getProjectStructure());
+                project.getProjectStructure(), project.getPayEnabled());
     }
 
     /**
