@@ -1,0 +1,157 @@
+package com.demo.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.demo.entity.DemoOrder;
+import com.demo.mapper.DemoOrderMapper;
+import com.demo.service.DemoOrderService;
+import com.demo.dto.DemoOrderSaveDTO;
+import com.demo.dto.DemoOrderItemSaveDTO;
+import com.demo.entity.DemoOrderItem;
+import com.demo.mapper.DemoOrderItemMapper;
+import com.demo.entity.DemoOrderItemAttr;
+import com.demo.mapper.DemoOrderItemAttrMapper;
+import com.demo.dto.DemoOrderLogSaveDTO;
+import com.demo.entity.DemoOrderLog;
+import com.demo.mapper.DemoOrderLogMapper;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Service;
+import java.util.List;
+
+/**
+ * 订单 Service
+ */
+@Service
+public class DemoOrderServiceImpl extends ServiceImpl<DemoOrderMapper, DemoOrder> implements DemoOrderService {
+
+    // <gen:begin key="service-body">
+    @Autowired
+    private DemoOrderItemMapper demoOrderItemMapper;
+    @Autowired
+    private DemoOrderItemAttrMapper demoOrderItemAttrMapper;
+    @Autowired
+    private DemoOrderLogMapper demoOrderLogMapper;
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveWithChildren(DemoOrderSaveDTO master,
+                                 List<DemoOrderItemSaveDTO> demoOrderItemRows,
+                                 List<DemoOrderLogSaveDTO> demoOrderLogRows) {
+        DemoOrder entity = new DemoOrder();
+        BeanUtils.copyProperties(master, entity);
+        saveOrUpdate(entity);
+        replaceDemoOrderItemRows(entity.getId(), demoOrderItemRows);
+        replaceDemoOrderLogRows(entity.getId(), demoOrderLogRows);
+    }
+    /**
+     * 订单明细 全量替换：先按外键逻辑删除旧行，再逐行插入，与主表同一事务。
+     * rows 为 null 表示本次提交未涉及该子表（不动），空列表表示清空。
+     */
+    private void replaceDemoOrderItemRows(Long masterId, List<DemoOrderItemSaveDTO> rows) {
+        if (masterId == null) {
+            return;
+        }
+        if (rows == null) {
+            return;
+        }
+        DemoOrderItemMapper childMapper = demoOrderItemMapper;
+        childMapper.delete(new LambdaQueryWrapper<DemoOrderItem>()
+                .eq(DemoOrderItem::getOrderId, masterId));
+        for (DemoOrderItemSaveDTO dto : rows) {
+            DemoOrderItem child = new DemoOrderItem();
+            BeanUtils.copyProperties(dto, child);
+            // 关键：旧行是逻辑删除（deleted=1，物理行仍在），沿用回传主键会撞 PRIMARY。
+            // 一律清空主键与审计字段，让雪花 ID 重新生成、时间交给自动填充。
+            child.setId(null);
+            child.setCreateTime(null);
+            child.setUpdateTime(null);
+            child.setCreateBy(null);
+            child.setUpdateBy(null);
+            child.setOrderId(masterId);
+            childMapper.insert(child);
+            // 三级：这一行的下级也要跟着落库，外键指向刚插入的这行
+            saveDemoOrderItemAttrRows(child.getId(), dto.getDemoOrderItemAttrs());
+        }
+    }
+    /**
+     * 明细属性 全量替换。抽成独立方法，避免保存主流程出现三层嵌套循环。
+     */
+    private void saveDemoOrderItemAttrRows(Long parentId, List<DemoOrderItemAttrSaveDTO> rows) {
+        if (parentId == null) {
+            return;
+        }
+        DemoOrderItemAttrMapper mapper = demoOrderItemAttrMapper;
+        mapper.delete(new LambdaQueryWrapper<DemoOrderItemAttr>()
+                .eq(DemoOrderItemAttr::getItemId, parentId));
+        if (rows == null) {
+            return;
+        }
+        for (DemoOrderItemAttrSaveDTO dto : rows) {
+            DemoOrderItemAttr row = new DemoOrderItemAttr();
+            BeanUtils.copyProperties(dto, row);
+            row.setId(null);
+            row.setCreateTime(null);
+            row.setUpdateTime(null);
+            row.setCreateBy(null);
+            row.setUpdateBy(null);
+            row.setItemId(parentId);
+            mapper.insert(row);
+        }
+    }
+    /**
+     * 操作日志 全量替换：先按外键逻辑删除旧行，再逐行插入，与主表同一事务。
+     * rows 为 null 表示本次提交未涉及该子表（不动），空列表表示清空。
+     */
+    private void replaceDemoOrderLogRows(Long masterId, List<DemoOrderLogSaveDTO> rows) {
+        if (masterId == null) {
+            return;
+        }
+        if (rows == null) {
+            return;
+        }
+        DemoOrderLogMapper childMapper = demoOrderLogMapper;
+        childMapper.delete(new LambdaQueryWrapper<DemoOrderLog>()
+                .eq(DemoOrderLog::getOrderId, masterId));
+        for (DemoOrderLogSaveDTO dto : rows) {
+            DemoOrderLog child = new DemoOrderLog();
+            BeanUtils.copyProperties(dto, child);
+            // 关键：旧行是逻辑删除（deleted=1，物理行仍在），沿用回传主键会撞 PRIMARY。
+            // 一律清空主键与审计字段，让雪花 ID 重新生成、时间交给自动填充。
+            child.setId(null);
+            child.setCreateTime(null);
+            child.setUpdateTime(null);
+            child.setCreateBy(null);
+            child.setUpdateBy(null);
+            child.setOrderId(masterId);
+            childMapper.insert(child);
+        }
+    }
+    /**
+     * V4.4 按删除级联模式删除主表（模式由生成时配置决定，三选一渲染）：
+     * 级联=先删各子表行（含三级）再删主行；阻止=任一子表还有有效行就拒删；不处理=仅删主行。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void removeWithChildren(Long id) {
+        // 订单明细：先清三级，再按外键逻辑删除本级
+        List<DemoOrderItem> demoOrderItemRows = demoOrderItemMapper.selectList(
+                new LambdaQueryWrapper<DemoOrderItem>()
+                        .eq(DemoOrderItem::getOrderId, id));
+        // 孙层按主键集合一次删：逐行 delete 会让「500 条明细」变成 500 条 SQL，全压在同一个事务里
+        List<Long> demoOrderItemIds = demoOrderItemRows.stream()
+                .map(DemoOrderItem::getId).toList();
+        if (!demoOrderItemIds.isEmpty()) {
+            demoOrderItemAttrMapper.delete(new LambdaQueryWrapper<DemoOrderItemAttr>()
+                    .in(DemoOrderItemAttr::getItemId, demoOrderItemIds));
+        }
+        demoOrderItemMapper.delete(new LambdaQueryWrapper<DemoOrderItem>()
+                .eq(DemoOrderItem::getOrderId, id));
+        // 操作日志：先清三级，再按外键逻辑删除本级
+        demoOrderLogMapper.delete(new LambdaQueryWrapper<DemoOrderLog>()
+                .eq(DemoOrderLog::getOrderId, id));
+        removeById(id);
+    }
+    // <gen:end key="service-body">
+    // ===== 以下为手写区：自定义方法写在这里，重新生成不会被覆盖 =====
+}

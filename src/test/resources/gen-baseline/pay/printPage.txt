@@ -1,0 +1,269 @@
+<template>
+  <div class="print-wrap" v-loading="loading">
+    <!-- 屏幕工具条：打印时整体隐藏 -->
+    <div class="print-toolbar no-print">
+      <el-button type="primary" icon="el-icon-printer" @click="handlePrint">打印 / 另存为 PDF</el-button>
+      <el-button icon="el-icon-back" @click="handleBack">返回</el-button>
+    </div>
+
+    <!-- A4 纸面：屏幕预览 794px 等比模拟，打印时交给 @page 控版 -->
+    <div class="sheet">
+      <div class="doc-title">缴费单</div>
+      <div class="doc-meta">
+        <span>单号：{{ master.id || '—' }}</span>
+        <span>打印时间：{{ printTime }}</span>
+      </div>
+
+      <!-- 主表信息区：两列键值网格，列取 isForm -->
+      <table class="kv-table">
+        <tr>
+          <th class="kv-label">缴费项目</th>
+          <td class="kv-value">{{ master.feeItem }}</td>
+          <th class="kv-label">金额</th>
+          <td class="kv-value">{{ master.amount }}</td>
+        </tr>
+        <tr>
+          <th class="kv-label">支付状态</th>
+          <td class="kv-value">{{ master.payStatus }}</td>
+          <td class="kv-value"></td>
+        </tr>
+      </table>
+
+      <div class="sign-bar">
+        <span>制单人：____________</span>
+        <span>审&nbsp;&nbsp;核：____________</span>
+        <span>批&nbsp;&nbsp;准：____________</span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { getDemoFeeDetail } from '@/api/fee'
+
+// 注释枚举内联：打印页独立于后台导航壳，不依赖字典接口即可回显中文
+const PRINT_ENUMS = {
+}
+
+// 合计列配置：BigDecimal/Double 走「分」整数累加（规避 JS 浮点误差），整数类型直接累加
+const SUM_FIELDS = {
+}
+
+export default {
+  name: 'PrintDemoFee',
+  data() {
+    return {
+      loading: false,
+      master: {},
+      // [{key, comment, rows}]，与 /with-children 响应同构
+      groups: [],
+      printTime: ''
+    }
+  },
+  created() {
+    this.printTime = this.now()
+    this.fetchData()
+  },
+  methods: {
+    async fetchData() {
+      this.loading = true
+      try {
+        const id = this.$route.params.id
+        const res = await getDemoFeeDetail(id)
+        this.master = (res && res.data) || {}
+      } catch (e) {
+        /* 拦截器已提示 */
+      } finally {
+        this.loading = false
+      }
+    },
+    rowsOf(key) {
+      const dot = key.indexOf('.')
+      if (dot === -1) {
+        const g = this.groups.find(item => item.key === key)
+        return (g && g.rows) || []
+      }
+      // 孙表：从父组每行 gVar + 's' 里展平
+      const parentKey = key.slice(0, dot)
+      const gcField = key.slice(dot + 1) + 's'
+      const g = this.groups.find(item => item.key === parentKey)
+      const out = []
+      ;((g && g.rows) || []).forEach(row => {
+        ;(row[gcField] || []).forEach(item => out.push(item))
+      })
+      return out
+    },
+    labelOf(key, value) {
+      if (value === null || value === undefined || value === '') return ''
+      const opts = PRINT_ENUMS[key] || []
+      const hit = opts.find(o => String(o.value) === String(value))
+      return hit ? hit.label : value
+    },
+    colSum(groupKey, field) {
+      const mode = SUM_FIELDS[groupKey + '.' + field] || 'plain'
+      const rows = this.rowsOf(groupKey)
+      let sum = 0
+      rows.forEach(row => {
+        const v = Number(row[field])
+        if (!isNaN(v)) {
+          sum += mode === 'cents' ? Math.round(v * 100) : v
+        }
+      })
+      return mode === 'cents' ? (sum / 100).toFixed(2) : String(sum)
+    },
+    fmt(v) {
+      if (v === null || v === undefined || v === '') return ''
+      return String(v).replace('T', ' ')
+    },
+    now() {
+      const d = new Date()
+      const p = n => String(n).padStart(2, '0')
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+        + ' ' + p(d.getHours()) + ':' + p(d.getMinutes())
+    },
+    handlePrint() {
+      window.print()
+    },
+    handleBack() {
+      if (window.history.length > 1) {
+        window.history.back()
+      } else {
+        window.close()
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+/* 屏幕预览：按 A4 宽度 794px 等比模拟 */
+.print-wrap {
+  min-height: 100vh;
+  background: #f0f2f5;
+  padding: 16px 0 32px;
+}
+
+.print-toolbar {
+  width: 794px;
+  margin: 0 auto 12px;
+  text-align: right;
+}
+
+.sheet {
+  width: 794px;
+  min-height: 1000px;
+  margin: 0 auto;
+  padding: 40px 34px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+  color: #1f2d3d;
+}
+
+.doc-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  margin-bottom: 10px;
+}
+
+.doc-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #5a5e66;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 16px 0 6px;
+}
+
+.kv-table,
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.kv-table th,
+.kv-table td,
+.detail-table th,
+.detail-table td {
+  border: 1px solid #333;
+  padding: 5px 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.kv-table th {
+  width: 96px;
+  background: #f7f8fa;
+  font-weight: 600;
+  text-align: left;
+}
+
+.detail-table th {
+  background: #f7f8fa;
+  font-weight: 600;
+}
+
+.detail-table .idx {
+  width: 34px;
+  text-align: center;
+}
+
+/* 跨页行为：表头自动重复、行不拦腰截断 */
+.detail-table thead {
+  display: table-header-group;
+}
+
+.detail-table tr {
+  break-inside: avoid;
+}
+
+.sum-row td {
+  font-weight: 700;
+  background: #fbfbfc;
+}
+
+.sum-num {
+  text-align: right;
+}
+
+.sign-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 42px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* 打印：隐藏一切非单据元素，版面交给 @page */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm 12mm;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-wrap {
+    background: #fff;
+    padding: 0;
+  }
+
+  .sheet {
+    width: auto;
+    min-height: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+}
+</style>

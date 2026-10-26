@@ -1,39 +1,97 @@
-# 代码生存器后端
+# 代码生存器后端（CodeGen Server）
 
-#### 介绍
-{**以下是 Gitee 平台说明，您可以替换此简介**
-Gitee 是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN）。专为开发者提供稳定、高效、安全的云端软件开发协作平台
-无论是个人、团队、或是企业，都能够用 Gitee 实现代码托管、项目管理、协作开发。企业项目请看 [https://gitee.com/enterprises](https://gitee.com/enterprises)}
+面向 Spring Boot + Vue 项目的**多工程代码生成器**。从数据库表结构出发，产出可编译、可运行、带菜单权限的前后端代码。
 
-#### 软件架构
-软件架构说明
+## 能做什么
 
+| 阶段 | 能力 |
+|---|---|
+| 接表 | DDL 解析、库表直连导入、批量接管、列配置自动推导（控件/校验/字典/关联） |
+| 生成 | 12 个模板产出 Entity/Mapper/Service/Controller/DTO/VO + api.js + Vue 页面；标记块合并保留手写代码 |
+| 校验 | 内存编译自检（真实 javac）、结构契约检查、权限一致性检查、与磁盘 diff 预览 |
+| 落地 | 写盘 + `.gen-backup` 批次备份、`gen_output` 四态台账、历史回滚 |
+| 配套 | 菜单权限双出口（artifact SQL / internal 直写）、前端路由自动重建、模板版本化管理 |
 
-#### 安装教程
+支持主子表（同事务保存）、树形表、多模块输出、关联下拉、Excel 导入导出。
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## 快速开始
 
-#### 使用说明
+### 1. 建库
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+```bash
+mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
+mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
+```
 
-#### 参与贡献
+初始化脚本会创建 13 张表，并写入默认账号 `admin / admin123` 与基础菜单。
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+### 2. 配置目标工程
 
+复制配置模板并按本机路径修改：
 
-#### 特技
+```bash
+cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
+```
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+`application-local.yml` 已在 `.gitignore` 中排除，不会提交。主要配置项：
+
+```yaml
+gen:
+  output:
+    backend-root: /path/to/your-target-project      # 生成物写盘基准
+    frontend-root: /path/to/your-target-project
+    frontend-path: demo-web                          # monorepo 时前端子目录
+    backend-path: demo-server/src/main/java/com/demo
+    package-name: com.demo
+    root-package: com.demo                           # 生成物 import 基座类的前缀
+  selfcheck:
+    classpath: /path/to/your-target-project/demo-lib/*
+```
+
+自检的依赖目录这样导出：
+
+```bash
+cd your-target/demo-server
+mvn dependency:copy-dependencies -DoutputDirectory=../demo-lib
+```
+
+### 3. 启动
+
+```bash
+mvn package -DskipTests
+java -jar target/codegen-server.jar
+```
+
+服务默认端口 **8120**，接口文档 `/swagger-ui/index.html`。
+
+## 软件架构
+
+```
+controller/      接口层
+service/impl/    核心实现（Gen* 生成链路 / Sys* 系统管理）
+util/            模板引擎、模型装配、合并、校验
+config/          输出配置、自检配置、模板种子器
+common/          Result / BaseEntity / 异常 / 审计
+resources/gen-templates/   12 个 FreeMarker 模板
+```
+
+技术栈：Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8
+
+## 目标工程必须自带的基座能力
+
+生成器只产出业务代码，以下基础件需由目标工程提供，**缺失会导致静默故障**：
+
+1. **MyBatis-Plus 分页插件**（`PaginationInnerInterceptor`）
+   没有它时 `service.page()` 只做 limit 不做 count，`Page.total` 恒为 0——列表数据正常但分页器算不出总页数。
+2. **`Result` / `BaseEntity` / `PageQuery`** 等基座类，包名前缀与 `root-package` 一致。
+3. **`utils/request.js` 的 `toPageData`**，把后端 `Page{records,total}` 转成页面的 `{list,total}`。
+
+另需 pom 依赖 `springdoc-openapi-starter-webmvc-ui`（生成物用 `@Operation`）与 `poi-ooxml`（Excel 导入导出）。
+
+## 配置说明
+
+| 配置 | 说明 |
+|---|---|
+| `gen.output.*` | 生成物写盘路径、包名、模块映射 |
+| `gen.selfcheck.classpath` | 自检内存编译的依赖 classpath，支持 `dir/*` |
+| `gen.menu.outlet` | `artifact` 只产出菜单 SQL 与路由片段；`internal` 同时写入平台自身 `sys_menu` |

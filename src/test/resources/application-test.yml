@@ -1,0 +1,36 @@
+# 测试专用配置：只在 @ActiveProfiles("test") 下生效
+#
+# 三条硬约束（违反任一，测试立刻失效）：
+# 1. 库名必须带 _test —— 契约测试会 DROP/CREATE 表，连到 gen_platform 就是删开发库
+# 2. schema-test.sql 每次启动重建，保证测试不受历史数据干扰
+# 3. 写盘根目录交给各用例的 @TempDir 覆盖（表级配置优先于全局），这里只给一份兜底值
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/gen_platform_test?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-test.sql
+      continue-on-error: false
+
+gen:
+  output:
+    # 测试兜底路径：真实用例会用 @TempDir 覆盖到表级配置
+    backend-root: ${java.io.tmpdir}/gen-contract-fallback
+    frontend-root: ${java.io.tmpdir}/gen-contract-fallback
+    frontend-path: demo-web
+    backend-path: demo-server/src/main/java/com/demo
+    package-name: com.demo
+    root-package: com.demo
+    gateway-prefix: demo
+  selfcheck:
+    # 测试环境不做 javac 编译自检（契约测试只关心写盘与台账事实）
+    compile-enabled: false
+
+logging:
+  level:
+    root: warn
+    com.codegen: warn

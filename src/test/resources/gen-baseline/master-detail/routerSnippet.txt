@@ -1,0 +1,13 @@
+{
+  path: 'order',
+  name: 'DemoOrder',
+  component: () => import('@/views/order/index.vue'),
+  meta: { title: '订单' }
+},
+{
+  // V4.5 打印单据：无 layout 顶层路由，打印页必须脱离后台导航壳，否则打出来带侧边栏
+  path: '/print/order/:id',
+  name: 'PrintDemoOrder',
+  component: () => import('@/views/order/print.vue'),
+  meta: { title: '订单打印' }
+},

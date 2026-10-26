@@ -1,0 +1,13 @@
+{
+  path: 'fee',
+  name: 'DemoFee',
+  component: () => import('@/views/fee/index.vue'),
+  meta: { title: '缴费单' }
+},
+{
+  // V4.5 打印单据：无 layout 顶层路由，打印页必须脱离后台导航壳，否则打出来带侧边栏
+  path: '/print/fee/:id',
+  name: 'PrintDemoFee',
+  component: () => import('@/views/fee/print.vue'),
+  meta: { title: '缴费单打印' }
+},

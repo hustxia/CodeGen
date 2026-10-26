@@ -1,0 +1,51 @@
+import request, { toPageData } from '@/utils/request'
+
+// 标签接口：demo_tag（经平台网关 /tag）
+// <gen:begin key="api-fns">
+function toPageQuery(params) {
+  const { page, size, ...query } = params || {}
+  return { pageNum: page || 1, pageSize: size || 10, ...query }
+}
+export function getDemoTagList(params) {
+  return request({
+    url: '/tag/page',
+    method: 'post',
+    data: toPageQuery(params)
+  }).then(toPageData)
+}
+export function exportDemoTag(params) {
+  return request({
+    url: '/tag/export',
+    method: 'post',
+    data: params || {},
+    responseType: 'blob'
+  })
+}
+export function getDemoTagDetail(id) {
+  return request({
+    url: `/tag/${id}`,
+    method: 'get'
+  })
+}
+export function createDemoTag(data) {
+  return request({
+    url: '/tag',
+    method: 'post',
+    data
+  })
+}
+export function updateDemoTag(id, data) {
+  return request({
+    url: '/tag',
+    method: 'put',
+    data: { ...data, id }
+  })
+}
+export function deleteDemoTag(id) {
+  return request({
+    url: `/tag/${id}`,
+    method: 'delete'
+  })
+}
+// <gen:end key="api-fns">
+// ===== 以下为手写区：自定义请求写在这里，重新生成不会被覆盖 =====

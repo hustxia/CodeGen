@@ -1,0 +1,660 @@
+<template>
+  <div class="app-container">
+    <!-- <gen:begin key="vue-template"> -->
+    <!-- 页头：一眼看清「我在哪个页面、这页能干什么」 -->
+    <div class="page-head">
+      <div class="page-head__main">
+        <h2 class="page-title">订单</h2>
+        <p class="page-desc">维护订单数据，可按条件筛选、编辑与导出</p>
+      </div>
+      <div class="page-head__meta">
+        <span class="meta-pill">{{ total }} 条记录</span>
+      </div>
+    </div>
+    <!-- 筛选区 -->
+    <el-card shadow="never" class="filter-card">
+      <el-form :inline="true" :model="query" @submit.native.prevent>
+        <el-form-item label="订单号">
+          <el-input v-model="query.orderNo" placeholder="订单号" clearable @keyup.enter.native="handleSearch" />
+        </el-form-item>
+        <el-form-item>
+          <el-button v-hasPermi="['demo_order:query']" type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
+          <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 列表 -->
+    <el-card shadow="never" class="table-card">
+      <div slot="header" class="card-header">
+        <div class="card-title">
+          <span class="title">订单</span>
+          <span class="subtitle">共 {{ total }} 条</span>
+        </div>
+        <div class="card-actions">
+          <el-button v-hasPermi="['demo_order:add']" type="primary" icon="el-icon-plus" size="small" @click="openDialog()">新增订单</el-button>
+          <el-button icon="el-icon-download" size="small" @click="handleExport">导出</el-button>
+        </div>
+      </div>
+
+      <el-table
+        v-loading="loading"
+        :data="list"
+        class="data-table"
+        stripe
+        header-cell-class-name="table-head-cell"
+        empty-text="暂无数据"
+      >
+        <el-table-column prop="id" label="ID" width="180" />
+        <el-table-column prop="orderNo" label="订单号" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="updateTime" label="更新时间" width="170" align="center" />
+        <el-table-column label="操作" width="278" fixed="right" align="center">
+          <template slot-scope="{ row }">
+            <el-button type="text" @click="openDetail(row)">详情</el-button>
+            <el-button type="text" @click="handlePrintRow(row)">打印</el-button>
+            <el-button v-hasPermi="['demo_order:edit']" type="text" @click="openDialog(row)">编辑</el-button>
+            <el-button v-hasPermi="['demo_order:remove']" type="text" class="danger-btn" @click="handleDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-pagination
+        class="pagination"
+        background
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        :page-size="query.size"
+        :current-page.sync="query.page"
+        @size-change="handleSizeChange"
+        @current-change="fetchList"
+      />
+    </el-card>
+
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog :title="form.id ? '编辑订单' : '新增订单'" :visible.sync="dialogVisible" width="900px" top="6vh" class="form-dialog">
+      <el-form ref="form" :model="form" :rules="rules" label-width="110px">
+        <el-form-item label="订单号" prop="orderNo">
+          <el-input v-model="form.orderNo" placeholder="请输入订单号" />
+        </el-form-item>
+      </el-form>
+
+      <el-tabs v-model="activeChildTab" type="card" class="child-tabs">
+        <el-tab-pane label="订单明细" name="demoOrderItem">
+          <div class="child-bar">
+            <el-button type="primary" icon="el-icon-plus" size="mini" @click="addChildRow('demoOrderItem')">添加明细</el-button>
+            <span class="child-tip">主表与子表在同一事务中保存（先清后插）</span>
+          </div>
+          <el-table :data="demoOrderItemRows" border size="mini" class="child-table">
+            <el-table-column label="商品名称" min-width="130">
+              <template slot-scope="{ row }">
+                <el-input v-model="row.goodsName" size="mini" placeholder="商品名称" />
+              </template>
+            </el-table-column>
+            <el-table-column label="数量" min-width="130">
+              <template slot-scope="{ row }">
+                <el-input v-model="row.qty" size="mini" placeholder="数量" />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="150" align="center">
+              <template slot-scope="{ row, $index }">
+                <el-button type="text" @click="openGrandRows('demoOrderItem', 'demoOrderItemAttr', row)">明细属性</el-button>
+                <el-button type="text" class="danger-btn" @click="demoOrderItemRows.splice($index, 1)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div class="child-tip" style="margin-top: 6px">
+            下级明细在点「确定」时与本级明细一起全量替换，弹窗里改完不必单独保存。
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="操作日志" name="demoOrderLog">
+          <div class="child-bar">
+            <el-button type="primary" icon="el-icon-plus" size="mini" @click="addChildRow('demoOrderLog')">添加明细</el-button>
+            <span class="child-tip">主表与子表在同一事务中保存（先清后插）</span>
+          </div>
+          <el-table :data="demoOrderLogRows" border size="mini" class="child-table">
+            <el-table-column label="日志内容" min-width="130">
+              <template slot-scope="{ row }">
+                <el-input v-model="row.logText" size="mini" placeholder="日志内容" />
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="70" align="center">
+              <template slot-scope="{ row, $index }">
+                <el-button type="text" class="danger-btn" @click="demoOrderLogRows.splice($index, 1)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+      </el-tabs>
+
+      <div slot="footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 三级明细编辑：直接改选中行的下级数组（引用直改），保存时随主表一起提交 -->
+    <el-dialog
+      :title="grandTitle"
+      :visible.sync="grandVisible"
+      width="720px"
+      append-to-body
+    >
+      <div class="child-bar">
+        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addGrandRow">添加{{ grandTitle }}</el-button>
+      </div>
+      <el-table v-show="grandDialog === 'demoOrderItem.demoOrderItemAttr'" :data="grandRows" border size="mini" class="child-table">
+        <el-table-column label="属性名" min-width="130">
+          <template slot-scope="{ row }">
+            <el-input v-model="row.attrName" size="mini" placeholder="属性名" />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="70" align="center">
+          <template slot-scope="{ $index }">
+            <el-button type="text" class="danger-btn" @click="grandRows.splice($index, 1)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div slot="footer">
+        <el-button @click="grandVisible = false">关闭</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 详情抽屉（只读）。主子表：宽抽屉 + el-tabs，tab1 主表字段，tab2..N 每张明细一张只读表；
+         数据复用 /with-children 一次拉全，不逐 tab 发请求 -->
+    <el-drawer title="订单详情" :visible.sync="detailVisible" size="62%">
+      <el-tabs v-model="activeDetailTab" type="card" class="detail-tabs">
+        <el-tab-pane label="主表信息" name="main">
+          <div class="detail-body">
+            <div class="detail-row">
+              <span class="detail-label">ID</span>
+              <span class="detail-value">{{ detail.id }}</span>
+            </div>
+          <div class="detail-row">
+            <span class="detail-label">订单号</span>
+            <span class="detail-value">{{ detail.orderNo }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">创建时间</span>
+            <span class="detail-value">{{ detail.createTime }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">更新时间</span>
+            <span class="detail-value">{{ detail.updateTime }}</span>
+          </div>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="订单明细" name="demoOrderItem">
+          <el-table :data="detailGroupRows('demoOrderItem')" border size="mini" max-height="520">
+            <el-table-column label="商品名称" min-width="120" prop="goodsName">
+              <template slot-scope="{ row }">
+                {{ row.goodsName }}
+              </template>
+            </el-table-column>
+            <el-table-column label="数量" min-width="120" prop="qty">
+              <template slot-scope="{ row }">
+                {{ row.qty }}
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+        <el-tab-pane label="操作日志" name="demoOrderLog">
+          <el-table :data="detailGroupRows('demoOrderLog')" border size="mini" max-height="520">
+            <el-table-column label="日志内容" min-width="120" prop="logText">
+              <template slot-scope="{ row }">
+                {{ row.logText }}
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+      </el-tabs>
+    </el-drawer>
+
+    <!-- <gen:end key="vue-template"> -->
+  </div>
+</template>
+
+<script>
+import {
+  getDemoOrderList,
+  getDemoOrderWithChildren,
+  saveDemoOrderWithChildren,
+  exportDemoOrder,
+  createDemoOrder,
+  updateDemoOrder,
+  deleteDemoOrder
+} from '@/api/order'
+
+const defaultForm = () => ({
+  id: undefined,
+  orderNo: '',
+})
+// 每张子表的新行工厂：键 = 子表 varName（与后端 children[].key 一致）
+const defaultChildMap = {
+  'demoOrderItem': () => ({ goodsName: '', qty: '' }),
+  'demoOrderLog': () => ({ logText: '' })
+}
+// 三级明细新行工厂：键 = '子表.varName'，与 grandDialog 状态对齐
+const defaultGrandMap = {
+  'demoOrderItem.demoOrderItemAttr': () => ({ attrName: '' }),
+}
+const grandTitleMap = {
+  'demoOrderItem.demoOrderItemAttr': '明细属性',
+}
+
+export default {
+  name: 'DemoOrder',
+  data() {
+    return {
+      // <gen:begin key="vue-data">
+      loading: false,
+      list: [],
+      total: 0,
+      query: { page: 1, size: 10, orderNo: '' },
+      dialogVisible: false,
+      submitting: false,
+      detailVisible: false,
+      detail: {},
+      // V4.4 详情多 tab：children 组数组 [{key, comment, rows}]，与 /with-children 响应同构
+      detailChildren: [],
+      activeDetailTab: 'main',
+      activeChildTab: 'demoOrderItem',
+      demoOrderItemRows: [],
+      demoOrderLogRows: [],
+      // 三级明细：grandRows 指向选中行的下级数组（直接改引用，弹窗里编辑等于改主结构），
+      // grandDialog 记录当前弹的是哪组（'子表.varName'），决定显示哪张编辑表
+      grandVisible: false,
+      grandRows: [],
+      grandTitle: '',
+      grandDialog: '',
+      rules: {
+      },
+      form: defaultForm()
+      // <gen:end key="vue-data">
+    }
+  },
+  created() {
+    this.fetchList()
+  },
+  methods: {
+    // <gen:begin key="vue-methods">
+    async fetchList() {
+      this.loading = true
+      try {
+        const res = await getDemoOrderList(this.query)
+        this.list = res.data.list || []
+        this.total = res.data.total || 0
+      } catch (e) {
+        this.list = []
+        this.total = 0
+      } finally {
+        this.loading = false
+      }
+    },
+    handleSearch() {
+      this.query.page = 1
+      this.fetchList()
+    },
+    handleReset() {
+      this.query = { page: 1, size: this.query.size, orderNo: '' }
+      this.fetchList()
+    },
+    handleSizeChange(size) {
+      this.query.size = size
+      this.query.page = 1
+      this.fetchList()
+    },
+    openDetail(row) {
+      this.detail = row || {}
+      this.detailVisible = true
+      this.activeDetailTab = 'main'
+      this.loadDetailChildren(row && row.id)
+    },
+    /**
+     * 详情抽屉的明细数据：复用 /with-children 一次拉全，不逐 tab 发请求
+     */
+    async loadDetailChildren(id) {
+      this.detailChildren = []
+      if (!id) return
+      try {
+        const res = await getDemoOrderWithChildren(id)
+        this.detailChildren = (res.data && res.data.children) || []
+      } catch (e) {
+        /* 拦截器已提示；明细保持为空 */
+      }
+    },
+    detailGroupRows(key) {
+      const group = this.detailChildren.find(g => g.key === key)
+      return (group && group.rows) || []
+    },
+    openDialog(row) {
+      this.form = row ? { ...defaultForm(), ...row } : defaultForm()
+      this.demoOrderItemRows = []
+      this.demoOrderLogRows = []
+      this.dialogVisible = true
+      if (row && row.id) {
+        this.loadChildren(row.id)
+      }
+      this.$nextTick(() => {
+        if (this.$refs.form) this.$refs.form.clearValidate()
+      })
+    },
+    async loadChildren(id) {
+      this.demoOrderItemRows = []
+      this.demoOrderLogRows = []
+      try {
+        const res = await getDemoOrderWithChildren(id)
+        // 后端 children: [{key, tableName, comment, rows}]；key 即子表 varName
+        const groups = (res.data && res.data.children) || []
+        groups.forEach(g => {
+          if (this[g.key + 'Rows'] !== undefined) {
+            this[g.key + 'Rows'] = g.rows || []
+          }
+        })
+      } catch (e) {
+        /* 拦截器已提示；保持空明细 */
+      }
+    },
+    addChildRow(tab) {
+      const factory = defaultChildMap[tab]
+      this[tab + 'Rows'].push(factory ? factory() : {})
+    },
+    /**
+     * 打开某一行的下级明细。用 $set 保障数组存在，
+     * 因为后端返回的 VO 里该字段可能为 null（没有下级时）。
+     */
+    openGrandRows(childVar, gcVar, row) {
+      const field = gcVar + 's'
+      if (!row[field]) {
+        this.$set(row, field, [])
+      }
+      this.grandRows = row[field]
+      this.grandDialog = childVar + '.' + gcVar
+      this.grandTitle = grandTitleMap[this.grandDialog] || '下级明细'
+      this.grandVisible = true
+    },
+    addGrandRow() {
+      const factory = defaultGrandMap[this.grandDialog]
+      this.grandRows.push(factory ? factory() : {})
+    },
+    /**
+     * 打印单据：跳转独立打印页（无后台导航壳，window.print 直出 A4）
+     */
+    handlePrintRow(row) {
+      this.$router.push('/print/order/' + row.id)
+    },
+    async submitForm() {
+      const valid = await this.$refs.form.validate().catch(() => false)
+      if (!valid) return
+      this.submitting = true
+      try {
+        // 子表按组提交：与后端约定 null=不动该子表、[]=清空；编辑页全部组都提交（全量替换）
+        const payload = { master: this.form }
+        payload.demoOrderItemRows = this.demoOrderItemRows
+        payload.demoOrderLogRows = this.demoOrderLogRows
+        await saveDemoOrderWithChildren(payload)
+        this.$message.success(this.form.id ? '更新成功' : '创建成功')
+        this.dialogVisible = false
+        this.fetchList()
+      } catch (e) { /* 拦截器已提示 */ } finally {
+        this.submitting = false
+      }
+    },
+    handleDelete(row) {
+      this.$confirm(`确定删除该订单吗？`, '提示', { type: 'warning' })
+        .then(async () => {
+          await deleteDemoOrder(row.id)
+          this.$message.success('删除成功')
+          if (this.list.length === 1 && this.query.page > 1) this.query.page--
+          this.fetchList()
+        })
+        .catch(() => {})
+    },
+    async handleExport() {
+      try {
+        const res = await exportDemoOrder(this.query)
+        const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = '订单.xlsx'
+        a.click()
+        window.URL.revokeObjectURL(url)
+      } catch (e) { /* 拦截器已提示 */ }
+    }
+    // <gen:end key="vue-methods">
+    // ===== 以下为手写区：自定义方法写在这里，重新生成不会被覆盖 =====
+  }
+}
+</script>
+
+<style scoped>
+/* <gen:begin key="vue-style"> */
+.app-container {
+  padding: 0;
+  background: transparent;
+}
+
+/* ===== 页头 ===== */
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  letter-spacing: 0.2px;
+}
+
+.page-desc {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #8a94a6;
+}
+
+.page-head__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.meta-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: #eef2ff;
+  color: #4d7cfe;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ===== 卡片 ===== */
+.filter-card,
+.table-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 20px rgba(16, 24, 40, 0.05);
+}
+
+.filter-card {
+  margin-bottom: 16px;
+}
+
+.filter-card >>> .el-card__body {
+  padding: 18px 18px 4px;
+}
+
+.filter-card >>> .el-form-item {
+  margin-right: 16px;
+  margin-bottom: 14px;
+}
+
+.filter-card >>> .el-form-item__label {
+  color: #5a6478;
+  font-size: 13px;
+}
+
+.table-card >>> .el-card__header {
+  padding: 16px 18px;
+  border-bottom: 1px solid #eef1f7;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  display: flex;
+  align-items: baseline;
+}
+
+.card-title .title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.card-title .subtitle {
+  margin-left: 10px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.card-actions >>> .el-button + .el-button {
+  margin-left: 8px;
+}
+
+/* ===== 表格 ===== */
+.data-table >>> .table-head-cell {
+  background: #f7f9fc !important;
+  color: #5c6270;
+  font-weight: 600;
+}
+
+.data-table >>> td {
+  padding: 11px 0;
+}
+
+.data-table >>> .el-table__row:hover > td {
+  background: #f5f9ff;
+}
+
+.data-table >>> .el-button--text {
+  padding: 4px 6px;
+}
+
+/* ===== 分页 ===== */
+.pagination {
+  margin-top: 18px;
+  text-align: right;
+}
+
+.danger-btn {
+  color: #f56c6c;
+}
+
+.child-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.child-tip {
+  color: #909399;
+  font-size: 12px;
+}
+
+.import-summary {
+  margin-bottom: 8px;
+}
+
+.import-tpl-tip {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #606266;
+}
+
+.import-summary .ok {
+  color: #67c23a;
+}
+
+.import-summary .bad {
+  color: #f56c6c;
+}
+
+.import-fail-box {
+  max-height: 200px;
+  overflow: auto;
+  padding: 8px;
+  background: #fdf6ec;
+  border-radius: 4px;
+}
+
+.import-fail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.import-fail {
+  color: #f56c6c;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.import-fail-more {
+  color: #909399;
+  font-size: 12px;
+}
+
+.child-table {
+  margin-bottom: 8px;
+}
+
+.detail-body {
+  padding: 0 20px;
+}
+
+.detail-row {
+  display: flex;
+  padding: 8px 0;
+  border-bottom: 1px solid #ebeef5;
+  font-size: 13px;
+}
+
+.detail-label {
+  width: 110px;
+  color: #909399;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  color: #303133;
+  word-break: break-all;
+}
+
+.import-result {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.import-fail {
+  color: #f56c6c;
+}
+</style>
+/* <gen:end key="vue-style"> */

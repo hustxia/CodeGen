@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V6.0 效果图 - 微服务设施（三态 + 五模块 + 网关/Feign）</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Helvetica Neue",Helvetica,"PingFang SC","Microsoft YaHei",sans-serif; background:#f0f2f5; padding:24px; font-size:14px; color:#303133; }
+  .panel { max-width:820px; margin:0 auto 20px; background:#fff; border-radius:4px; box-shadow:0 2px 12px rgba(0,0,0,.08); overflow:hidden; }
+  .panel-title { padding:14px 20px; border-bottom:1px solid #ebeef5; font-weight:600; font-size:15px; background:#fff; display:flex; align-items:center; gap:8px; }
+  .panel-title .badge { font-size:12px; font-weight:500; color:#409eff; background:#ecf5ff; border:1px solid #d9ecff; padding:1px 8px; border-radius:10px; }
+  .dialog-body { padding:20px 28px 8px; }
+  .el-form-item { display:flex; margin-bottom:18px; }
+  .el-form-item label { width:120px; text-align:right; padding-right:12px; color:#606266; line-height:36px; flex-shrink:0; }
+  .el-form-item label .req { color:#f56c6c; margin-right:4px; }
+  .el-input, .el-select-box { flex:1; }
+  .el-input input, .el-select-box { width:100%; height:34px; border:1px solid #dcdfe6; border-radius:4px; padding:0 12px; color:#606266; line-height:32px; background:#fff; font-size:13px; }
+  .el-select-box { position:relative; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+  .el-select-box .arrow { color:#c0c4cc; font-size:12px; }
+  .dropdown { border:1px solid #e4e7ed; border-radius:4px; box-shadow:0 2px 12px rgba(0,0,0,.1); margin:6px 0 0 120px; max-width:340px; background:#fff; }
+  .dropdown li { list-style:none; padding:8px 16px; font-size:13px; color:#606266; cursor:pointer; }
+  .dropdown li.selected { color:#409eff; font-weight:600; background:#ecf5ff; }
+  .dropdown li:hover { background:#f5f7fa; }
+  .tip { font-size:12px; color:#909399; line-height:1.6; margin-top:4px; }
+  .highlight { outline:2px solid #67c23a; outline-offset:2px; border-radius:4px; position:relative; }
+  .new-tag { position:absolute; right:-46px; top:6px; font-size:11px; color:#67c23a; border:1px solid #67c23a; padding:0 6px; border-radius:3px; background:#f0f9eb; }
+  .tree-card { padding:16px 28px 20px; }
+  .tree { font-family:Consolas,Menlo,monospace; font-size:13px; line-height:1.9; background:#2d2d2d; color:#ccc; border-radius:6px; padding:16px 20px; overflow-x:auto; white-space:pre; }
+  .tree .dir { color:#66d9ef; font-weight:600; }
+  .tree .file { color:#a6e22e; }
+  .tree .note { color:#888; }
+  .tree .mod { color:#fd971f; }
+  .tree .new { color:#f92672; font-weight:700; }
+  .legend { display:flex; gap:16px; margin-top:10px; flex-wrap:wrap; }
+  .legend span { font-size:12px; color:#606266; }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; }
+  .cfg { font-family:Consolas,Menlo,monospace; font-size:12.5px; line-height:1.8; background:#f5f7fa; border:1px solid #ebeef5; border-radius:6px; padding:14px 18px; color:#476582; overflow-x:auto; white-space:pre; }
+  .cfg .k { color:#c0392b; }
+  .cfg .c { color:#909399; }
+  .cfg .v { color:#2980b9; }
+  h3.section { padding:12px 28px 0; font-size:14px; color:#303133; }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <div class="panel-title">系统管理 / 编辑系统 <span class="badge">V6.0 工程结构升级为三态</span></div>
+  <div class="dialog-body">
+    <div class="el-form-item"><label><span class="req">*</span>系统编码</label><div class="el-input"><input value="wms" readonly style="color:#909399;background:#f5f7fa"></div></div>
+    <div class="el-form-item"><label><span class="req">*</span>系统名称</label><div class="el-input"><input value="仓库管理系统"></div></div>
+    <div class="el-form-item"><label>根包名</label><div class="el-input"><input value="com.wms"></div></div>
+    <div class="el-form-item">
+      <label>工程结构</label>
+      <div class="highlight" style="flex:1">
+        <div class="el-select-box"><span style="color:#409eff;font-weight:600">微服务设施（五模块 + 注册中心/网关/Feign）</span><span class="arrow">▲</span><span class="new-tag">V6.0</span></div>
+        <div class="dropdown">
+          <li>单模块（跟随默认）</li>
+          <li>多模块（微服务就绪）</li>
+          <li class="selected">微服务设施（五模块 + Nacos/Gateway/Feign）</li>
+        </div>
+        <div class="tip">
+          多模块：parent + common/domain/service/bootstrap 四个子模块，单体运行；<br>
+          <b>微服务设施：</b>在多模块基础上追加 <code>&lt;stem&gt;-gateway</code> 网关模块与 OpenFeign 骨架，
+          内置 Nacos 开关（默认关=与多模块行为一致，两栖运行；开=注册中心+负载均衡），改动后下次脚手架生成生效
+        </div>
+      </div>
+    </div>
+    <div class="el-form-item"><label>服务端口</label><div class="el-input"><input value="8130" style="width:120px"> <span class="tip" style="display:inline-block;margin-left:8px">微服务时网关占用 <b>8131</b>（服务端口+1）</span></div></div>
+    <div class="el-form-item"><label>网关前缀</label><div class="el-input"><input value="wms"></div></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">选择「微服务设施」后的产物目录结构（后端工程根）</div>
+  <div class="tree-card">
+    <div class="tree">
+D:/proj/wms-server/                              <span class="note">← backendRoot（原样不变）</span>
+├── <span class="dir">pom.xml</span>                                       <span class="note">← 聚合 pom <span class="new">+ spring-cloud / alibaba BOM + gateway 模块条目</span></span>
+├── <span class="mod">wms-common/</span>    <span class="note">← 基座（同多模块，不变）</span>
+├── <span class="mod">wms-domain/</span>    <span class="note">← entity + mapper（同多模块，不变）</span>
+├── <span class="mod">wms-service/</span>   <span class="note">← controller + service + dto/vo</span>
+│   └── src/main/java/com/wms/<span class="new">remote/RemoteSampleClient.java</span>  <span class="note">← Feign 骨架</span>
+├── <span class="mod">wms-bootstrap/</span> <span class="note">← 启动壳</span>
+│   ├── pom.xml                              <span class="note">← <span class="new">+ nacos-discovery/config + openfeign + loadbalancer</span></span>
+│   ├── src/main/java/com/wms/WmsApplication.java  <span class="note">← <span class="new">+ @EnableFeignClients</span></span>
+│   └── src/main/resources/
+│       ├── application.yml                  <span class="note">← <span class="new">+ spring.application.name + nacos 开关(默认false) + Feign 直连 url</span></span>
+│       └── <span class="new">bootstrap.yml</span>                   <span class="note">← Nacos 配置中心接入（注释态，启用时放开）</span>
+└── <span class="mod new">wms-gateway/</span>  <span class="note">← V6.0 新增：统一入口</span>
+    ├── pom.xml                              <span class="note">← gateway + nacos-discovery + loadbalancer + nacos-config</span>
+    ├── src/main/java/com/wms/gateway/WmsGatewayApplication.java
+    └── src/main/resources/application.yml   <span class="note">← port 8131 + 路由（catch-all → wms-bootstrap）</span>
+    </div>
+    <div class="legend">
+      <span><i style="background:#fd971f"></i>子模块目录</span>
+      <span><i style="background:#f92672"></i>V6.0 新增/变更</span>
+      <span>依赖链：domain → common，service → domain，bootstrap → service；gateway 独立（webflux）</span>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">网关路由配置（wms-gateway/src/main/resources/application.yml，节选）</div>
+  <div class="tree-card">
+    <div class="cfg"><span class="c"># 统一入口：按业务模块聚合路由；M1 只有单一业务服务，先放 catch-all，拆服务后按注释示例细分</span>
+server:
+  port: <span class="v">8131</span>          <span class="c"># 服务端口 + 1</span>
+spring:
+  application:
+    name: <span class="v">wms-gateway</span>
+  cloud:
+    nacos:
+      discovery:
+        enabled: <span class="k">false</span>   <span class="c"># ← 默认关：直连本机业务服务，与多模块行为一致</span>
+        server-addr: <span class="v">127.0.0.1:8848</span>
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]': { allowedOriginPatterns: <span class="v">"*"</span>, allowedMethods: <span class="v">"*"</span>, allowedHeaders: <span class="v">"*"</span> }
+      routes:
+        - id: business
+          uri: <span class="v">http://localhost:8130</span>   <span class="c"># 关 Nacos：直连；开启后改 lb://wms-bootstrap</span>
+          predicates: [ <span class="v">Path=/**</span> ]
+        <span class="c"># 拆服务后按模块聚合（示例）：</span>
+        <span class="c"># - id: order   { uri: lb://wms-order,   predicates: [ Path=/order/** ] }</span>
+        <span class="c"># - id: stock   { uri: lb://wms-stock,   predicates: [ Path=/stock/** ] }</span>
+    </div>
+    <div class="legend" style="margin-top:10px">
+      <span>鉴权：网关<b>透传不解析</b> token 头，各服务 AuthContextFilter 自行校验</span>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">OpenFeign 骨架（wms-service/src/main/java/com/wms/remote/RemoteSampleClient.java）</div>
+  <div class="tree-card">
+    <div class="cfg"><span class="c">// 跨服务调用约定：M1 只给骨架，接口按需手写；name 指向业务服务注册名</span>
+<span class="k">@FeignClient</span>(name = <span class="v">"wms-bootstrap"</span>,
+             url  = <span class="v">"${wms.remote.bootstrap-url:}"</span>)  <span class="c">// url 有值=直连（默认 false 模式）；清空=走注册中心负载均衡</span>
+public interface RemoteSampleClient {
+    <span class="k">@GetMapping</span>(<span class="v">"/actuator/health"</span>)
+    String health();
+}
+    </div>
+    <div class="legend" style="margin-top:10px">
+      <span>bootstrap application.yml 默认下发 <code>wms.remote.bootstrap-url: http://localhost:8130</code>（直连可用）；</span>
+      <span>开启 Nacos 后把该值清空即自动走 <code>lb://</code></span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

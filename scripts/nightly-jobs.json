@@ -1,0 +1,11 @@
+{
+  "enabled": false,
+  "jobs": [
+    {
+      "systemName": "医院信息管理系统",
+      "systemDesc": "面向二级医院的 HIS 系统，覆盖门诊挂号、患者建档、医生排班、处方收费、住院管理、药品库存、检验检查、护士站医嘱执行等业务",
+      "dbName": "his",
+      "scale": "full"
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V6.1 待办中心效果图</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif; }
+  body { background:#f0f2f5; color:#303133; padding:20px; }
+  .page { max-width:1080px; margin:0 auto; }
+  .hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .hd h1 { font-size:18px; }
+  .hd .engine { font-size:12px; color:#909399; }
+  .hd .engine b { color:#409eff; font-weight:600; }
+  .tabs { display:flex; gap:4px; background:#fff; border-radius:6px 6px 0 0; padding:8px 12px 0; border-bottom:1px solid #e4e7ed; }
+  .tab { padding:9px 18px; font-size:14px; cursor:pointer; border-radius:6px 6px 0 0; color:#606266; }
+  .tab.on { color:#409eff; background:#ecf5ff; font-weight:600; }
+  .card { background:#fff; border-radius:0 0 6px 6px; padding:6px 16px 16px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; color:#909399; font-weight:500; padding:11px 10px; border-bottom:1px solid #ebeef5; }
+  td { padding:11px 10px; border-bottom:1px solid #f2f6fc; }
+  tr:hover td { background:#f5f7fa; }
+  .tag { display:inline-block; padding:2px 9px; border-radius:4px; font-size:12px; }
+  .tag.blue { background:#ecf5ff; color:#409eff; }
+  .tag.green { background:#f0f9eb; color:#67c23a; }
+  .tag.warn { background:#fdf6ec; color:#e6a23c; }
+  .btn { display:inline-block; padding:6px 14px; border-radius:4px; font-size:12px; cursor:pointer; border:1px solid #dcdfe6; background:#fff; color:#606266; margin-right:6px; }
+  .btn.p { background:#409eff; border-color:#409eff; color:#fff; }
+  .btn.d { background:#fff; border-color:#f56c6c; color:#f56c6c; }
+  /* 审批弹窗 */
+  .mask { position:fixed; inset:0; background:rgba(0,0,0,.42); display:flex; align-items:center; justify-content:center; }
+  .dlg { width:460px; background:#fff; border-radius:8px; padding:20px 22px; }
+  .dlg h3 { font-size:16px; margin-bottom:14px; }
+  .dlg .row { margin-bottom:12px; font-size:13px; }
+  .dlg .row label { display:block; color:#909399; margin-bottom:5px; font-size:12px; }
+  .dlg .row input, .dlg .row textarea { width:100%; border:1px solid #dcdfe6; border-radius:4px; padding:7px 10px; font-size:13px; outline:none; }
+  .dlg .ops { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+  /* 时间线 */
+  .tl { margin-top:6px; border-left:2px solid #e4e7ed; padding-left:18px; }
+  .tl .item { position:relative; padding-bottom:16px; }
+  .tl .dot { position:absolute; left:-25px; top:2px; width:10px; height:10px; border-radius:50%; background:#c0c4cc; }
+  .tl .item.ok .dot { background:#67c23a; }
+  .tl .item.cur .dot { background:#409eff; box-shadow:0 0 0 3px #ecf5ff; }
+  .tl .t1 { font-size:13px; font-weight:600; }
+  .tl .t2 { font-size:12px; color:#909399; margin-top:3px; }
+  .cap { font-size:13px; color:#909399; margin:18px 0 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hd">
+    <h1>待办中心</h1>
+    <div class="engine">引擎：<b>Activiti 8</b>　流程：<b>hr_leave_flow</b>（3 节点）</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on">我的待办（3）</div>
+    <div class="tab">我的已办</div>
+  </div>
+  <div class="card">
+    <table>
+      <tr><th>单据标题</th><th>业务表</th><th>业务单号</th><th>当前节点</th><th>提交人</th><th>到达时间</th><th>操作</th></tr>
+      <tr>
+        <td>张三的请假申请（3 天）</td><td><span class="tag blue">leave_request</span></td><td>LR-20261025-001</td>
+        <td><span class="tag warn">主管审批</span></td><td>张三</td><td>2026-10-25 09:12</td>
+        <td><span class="btn p">审批</span><span class="btn">详情</span></td>
+      </tr>
+      <tr>
+        <td>李四的请假申请（1 天）</td><td><span class="tag blue">leave_request</span></td><td>LR-20261025-002</td>
+        <td><span class="tag warn">主管审批</span></td><td>李四</td><td>2026-10-25 10:40</td>
+        <td><span class="btn p">审批</span><span class="btn">详情</span></td>
+      </tr>
+      <tr>
+        <td>王五的报销单（¥2,380）</td><td><span class="tag blue">expense_claim</span></td><td>EX-20261024-017</td>
+        <td><span class="tag warn">主管审批</span></td><td>王五</td><td>2026-10-24 16:05</td>
+        <td><span class="btn p">审批</span><span class="btn">详情</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="cap">▲ 点击「审批」弹出审批弹窗（下）；单据详情含审批时间线（下下）。</div>
+
+  <!-- 审批弹窗 -->
+  <div class="mask">
+    <div class="dlg">
+      <h3>审批 · 张三的请假申请（3 天）</h3>
+      <div class="row"><label>单据信息</label>LR-20261025-001　请假 3 天（10-26 ~ 10-28）　事由：家中有事</div>
+      <div class="row"><label>审批意见</label><textarea rows="3" placeholder="请输入审批意见（可选）">同意，注意工作交接。</textarea></div>
+      <div class="ops">
+        <span class="btn">取消</span>
+        <span class="btn d">驳 回</span>
+        <span class="btn p">通 过</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 时间线 -->
+  <div class="cap">审批记录时间线（复用打印页样式体系；引擎历史 ACT_HI_* 投影）：</div>
+  <div class="card" style="padding:18px 20px;">
+    <div class="tl">
+      <div class="item ok"><span class="dot"></span>
+        <div class="t1">提交申请 <span class="tag green">张三</span></div>
+        <div class="t2">2026-10-25 09:12　草稿 → 主管审批</div>
+      </div>
+      <div class="item ok"><span class="dot"></span>
+        <div class="t1">主管审批通过 <span class="tag green">陈主管</span></div>
+        <div class="t2">2026-10-25 14:30　同意，注意工作交接。</div>
+      </div>
+      <div class="item cur"><span class="dot"></span>
+        <div class="t1">人事复核 <span class="tag blue">进行中</span></div>
+        <div class="t2">等待人事专员处理…</div>
+      </div>
+      <div class="item"><span class="dot"></span>
+        <div class="t1">结束</div>
+        <div class="t2">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
