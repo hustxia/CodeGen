@@ -1,0 +1,79 @@
+/* ========== 全局基础样式 ==========
+   颜色一律走 theme.css 的 --cg-* token，本文件不出现任何硬编码色值。
+   Element UI 组件的视觉覆盖集中在 theme.css 的「L3 组件映射」，
+   这里只保留与尺寸/间距相关的布局调整，避免两处定义打架。 */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--cg-bg-page);
+  color: var(--cg-text-regular);
+}
+
+#app {
+  height: 100%;
+}
+
+a {
+  text-decoration: none;
+  color: var(--cg-primary);
+}
+
+/* 页面容器 */
+.app-container {
+  padding: 16px;
+}
+
+/* ---------- 卡片间距 ---------- */
+.el-card + .el-card,
+.app-container > .el-card + * {
+  margin-top: 16px;
+}
+
+/* ---------- 表格行高（宽度/配色由 theme.css 负责） ---------- */
+.el-table .cell {
+  line-height: 22px;
+}
+
+/* ---------- 弹窗内边距 ---------- */
+.el-dialog__header {
+  padding: 16px 20px;
+}
+.el-dialog__title {
+  font-weight: 600;
+  font-size: 16px;
+}
+.el-dialog {
+  overflow: hidden;
+}
+.el-drawer__header {
+  margin-bottom: 0;
+  padding: 16px 20px;
+  font-weight: 600;
+}
+
+/* ---------- 分页 ---------- */
+.el-pagination {
+  margin-top: 16px;
+  text-align: right;
+}
+
+/* ---------- 筛选区 ---------- */
+.filter-container {
+  padding-bottom: 4px;
+}
+.filter-container .el-form-item {
+  margin-bottom: 12px;
+  margin-right: 12px;
+}
+
+/* ---------- 进度条细节 ---------- */
+.el-progress-bar__outer {
+  border-radius: 4px;
+}

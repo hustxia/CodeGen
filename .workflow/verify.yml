@@ -1,0 +1,44 @@
+# Gitee Go 流水线：push dev 时跑三层护栏
+#
+# 说明（务必先读）：
+# 1. 需要在 Gitee 仓库 → 服务 → Gitee Go 里「启用」并选择本文件，未启用不会生效；
+# 2. 两个工程在同一个 Gitee 账号下的不同仓库，跨仓拉取需要在 Gitee Go 里配置
+#    「流水线变量」或使用多仓库检出；本文件按「代码生成器前后端同仓/已挂载」假设编写，
+#    若你的仓库是两个独立仓库，请为前端与后端各建一条流水线，命令分别取下面两段；
+# 3. 命令与本地一致，避免「本地绿、CI 红」两套标准。
+version: 1.0
+name: verify
+displayName: 测试与构建校验
+triggers:
+  trigger: auto
+  push:
+    branches:
+      include:
+        - dev
+      ignore: []
+stages:
+  - stage:
+      name: verify
+      displayName: 后端测试 / 前端单测 / 前端构建
+      steps:
+        - step: build@maven
+          name: backend_test
+          displayName: 后端测试（mvn test）
+          jdkVersion: 21
+          mavenVersion: 3.6.3
+          commands:
+            - mvn -B test
+        - step: build@nodejs
+          name: frontend_unit
+          displayName: 前端单测（vitest）
+          nodeVersion: 18
+          commands:
+            - npm ci
+            - npx vitest run
+        - step: build@nodejs
+          name: frontend_build
+          displayName: 前端生产构建
+          nodeVersion: 18
+          commands:
+            - npm ci
+            - npm run build:prod
