@@ -272,6 +272,10 @@ const defaultForm = () => ({
   defaultGenDeleteBtn: 1,
   // V4.5 打印单据默认：独立于 17 键体系（硬编码兜底是关而非开），null=未配置（关）
   defaultGenPrint: null,
+  // V6.2 部署物默认：null=未配置（关）
+  defaultGenDeploy: null,
+  // V6.3 支付能力包：null=未配置（关）
+  payEnabled: null,
   // 工程结构：null/''=单模块，'multi'=Maven 多模块（微服务就绪单体），'micro'=微服务设施（V6.0：五模块+Nacos/Gateway/Feign）
   projectStructure: '',
   // V6.1 流程引擎：null/''=内置简易流，'activiti'=Activiti 8（BPMN 翻译+待办中心）
@@ -305,6 +309,16 @@ const triStateDefs = [
     key: 'defaultGenPrint',
     label: '打印单据默认',
     tip: '开=新表默认生成 A4 打印页；关=不生成；未配置=关'
+  },
+  {
+    key: 'defaultGenDeploy',
+    label: '部署物默认',
+    tip: '开=脚手架追加 Dockerfile/compose/CI 模板；关=不生成；未配置=关'
+  },
+  {
+    key: 'payEnabled',
+    label: '支付能力包',
+    tip: '开=生成支付模块（pay_order + 微信/支付宝/mock 三渠道 + 收银台）；关=不生成；未配置=关'
   }
 ]
 
