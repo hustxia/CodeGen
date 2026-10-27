@@ -250,6 +250,13 @@ public class GenTemplateEngine {
         }
         if (GenTemplateModel.on(table.getGenController()) && !isChild) {
             put(files, "controller", resolver, model, project);
+            // V6.4 P0-3：接口-perms 映射清单随 Controller 同源生成（PermissionChecker 集中校验）。
+            // 产物为超集映射：未启用的端点不会命中，无须按 gen 开关裁剪；
+            // 多模块归属 service（与 controller 同层，service 模块依赖 common 可见 ApiPermContributor）
+            String permsPrefix = GenPathResolver.moduleRelPrefix("controller",
+                    project == null ? null : project.projectStructure(),
+                    project == null ? null : project.rootPackage());
+            files.put(permsPrefix + apiPermsPath(model), apiPermsJava(model));
         }
         if (genFrontend && GenTemplateModel.on(table.getGenApiJs()) && !isChild) {
             put(files, "apiJs", resolver, model, project);
@@ -348,6 +355,69 @@ public class GenTemplateEngine {
             log.warn("renderPayShared 注入失败（projectId={}）: {}", table.getProjectId(), e.getMessage());
             return Map.of();
         }
+    }
+
+    /**
+     * V6.4 P0-3：接口-perms 映射清单落点（{backendBase}/common/auth/{Class}ApiPerms.java，
+     * 与其他后端产物同口径走 ${backendBase} 前缀，写盘/预览按同一条路径判定链处理）。
+     */
+    private static String apiPermsPath(Map<String, Object> model) {
+        String className = String.valueOf(model.get("className"));
+        String backendBase = String.valueOf(model.get("backendBase"));
+        return backendBase + "/common/auth/" + className + "ApiPerms.java";
+    }
+
+    /**
+     * V6.4 P0-3：生成 {Class}ApiPerms —— 端点→perms 映射贡献者。
+     * perms 值与 V3.0 五级回落/前端 v-hasPermi 同源：{permsPrefix}:{list|add|edit|remove}。
+     * 读类端点统一挂 :list（菜单授权即含），写类端点按操作分派；未注册端点由 PermissionChecker
+     * fail-closed 缺省兜底（GET 放行、写拒绝）。
+     */
+    private static String apiPermsJava(Map<String, Object> model) {
+        String pkg = String.valueOf(model.get("pkg"));
+        String className = String.valueOf(model.get("className"));
+        String prefix = String.valueOf(model.get("permsPrefix"));
+        String module = String.valueOf(model.get("moduleName"));
+        String base = module == null || module.isBlank() ? "" : "/" + module;
+        boolean hasFlow = Boolean.TRUE.equals(model.get("hasFlow"));
+        StringBuilder m = new StringBuilder();
+        // 读类：page/tree/options/详情/导出/导入模板
+        m.append("        m.put(\"POST ").append(base).append("/page\", \"").append(prefix).append(":list\");\n");
+        m.append("        m.put(\"GET ").append(base).append("/tree\", \"").append(prefix).append(":list\");\n");
+        m.append("        m.put(\"GET ").append(base).append("/options\", \"").append(prefix).append(":list\");\n");
+        m.append("        m.put(\"GET ").append(base).append("/bind-values\", \"").append(prefix).append(":list\");\n");
+        m.append("        m.put(\"GET ").append(base).append("/{id}\", \"").append(prefix).append(":list\");\n");
+        m.append("        m.put(\"GET ").append(base).append("/{id}/with-children\", \"").append(prefix).append(":list\");\n");
+        m.append("        m.put(\"POST ").append(base).append("/export\", \"").append(prefix).append(":list\");\n");
+        m.append("        m.put(\"GET ").append(base).append("/import-template\", \"").append(prefix).append(":list\");\n");
+        m.append("        m.put(\"GET ").append(base).append("/import/failed\", \"").append(prefix).append(":list\");\n");
+        // 写类：新增/编辑/删除/导入/主子保存
+        m.append("        m.put(\"POST ").append(base).append("\", \"").append(prefix).append(":add\");\n");
+        m.append("        m.put(\"PUT ").append(base).append("\", \"").append(prefix).append(":edit\");\n");
+        m.append("        m.put(\"POST ").append(base).append("/import\", \"").append(prefix).append(":add\");\n");
+        m.append("        m.put(\"POST ").append(base).append("/save-with-children\", \"").append(prefix).append(":edit\");\n");
+        m.append("        m.put(\"DELETE ").append(base).append("/{id}\", \"").append(prefix).append(":remove\");\n");
+        if (hasFlow) {
+            m.append("        m.put(\"POST ").append(base).append("/flow/submit/{id}\", \"")
+                    .append(prefix).append(":edit\");\n");
+        }
+        return "package " + pkg + ".common.auth;\n\n"
+                + "import org.springframework.stereotype.Component;\n\n"
+                + "import java.util.HashMap;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * " + className + " 端点-权限映射（代码生成器随 Controller 同源生成）。\n"
+                + " * perms 值与菜单注册/前端 v-hasPermi 同源（" + prefix + ":*）。\n"
+                + " */\n"
+                + "@Component\n"
+                + "public class " + className + "ApiPerms implements ApiPermContributor {\n\n"
+                + "    @Override\n"
+                + "    public Map<String, String> endpointPerms() {\n"
+                + "        Map<String, String> m = new HashMap<>();\n"
+                + m
+                + "        return m;\n"
+                + "    }\n"
+                + "}\n";
     }
 
     /**
