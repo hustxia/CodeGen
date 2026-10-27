@@ -86,12 +86,24 @@ class GenV64SecurityBaselineTest {
 
     @Test
     void authFilter_hasTwoLevelCheck() throws Exception {
+        // V6.6：签名加 fileEnabled（/uploads 直链进白名单）
         String code = invokeScaffold("authContextFilterJava",
-                new Class<?>[]{String.class, boolean.class}, new Object[]{"com.demo", false});
+                new Class<?>[]{String.class, boolean.class, boolean.class},
+                new Object[]{"com.demo", false, false});
         assertTrue(code.contains("permissionChecker.check"), "缺第二级权限点校验");
         assertTrue(code.contains("writeForbidden"), "缺 403 响应");
         assertTrue(code.contains("SC_FORBIDDEN"), "403 必须是 HTTP 语义而不是 200 包错误码");
         assertTrue(code.contains("\"/auth/captcha\""), "验证码端点必须进白名单");
+        assertFalse(code.contains("\"/uploads\""), "未开文件包时不应出现 /uploads 白名单");
+    }
+
+    @Test
+    void authFilter_fileUploadWhiteList() throws Exception {
+        // V6.6 文件包：图片直链是浏览器/img 标签请求，不带 token，必须进白名单
+        String code = invokeScaffold("authContextFilterJava",
+                new Class<?>[]{String.class, boolean.class, boolean.class},
+                new Object[]{"com.demo", false, true});
+        assertTrue(code.contains("\"/uploads\""), "开文件包时 /uploads 必须进白名单");
     }
 
     @Test

@@ -235,6 +235,10 @@ public class SysProjectServiceImpl implements SysProjectService {
         projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
                 .eq(SysProject::getId, project.getId())
                 .set(SysProject::getMobileEnabled, project.getMobileEnabled()));
+        // V6.6 同款修复：file_enabled 三态
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getFileEnabled, project.getFileEnabled()));
     }
 
     @Override

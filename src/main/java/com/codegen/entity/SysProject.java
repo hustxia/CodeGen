@@ -134,6 +134,13 @@ public class SysProject extends BaseEntity {
     private Integer mobileEnabled;
 
     /**
+     * V6.6 文件能力包系统级开关。NULL = 未配置，回落硬编码关（0）；
+     * 回落唯一实现 {@link com.codegen.util.GenTemplateModel#resolveFile}。
+     * <p>三态可空同款约定（V4.4 教训）；保存时显式 SET（updateById NOT_NULL 不写 null）。
+     */
+    private Integer fileEnabled;
+
+    /**
      * 备注
      */
     private String remark;

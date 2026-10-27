@@ -114,29 +114,30 @@ public final class GenTemplateModel {
      */
     public record ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                                 String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
-                                String projectStructure, Integer payEnabled, Integer mobileEnabled) {
+                                String projectStructure, Integer payEnabled, Integer mobileEnabled,
+                                Integer fileEnabled) {
 
         /** 兼容 V3.0 之前的构造：无系统编码，权限点不加前缀 */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage) {
-            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V3.0 构造：无级联默认值（V4.4 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage, String projectCode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null, null, null);
         }
 
         /** 兼容 V4.4 构造：无打印默认值（V4.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null, null, null);
         }
 
         /** 兼容 V4.5 构造：无工程结构（V5.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, null, null, null);
+                    defaultGenPrint, null, null, null, null);
         }
 
         /** 兼容 V6.2 构造：无支付开关（V6.3 前的调用方） */
@@ -144,7 +145,7 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, null, null);
+                    defaultGenPrint, projectStructure, null, null, null);
         }
 
         /** 兼容 V6.3/V6.4 构造：无移动端开关（V6.5 前的调用方） */
@@ -152,7 +153,15 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure, Integer payEnabled) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, payEnabled, null);
+                    defaultGenPrint, projectStructure, payEnabled, null, null);
+        }
+
+        /** 兼容 V6.5 构造：无文件能力开关（V6.6 前的调用方） */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                             String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
+                             String projectStructure, Integer payEnabled, Integer mobileEnabled) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
+                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, null);
         }
     }
 
@@ -199,6 +208,16 @@ public final class GenTemplateModel {
      * （业务表经 gen_vue_page 开关 + 表形态自动接入，从表/树表缺省排除）。
      */
     public static boolean resolveMobile(Integer projectVal) {
+        return projectVal != null && projectVal == 1;
+    }
+
+    /**
+     * V6.6 文件能力包开关的回落唯一实现：系统级 → 硬编码关。
+     * 与 resolvePay 同款语义；文件上传下载基座（sys_file 表 + /file 端点 + 上传组件）
+     * 是系统级能力包，无表级开关（业务表经 html_type=image/file 列配置自动接入，
+     * 没开能力包时列仍按普通文本框渲染，不产生死链）。
+     */
+    public static boolean resolveFile(Integer projectVal) {
         return projectVal != null && projectVal == 1;
     }
 
@@ -525,6 +544,16 @@ public final class GenTemplateModel {
                 && cols != null && cols.stream().anyMatch(c ->
                 "pay_status".equalsIgnoreCase(c.getColumnName())));
 
+        // V6.6 文件能力包：系统开了文件基座 + 页面里有 image/file 列 → 页面 import 上传组件（模板条件块）。
+        // 系统没开时列按普通文本框渲染（htmlType 仍是 image/file 但组件不注册，导入即坏）——
+        // 所以 hasUpload 一起受 fileEnabled 网控，与 hasPayStatus 防死链同款思路。
+        // 统计范围必须含子表/孙表：模板对 child.formColumns / gc.formColumns 同样渲染上传组件，
+        // 只看主表会让「主表无上传列、子表有」的页面漏注册组件（渲染即 Unknown custom element）
+        boolean fileOn = genFrontend && resolveFile(project == null ? null : project.fileEnabled());
+        m.put("fileEnabled", fileOn);
+        m.put("hasUpload", fileOn && (hasUploadColumn(toModel(biz))
+                || childrenModel.stream().anyMatch(GenTemplateModel::childHasUpload)));
+
         // ===== P3-2 多对多 =====
         // 中间表本身不需要一整套 CRUD 页面：它是关系，不是实体。
         // 这里给出标记，由模板决定「中间表只生成只读接口 + 双侧主表挂多选」。
@@ -680,6 +709,33 @@ public final class GenTemplateModel {
                 .filter(c -> c.getColumnName() == null || !c.getColumnName().equalsIgnoreCase(gFk))
                 .toList()));
         return gcm;
+    }
+
+    /** 列模型是否带上传控件标记（html_type 配置/推断为 image 或 file） */
+    private static boolean isUploadColumn(Object colModel) {
+        return colModel instanceof Map<?, ?> cm
+                && (Boolean.TRUE.equals(cm.get("isImage")) || Boolean.TRUE.equals(cm.get("isFile")));
+    }
+
+    private static boolean hasUploadColumn(List<?> columnModels) {
+        return columnModels != null && columnModels.stream().anyMatch(GenTemplateModel::isUploadColumn);
+    }
+
+    /** 子表是否自带上传列（含它自己的下级明细表单列）——hasUpload 判定用 */
+    private static boolean childHasUpload(Map<String, Object> child) {
+        if (hasUploadColumn(asList(child.get("formColumns")))) {
+            return true;
+        }
+        for (Object grand : asList(child.get("grandChildren"))) {
+            if (grand instanceof Map<?, ?> gm && hasUploadColumn(asList(gm.get("formColumns")))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<?> asList(Object value) {
+        return value instanceof List<?> list ? list : List.of();
     }
 
     /**
@@ -968,6 +1024,9 @@ public final class GenTemplateModel {
             cm.put("isDate", "date".equals(htmlType));
             cm.put("isDatetime", "datetime".equals(htmlType));
             cm.put("isPick", GenValidateUtils.isPick(htmlType));
+            // V6.6 文件能力包：图片/文件上传控件派生标志（唯一实现在此，模板只消费）
+            cm.put("isImage", "image".equals(htmlType));
+            cm.put("isFile", "file".equals(htmlType));
             // P1-2 列宽自适应：按控件类型与宽度语义给默认值，避免所有列等宽
             cm.put("colWidth", columnWidth(c, htmlType, javaType));
             cm.put("dictType", hasDict ? dictType.trim() : "");

@@ -77,6 +77,9 @@ public class GenScaffoldDTO {
     @Schema(description = "V6.5 是否生成移动端工程（uni-app 单源 H5+微信小程序，落 {frontendModule}-mobile），默认 false；系统配置请把 sys_project.mobile_enabled 设为同值")
     private Boolean mobileEnabled;
 
+    @Schema(description = "V6.6 是否生成文件能力包（sys_file 表 + /file 上传下载端点 + ImageUpload/FileUpload 组件），默认 false；系统配置请把 sys_project.file_enabled 设为同值")
+    private Boolean fileEnabled;
+
     @Schema(description = "V6.1 需下发的流程定义（平台不直连产物库，由调用方查询组装）；空=只写流程表 DDL")
     private java.util.List<FlowDef> flowDefs;
 

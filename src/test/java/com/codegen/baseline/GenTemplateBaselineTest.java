@@ -127,6 +127,12 @@ class GenTemplateBaselineTest {
         compare("pay", modelPay());
     }
 
+    @Test
+    @DisplayName("file：文件能力包（表含 image/file htmlType 列 + 系统 fileEnabled=1）的 13 个产物")
+    void file() {
+        compare("file", modelFile());
+    }
+
     // ------------------------------------------------------------------
     // 比对与更新
     // ------------------------------------------------------------------
@@ -294,6 +300,49 @@ class GenTemplateBaselineTest {
         return GenTemplateModel.build(table, cols, (java.util.List<GenTemplateModel.ChildInfo>) null, project);
     }
 
+    /** V6.6 文件能力包场景：商品图（image）+ 说明书（file）列 + 系统 fileEnabled=1，钉住 hasUpload 的上传控件/缩略图块 */
+    private static Map<String, Object> modelFile() {
+        GenTable table = baseTable("demo_goods_file", "商品资料", "DemoGoodsFile", "goodsFile");
+        List<GenTableColumn> cols = new ArrayList<>();
+        cols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        cols.add(col("goods_name", "商品名称", "varchar(100)", "goodsName", "String", 0, 1, 1, "LIKE", 1, 1, 2));
+        GenTableColumn image = col("cover_image", "商品图", "varchar(255)", "coverImage", "String", 0, 1, 0, "EQ", 1, 1, 3);
+        image.setHtmlType("image");
+        cols.add(image);
+        GenTableColumn manual = col("manual_file", "说明书", "varchar(255)", "manualFile", "String", 0, 1, 0, "EQ", 1, 1, 4);
+        manual.setHtmlType("file");
+        cols.add(manual);
+        GenTemplateModel.ProjectConfig project = new GenTemplateModel.ProjectConfig(
+                null, null, "com.codegen", "demo", null, null, null, null, null, 1);
+        return GenTemplateModel.build(table, cols, (java.util.List<GenTemplateModel.ChildInfo>) null, project);
+    }
+
+    @Test
+    @DisplayName("file：上传列只出现在子表时 hasUpload 也必须为 true（否则组件未注册）")
+    void hasUploadIncludesChildColumns() {
+        GenTable main = baseTable("demo_order", "订单", "DemoOrder", "order");
+        List<GenTableColumn> mainCols = new ArrayList<>();
+        mainCols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        mainCols.add(col("order_no", "订单号", "varchar(32)", "orderNo", "String", 0, 1, 1, "LIKE", 1, 1, 2));
+
+        GenTable child = baseTable("demo_order_item", "订单明细", "DemoOrderItem", "orderItem");
+        child.setMasterForeignKey("order_id");
+        List<GenTableColumn> childCols = new ArrayList<>();
+        childCols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        GenTableColumn itemImage = col("item_image", "明细图", "varchar(255)", "itemImage", "String",
+                0, 1, 0, "EQ", 1, 1, 2);
+        itemImage.setHtmlType("image");
+        childCols.add(itemImage);
+
+        GenTemplateModel.ProjectConfig project = new GenTemplateModel.ProjectConfig(
+                null, null, "com.codegen", "demo", null, null, null, null, null, 1);
+        Map<String, Object> model = GenTemplateModel.build(main, mainCols,
+                List.of(new GenTemplateModel.ChildInfo(child, childCols, (GenTemplateModel.ChildInfo) null)),
+                project);
+        assertTrue(Boolean.TRUE.equals(model.get("hasUpload")),
+                "主表无上传列、子表有 image 列时 hasUpload 必须为 true");
+    }
+
     private static Map<String, Object> modelWithStructure(String structure) {
         GenTable table = baseTable("demo_tag", "标签", "DemoTag", "tag");
         List<GenTableColumn> cols = new ArrayList<>();
@@ -457,7 +506,7 @@ class GenTemplateBaselineTest {
             return;
         }
         List<String> known = new ArrayList<>();
-        for (String caseName : List.of("simple", "relation", "master-detail", "master-multichild", "multi", "micro", "flow", "pay")) {
+        for (String caseName : List.of("simple", "relation", "master-detail", "master-multichild", "multi", "micro", "flow", "pay", "file")) {
             for (String tpl : TEMPLATES) {
                 known.add(caseName + "/" + tpl + ".txt");
             }

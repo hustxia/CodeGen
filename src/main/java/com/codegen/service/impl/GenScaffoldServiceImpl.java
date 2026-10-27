@@ -77,6 +77,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 StringUtils.hasText(dto.getFlowEngine()) ? dto.getFlowEngine().trim() : "");
         // V6.3 支付能力包：系统级开关（DTO 由调用方按 sys_project.pay_enabled + resolvePay 组装）
         boolean payEnabled = Boolean.TRUE.equals(dto.getPayEnabled());
+        // V6.6 文件能力包：系统级开关（DTO 由调用方按 sys_project.file_enabled + resolveFile 组装）
+        boolean fileEnabled = Boolean.TRUE.equals(dto.getFileEnabled());
         // ---------- 后端 ----------
         if (multi) {
             // 多模块：聚合 pom + 4 个子模块 pom；依赖拆分原则——common 承载全部基座依赖，
@@ -163,7 +165,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         // 启动类与运行配置归 bootstrap；包名不变（仍是 <pkg> 根），@SpringBootApplication 默认扫描覆盖全部模块；
         // micro 时启动类追加 @EnableFeignClients 扫 remote 包（跨服务调用骨架）
         write(bootRoot, pkgPath + "/" + appClass + "Application.java",
-                applicationJava(pkg, appClass, micro, activiti, payEnabled), "backend", force, vo, counter);
+                applicationJava(pkg, appClass, micro, activiti, payEnabled, fileEnabled), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/result/Result.java", resultJava(pkg), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/result/ResultCode.java", resultCodeJava(pkg), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/exception/BusinessException.java",
@@ -209,7 +211,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 "backend", force, vo, counter);
         if (Boolean.TRUE.equals(dto.getWithAuth())) {
             write(commonRoot, pkgPath + "/common/config/AuthContextFilter.java",
-                    authContextFilterJava(pkg, payEnabled), "backend", force, vo, counter);
+                    authContextFilterJava(pkg, payEnabled, fileEnabled), "backend", force, vo, counter);
             // V5.0 F-07：登录基座闭环——以前 filter「非空 token 即放行」是占位实现，
             // 401 拦得住陌生人却发不出合法 token，登录页成了摆设
             write(commonRoot, pkgPath + "/common/auth/TokenStore.java",
@@ -282,8 +284,27 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             vo.getNextSteps().add("支付能力包：缺省 mock 渠道开箱即跑（收银台 /pay/cashier，模拟支付走与真渠道同构链路）；"
                     + "接真渠道改 yml pay.channel 并配置 PAY_* 环境变量，零代码改动");
         }
+        // V6.6 文件能力包：fileEnabled 开启才生成（缺省关闭 → 存量产物与旧版逐文件一致）。
+        // sys_file 元数据表 + /file 上传下载端点 + ImageUpload/FileUpload 前端组件；
+        // 设计见 docs/design/V6.6文件能力包-设计.md。纯 Spring Web + MyBatis-Plus，无新依赖。
+        if (fileEnabled) {
+            write(bootRoot, "db/file.sql", fileResource("file.sql", pkg), "backend", force, vo, counter);
+            for (String f : List.of("FileRecord.java", "FileMapper.java", "FileProps.java",
+                    "FileController.java", "FileWebConfig.java")) {
+                write(commonRoot, pkgPath + "/common/file/" + f, fileResource(f, pkg),
+                        "backend", force, vo, counter);
+            }
+            // V6.4 权限闭环：/file 端点注册为「仅登录」（同 FlowApiPerms/PayApiPerms 模式）
+            if (Boolean.TRUE.equals(dto.getWithAuth())) {
+                write(commonRoot, pkgPath + "/common/auth/FileApiPerms.java",
+                        fileApiPermsJava(pkg), "backend", force, vo, counter);
+            }
+            vo.getNextSteps().add("文件能力包：上传目录默认 ./uploads（yml file.upload-dir 可改）；"
+                    + "首次启动前导入 db/file.sql 建 sys_file 表（流水线自动导入），"
+                    + "生成页面里 html_type=图片/文件上传 的列自动带上传控件与缩略图预览");
+        }
         write(bootRoot, "src/main/resources/application.yml",
-                applicationYml(dto, pkg, project, serverPort, stem, micro, payEnabled),
+                applicationYml(dto, pkg, project, serverPort, stem, micro, payEnabled, fileEnabled),
                 "backend", force, vo, counter);
         if (micro) {
             // V6.0：Nacos 配置中心接入模板（注释态）。说明头里写清 Boot 3 默认不读 bootstrap.yml，
@@ -304,7 +325,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             // V6.0 micro：前端请求走网关（端口=服务端口+1），apiBase 不带 /api 前缀（网关按模块路由）
             int proxyPort = micro ? serverPort + 1 : serverPort;
             write(frontendRoot, "vue.config.js", frontendVueConfig(webPort, proxyPort,
-                    StringUtils.hasText(dto.getGatewayPrefix()) ? dto.getGatewayPrefix().trim() : "demo"),
+                    StringUtils.hasText(dto.getGatewayPrefix()) ? dto.getGatewayPrefix().trim() : "demo",
+                    fileEnabled),
                     "frontend", force, vo, counter);
             write(frontendRoot, "babel.config.js", frontendBabelConfig(), "frontend", force, vo, counter);
             write(frontendRoot, ".env.development",
@@ -326,6 +348,13 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                   + "export default []\n",
                     "frontend", force, vo, counter);
             write(frontendRoot, "src/store/index.js", frontendStoreJs(), "frontend", force, vo, counter);
+            // V6.6 文件能力包：上传组件随开关写盘（生成页面的 image/file 列 import 这两个组件）
+            if (fileEnabled) {
+                write(frontendRoot, "src/components/ImageUpload.vue",
+                        fileResource("ImageUpload.vue", pkg), "frontend", force, vo, counter);
+                write(frontendRoot, "src/components/FileUpload.vue",
+                        fileResource("FileUpload.vue", pkg), "frontend", force, vo, counter);
+            }
             write(frontendRoot, ".gitignore", frontendGitignore(), "frontend", force, vo, counter);
             write(frontendRoot, "README.md", frontendReadme(project, frontendModule, webPort, serverPort),
                     "frontend", force, vo, counter);
@@ -1409,6 +1438,47 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         }
     }
 
+    /** V6.6 文件能力包：源码资源读取（V6.3 payResource 同款模式，__PKG__ 占位替换） */
+    private String fileResource(String file, String pkg) {
+        try {
+            org.springframework.core.io.ClassPathResource resource = new org.springframework.core.io.ClassPathResource("scaffold-file/" + file);
+            String content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            return content.replace("__PKG__", pkg);
+        } catch (java.io.IOException e) {
+            throw new com.codegen.common.exception.BusinessException(500, "文件模块源码资源缺失：scaffold-file/" + file);
+        }
+    }
+
+    /**
+     * V6.4：文件基座端点映射——上传/下载登录即可；文件管理（列表/删除）收紧为权限点。
+     *
+     * <p>page/delete 若也放「登录即可」，任意登录用户就能翻全量文件元数据、删他人文件记录（IDOR）。
+     * 权限点 file:list / file:delete 默认不在任何菜单下 → 只有超管（*:*:*）直通，
+     * 需要开放给普通用户时在 sys_menu 挂按钮权限授予角色即可（与业务表 ApiPerms 同一套路）。
+     */
+    private String fileApiPermsJava(String pkg) {
+        return "package " + pkg + ".common.auth;\n\n"
+                + "import org.springframework.stereotype.Component;\n\n"
+                + "import java.util.HashMap;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * 文件基座端点映射：上传/下载是平台内置能力，登录即可操作；\n"
+                + " * 列表、删除是管理动作，收为权限点 file:list / file:delete（未授权即 403，超管直通）。\n"
+                + " */\n"
+                + "@Component\n"
+                + "public class FileApiPerms implements ApiPermContributor {\n\n"
+                + "    @Override\n"
+                + "    public Map<String, String> endpointPerms() {\n"
+                + "        Map<String, String> m = new HashMap<>();\n"
+                + "        m.put(\"POST /file/upload\", \"\");\n"
+                + "        m.put(\"GET /file/download/{id}\", \"\");\n"
+                + "        m.put(\"POST /file/page\", \"file:list\");\n"
+                + "        m.put(\"DELETE /file/{id}\", \"file:delete\");\n"
+                + "        return m;\n"
+                + "    }\n"
+                + "}\n";
+    }
+
     // ============================ V6.5 移动端工程物料 ============================
 
     /** mobile 工程骨架文件清单：显式枚举（classpath 资源无法可靠列目录，V6.3 scaffold-pay 同款取舍）。
@@ -1802,7 +1872,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "</project>\n";
     }
 
-    private String applicationJava(String pkg, String appClass, boolean micro, boolean activiti, boolean payEnabled) {
+    private String applicationJava(String pkg, String appClass, boolean micro, boolean activiti,
+                                   boolean payEnabled, boolean fileEnabled) {
         String feign = micro
                 ? "\n"
                 + "// V6.0 微服务设施：跨服务调用骨架，扫描 .remote 包；nacos 关闭时 Feign 走 url 直连\n"
@@ -1819,7 +1890,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         // 不加过滤会被 MyBatis 注册成 mapper 代理，注入时抢赢真正的渠道实现 bean，
         // 运行期报 Invalid bound statement: PaymentService.create（V6.3 冒烟实测踩坑，坑库 #44）
         String mapperScanBase = "basePackages = {\"" + pkg + ".mapper\", \"" + pkg + ".system\""
-                + (payEnabled ? ", \"" + pkg + ".common.pay\"" : "") + "}";
+                + (payEnabled ? ", \"" + pkg + ".common.pay\"" : "")
+                + (fileEnabled ? ", \"" + pkg + ".common.file\"" : "") + "}";
         String mapperScanAttr = "@MapperScan(markerInterface = com.baomidou.mybatisplus.core.mapper.BaseMapper.class, "
                 + mapperScanBase + ")";
         return "package " + pkg + ";\n\n"
@@ -3008,9 +3080,11 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "\n";
     }
 
-    private String authContextFilterJava(String pkg, boolean payEnabled) {
+    private String authContextFilterJava(String pkg, boolean payEnabled, boolean fileEnabled) {
         // V6.3：渠道异步通知由支付渠道服务器回调，无法携带登录 token，必须进白名单
         String payWhiteEntry = payEnabled ? ",\n            \"/pay/notify\"" : "";
+        // V6.6：图片直链 /uploads/** 是静态资源（img 标签/浏览器直开不带 token），必须进白名单
+        String fileWhiteEntry = fileEnabled ? ",\n            \"/uploads\"" : "";
         return "package " + pkg + ".common.config;\n\n"
                 + "import " + pkg + ".common.auth.PermissionChecker;\n"
                 + "import " + pkg + ".common.auth.TokenStore;\n"
@@ -3057,7 +3131,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "            \"/swagger-ui\",\n"
                 + "            \"/swagger-resources\",\n"
                 + "            \"/error\""
-                + payWhiteEntry + "\n"
+                + payWhiteEntry
+                + fileWhiteEntry + "\n"
                 + "    );\n\n"
                 + "    private final ObjectMapper objectMapper = new ObjectMapper();\n\n"
                 + "    @Override\n"
@@ -3540,7 +3615,11 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        String method = request.getMethod().toUpperCase();\n"
                 + "        String required = resolveRequired(method, path);\n"
                 + "        if (required == null) {\n"
-                + "            // 未注册映射：读放行、写拒绝（fail-closed）\n"
+                + "            // 未注册映射：管理员直通（基座 sys 端点未注册权限点，超管必须可用）；\n"
+                + "            // 普通用户读放行、写拒绝（fail-closed）\n"
+                + "            if (hasPerm(permsOf(username), \"*:*:*\")) {\n"
+                + "                return true;\n"
+                + "            }\n"
                 + "            return \"GET\".equals(method);\n"
                 + "        }\n"
                 + "        if (required.isEmpty()) {\n"
@@ -3918,7 +3997,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     private String applicationYml(GenScaffoldDTO dto, String pkg, String project, int serverPort,
-                                  String stem, boolean micro, boolean payEnabled) {
+                                  String stem, boolean micro, boolean payEnabled, boolean fileEnabled) {
         String db = StringUtils.hasText(dto.getDbName()) ? dto.getDbName() : project.replace('-', '_');
         String host = StringUtils.hasText(dto.getDbHost()) ? dto.getDbHost() : "127.0.0.1:3306";
         String user = StringUtils.hasText(dto.getDbUsername()) ? dto.getDbUsername() : "root";
@@ -3971,13 +4050,34 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "  # 回调不可达兜底：定时查单补偿（本机/内网部署靠它对账收状态）\n"
                 + "  reconcile-enabled: true\n"
                 + "  reconcile-interval-ms: 300000\n" : "";
+        // V6.6 文件能力包：Spring 默认 multipart 上限 1MB，不配的话 2MB 图片在解析层就 500，
+        // 业务层的大小校验（file.max-size-mb）根本轮不到——留 2 倍余量，让业务层给出友好提示。
+        // Tomcat 侧还有一层 max-http-form-post-size 默认 10MB（实测 11MB 上传被 Tomcat 直接拒 500），
+        // 必须同步放宽，否则 Spring 配了也白配
+        // 注意缩进：spring 的直接子键是 2 空格（写成 4 会变成 application.servlet，配置静默失效——S8 实测踩过）
+        String multipartBlock = fileEnabled
+                ? "  servlet:\n"
+                + "    multipart:\n"
+                + "      max-file-size: 20MB\n"
+                + "      max-request-size: 25MB\n" : "";
+        String tomcatBlock = fileEnabled
+                ? "  tomcat:\n"
+                + "    max-http-form-post-size: 25MB\n" : "";
+        // V6.6 文件能力包：顶层键块放 yml 末尾（坑 40）；白名单扩展名可省略（FileProps 内置默认）
+        String fileBlock = fileEnabled
+                ? "\n# V6.6 文件能力包：上传落盘目录相对启动目录；生产容器建议挂卷到独立数据盘\n"
+                + "file:\n"
+                + "  upload-dir: ${FILE_UPLOAD_DIR:./uploads}\n"
+                + "  max-size-mb: ${FILE_MAX_SIZE_MB:10}\n" : "";
         // V6.2 配置安全：url/username/password 改环境变量占位符——冒号后默认值=本机直跑原行为，
         // 生产由 DB_* 环境变量覆盖，yml 本身不再含可提交泄露的明文密码
         return "server:\n"
-                + "  port: " + serverPort + "\n\n"
+                + "  port: " + serverPort + "\n"
+                + tomcatBlock + "\n"
                 + "spring:\n"
                 + "  application:\n"
                 + "    name: " + appName + "\n"
+                + multipartBlock
                 + microBlock
                 + activitiBlock
                 + "  profiles:\n"
@@ -4020,6 +4120,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    " + pkg + ": info\n"
                 + feignBlock
                 + payBlock
+                + fileBlock
                 // V6.4 P0-1：会话时长（滑动续期）；顶层键块放 yml 末尾（坑 40：插进 spring: 会挤坏后续块）
                 + "\n# V6.4 登录会话：token 持久化 sys_session，滑动续期；改短便于验证过期清理\n"
                 + "auth:\n"
@@ -4107,9 +4208,15 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "}\n";
     }
 
-    private String frontendVueConfig(int webPort, int serverPort, String gatewayPrefix) {
+    private String frontendVueConfig(int webPort, int serverPort, String gatewayPrefix, boolean fileEnabled) {
         // api.js 的路径带 /api/{gatewayPrefix}（给网关预留），本地直连后端没有网关，
         // 代理必须把这段前缀剥掉，否则后端收到 /api/demo/xxx 全部 404
+        // V6.6 文件能力包：图片直链 /uploads/** 在后端，dev 必须单独代理（不剥任何前缀）
+        String uploadsProxy = fileEnabled
+                ? ",\n      '/uploads': {\n"
+                + "        target: 'http://127.0.0.1:" + serverPort + "',\n"
+                + "        changeOrigin: true\n"
+                + "      }" : "";
         return "const { defineConfig } = require('@vue/cli-service')\n\n"
                 + "module.exports = defineConfig({\n"
                 + "  transpileDependencies: true,\n"
@@ -4124,7 +4231,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        changeOrigin: true,\n"
                 + "        // http-proxy-middleware 多条 pathRewrite 不保证顺序执行，合并成一条正则\n"
                 + "        pathRewrite: { '^/dev-api(/api/" + gatewayPrefix + ")?': '' }\n"
-                + "      }\n"
+                + "      }" + uploadsProxy + "\n"
                 + "    }\n"
                 + "  }\n"
                 + "})\n";

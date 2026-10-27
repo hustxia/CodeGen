@@ -286,6 +286,8 @@ public class PipelineExecutor {
         dto.setPayEnabled(com.codegen.util.GenTemplateModel.resolvePay(project.getPayEnabled()));
         // V6.5：移动端工程开关（回落唯一实现 resolveMobile）
         dto.setMobileEnabled(com.codegen.util.GenTemplateModel.resolveMobile(project.getMobileEnabled()));
+        // V6.6：文件能力包开关（回落唯一实现 resolveFile）
+        dto.setFileEnabled(com.codegen.util.GenTemplateModel.resolveFile(project.getFileEnabled()));
         GenScaffoldVO vo = scaffoldService.scaffold(dto);
 
         // 种子 SQL：脚手架带出 db/init_sys_user.sql（admin/admin123），导入到目标库
@@ -333,7 +335,26 @@ public class PipelineExecutor {
                 log.warn("支付单表 SQL 导入失败（不阻断）: {}", e.getMessage());
             }
         }
-        return "写入 " + vo.getWritten() + " 个文件，跳过 " + vo.getSkipped() + " " + seedNote;
+        // V6.6：sys_file 文件元数据表导入产物库（幂等）。
+        // 缺这张表时上传接口插库即 500——比支付单表更「一用就炸」，失败要把原因带回步骤结果
+        String fileNote = "";
+        Path fileSql = Paths.get(project.getBackendRoot(), dto.getBackendModule(), "db", "file.sql");
+        if (Files.exists(fileSql)) {
+            try {
+                GenDdlExecuteDTO fileDto = new GenDdlExecuteDTO();
+                fileDto.setDdl(Files.readString(fileSql, StandardCharsets.UTF_8));
+                fileDto.setSchema(pipeline.getDbName());
+                fileDto.setAutoImport(false);
+                var fr = ddlService.execute(fileDto);
+                log.info("文件表 SQL 已导入 {}: {} 条语句", pipeline.getDbName(), fr.getSuccessCount());
+            } catch (Exception e) {
+                log.warn("文件表 SQL 导入失败: {}", e.getMessage());
+                fileNote = "（sys_file 建表失败：" + abbreviate(e.getMessage(), 80) + "，上传功能将不可用）";
+            }
+        } else if (Boolean.TRUE.equals(dto.getFileEnabled())) {
+            fileNote = "（未找到 db/file.sql，sys_file 缺失时上传功能不可用）";
+        }
+        return "写入 " + vo.getWritten() + " 个文件，跳过 " + vo.getSkipped() + " " + seedNote + fileNote;
     }
 
     /**
@@ -554,7 +575,7 @@ public class PipelineExecutor {
         if (mp.exitCode != 0) {
             throw new IllegalStateException("build:mp-weixin 退出码 " + mp.exitCode + "，详见日志 " + mp.logFile);
         }
-        if (!Files.exists(mobileDir.resolve("dist", "build", "mp-weixin", "app.json"))) {
+        if (!Files.exists(mobileDir.resolve(Paths.get("dist", "build", "mp-weixin", "app.json")))) {
             throw new IllegalStateException("小程序包缺 app.json，出包可能不完整：" + mobileDir + "/dist/build/mp-weixin");
         }
         return "移动端出包完成：H5 静态包 + mp-weixin 目录（" + (h5.durationSeconds + mp.durationSeconds) + "s）";

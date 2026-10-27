@@ -79,7 +79,20 @@
       >
         <el-table-column prop="id" label="ID" width="<#if idColWidth gt 0>${idColWidth}<#else>70</#if>" />
 <#list listColumns as c>
-<#if c.hasRef>
+<#if c.isImage && fileEnabled>
+        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="center">
+          <template slot-scope="{ row }">
+            <el-image v-if="row.${c.javaField}" :src="row.${c.javaField}" :preview-src-list="[row.${c.javaField}]" fit="cover" style="width: 44px; height: 44px; border-radius: 4px" />
+            <span v-else>—</span>
+          </template>
+        </el-table-column>
+<#elseif c.isFile && fileEnabled>
+        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip>
+          <template slot-scope="{ row }">
+            <el-link v-if="row.${c.javaField}" type="primary" :href="row.${c.javaField}" target="_blank" icon="el-icon-document">{{ row.${c.javaField}.split('/').pop() }}</el-link>
+          </template>
+        </el-table-column>
+<#elseif c.hasRef>
         <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip
           :formatter="(row) => refText('${c.javaField}', row.${c.javaField})" />
 <#elseif c.isSwitch>
@@ -172,7 +185,11 @@
           <el-col :span="12">
 </#if>
         <el-form-item<#if c.hasLink> v-if="link.visible('${c.javaField}')"</#if> label="${c.commentLabel}" prop="${c.javaField}">
-<#if c.hasRef>
+<#if c.isImage && fileEnabled>
+          <image-upload v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> />
+<#elseif c.isFile && fileEnabled>
+          <file-upload v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> />
+<#elseif c.hasRef>
           <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> filterable remote clearable placeholder="输入关键字搜索${c.commentLabel}"
             :remote-method="kw => searchRef('${c.javaField}', '${c.refTable}', '${c.refLabel}', kw)"
             :loading="refLoading['${c.javaField}']" style="width: 100%">
@@ -233,7 +250,11 @@
 <#list child.formColumns as c>
             <el-table-column label="${c.commentLabel}" min-width="130">
               <template slot-scope="{ row }">
-<#if c.isSwitch>
+<#if c.isImage && fileEnabled>
+                <image-upload v-model="row.${c.javaField}" width="72px" height="72px" />
+<#elseif c.isFile && fileEnabled>
+                <file-upload v-model="row.${c.javaField}" />
+<#elseif c.isSwitch>
                 <el-switch v-model="row.${c.javaField}" :active-value="1" :inactive-value="0" />
 <#elseif c.isNumberCtrl>
                 <el-input-number v-model="row.${c.javaField}" controls-position="right" size="mini" style="width: 100%" />
@@ -289,7 +310,11 @@
 <#list gc.formColumns as c>
         <el-table-column label="${c.commentLabel}" min-width="130">
           <template slot-scope="{ row }">
-<#if c.isSwitch>
+<#if c.isImage && fileEnabled>
+            <image-upload v-model="row.${c.javaField}" width="72px" height="72px" />
+<#elseif c.isFile && fileEnabled>
+            <file-upload v-model="row.${c.javaField}" />
+<#elseif c.isSwitch>
             <el-switch v-model="row.${c.javaField}" :active-value="1" :inactive-value="0" />
 <#elseif c.isNumberCtrl>
             <el-input-number v-model="row.${c.javaField}" controls-position="right" size="mini" style="width: 100%" />
@@ -345,7 +370,15 @@
 <#else>        <div class="detail-row">
           <span class="detail-label">${c.commentLabel}</span>
 </#if>
-<#if c.hasRef>
+<#if c.isImage && fileEnabled>
+<#if hasChild>            <span class="detail-value"><el-image v-if="detail.${c.javaField}" :src="detail.${c.javaField}" :preview-src-list="[detail.${c.javaField}]" fit="cover" style="width: 64px; height: 64px; border-radius: 4px" /><span v-else>—</span></span>
+<#else>          <span class="detail-value"><el-image v-if="detail.${c.javaField}" :src="detail.${c.javaField}" :preview-src-list="[detail.${c.javaField}]" fit="cover" style="width: 64px; height: 64px; border-radius: 4px" /><span v-else>—</span></span>
+</#if>
+<#elseif c.isFile && fileEnabled>
+<#if hasChild>            <span class="detail-value"><el-link v-if="detail.${c.javaField}" type="primary" :href="detail.${c.javaField}" target="_blank" icon="el-icon-document">{{ detail.${c.javaField}.split('/').pop() }}</el-link></span>
+<#else>          <span class="detail-value"><el-link v-if="detail.${c.javaField}" type="primary" :href="detail.${c.javaField}" target="_blank" icon="el-icon-document">{{ detail.${c.javaField}.split('/').pop() }}</el-link></span>
+</#if>
+<#elseif c.hasRef>
 <#if hasChild>            <span class="detail-value">{{ refText('${c.javaField}', detail.${c.javaField}) }}</span>
 <#else>          <span class="detail-value">{{ refText('${c.javaField}', detail.${c.javaField}) }}</span>
 </#if>
@@ -539,6 +572,11 @@ import {
 // 字典兜底、唯一性查重、导入失败明细下载都直接用通用 request，不依赖宿主是否提供专用 api 模块
 import request from '@/utils/request'
 </#if>
+<#if hasUpload>
+// V6.6 文件能力包：页面里有 image/file 列才引入上传组件（fileEnabled 网控在模型层，未开时列按文本框渲染）
+import ImageUpload from '@/components/ImageUpload.vue'
+import FileUpload from '@/components/FileUpload.vue'
+</#if>
 
 const defaultForm = () => ({
   id: undefined,
@@ -577,6 +615,9 @@ const grandTitleMap = {
 
 export default {
   name: '${className}',
+<#if hasUpload>
+  components: { ImageUpload, FileUpload },
+</#if>
   data() {
     return {
       // <gen:begin key="vue-data">
