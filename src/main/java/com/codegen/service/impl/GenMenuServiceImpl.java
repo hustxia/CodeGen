@@ -99,6 +99,9 @@ public class GenMenuServiceImpl implements GenMenuService {
     @Override
     @Transactional
     public GenMenuRegisterVO register(GenMenuRegisterDTO dto) {
+        // 与 GenCodeServiceImpl.writeToDisk 同款修法（坑 51）：注册前清系统配置缓存，
+        // 避免管理页改完 sys_project 后菜单注册仍读旧配置
+        projectCache.clear();
         if (dto == null || dto.getIds() == null || dto.getIds().isEmpty()) {
             throw new BusinessException(400, "请先勾选要注册菜单的表");
         }

@@ -187,6 +187,9 @@ public class GenCodeServiceImpl implements GenCodeService {
     @Override
     public List<GenWriteVO> writeToDisk(GenWriteDTO dto, String batchNo) {
         LEDGER_ERRORS.set(0);
+        // 与 renderTables 同口径：写盘前清一次系统配置缓存，
+        // 否则管理页改完 sys_project（root/path 语义修正）后直调写盘仍用旧配置（坑 51）
+        clearProjectCache();
         List<Long> ids = dto == null ? null : dto.getIds();
         if (ids == null || ids.isEmpty()) {
             throw new BusinessException(400, "请先勾选要生成的表");

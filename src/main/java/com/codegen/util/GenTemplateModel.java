@@ -276,7 +276,7 @@ public final class GenTemplateModel {
         // 规则统一放在 GenNaming，菜单服务与自检服务调的是同一个方法——
         // 这里若自己拼字符串，就会出现「大小写/空白处理不一致 → 按钮点了没反应」的静默 bug。
         m.put("permsPrefix", com.codegen.support.GenNaming.permsPrefix(effectiveProjectCode, table.getTableName()));
-        m.put("comment", orDefault(table.getTableComment(), className));
+        m.put("comment", sanitizeComment(orDefault(table.getTableComment(), className)));
         m.put("moduleName", module);
         m.put("gatewayPrefix", prefix);
         m.put("author", orDefault(table.getAuthor(), ""));
@@ -623,7 +623,7 @@ public final class GenTemplateModel {
         cm.put("className", ct.getClassName());
         cm.put("varName", decap(ct.getClassName()));
         cm.put("tableName", ct.getTableName());
-        cm.put("comment", orDefault(ct.getTableComment(), ct.getClassName()));
+        cm.put("comment", sanitizeComment(orDefault(ct.getTableComment(), ct.getClassName())));
         cm.put("moduleName", orDefault(ct.getModuleName(), module));
         cm.put("pkg", childPkg);
         cm.put("rootPkg", rootPkg);
@@ -669,7 +669,7 @@ public final class GenTemplateModel {
         gcm.put("className", gct.getClassName());
         gcm.put("varName", decap(gct.getClassName()));
         gcm.put("tableName", gct.getTableName());
-        gcm.put("comment", orDefault(gct.getTableComment(), gct.getClassName()));
+        gcm.put("comment", sanitizeComment(orDefault(gct.getTableComment(), gct.getClassName())));
         gcm.put("pkg", orDefault(gct.getPackageName(), parentChildPkg));
         gcm.put("fkColumn", gFk);
         gcm.put("fkField", GenUtils.toCamel(gFk));
@@ -731,6 +731,11 @@ public final class GenTemplateModel {
     /** 「上级分类ID，0=顶级 1=一级」这类逗号枚举尾巴：主标题同样只取前半段 */
     private static final java.util.regex.Pattern COMMENT_ENUM_TAIL =
             java.util.regex.Pattern.compile("^([^,，:：（(]{1,40})[,，]\\s*\\d+\\s*[-=:：]?.+$");
+
+    /** 注释脱敏：剥掉单双引号，防止注释原文嵌进 Java/JS 字符串字面量打坏生成代码（坑 52） */
+    private static String sanitizeComment(String s) {
+        return s == null ? null : s.replace("\"", "").replace("'", "");
+    }
 
     private static String commentLabel(String comment) {
         return commentLabel(comment, null);
@@ -934,12 +939,12 @@ public final class GenTemplateModel {
             // 数据库列名：查重、导出表头映射等需要按真实列名拼 SQL
             cm.put("dbField", c.getColumnName());
             cm.put("javaType", javaType);
-            // 原始注释：枚举说明等仍可能在少数场景被引用
-            cm.put("columnComment", c.getColumnComment());
+            // 原始注释：枚举说明等仍可能在少数场景被引用（剥掉引号，防止打进字符串字面量打坏生成代码，坑 52）
+            cm.put("columnComment", sanitizeComment(c.getColumnComment()));
             // 页面显示名：剥掉注释里的枚举说明（状态:1启用0停用 -> 状态）；
             // 注释整体是编号映射（1男 2女 0未知）时回落列名，映射串不再整段上屏。
             // vue 模板的 label/placeholder/校验消息统一用这个，原始注释不再直接上屏
-            cm.put("commentLabel", commentLabel(c.getColumnComment(), c.getColumnName()));
+            cm.put("commentLabel", sanitizeComment(commentLabel(c.getColumnComment(), c.getColumnName())));
             cm.put("columnType", c.getColumnType());
             cm.put("queryType", c.getQueryType());
             cm.put("queryOp", queryOp(c.getQueryType()));
