@@ -64,7 +64,7 @@ public class PipelineExecutor {
     public static final String[] STEP_KEYS = {
             "model", "db", "seed", "scaffold", "gen",
             "package_backend", "deploy_backend",
-            "package_frontend", "deploy_frontend",
+            "package_frontend", "package_mobile", "deploy_frontend",
             "health"
     };
 
@@ -169,6 +169,7 @@ public class PipelineExecutor {
                         case "package_backend" -> stepPackageBackend(pipeline);
                         case "deploy_backend" -> stepDeployBackend(pipeline);
                         case "package_frontend" -> stepPackageFrontend(pipeline);
+                        case "package_mobile" -> stepPackageMobile(pipeline);
                         case "deploy_frontend" -> stepDeployFrontend(pipeline);
                         case "health" -> stepHealth(pipeline);
                         default -> "未知步骤，跳过";
@@ -283,6 +284,8 @@ public class PipelineExecutor {
         dto.setFlowDefs(collectFlowDefs(project.getId()));
         // V6.3：支付能力包开关（回落唯一实现 resolvePay）
         dto.setPayEnabled(com.codegen.util.GenTemplateModel.resolvePay(project.getPayEnabled()));
+        // V6.5：移动端工程开关（回落唯一实现 resolveMobile）
+        dto.setMobileEnabled(com.codegen.util.GenTemplateModel.resolveMobile(project.getMobileEnabled()));
         GenScaffoldVO vo = scaffoldService.scaffold(dto);
 
         // 种子 SQL：脚手架带出 db/init_sys_user.sql（admin/admin123），导入到目标库
@@ -518,6 +521,43 @@ public class PipelineExecutor {
             throw new IllegalStateException("npm install 退出码 " + r.exitCode + "，详见日志 " + r.logFile);
         }
         return "依赖安装完成（" + r.durationSeconds + "s）";
+    }
+
+    /**
+     * package_mobile：V6.5 移动端出包（build:h5 静态包 + build:mp-weixin 小程序目录）。
+     * 未开启 mobile_enabled 时优雅跳过（步骤恒在种子清单里，开关决定它干活还是让路）；
+     * CI 只出包不发布——小程序真机预览/上传由用户在微信开发者工具完成（诚实边界）。
+     */
+    private String stepPackageMobile(GenPipeline pipeline) {
+        var project = projectService.getById(pipeline.getProjectId());
+        if (!com.codegen.util.GenTemplateModel.resolveMobile(project.getMobileEnabled())) {
+            return "未开启 mobile_enabled，跳过移动端构建";
+        }
+        Path mobileDir = Paths.get(project.getFrontendRoot(), project.getProjectCode() + "-web-mobile");
+        if (!Files.exists(mobileDir.resolve("package.json"))) {
+            throw new IllegalStateException("移动端工程不存在：" + mobileDir + "（请检查脚手架步骤是否成功）");
+        }
+        if (!Files.exists(mobileDir.resolve("node_modules"))) {
+            CommandResult r = runCommand(pipeline, "package_mobile", mobileDir.toFile(),
+                    "cmd", "/c", props.getNpm(), "install", "--no-audit", "--no-fund");
+            if (r.exitCode != 0) {
+                throw new IllegalStateException("npm install 退出码 " + r.exitCode + "，详见日志 " + r.logFile);
+            }
+        }
+        CommandResult h5 = runCommand(pipeline, "package_mobile", mobileDir.toFile(),
+                "cmd", "/c", props.getNpm(), "run", "build:h5");
+        if (h5.exitCode != 0) {
+            throw new IllegalStateException("build:h5 退出码 " + h5.exitCode + "，详见日志 " + h5.logFile);
+        }
+        CommandResult mp = runCommand(pipeline, "package_mobile", mobileDir.toFile(),
+                "cmd", "/c", props.getNpm(), "run", "build:mp-weixin");
+        if (mp.exitCode != 0) {
+            throw new IllegalStateException("build:mp-weixin 退出码 " + mp.exitCode + "，详见日志 " + mp.logFile);
+        }
+        if (!Files.exists(mobileDir.resolve("dist", "build", "mp-weixin", "app.json"))) {
+            throw new IllegalStateException("小程序包缺 app.json，出包可能不完整：" + mobileDir + "/dist/build/mp-weixin");
+        }
+        return "移动端出包完成：H5 静态包 + mp-weixin 目录（" + (h5.durationSeconds + mp.durationSeconds) + "s）";
     }
 
     /** deploy_frontend：npm run serve -- --port X，dev server 常驻 */

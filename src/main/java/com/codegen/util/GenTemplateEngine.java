@@ -264,6 +264,14 @@ public class GenTemplateEngine {
         if (genFrontend && GenTemplateModel.on(table.getGenVuePage()) && !isChild) {
             put(files, "vuePage", resolver, model, project);
         }
+        // V6.5 移动端：系统 mobile_enabled=1 且该表出前端页面的非从表/非树表 → 动态页配置文件。
+        // 走 Java 方法而不是 gen_template（V6.4 ApiPerms 同款理由：库模板优先于 classpath，
+        // 新模板还得过 Seeder 同步；纯 Java 生成零模板依赖）。relPath 前缀 mobile/ = 第三侧 MOBILE。
+        if (genFrontend && GenTemplateModel.on(table.getGenVuePage()) && !isChild
+                && !Boolean.TRUE.equals(model.get("genTree"))
+                && GenTemplateModel.resolveMobile(project == null ? null : project.mobileEnabled())) {
+            files.put(mobileConfigRelPath(model), mobileTableConfigJs(model));
+        }
         // V4.5 打印单据：开关与前置条件都在 genPrint 键里算好（resolveGenPrint 唯一实现），
         // 引擎只认结果，不再重复判定
         if (Boolean.TRUE.equals(model.get("genPrint"))) {
@@ -365,6 +373,71 @@ public class GenTemplateEngine {
         String className = String.valueOf(model.get("className"));
         String backendBase = String.valueOf(model.get("backendBase"));
         return backendBase + "/common/auth/" + className + "ApiPerms.java";
+    }
+
+    /**
+     * V6.5 移动端：动态页配置文件的落位路径（relPath 前缀 mobile/ = 第三侧 MOBILE）。
+     * 写盘/ZIP 侧按前缀识别归属，mobileRoot 由 GenCodeServiceImpl.mobileRootOf 解析。
+     */
+    private static String mobileConfigRelPath(Map<String, Object> model) {
+        return "mobile/src/config/tables/" + model.get("moduleName") + "/" + model.get("tableName") + ".js";
+    }
+
+    /**
+     * V6.5 移动端表配置 JS：声明式数据源，scaffold-mobile 的动态页三件（list/detail/form）
+     * 按 import.meta.glob 聚合消费——新增表零注册，pages.json 恒定不重建。
+     * 列分类完全复用 {@link GenTemplateModel} 现有标记（htmlType/commentLabel/enumJs/isRequired），
+     * 不新增模型；hasEnum 优先于 hasDict（与 PC vuePage 同一回落链）。
+     */
+    private static String mobileTableConfigJs(Map<String, Object> model) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("// V6.5 移动端动态页配置：自动生成，请勿手工编辑（重新生成会覆盖）\n");
+        sb.append("// 消费方：{frontendModule}-mobile 的 pages/dynamic/list|detail|form.vue\n");
+        sb.append("export default {\n");
+        sb.append("  table: '").append(model.get("tableName")).append("',\n");
+        sb.append("  title: '").append(escJs(String.valueOf(model.get("comment")))).append("',\n");
+        sb.append("  module: '").append(model.get("moduleName")).append("',\n");
+        sb.append("  api: '").append(model.get("apiBase")).append("',\n");
+        appendColGroup(sb, "search", model.get("vueQueryColumns"));
+        appendColGroup(sb, "list", model.get("listColumns"));
+        appendColGroup(sb, "form", model.get("formColumns"));
+        sb.append("}\n");
+        return sb.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void appendColGroup(StringBuilder sb, String key, Object colsObj) {
+        List<Map<String, Object>> cols = colsObj == null ? List.of() : (List<Map<String, Object>>) colsObj;
+        sb.append("  ").append(key).append(": [\n");
+        for (Map<String, Object> c : cols) {
+            String htmlType = String.valueOf(c.get("htmlType"));
+            // 移动端控件映射：select/radio → picker（uni-ui 无 el-select 形态）；
+            // switch/number/date/datetime/textarea 原样可用；其余回落 input
+            String ctrl = switch (htmlType) {
+                case "select", "radio" -> "picker";
+                case "switch", "number", "date", "datetime", "textarea" -> htmlType;
+                default -> "input";
+            };
+            boolean hasEnum = Boolean.TRUE.equals(c.get("hasEnum"));
+            boolean hasDict = Boolean.TRUE.equals(c.get("hasDict"));
+            sb.append("    { field: '").append(c.get("javaField"))
+                    .append("', label: '").append(escJs(String.valueOf(c.get("commentLabel"))))
+                    .append("', ctrl: '").append(ctrl)
+                    .append("', required: ").append(Boolean.TRUE.equals(c.get("isRequired")));
+            if (hasEnum) {
+                sb.append(", enum: ").append(c.get("enumJs"));
+            }
+            if (hasDict) {
+                sb.append(", dict: '").append(c.get("dictType")).append("'");
+            }
+            sb.append(" },\n");
+        }
+        sb.append("  ],\n");
+    }
+
+    /** JS 单引号字符串转义（反斜杠/单引号/换行） */
+    private static String escJs(String s) {
+        return s == null ? "" : s.replace("\\", "\\\\").replace("'", "\\'").replace("\n", " ");
     }
 
     /**

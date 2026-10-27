@@ -19,6 +19,9 @@ public class GenScaffoldVO {
     @Schema(description = "前端工程绝对路径")
     private String frontendPath;
 
+    @Schema(description = "V6.5 移动端工程绝对路径（mobile_enabled 关闭时为 null）")
+    private String mobilePath;
+
     @Schema(description = "本次实际写入文件数")
     private int written;
 

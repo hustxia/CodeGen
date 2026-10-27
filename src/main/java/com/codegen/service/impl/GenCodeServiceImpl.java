@@ -241,13 +241,16 @@ public class GenCodeServiceImpl implements GenCodeService {
                 }
                 // V5.5 多模块：模块目录前缀 <stem>-domain/ 在 relPath 最前面，backendBase 段
                 // 不再顶头，改 contains 判定（前端路径不会含 backendBase 包路径段）
-                boolean isBackend = relPath.contains(backendBase + "/");
-                String root = isBackend ? backendRootOf(table) : frontendRootOf(table);
+                // V6.5 移动端：relPath 前缀 mobile/ = 第三侧 MOBILE
+                boolean isMobile = relPath.startsWith("mobile/");
+                boolean isBackend = !isMobile && relPath.contains(backendBase + "/");
+                String root = isBackend ? backendRootOf(table)
+                        : isMobile ? mobileRootOf(table) : frontendRootOf(table);
                 if (!StringUtils.hasText(root)) {
                     continue;
                 }
                 Path rootPath = Paths.get(root).toAbsolutePath().normalize();
-                if (!isBackend) {
+                if (!isBackend && !isMobile) {
                     // 前端产物路径形如 src/api/x.js，可能叠加 gen.output.frontend-path 子目录
                     rootPath = frontendBaseOf(table, rootPath);
                 }
@@ -259,7 +262,7 @@ public class GenCodeServiceImpl implements GenCodeService {
                 vo.setTableName(table.getTableName());
                 vo.setPath(relPath);
                 vo.setAbsPath(target.toString());
-                vo.setSide(isBackend ? "BACKEND" : "FRONTEND");
+                vo.setSide(isBackend ? "BACKEND" : isMobile ? "MOBILE" : "FRONTEND");
                 String oldContent = null;
                 String actualMd5 = null;
                 if (Files.exists(target)) {
@@ -325,18 +328,21 @@ public class GenCodeServiceImpl implements GenCodeService {
 
             try {
                 // V5.5 多模块：模块目录前缀在 relPath 最前面，同 diffTable 改 contains 判定
-                boolean isBackend = relPath.contains(backendBase + "/");
-                String group = isBackend ? "backend" : "frontend";
-                String root = isBackend ? backendRootOf(table) : frontendRootOf(table);
+                // V6.5 移动端：relPath 前缀 mobile/ = 第三侧 MOBILE，落 frontendModule-mobile 工程
+                boolean isMobile = relPath.startsWith("mobile/");
+                boolean isBackend = !isMobile && relPath.contains(backendBase + "/");
+                String group = isBackend ? "backend" : isMobile ? "mobile" : "frontend";
+                String root = isBackend ? backendRootOf(table)
+                        : isMobile ? mobileRootOf(table) : frontendRootOf(table);
                 if (!StringUtils.hasText(root)) {
-                    String msg = (isBackend ? "后端" : "前端") + "根目录未配置：请在 gen.output."
+                    String msg = (isBackend ? "后端" : isMobile ? "移动端" : "前端") + "根目录未配置：请在 gen.output."
                             + (isBackend ? "backend-root" : "frontend-root") + " 或表配置中补充";
                     recordOutput(batchNo, table, group, relPath, "", "ERROR", 0, "", msg, null, null);
                     results.add(new GenWriteVO(table.getTableName(), relPath, "ERROR", msg));
                     continue;
                 }
                 Path rootPath = Paths.get(root).toAbsolutePath().normalize();
-                if (!isBackend) {
+                if (!isBackend && !isMobile) {
                     // 前端产物路径形如 src/api/x.js，可能叠加 gen.output.frontend-path 子目录
                     rootPath = frontendBaseOf(table, rootPath);
                 }
@@ -395,12 +401,13 @@ public class GenCodeServiceImpl implements GenCodeService {
                 byte[] writtenBytes = finalContent.getBytes(StandardCharsets.UTF_8);
                 boolean merged = "MERGED".equals(status);
                 String action = merged ? "MERGED" : (exists ? "OVERWRITTEN" : "WRITTEN");
-                recordOutput(batchNo, table, isBackend ? "backend" : "frontend", relPath, target.toString(),
+                recordOutput(batchNo, table, group, relPath, target.toString(),
                         action, writtenBytes.length, GenDigestUtils.md5Hex(writtenBytes), merged ? message : "",
                         backupPath, prevMd5);
                 results.add(new GenWriteVO(table.getTableName(), relPath, status, message, backupPath));
             } catch (Exception e) {
-                recordOutput(batchNo, table, relPath.contains(backendBase + "/") ? "backend" : "frontend",
+                recordOutput(batchNo, table, relPath.startsWith("mobile/") ? "mobile"
+                                : relPath.contains(backendBase + "/") ? "backend" : "frontend",
                         relPath, "", "ERROR", 0, "", e.getMessage(), null, null);
                 results.add(new GenWriteVO(table.getTableName(), relPath, "ERROR", e.getMessage()));
             }
@@ -582,7 +589,7 @@ public class GenCodeServiceImpl implements GenCodeService {
                 project.getRootPackage(), project.getGatewayPrefix(),
                 project.getRootPackage(), project.getProjectCode(),
                 project.getDefaultDeleteCascadeMode(), project.getDefaultGenPrint(),
-                project.getProjectStructure(), project.getPayEnabled());
+                project.getProjectStructure(), project.getPayEnabled(), project.getMobileEnabled());
     }
 
     /**
@@ -800,6 +807,19 @@ public class GenCodeServiceImpl implements GenCodeService {
      *
      * <p>表级没有 frontendPath 字段（一张表不可能换前端工程），所以第一个有资格说话的就是系统。
      */
+    /**
+     * V6.5 移动端工程根：与前端工程平级的同级目录 {@code <前端工程目录名>-mobile}。
+     * 与 scaffold 侧 resolveRoot(dtoFrontendRoot, configRoot, frontendModule + "-mobile") 必须算出同一路径——
+     * 同一份 frontend 配置，scaffold 写骨架、生成写表配置，落进同一个 mobile 工程。
+     */
+    private String mobileRootOf(GenTable table) {
+        Path frontendBase = frontendBaseOf(table,
+                Paths.get(frontendRootOf(table)).toAbsolutePath().normalize());
+        Path parent = frontendBase.getParent();
+        String dirName = frontendBase.getFileName() == null ? "mobile" : frontendBase.getFileName().toString();
+        return (parent == null ? frontendBase : parent).resolve(dirName + "-mobile").toString();
+    }
+
     private String frontendPathOf(GenTable table) {
         return GenPathResolver.frontendPath(table, projectOf(table), outputProperties);
     }

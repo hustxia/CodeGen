@@ -114,29 +114,29 @@ public final class GenTemplateModel {
      */
     public record ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                                 String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
-                                String projectStructure, Integer payEnabled) {
+                                String projectStructure, Integer payEnabled, Integer mobileEnabled) {
 
         /** 兼容 V3.0 之前的构造：无系统编码，权限点不加前缀 */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage) {
-            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null, null);
         }
 
         /** 兼容 V3.0 构造：无级联默认值（V4.4 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage, String projectCode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null, null);
         }
 
         /** 兼容 V4.4 构造：无打印默认值（V4.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null, null);
         }
 
         /** 兼容 V4.5 构造：无工程结构（V5.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, null, null);
+                    defaultGenPrint, null, null, null);
         }
 
         /** 兼容 V6.2 构造：无支付开关（V6.3 前的调用方） */
@@ -144,7 +144,15 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, null);
+                    defaultGenPrint, projectStructure, null, null);
+        }
+
+        /** 兼容 V6.3/V6.4 构造：无移动端开关（V6.5 前的调用方） */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                             String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
+                             String projectStructure, Integer payEnabled) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
+                    defaultGenPrint, projectStructure, payEnabled, null);
         }
     }
 
@@ -182,6 +190,15 @@ public final class GenTemplateModel {
      * （业务表经 pay_status 列约定自动接入，不需要表级绑定）。
      */
     public static boolean resolvePay(Integer projectVal) {
+        return projectVal != null && projectVal == 1;
+    }
+
+    /**
+     * V6.5 移动端支持开关的回落唯一实现：系统级 → 硬编码关。
+     * 与 resolvePay 同款语义；移动工程是系统级能力包，无表级开关
+     * （业务表经 gen_vue_page 开关 + 表形态自动接入，从表/树表缺省排除）。
+     */
+    public static boolean resolveMobile(Integer projectVal) {
         return projectVal != null && projectVal == 1;
     }
 

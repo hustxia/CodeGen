@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 一键建工程实现。
@@ -328,6 +329,25 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             write(frontendRoot, ".gitignore", frontendGitignore(), "frontend", force, vo, counter);
             write(frontendRoot, "README.md", frontendReadme(project, frontendModule, webPort, serverPort),
                     "frontend", force, vo, counter);
+        }
+
+        // ---------- V6.5 移动端工程（uni-app 单源 H5 + 微信小程序） ----------
+        // 与 PC 前端互不依赖：独立工程、独立构建；开关关闭时整段跳过，存量产物零 diff。
+        // 表业务配置（mobile/src/config/tables/**）由表生成侧产出，这里只出工程骨架与动态页。
+        if (Boolean.TRUE.equals(dto.getMobileEnabled())) {
+            Path mobileRoot = resolveRoot(dto.getFrontendRoot(), outputProperties.getFrontendRoot(),
+                    frontendModule + "-mobile");
+            vo.setMobilePath(mobileRoot.toString());
+            // micro 时 H5 代理指向网关（端口=服务端口+1），与 PC vue.config.js 同口径
+            int apiTarget = micro ? serverPort + 1 : serverPort;
+            String gwPrefix = StringUtils.hasText(dto.getGatewayPrefix())
+                    ? dto.getGatewayPrefix().trim() : "demo";
+            for (Map.Entry<String, String> e : mobileResources(project, apiTarget, gwPrefix).entrySet()) {
+                write(mobileRoot, e.getKey(), e.getValue(), "mobile", force, vo, counter);
+            }
+            vo.getNextSteps().add("移动端工程：cd " + mobileRoot + " && npm install && npm run dev:h5（H5 实机调试）；"
+                    + "小程序包 npm run build:mp-weixin，用微信开发者工具导入 dist/build/mp-weixin"
+                    + "（本地联调勾选「不校验合法域名」，发布前在 mp 后台配置 request 合法域名）");
         }
 
         vo.setWritten(counter[0]);
@@ -1386,6 +1406,45 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             return content.replace("__PKG__", pkg);
         } catch (java.io.IOException e) {
             throw new com.codegen.common.exception.BusinessException(500, "支付模块源码资源缺失：scaffold-pay/" + file);
+        }
+    }
+
+    // ============================ V6.5 移动端工程物料 ============================
+
+    /** mobile 工程骨架文件清单：显式枚举（classpath 资源无法可靠列目录，V6.3 scaffold-pay 同款取舍）。
+     * 注意 .gitignore 不走资源：dotfile 会被 jar 打包漏掉（S8 实测），内容内联在 mobileGitignore() */
+    private static final List<String> MOBILE_FILES = List.of(
+            "package.json", "vite.config.js", "index.html", "README.md",
+            "src/main.js", "src/App.vue", "src/manifest.json", "src/pages.json", "src/uni.scss",
+            "src/utils/request.js", "src/utils/tables.js", "src/store/user.js",
+            "src/pages/login/login.vue", "src/pages/index/index.vue",
+            "src/pages/dynamic/list.vue", "src/pages/dynamic/detail.vue", "src/pages/dynamic/form.vue",
+            "src/pages/todo/todo.vue", "src/pages/mine/mine.vue");
+
+    private Map<String, String> mobileResources(String project, int apiPort, String gwPrefix) {
+        Map<String, String> out = new java.util.LinkedHashMap<>();
+        for (String f : MOBILE_FILES) {
+            out.put(f, mobileResource(f, project, apiPort, gwPrefix));
+        }
+        out.put(".gitignore", mobileGitignore());
+        return out;
+    }
+
+    private String mobileGitignore() {
+        return "node_modules/\ndist/\n.hbuilderx/\n.DS_Store\n*.local\n";
+    }
+
+    /** 读 classpath scaffold-mobile/&lt;file&gt;，__PROJECT__/__API_PORT__/__GW__ 占位替换 */
+    private String mobileResource(String file, String project, int apiPort, String gwPrefix) {
+        try {
+            org.springframework.core.io.ClassPathResource resource =
+                    new org.springframework.core.io.ClassPathResource("scaffold-mobile/" + file);
+            String content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            return content.replace("__PROJECT__", project)
+                    .replace("__API_PORT__", String.valueOf(apiPort))
+                    .replace("__GW__", gwPrefix == null ? "" : gwPrefix);
+        } catch (java.io.IOException e) {
+            throw new com.codegen.common.exception.BusinessException(500, "移动端工程资源缺失：scaffold-mobile/" + file);
         }
     }
 

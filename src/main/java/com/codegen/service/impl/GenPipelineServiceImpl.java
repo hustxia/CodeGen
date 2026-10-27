@@ -526,6 +526,7 @@ public class GenPipelineServiceImpl implements GenPipelineService {
                 {"package_backend", "后端打包", "backend"},
                 {"deploy_backend", "后端启动", "backend"},
                 {"package_frontend", "前端依赖安装", "frontend"},
+                {"package_mobile", "移动端构建", "mobile"},
                 {"deploy_frontend", "前端启动", "frontend"},
                 {"health", "健康检查", "pipeline"}
         };

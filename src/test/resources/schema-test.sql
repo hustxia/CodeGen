@@ -207,6 +207,7 @@ CREATE TABLE `sys_project` (
   `flow_engine` varchar(16) DEFAULT NULL COMMENT '产物流程引擎：null/builtin=内置简易流，activiti=Activiti 8 引擎',
   `default_gen_deploy` tinyint DEFAULT NULL COMMENT '部署物默认:NULL=未配置(关) 1=生成 0=不生成',
   `pay_enabled` tinyint DEFAULT NULL COMMENT '支付能力包:NULL=未配置(关) 1=生成 0=不生成',
+  `mobile_enabled` tinyint DEFAULT NULL COMMENT '移动端工程:NULL=未配置(关) 1=生成 uni-app 单源 H5+微信小程序',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_project_code` (`project_code`,`deleted`),
   KEY `idx_default` (`is_default`)

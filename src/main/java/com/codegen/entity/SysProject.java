@@ -128,6 +128,12 @@ public class SysProject extends BaseEntity {
     private Integer payEnabled;
 
     /**
+     * V6.5 移动端支持系统级开关。NULL = 未配置，回落硬编码关（0）；
+     * 回落唯一实现 {@link com.codegen.util.GenTemplateModel#resolveMobile}。
+     */
+    private Integer mobileEnabled;
+
+    /**
      * 备注
      */
     private String remark;
