@@ -965,7 +965,9 @@ export default {
         { value: 'radio', label: '单选' },
         { value: 'switch', label: '开关' },
         { value: 'date', label: '日期' },
-        { value: 'datetime', label: '日期时间' }
+        { value: 'datetime', label: '日期时间' },
+        { value: 'image', label: '图片上传' },
+        { value: 'file', label: '文件上传' }
       ],
       switchDefs: [
         { key: 'genEntity', label: '生成 entity' },

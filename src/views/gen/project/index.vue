@@ -278,6 +278,8 @@ const defaultForm = () => ({
   payEnabled: null,
   // V6.5 移动端工程：null=未配置（关）
   mobileEnabled: null,
+  // V6.6 文件能力包：null=未配置（关）
+  fileEnabled: null,
   // 工程结构：null/''=单模块，'multi'=Maven 多模块（微服务就绪单体），'micro'=微服务设施（V6.0：五模块+Nacos/Gateway/Feign）
   projectStructure: '',
   // V6.1 流程引擎：null/''=内置简易流，'activiti'=Activiti 8（BPMN 翻译+待办中心）
@@ -326,6 +328,11 @@ const triStateDefs = [
     key: 'mobileEnabled',
     label: '移动端工程',
     tip: '开=生成 uni-app 移动端工程（{前端模块}-mobile，单源 H5+微信小程序）；关=不生成；未配置=关'
+  },
+  {
+    key: 'fileEnabled',
+    label: '文件能力包',
+    tip: '开=生成文件上传下载基座（sys_file + /file 端点 + ImageUpload/FileUpload 组件），html_type=图片/文件上传 的列自动带控件；关=不生成；未配置=关'
   }
 ]
 
