@@ -28,13 +28,23 @@ export const STRATEGY_OPTIONS = [
 export function resolveWriteFlags(mode) {
   switch (mode) {
     case STRATEGY_OVERWRITE:
-      return { overwrite: true, skipDrifted: false }
+      // V6.8：强制覆盖连「受保护文件」（既有但无台账快照，可能手写）一起覆盖。
+      // 只有这一档传 force=true——另外两档必须保留保护语义，否则手写代码会被静默吃掉。
+      return { overwrite: true, skipDrifted: false, force: true }
     case STRATEGY_SAFE:
-      return { overwrite: true, skipDrifted: true }
+      return { overwrite: true, skipDrifted: true, force: false }
     case STRATEGY_SKIP:
     default:
-      return { overwrite: false, skipDrifted: false }
+      return { overwrite: false, skipDrifted: false, force: false }
   }
+}
+
+/**
+ * 受保护文件数：存在但台账无快照（不是本平台写的，或台账丢失），
+ * 无法判断是否手写 → 非 force 策略下默认跳过。
+ */
+export function countProtected(rows) {
+  return asRows(rows).filter(r => r.protectedFile === true).length
 }
 
 /** 磁盘相对上次生成被改过的文件数 */

@@ -109,11 +109,12 @@ export function previewGenCode(ids) {
 
 // 写入磁盘，返回 [{ path, status, message, backupPath }]
 // skipDrifted：只写未漂移文件（磁盘已被手改的一律 SKIPPED），V4.2
-export function writeGenCode(ids, overwrite, skipDrifted) {
+export function writeGenCode(ids, overwrite, skipDrifted, force) {
   return request({
     url: '/gen/write',
     method: 'post',
-    data: { ids, overwrite, skipDrifted: !!skipDrifted }
+    // force 只在「强制覆盖」策略下为 true：覆盖受保护文件（既有但无台账快照）
+    data: { ids, overwrite, skipDrifted: !!skipDrifted, force: !!force }
   })
 }
 

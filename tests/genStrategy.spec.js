@@ -7,6 +7,7 @@ import {
   countDrifted,
   countDriftedOverwrite,
   countSkipped,
+  countProtected,
   strategyNote,
   rollbackDefaultSelection,
   isRollbackSelectable,
@@ -29,20 +30,20 @@ const ROWS = [
 
 describe('resolveWriteFlags：策略 → 请求参数', () => {
   it('skip 只写新增', () => {
-    expect(resolveWriteFlags(STRATEGY_SKIP)).toEqual({ overwrite: false, skipDrifted: false })
+    expect(resolveWriteFlags(STRATEGY_SKIP)).toEqual({ overwrite: false, skipDrifted: false, force: false })
   })
 
   it('safe 覆盖但跳过已手改', () => {
-    expect(resolveWriteFlags(STRATEGY_SAFE)).toEqual({ overwrite: true, skipDrifted: true })
+    expect(resolveWriteFlags(STRATEGY_SAFE)).toEqual({ overwrite: true, skipDrifted: true, force: false })
   })
 
-  it('overwrite 强制覆盖，不看漂移', () => {
-    expect(resolveWriteFlags(STRATEGY_OVERWRITE)).toEqual({ overwrite: true, skipDrifted: false })
+  it('overwrite 强制覆盖，不看漂移，并连受保护文件一起覆盖', () => {
+    expect(resolveWriteFlags(STRATEGY_OVERWRITE)).toEqual({ overwrite: true, skipDrifted: false, force: true })
   })
 
   it('未知策略按 skip 处理，宁可少写', () => {
-    expect(resolveWriteFlags('whatever')).toEqual({ overwrite: false, skipDrifted: false })
-    expect(resolveWriteFlags(undefined)).toEqual({ overwrite: false, skipDrifted: false })
+    expect(resolveWriteFlags('whatever')).toEqual({ overwrite: false, skipDrifted: false, force: false })
+    expect(resolveWriteFlags(undefined)).toEqual({ overwrite: false, skipDrifted: false, force: false })
   })
 })
 
@@ -148,5 +149,23 @@ describe('回滚动作展示', () => {
     expect(opText('UNKNOWN')).toBe('UNKNOWN')
     expect(opTagType('UNKNOWN')).toBe('info')
     expect(opText(undefined)).toBe('')
+  })
+})
+
+
+describe('countProtected：受保护文件（既有 + 无台账快照）', () => {
+  it('只统计 protectedFile=true 的行', () => {
+    const rows = [
+      { status: 'MODIFIED', protectedFile: true },
+      { status: 'MODIFIED', protectedFile: false },
+      { status: 'NEW' },
+      null
+    ]
+    expect(countProtected(rows)).toBe(1)
+  })
+
+  it('非数组/空值不抛错', () => {
+    expect(countProtected(null)).toBe(0)
+    expect(countProtected([])).toBe(0)
   })
 })

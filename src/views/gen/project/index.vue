@@ -179,6 +179,25 @@
           </div>
         </el-form-item>
 
+        <el-form-item label="应用显示名">
+          <el-input v-model="form.appName" placeholder="如 悦集商城；留空用系统名" />
+          <div class="form-tip">
+            生成产物的浏览器标题、侧边栏品牌区、登录页标题统一取这个值；留空回落到系统名
+          </div>
+        </el-form-item>
+
+        <el-form-item label="品牌主色">
+          <el-color-picker v-model="form.appThemeColor" />
+          <span class="brand-color-hint">{{ form.appThemeColor || '未配置（默认 #e1251b）' }}</span>
+          <div class="form-tip">
+            注入产物的 --app-primary 变量（品牌标记、登录按钮）；留空或非法值回落默认色
+          </div>
+        </el-form-item>
+
+        <el-form-item label="Logo 地址">
+          <el-input v-model="form.appLogo" placeholder="留空用内置 logo" />
+        </el-form-item>
+
         <el-form-item label="状态">
           <el-switch v-model="form.enabled" :active-value="1" :inactive-value="0" active-text="启用" />
         </el-form-item>
@@ -282,6 +301,10 @@ const defaultForm = () => ({
   fileEnabled: null,
   // V6.7 测试骨架：null=未配置（开）——方向与其它能力包相反，测试零运行时侵入
   testEnabled: null,
+  // V6.8 品牌外观：全部可空，空=回落（项目名 / 内置 logo / #e1251b）
+  appName: '',
+  appLogo: '',
+  appThemeColor: '',
   // 工程结构：null/''=单模块，'multi'=Maven 多模块（微服务就绪单体），'micro'=微服务设施（V6.0：五模块+Nacos/Gateway/Feign）
   projectStructure: '',
   // V6.1 流程引擎：null/''=内置简易流，'activiti'=Activiti 8（BPMN 翻译+待办中心）
@@ -464,6 +487,12 @@ export default {
 </script>
 
 <style scoped>
+/* V6.8 品牌主色：色块与说明同行，未配置时显示回落值 */
+.brand-color-hint {
+  margin-left: 10px;
+  color: #909399;
+  font-size: 12px;
+}
 /* 17 个开关的紧凑网格：放在系统弹窗里，两列就够，四列会把标签挤断 */
 .default-switch-grid {
   display: grid;

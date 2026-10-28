@@ -163,6 +163,10 @@
             <span>已手改（漂移）{{ skipDrifted ? '· 将跳过' : '' }}</span>
           </div>
           <div class="stat"><b class="c-gray">{{ statOf('UNCHANGED') }}</b><span>内容无变化</span></div>
+          <div class="stat">
+            <b class="c-red">{{ protectedCount }}</b>
+            <span>受保护（无台账快照·手写{{ overwrite && !writeFlags.force ? '· 将跳过' : '' }}）</span>
+          </div>
         </div>
         <div class="stat-note">
           {{ strategyNote }}
@@ -350,6 +354,7 @@ import {
   countDrifted,
   countDriftedOverwrite,
   countSkipped,
+  countProtected,
   strategyNote as buildStrategyNote
 } from '@/utils/genStrategy'
 
@@ -412,6 +417,10 @@ export default {
     /** 保守覆盖下会被跳过的「已手改」文件数 */
     driftedOverwriteCount() {
       return countDriftedOverwrite(this.allRows)
+    },
+    /** V6.8 受保护文件数：既有但台账无快照，无法判断是否手写 */
+    protectedCount() {
+      return countProtected(this.allRows)
     },
     strategyNote() {
       return buildStrategyNote(this.strategyMode, this.driftCount)
@@ -577,7 +586,7 @@ export default {
       this.menuResult = null
       this.verifyResult = null
       try {
-        const res = await writeGenCode(this.selectedIds(), this.overwrite, this.skipDrifted)
+        const res = await writeGenCode(this.selectedIds(), this.overwrite, this.skipDrifted, this.writeFlags.force)
         this.writeResults = res.data || []
         this.batchNo = (this.writeResults[0] && this.writeResults[0].batchNo) || ''
         this.writeDone = true
