@@ -241,6 +241,9 @@ public final class GenUtils {
         }
         // V6.6 文件能力包：varchar 列名带图片/文件语义 → 上传控件
         // （仅 String 列参与；用户在平台显式改回其他控件时 htmlType 已落库，不再走到推断）
+        if ("String".equals(jt) && looksLikeMultiImageColumn(columnName)) {
+            return "multiImage";
+        }
         if ("String".equals(jt) && looksLikeFileColumn(columnName)) {
             return looksLikeImageColumn(columnName) ? "image" : "file";
         }
@@ -275,6 +278,20 @@ public final class GenUtils {
         String n = columnName == null ? "" : columnName.toLowerCase(Locale.ROOT);
         return n.endsWith("_file") || n.equals("file") || n.endsWith("_attachment")
                 || n.equals("attachment") || n.endsWith("_annex") || n.equals("annex");
+    }
+
+    /**
+     * V6.8 多图列语义：列名以 <b>复数</b> 图片语义结尾 → JSON 数组字符串（如 {@code slider_images}）。
+     *
+     * <p>必须与 {@link #looksLikeImageColumn} 区分开：单数结尾是单图 URL（varchar 256），
+     * 复数结尾是 URL 数组的 JSON 串。判断顺序上 multiImage 先于单图，
+     * 否则 {@code *_images} 会被 {@code *_image} 之外的单图逻辑漏掉、按普通文本框渲染。
+     */
+    public static boolean looksLikeMultiImageColumn(String columnName) {
+        String n = columnName == null ? "" : columnName.toLowerCase(Locale.ROOT);
+        return n.equals("images") || n.equals("pics") || n.equals("photos") || n.equals("gallery")
+                || n.equals("slider_images") || n.endsWith("_images") || n.endsWith("_pics")
+                || n.endsWith("_photos") || n.endsWith("_gallery");
     }
 
     /**

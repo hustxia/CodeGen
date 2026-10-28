@@ -48,6 +48,13 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 ? dto.getFrontendModule().trim() : project + "-web";
         int serverPort = dto.getServerPort() == null ? 8080 : dto.getServerPort();
         int webPort = dto.getWebPort() == null ? serverPort + 1000 : dto.getWebPort();
+        // V6.8 品牌参数化：显示名/主色统一走 GenTemplateModel 的回落实现（唯一实现；
+        // 非法色值会回落默认色，避免把 "red;" 这类串拼进 CSS 打坏整页）
+        String appName = com.codegen.util.GenTemplateModel.resolveAppName(
+                dto.getAppName(), project, null);
+        String themeColor = com.codegen.util.GenTemplateModel.resolveThemeColor(dto.getAppThemeColor());
+        // V6.8 Logo：空 = favicon 用自带 placeholder.svg、品牌区用文字标识（不拼不存在的 logo.png）
+        String appLogo = com.codegen.util.GenTemplateModel.resolveAppLogo(dto.getAppLogo());
 
         Path backendRoot = resolveRoot(dto.getBackendRoot(), outputProperties.getBackendRoot(), backendModule);
         Path frontendRoot = resolveRoot(dto.getFrontendRoot(), outputProperties.getFrontendRoot(), frontendModule);
@@ -90,7 +97,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             // backendModule 默认取 projectName（用户常中文命名），中文直进 artifactId 产物 mvn 直接拒读。
             // 聚合坐标统一用 stem（rootPackage 最后一段，纯合法字符）；可读名放 <name>。
             String parentArtifactId = stem + "-parent";
-            write(backendRoot, "pom.xml", pomMultiParent(project, pkg, stem, backendModule, micro, activiti, payEnabled), "backend", force, vo, counter);
+            write(backendRoot, "pom.xml", pomMultiParent(appName, project, pkg, stem, backendModule, micro, activiti, payEnabled), "backend", force, vo, counter);
             write(backendRoot, stem + "-common/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "common",
                     dep("org.springframework.boot", "spring-boot-starter-web", null)
                             + dep("org.springframework.boot", "spring-boot-starter-validation", null)
@@ -161,7 +168,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                         remoteSampleClientJava(pkg, stem), "backend", force, vo, counter);
             }
         } else {
-            write(backendRoot, "pom.xml", pomXml(dto, project, pkg, backendModule, serverPort, activiti, payEnabled, testEnabled), "backend", force, vo, counter);
+            write(backendRoot, "pom.xml", pomXml(dto, appName, project, pkg, backendModule, serverPort, activiti, payEnabled, testEnabled), "backend", force, vo, counter);
         }
 
         String pkgPath = "src/main/java/" + pkg.replace('.', '/');
@@ -238,6 +245,18 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             write(bootRoot, "db/init_sys_user.sql", seedSql(),
                     "backend", force, vo, counter);
         }
+        // V6.8 字典脚手架（恒写）：建表 + 通用种子 + 只读接口。
+        // 之前生成页面的字典下拉依赖目标库「恰好已有」sys_dict_data，新库直接空下拉；
+        // 现在产物自带表结构与种子，接口挂在 /system/dict（白名单只读）。
+        write(bootRoot, "db/dict.sql", loadScaffoldResource("scaffold/dict.sql"),
+                "backend", force, vo, counter);
+        write(commonRoot, pkgPath + "/system/SysDictController.java",
+                dictControllerJava(pkg), "backend", force, vo, counter);
+        // V6.8 素材链路：static/img 里放一张默认图，/img/placeholder.svg 开箱即 200
+        // （白名单常驻 /img，前端 devServer 代理 /img 不剥前缀——三处都对上这条路径）
+        write(bootRoot, "src/main/resources/static/img/placeholder.svg",
+                loadScaffoldResource("scaffold/web/placeholder.svg"), "backend", force, vo, counter);
+
         // V6.1 流程基座（恒写）：修复 controller.ftl 引用 ${pkg}.common.flow.FlowService
         // 而基座从未生成的历史断裂——绑定 flow_code 的表生成产物此前编译不过。
         // 引擎实现二选一：builtin=移植平台简易流（无第三方依赖）；activiti=引擎实现 + 部署 Runner
@@ -340,7 +359,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         write(bootRoot, "src/main/resources/application-local.yml.example",
                 applicationLocalExample(pkg), "backend", force, vo, counter);
         write(bootRoot, ".gitignore", backendGitignore(), "backend", force, vo, counter);
-        write(bootRoot, "README.md", backendReadme(project, pkg, backendModule, serverPort),
+        write(bootRoot, "README.md", backendReadme(appName, pkg, backendModule, serverPort),
                 "backend", force, vo, counter);
 
         // ---------- 前端 ----------
@@ -357,14 +376,20 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             write(frontendRoot, ".env.development",
                     frontendEnvDev(proxyPort), "frontend", force, vo, counter);
             write(frontendRoot, ".env.production", frontendEnvProd(), "frontend", force, vo, counter);
-            write(frontendRoot, "public/index.html", frontendIndexHtml(project), "frontend", force, vo, counter);
+            write(frontendRoot, "public/index.html", frontendIndexHtml(appName, appLogo, themeColor),
+                    "frontend", force, vo, counter);
+            // V6.8 素材链路：产物自带占位图，图片列 onerror / el-image error 槽统一指向它，
+            // 种子数据里指向不存在文件的 URL 不再显示浏览器破图
+            write(frontendRoot, "public/placeholder.svg", loadScaffoldResource("scaffold/web/placeholder.svg"),
+                    "frontend", force, vo, counter);
             write(frontendRoot, "src/main.js", frontendMainJs(), "frontend", force, vo, counter);
             write(frontendRoot, "src/App.vue", frontendAppVue(), "frontend", force, vo, counter);
             write(frontendRoot, "src/utils/request.js", frontendRequestJs(), "frontend", force, vo, counter);
-            write(frontendRoot, "src/layout/index.vue", frontendLayoutVue(project), "frontend", force, vo, counter);
-            write(frontendRoot, "src/views/index.vue", frontendHomeVue(project), "frontend", force, vo, counter);
+            write(frontendRoot, "src/layout/index.vue", frontendLayoutVue(appName, appLogo, themeColor),
+                    "frontend", force, vo, counter);
+            write(frontendRoot, "src/views/index.vue", frontendHomeVue(appName), "frontend", force, vo, counter);
             // V5.0 F-07：登录页与路由守卫（401 跳转目标从 request.js 来）
-            write(frontendRoot, "src/views/login.vue", frontendLoginVue(project), "frontend", force, vo, counter);
+            write(frontendRoot, "src/views/login.vue", frontendLoginVue(appName, appLogo, themeColor), "frontend", force, vo, counter);
             write(frontendRoot, "src/router/index.js", frontendRouterJs(), "frontend", force, vo, counter);
             // 占位：route-sync 未跑前保证 webpack 能解析 import（后续被 GenMenuServiceImpl 整文件重建）
             write(frontendRoot, "src/router/gen-routes.js",
@@ -379,9 +404,12 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                         fileResource("ImageUpload.vue", pkg), "frontend", force, vo, counter);
                 write(frontendRoot, "src/components/FileUpload.vue",
                         fileResource("FileUpload.vue", pkg), "frontend", force, vo, counter);
+                // V6.8 多图字段：multiImage 列 import 这个组件（JSON 数组字符串 v-model）
+                write(frontendRoot, "src/components/MultiImageUpload.vue",
+                        fileResource("MultiImageUpload.vue", pkg), "frontend", force, vo, counter);
             }
             write(frontendRoot, ".gitignore", frontendGitignore(), "frontend", force, vo, counter);
-            write(frontendRoot, "README.md", frontendReadme(project, frontendModule, webPort, serverPort),
+            write(frontendRoot, "README.md", frontendReadme(appName, frontendModule, webPort, serverPort),
                     "frontend", force, vo, counter);
         }
 
@@ -1559,7 +1587,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
     // ============================ 模板内容 ============================
 
-    private String pomXml(GenScaffoldDTO dto, String project, String pkg, String module, int serverPort,
+    private String pomXml(GenScaffoldDTO dto, String appName, String project, String pkg, String module, int serverPort,
                           boolean activiti, boolean payEnabled, boolean testEnabled) {
         StringBuilder extras = new StringBuilder();
         if (dto.getExtraDependencies() != null) {
@@ -1602,7 +1630,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    <version>1.0.0</version>\n"
                 + "    <packaging>jar</packaging>\n"
                 + "    <name>" + module + "</name>\n"
-                + "    <description>" + project + " 后端服务（由 codegen-server 脚手架生成）</description>\n\n"
+                + "    <description>" + appName + " 后端服务（由 codegen-server 脚手架生成）</description>\n\n"
                 + "    <properties>\n"
                 + "        <java.version>21</java.version>\n"
                 + "        <maven.compiler.source>21</maven.compiler.source>\n"
@@ -1751,7 +1779,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
      * <p>V6.0 micro=true：追加 spring-cloud / spring-cloud-alibaba BOM（版本矩阵复用 shop 实测：
      * Boot 3.2.5 + cloud 2023.0.1 + alibaba 2023.0.1.0）与 gateway 模块条目。
      */
-    private String pomMultiParent(String project, String pkg, String stem, String backendModule, boolean micro, boolean activiti, boolean payEnabled) {
+    private String pomMultiParent(String appName, String project, String pkg, String stem, String backendModule, boolean micro, boolean activiti, boolean payEnabled) {
         String gatewayModule = micro
                 ? "        <module>" + stem + "-gateway</module>\n" : "";
         // V6.1 Activiti 8 制品不在 Maven 中央仓库（7.1.x 起），产物 pom 必须自带 Alfresco 仓库声明
@@ -1789,8 +1817,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "                <scope>import</scope>\n"
                 + "            </dependency>\n" : "";
         String description = micro
-                ? project + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务设施：Nacos/Gateway/Feign 默认关闭）"
-                : project + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务就绪单体）";
+                ? appName + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务设施：Nacos/Gateway/Feign 默认关闭）"
+                : appName + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务就绪单体）";
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
                 + "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -3139,6 +3167,9 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         String payWhiteEntry = payEnabled ? ",\n            \"/pay/notify\"" : "";
         // V6.6：图片直链 /uploads/** 是静态资源（img 标签/浏览器直开不带 token），必须进白名单
         String fileWhiteEntry = fileEnabled ? ",\n            \"/uploads\"" : "";
+        // V6.8 素材链路：/img（产物自带静态素材）+ /system/dict（只读字典）常驻白名单；
+        // /shop 预留给 V6.9 的 C 端公开接口，先放行空前缀不影响后台
+        String baseWhiteEntry = ",\n            \"/img\",\n            \"/system/dict\",\n            \"/shop\"";
         return "package " + pkg + ".common.config;\n\n"
                 + "import " + pkg + ".common.auth.PermissionChecker;\n"
                 + "import " + pkg + ".common.auth.TokenStore;\n"
@@ -3186,7 +3217,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "            \"/swagger-resources\",\n"
                 + "            \"/error\""
                 + payWhiteEntry
-                + fileWhiteEntry + "\n"
+                + fileWhiteEntry
+                + baseWhiteEntry + "\n"
                 + "    );\n\n"
                 + "    private final ObjectMapper objectMapper = new ObjectMapper();\n\n"
                 + "    @Override\n"
@@ -3813,6 +3845,55 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     /** V6.4 P0-4：登录日志只读查询（管理页 P1 接入） */
+    /**
+     * V6.8 字典只读接口：GET /system/dict/data/type/{code} → [{value,label}]。
+     *
+     * <p>用 JdbcTemplate 而不是实体+Mapper：字典表由 {@code db/dict.sql} 保证存在，
+     * 多一套实体只会多一处漂移面。表不存在/查询异常时返回空数组——下拉降级为空，
+     * 页面照常可用（前端本来就有「取不到就当空选项」的兜底）。
+     */
+    private String dictControllerJava(String pkg) {
+        return "package " + pkg + ".system;\n\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
+                + "import org.springframework.jdbc.core.JdbcTemplate;\n"
+                + "import org.springframework.web.bind.annotation.GetMapping;\n"
+                + "import org.springframework.web.bind.annotation.PathVariable;\n"
+                + "import org.springframework.web.bind.annotation.RequestMapping;\n"
+                + "import org.springframework.web.bind.annotation.RestController;\n\n"
+                + "import java.util.ArrayList;\n"
+                + "import java.util.LinkedHashMap;\n"
+                + "import java.util.List;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * 字典数据只读接口（V6.8 字典脚手架）：前端按 dict_code 取 value/label 列表。\n"
+                + " * 表结构与种子由 db/dict.sql 提供；端点在白名单里（/system/dict），免登录可读。\n"
+                + " */\n"
+                + "@RestController\n"
+                + "@RequestMapping(\"/system/dict\")\n"
+                + "public class SysDictController {\n\n"
+                + "    @Autowired\n"
+                + "    private JdbcTemplate jdbcTemplate;\n\n"
+                + "    @GetMapping(\"/data/type/{code}\")\n"
+                + "    public List<Map<String, String>> byType(@PathVariable(\"code\") String code) {\n"
+                + "        List<Map<String, String>> out = new ArrayList<>();\n"
+                + "        try {\n"
+                + "            for (Map<String, Object> row : jdbcTemplate.queryForList(\n"
+                + "                    \"SELECT dict_value, dict_label FROM sys_dict_data \"\n"
+                + "                            + \"WHERE dict_code = ? AND deleted = 0 ORDER BY sort, id\", code)) {\n"
+                + "                Map<String, String> item = new LinkedHashMap<>();\n"
+                + "                item.put(\"value\", String.valueOf(row.get(\"dict_value\")));\n"
+                + "                item.put(\"label\", String.valueOf(row.get(\"dict_label\")));\n"
+                + "                out.add(item);\n"
+                + "            }\n"
+                + "        } catch (Exception e) {\n"
+                + "            // 表没建/库抖动：返回空列表，前端下拉为空但页面不炸\n"
+                + "            return List.of();\n"
+                + "        }\n"
+                + "        return out;\n"
+                + "    }\n"
+                + "}\n";
+    }
+
     private String loginLogControllerJava(String pkg) {
         return "package " + pkg + ".system;\n\n"
                 + "import org.springframework.beans.factory.annotation.Autowired;\n"
@@ -3971,12 +4052,16 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "SELECT u.id, 1 FROM sys_user u WHERE u.username = 'admin';\n";
     }
 
-    private String frontendLoginVue(String project) {
+    private String frontendLoginVue(String appName, String appLogo, String themeColor) {
         // V6.4：登录页带算术验证码（GET /auth/captcha，60s 一次性，点图刷新）
+        // V6.8：品牌 Logo 置于标题上方（空则整行不出现，不留空洞）
+        String logoTag = appLogo == null || appLogo.isBlank() ? ""
+                : "      <img class=\"login-logo\" src=\"" + appLogo + "\" alt=\"" + appName + "\" />\n";
         return "<template>\n"
                 + "  <div class=\"login-wrap\">\n"
                 + "    <el-card class=\"login-card\">\n"
-                + "      <h2>" + project + "</h2>\n"
+                + logoTag
+                + "      <h2>" + appName + "</h2>\n"
                 + "      <el-form @submit.native.prevent=\"doLogin\">\n"
                 + "        <el-form-item>\n"
                 + "          <el-input v-model=\"form.username\" placeholder=\"用户名\" />\n"
@@ -3990,7 +4075,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "            <img v-if=\"captchaImage\" :src=\"captchaImage\" class=\"captcha-img\" title=\"点击刷新\" @click=\"loadCaptcha\" />\n"
                 + "          </div>\n"
                 + "        </el-form-item>\n"
-                + "        <el-button type=\"primary\" :loading=\"loading\" native-type=\"submit\" style=\"width:100%\">登 录</el-button>\n"
+                + "        <el-button type=\"primary\" :loading=\"loading\" native-type=\"submit\" style=\"width:100%; background:" + themeColor + "; border-color:" + themeColor + "\">登 录</el-button>\n"
                 + "      </el-form>\n"
                 + "      <p class=\"tip\">默认账号 admin / admin123</p>\n"
                 + "    </el-card>\n"
@@ -4044,6 +4129,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "<style scoped>\n"
                 + ".login-wrap { display: flex; align-items: center; justify-content: center; height: 100vh; background: #f0f2f5; }\n"
                 + ".login-card { width: 360px; text-align: center; }\n"
+                + ".login-logo { width: 56px; height: 56px; object-fit: contain; margin-bottom: 6px; }\n"
                 + ".captcha-row { display: flex; gap: 8px; width: 100%; }\n"
                 + ".captcha-img { height: 40px; cursor: pointer; border-radius: 4px; }\n"
                 + ".tip { color: #999; font-size: 12px; margin-bottom: 0; }\n"
@@ -4266,6 +4352,13 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         // api.js 的路径带 /api/{gatewayPrefix}（给网关预留），本地直连后端没有网关，
         // 代理必须把这段前缀剥掉，否则后端收到 /api/demo/xxx 全部 404
         // V6.6 文件能力包：图片直链 /uploads/** 在后端，dev 必须单独代理（不剥任何前缀）
+        // V6.8 素材链路：/img/** 是产物自带的静态素材（resources/static/img），dev 必须代理；
+        // 漏了这一条整页图片都会落到 dev server 自己身上变成 404 → 全站占位图
+        String imgProxy = ",\n      // 静态素材（后端 resources/static/img），漏配会整页显示占位图\n"
+                + "      '/img': {\n"
+                + "        target: 'http://127.0.0.1:" + serverPort + "',\n"
+                + "        changeOrigin: true\n"
+                + "      }";
         String uploadsProxy = fileEnabled
                 ? ",\n      '/uploads': {\n"
                 + "        target: 'http://127.0.0.1:" + serverPort + "',\n"
@@ -4285,7 +4378,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        changeOrigin: true,\n"
                 + "        // http-proxy-middleware 多条 pathRewrite 不保证顺序执行，合并成一条正则\n"
                 + "        pathRewrite: { '^/dev-api(/api/" + gatewayPrefix + ")?': '' }\n"
-                + "      }" + uploadsProxy + "\n"
+                + "      }" + imgProxy + uploadsProxy + "\n"
                 + "    }\n"
                 + "  }\n"
                 + "})\n";
@@ -4312,14 +4405,20 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "VUE_APP_BASE_API = '/prod-api'\n";
     }
 
-    private String frontendIndexHtml(String project) {
+    private String frontendIndexHtml(String appName, String appLogo, String themeColor) {
+        // favicon 必须指向真的存在的文件：空 Logo 回落 placeholder.svg（脚手架必写），
+        // 历史上写死的 logo.png 从来没有被生成过，等于每个新工程都挂一个 404
+        String favicon = appLogo == null || appLogo.isBlank()
+                ? com.codegen.util.GenTemplateModel.FALLBACK_APP_LOGO : appLogo;
         return "<!DOCTYPE html>\n"
                 + "<html lang=\"zh-CN\">\n"
                 + "<head>\n"
                 + "  <meta charset=\"utf-8\">\n"
                 + "  <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n"
                 + "  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n"
-                + "  <title>" + project + "</title>\n"
+                + "  <title>" + appName + "</title>\n"
+                + "  <link rel=\"icon\" href=\"" + favicon + "\">\n"
+                + "  <style>:root { --app-primary: " + themeColor + "; }</style>\n"
                 + "</head>\n"
                 + "<body>\n"
                 + "  <noscript>请启用 JavaScript 后继续访问。</noscript>\n"
@@ -4432,12 +4531,17 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "export default service\n";
     }
 
-    private String frontendLayoutVue(String project) {
-        String name = project == null || project.isBlank() ? "业务系统" : project;
+    private String frontendLayoutVue(String appName, String appLogo, String themeColor) {
+        String name = appName == null || appName.isBlank() ? "业务系统" : appName;
         String initial = name.length() > 1 ? name.substring(0, 1) : name;
+        // 品牌区二选一：配了 Logo 用图，没配用首字标识（绝不留空占位）
+        String brandMark = appLogo == null || appLogo.isBlank()
+                ? "<div class=\"brand-mark\">" + initial + "</div>"
+                : "<img class=\"brand-logo\" src=\"" + appLogo + "\" alt=\"" + name + "\">";
         return loadScaffoldResource("scaffold/web/layout.vue")
-                .replace("__PROJECT_INITIAL__", initial)
-                .replace("__PROJECT__", name);
+                .replace("__BRAND_MARK__", brandMark)
+                .replace("__PROJECT__", name)
+                .replace("__THEME_COLOR__", themeColor);
     }
 
     /**

@@ -196,13 +196,15 @@ public class GenCodeServiceImpl implements GenCodeService {
         }
         boolean overwrite = Boolean.TRUE.equals(dto.getOverwrite());
         boolean skipDrifted = Boolean.TRUE.equals(dto.getSkipDrifted());
+        // V6.8：受保护文件（既有 + 无台账快照）默认跳过，只有显式 force 才覆盖
+        boolean force = Boolean.TRUE.equals(dto.getForce());
         // 台账只取一次：逐文件查库会把「一个批次几十个文件」放大成几十次往返，
         // 而且同一批次内台账不会变，缓存一份没有一致性风险
         Map<String, GenDriftService.LedgerSnapshot> ledger = genDriftService.latestByPath();
         List<GenWriteVO> results = new ArrayList<>();
         for (GenTable table : loadTablesInOrder(ids)) {
             int before = results.size();
-            results.addAll(writeTable(table, overwrite, skipDrifted, batchNo, ledger));
+            results.addAll(writeTable(table, overwrite, skipDrifted, force, batchNo, ledger));
             // 只看本表新增的结果：用累计 results 判断会让「第一张表写过」之后
             // 每张表都被打上生成时间，last_gen_time 直接失去意义
             boolean wrote = results.subList(before, results.size()).stream()
@@ -246,7 +248,7 @@ public class GenCodeServiceImpl implements GenCodeService {
                 // 不再顶头，改 contains 判定（前端路径不会含 backendBase 包路径段）
                 // V6.5 移动端：relPath 前缀 mobile/ = 第三侧 MOBILE
                 boolean isMobile = relPath.startsWith("mobile/");
-                boolean isBackend = !isMobile && relPath.contains(backendBase + "/");
+                boolean isBackend = !isMobile && GenPathResolver.isBackendRelPath(relPath, backendBase);
                 String root = isBackend ? backendRootOf(table)
                         : isMobile ? mobileRootOf(table) : frontendRootOf(table);
                 if (!StringUtils.hasText(root)) {
@@ -295,6 +297,9 @@ public class GenCodeServiceImpl implements GenCodeService {
                 // 「会不会被写入」取决于用户在第③步选的 overwrite 策略，由调用方推导，
                 // 不能混进 status——同一份差异不该因策略不同而变脸。
                 vo.setStatus(isNew ? "NEW" : (stats[0] + stats[1] == 0 ? "UNCHANGED" : "MODIFIED"));
+                // V6.8：既有文件但台账无快照 → 无法判断是否手改过，按受保护处理（与写盘侧同一判定）。
+                // 内容一致的文件无需写盘，不算受保护，否则第二次 dryRun 会冒出无意义的「受保护 N」。
+                vo.setProtectedFile(!isNew && snap == null && stats[0] + stats[1] > 0);
                 if (onlyChanged && "UNCHANGED".equals(vo.getStatus())) {
                     continue;
                 }
@@ -315,7 +320,7 @@ public class GenCodeServiceImpl implements GenCodeService {
      * @param batchNo 非空时，覆盖前先备份到 {@code <root>/.gen-backup/<batchNo>/} 并把
      *                备份路径、覆盖前 md5 一并记入 {@code gen_output} 台账
      */
-    private List<GenWriteVO> writeTable(GenTable table, boolean overwrite, boolean skipDrifted,
+    private List<GenWriteVO> writeTable(GenTable table, boolean overwrite, boolean skipDrifted, boolean force,
                                         String batchNo,
                                         Map<String, GenDriftService.LedgerSnapshot> ledger) {
         // 先解析目标模块，否则 backendBase 还是库里的旧值，后端文件会被误判成前端文件
@@ -333,7 +338,7 @@ public class GenCodeServiceImpl implements GenCodeService {
                 // V5.5 多模块：模块目录前缀在 relPath 最前面，同 diffTable 改 contains 判定
                 // V6.5 移动端：relPath 前缀 mobile/ = 第三侧 MOBILE，落 frontendModule-mobile 工程
                 boolean isMobile = relPath.startsWith("mobile/");
-                boolean isBackend = !isMobile && relPath.contains(backendBase + "/");
+                boolean isBackend = !isMobile && GenPathResolver.isBackendRelPath(relPath, backendBase);
                 String group = isBackend ? "backend" : isMobile ? "mobile" : "frontend";
                 String root = isBackend ? backendRootOf(table)
                         : isMobile ? mobileRootOf(table) : frontendRootOf(table);
@@ -373,6 +378,18 @@ public class GenCodeServiceImpl implements GenCodeService {
                     String drift = genDriftService.judge(snap == null ? null : snap.md5(), currentMd5);
                     if (GenDriftService.DRIFTED.equals(drift)) {
                         String msg = "磁盘内容已手改（漂移），按「只写未漂移」策略跳过";
+                        recordOutput(batchNo, table, group, relPath, target.toString(), "SKIPPED", 0, "",
+                                msg, null, currentMd5);
+                        results.add(new GenWriteVO(table.getTableName(), relPath, "SKIPPED", msg));
+                        continue;
+                    }
+                }
+                // V6.8 受保护跳过：文件已存在但没有台账快照，说明它可能是用户手写的，
+                // 也可能台账丢过——两种情况都不该静默覆盖。要覆盖必须显式 force。
+                if (exists && overwrite && !force) {
+                    GenDriftService.LedgerSnapshot snap = ledger.get(target.toString());
+                    if (snap == null) {
+                        String msg = "既有文件且无台账快照（视为手改资产），按受保护跳过；确认要覆盖请传 force=true";
                         recordOutput(batchNo, table, group, relPath, target.toString(), "SKIPPED", 0, "",
                                 msg, null, currentMd5);
                         results.add(new GenWriteVO(table.getTableName(), relPath, "SKIPPED", msg));

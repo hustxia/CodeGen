@@ -2,6 +2,7 @@ package com.codegen.service.impl;
 
 import com.codegen.config.GenOutputProperties;
 import com.codegen.dto.GenApplyDTO;
+import com.codegen.dto.GenDiffDTO;
 import com.codegen.dto.GenMenuRegisterDTO;
 import com.codegen.dto.GenRollbackDTO;
 import com.codegen.dto.GenWriteDTO;
@@ -17,6 +18,8 @@ import com.codegen.util.GenDigestUtils;
 import com.codegen.vo.GenApplyStageVO;
 import com.codegen.vo.GenApplyVO;
 import com.codegen.vo.GenCheckIssueVO;
+import com.codegen.vo.GenDiffVO;
+import com.codegen.vo.GenImpactVO;
 import com.codegen.vo.GenRollbackVO;
 import com.codegen.vo.GenSelfCheckVO;
 import com.codegen.vo.GenWriteVO;
@@ -107,6 +110,8 @@ public class GenApplyServiceImpl implements GenApplyService {
         boolean syncRoute = dto.getSyncRoute() == null || Boolean.TRUE.equals(dto.getSyncRoute());
         boolean runCompile = Boolean.TRUE.equals(dto.getCompile());
         boolean skipCheck = Boolean.TRUE.equals(dto.getSkipCheck());
+        // V6.8：受保护文件（既有 + 无台账快照）默认跳过，force=true 才覆盖
+        boolean force = Boolean.TRUE.equals(dto.getForce());
 
         GenApplyVO result = new GenApplyVO();
         String batchNo = "GEN" + LocalDateTime.now().format(BATCH_FORMAT);
@@ -150,7 +155,14 @@ public class GenApplyServiceImpl implements GenApplyService {
         }
 
         if (dryRun) {
-            result.stage(new GenApplyStageVO("WRITE", "SKIPPED", "dryRun：只自检，不写盘不注册", 0L));
+            // V6.8：dryRun 不再只回一句「不写盘」，要给文件级影响面——
+            // 新增/修改/未变/受保护四类计数 + 逐文件明细，重生成前先看清会动什么
+            GenImpactVO impact = impactOf(ids);
+            result.setImpact(impact);
+            result.stage(new GenApplyStageVO("WRITE", "SKIPPED",
+                    String.format("dryRun：新增 %d，修改 %d，未变 %d，受保护跳过 %d（共 %d 个文件），不写盘不注册",
+                            impact.getNewCount(), impact.getModifiedCount(), impact.getUnchangedCount(),
+                            impact.getProtectedCount(), impact.getTotal()), 0L));
             result.setPassed(Boolean.TRUE.equals(check.isPassed()));
             result.setWritten(0);
             result.setSkipped(0);
@@ -164,11 +176,14 @@ public class GenApplyServiceImpl implements GenApplyService {
         GenWriteDTO writeDto = new GenWriteDTO();
         writeDto.setIds(ids);
         writeDto.setOverwrite(overwrite);
+        writeDto.setForce(force);
         List<GenWriteVO> files = genCodeService.writeToDisk(writeDto, batchNo);
         result.setFiles(files);
         int written = (int) files.stream().filter(f -> "WRITTEN".equals(f.getStatus())).count();
         int skipped = (int) files.stream().filter(f -> "SKIPPED".equals(f.getStatus())).count();
         int failed = (int) files.stream().filter(f -> "ERROR".equals(f.getStatus())).count();
+        // 写盘结果里「受保护」被记为 SKIPPED，影响面用同一份判定回填，避免两处口径不一致
+        result.setImpact(impactOf(ids));
         result.setWritten(written);
         result.setSkipped(skipped);
         result.setFailed(failed);
@@ -590,6 +605,39 @@ public class GenApplyServiceImpl implements GenApplyService {
      * 可选编译：在后端仓库根目录执行 mvn compile。
      * 输出重定向到临时文件，避免大输出把管道写满导致 waitFor 死锁。
      */
+    /**
+     * V6.8 计算重生成影响面：复用差异引擎（预览/差异/ZIP 同一个渲染源），
+     * onlyChanged=false 才能拿到「未变」计数，否则汇总永远缺一块。
+     */
+    private GenImpactVO impactOf(List<Long> ids) {
+        GenDiffDTO diffDto = new GenDiffDTO();
+        diffDto.setIds(ids);
+        diffDto.setOverwrite(Boolean.TRUE);
+        diffDto.setOnlyChanged(Boolean.FALSE);
+        List<GenDiffVO> diffs = genCodeService.diff(diffDto);
+        GenImpactVO impact = new GenImpactVO();
+        impact.setTotal(diffs.size());
+        for (GenDiffVO d : diffs) {
+            GenImpactVO.File f = new GenImpactVO.File();
+            f.setTableName(d.getTableName());
+            f.setPath(d.getPath());
+            f.setStatus(d.getStatus());
+            f.setProtectedFile(Boolean.TRUE.equals(d.getProtectedFile()));
+            f.setAdditions(d.getAdditions());
+            f.setDeletions(d.getDeletions());
+            impact.getFiles().add(f);
+            switch (String.valueOf(d.getStatus())) {
+                case "NEW" -> impact.setNewCount(impact.getNewCount() + 1);
+                case "MODIFIED" -> impact.setModifiedCount(impact.getModifiedCount() + 1);
+                default -> impact.setUnchangedCount(impact.getUnchangedCount() + 1);
+            }
+            if (f.isProtectedFile()) {
+                impact.setProtectedCount(impact.getProtectedCount() + 1);
+            }
+        }
+        return impact;
+    }
+
     private GenApplyStageVO compileStage(List<Long> ids, long started) {
         String root = resolveBackendRoot(ids);
         if (!StringUtils.hasText(root)) {

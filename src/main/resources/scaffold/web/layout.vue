@@ -3,7 +3,7 @@
     <!-- 一级：系统栏，只展示系统本身 -->
     <aside class="rail">
       <div class="brand">
-        <div class="brand-mark">__PROJECT_INITIAL__</div>
+        __BRAND_MARK__
       </div>
       <div class="rail-list">
         <div
@@ -206,6 +206,10 @@ export default {
 </script>
 
 <style>
+/* V6.8 品牌主色：唯一来源是 sys_project.app_theme_color（空则 #e1251b），脚手架只替换这一个变量 */
+:root {
+  --app-primary: __THEME_COLOR__;
+}
 .layout {
   position: relative;
   display: flex;
@@ -237,11 +241,19 @@ export default {
   line-height: 34px;
   text-align: center;
   border-radius: 10px;
-  background: linear-gradient(135deg, #4d7cfe 0%, #6f5bf0 100%);
+  background: var(--app-primary);
   color: #fff;
   font-weight: 700;
   font-size: 15px;
-  box-shadow: 0 4px 12px rgba(77, 124, 254, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+.brand-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #fff;
+  padding: 3px;
 }
 .rail-list {
   flex: 1;

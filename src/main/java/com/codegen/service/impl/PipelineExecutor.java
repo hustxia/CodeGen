@@ -288,6 +288,11 @@ public class PipelineExecutor {
         dto.setMobileEnabled(com.codegen.util.GenTemplateModel.resolveMobile(project.getMobileEnabled()));
         // V6.6：文件能力包开关（回落唯一实现 resolveFile）
         dto.setFileEnabled(com.codegen.util.GenTemplateModel.resolveFile(project.getFileEnabled()));
+        // V6.8：品牌三项原样下发（回落统一在 GenTemplateModel.resolveAppName/resolveThemeColor，
+        // 这里只搬运，不重复实现回落逻辑）
+        dto.setAppName(project.getAppName());
+        dto.setAppLogo(project.getAppLogo());
+        dto.setAppThemeColor(project.getAppThemeColor());
         // V6.7：测试骨架开关（回落唯一实现 resolveTest，缺省开——只写 src/test 零运行时侵入）
         dto.setTestEnabled(com.codegen.util.GenTemplateModel.resolveTest(project.getTestEnabled()));
         GenScaffoldVO vo = scaffoldService.scaffold(dto);

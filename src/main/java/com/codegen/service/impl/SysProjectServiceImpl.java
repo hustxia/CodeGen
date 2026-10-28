@@ -243,6 +243,12 @@ public class SysProjectServiceImpl implements SysProjectService {
         projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
                 .eq(SysProject::getId, project.getId())
                 .set(SysProject::getTestEnabled, project.getTestEnabled()));
+        // V6.8 同款修复：品牌三项都是「空=回落」语义，null 必须能存回去（清空品牌要生效）
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getAppName, project.getAppName())
+                .set(SysProject::getAppLogo, project.getAppLogo())
+                .set(SysProject::getAppThemeColor, project.getAppThemeColor()));
     }
 
     @Override

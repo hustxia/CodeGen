@@ -35,4 +35,9 @@ public class GenWriteDTO implements Serializable {
      * 想强推就关掉它——但那时至少用户是知道自己在做什么的。
      */
     private Boolean skipDrifted;
+
+    /**
+     * V6.8 强制覆盖受保护文件（既有 + 无台账快照）。默认 false。
+     */
+    private Boolean force;
 }

@@ -240,6 +240,42 @@ public final class GenTemplateModel {
     }
 
     /**
+     * V6.8 品牌主色的回落唯一实现：配置值 → 硬编码 {@code #e1251b}。
+     * <p>只做格式宽松校验（{@code #rgb}/{@code #rrggbb}），非法值回落默认色，
+     * 避免把 {@code red;} 这类串直接拼进 CSS 变量打坏整个页面。
+     */
+    public static String resolveThemeColor(String projectVal) {
+        if (projectVal == null) {
+            return DEFAULT_THEME_COLOR;
+        }
+        String v = projectVal.trim();
+        return v.matches("^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$") ? v : DEFAULT_THEME_COLOR;
+    }
+
+    /**
+     * V6.8 应用显示名的回落唯一实现：配置值 → 项目名 → 项目编码。
+     */
+    public static String resolveAppName(String projectVal, String projectName, String projectCode) {
+        return firstText(projectVal, projectName, projectCode, "应用");
+    }
+
+    /**
+     * V6.8 品牌 Logo：空 = 调用方自行回落（favicon 用 {@link #FALLBACK_APP_LOGO}，
+     * 侧边栏/登录页用文字标识）。绝不回落成不存在的 logo.png——那会让每个新工程的 favicon 都是 404。
+     */
+    public static final String FALLBACK_APP_LOGO = "placeholder.svg";
+
+    public static String resolveAppLogo(String projectVal) {
+        return projectVal == null ? "" : projectVal.trim();
+    }
+
+    /** V6.8 图片展示尺寸的唯一定义源（模板只消费模型键，禁止再写死像素） */
+    public static final int IMAGE_LIST_SIZE = 80;
+    public static final int IMAGE_DETAIL_SIZE = 120;
+    /** 主题默认色（与后台既有主色一致） */
+    public static final String DEFAULT_THEME_COLOR = "#e1251b";
+
+    /**
      * 构建完整渲染模型（无子表）
      */
     public static Map<String, Object> build(GenTable table, List<GenTableColumn> cols) {
@@ -337,6 +373,10 @@ public final class GenTemplateModel {
         m.put("isMicro", microStructure);
         m.put("apiBase", microStructure ? "/" + module
                 : prefix.isEmpty() ? "/" + module : "/api/" + prefix + "/" + module);
+        // V6.8 字典等「非模块级」接口的前缀根：
+        // apiBase 带模块段（/api/{prefix}/{module}），字典是全局接口，必须去掉模块段再拼。
+        // 空前缀（直连 + dev 代理剥 /dev-api）时为 ""，micro（网关按 /{module} 路由）也为 ""。
+        m.put("apiRoot", microStructure || prefix.isEmpty() ? "" : "/api/" + prefix);
 
         // 原始开关
         m.put("genEntity", on(table.getGenEntity()));
@@ -593,6 +633,11 @@ public final class GenTemplateModel {
         m.put("fileEnabled", fileOn);
         m.put("hasUpload", fileOn && (hasUploadColumn(toModel(biz))
                 || childrenModel.stream().anyMatch(GenTemplateModel::childHasUpload)));
+        // V6.8 图片展示尺寸与多图标记：唯一实现在 GenTemplateModel，模板只消费（禁止再写死 44/64px）
+        m.put("imageListSize", IMAGE_LIST_SIZE);
+        m.put("imageDetailSize", IMAGE_DETAIL_SIZE);
+        boolean hasMultiImage = biz.stream().anyMatch(c -> GenUtils.looksLikeMultiImageColumn(c.getColumnName()));
+        m.put("hasMultiImage", fileOn && hasMultiImage);
 
         // ===== P3-2 多对多 =====
         // 中间表本身不需要一整套 CRUD 页面：它是关系，不是实体。
@@ -820,10 +865,9 @@ public final class GenTemplateModel {
         return gcm;
     }
 
-    /** 列模型是否带上传控件标记（html_type 配置/推断为 image 或 file） */
+    /** 列模型是否带上传控件标记（image / file / multiImage，V6.8 起含多图） */
     private static boolean isUploadColumn(Object colModel) {
-        return colModel instanceof Map<?, ?> cm
-                && (Boolean.TRUE.equals(cm.get("isImage")) || Boolean.TRUE.equals(cm.get("isFile")));
+        return colModel instanceof Map<?, ?> cm && Boolean.TRUE.equals(cm.get("isUpload"));
     }
 
     private static boolean hasUploadColumn(List<?> columnModels) {
@@ -1136,6 +1180,10 @@ public final class GenTemplateModel {
             // V6.6 文件能力包：图片/文件上传控件派生标志（唯一实现在此，模板只消费）
             cm.put("isImage", "image".equals(htmlType));
             cm.put("isFile", "file".equals(htmlType));
+            // V6.8 多图字段：JSON 数组字符串列，列表取首图、详情/表单渲染多图组件
+            cm.put("isMultiImage", "multiImage".equals(htmlType));
+            // 上传类控件统一标志（image/file/multiImage）——统计口径只认这一个，避免各处各写一遍
+            cm.put("isUpload", "image".equals(htmlType) || "file".equals(htmlType) || "multiImage".equals(htmlType));
             // P1-2 列宽自适应：按控件类型与宽度语义给默认值，避免所有列等宽
             cm.put("colWidth", columnWidth(c, htmlType, javaType));
             cm.put("dictType", hasDict ? dictType.trim() : "");

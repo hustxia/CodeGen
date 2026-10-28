@@ -149,6 +149,24 @@ public class SysProject extends BaseEntity {
     private Integer testEnabled;
 
     /**
+     * V6.8 品牌参数化：应用显示名（title / 侧边栏 / 登录页 / README 统一取这一个值）。
+     * <p>空 = 回落 {@code projectName}，存量项目零 diff。
+     */
+    private String appName;
+
+    /**
+     * V6.8 品牌参数化：Logo 图片 URL（产物 {@code public/logo.png} 的远程替代）。
+     * <p>空 = 使用脚手架内置 logo。
+     */
+    private String appLogo;
+
+    /**
+     * V6.8 品牌参数化：主题主色（如 {@code #e1251b}）。
+     * <p>空 = 回落 {@code #e1251b}。唯一回落实现 {@link com.codegen.util.GenTemplateModel#resolveThemeColor}。
+     */
+    private String appThemeColor;
+
+    /**
      * 备注
      */
     private String remark;

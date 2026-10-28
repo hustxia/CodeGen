@@ -209,6 +209,35 @@ public final class GenPathResolver {
     }
 
     /**
+     * 产物相对路径是否属于后端（main 与 test 两侧都要认）。
+     *
+     * <p>{@code backendBase} 只覆盖 {@code src/main/java/<pkg>}，测试产物的基路径是
+     * {@code src/test/java/<pkg>}（见 GenTemplateModel 的 backendTestBase 推导），两者字符串不同。
+     * 早先只判 {@code relPath.contains(backendBase + "/")}，测试类与 schema 资源因此被判成前端产物，
+     * 写进前端仓库的模块目录下（V6.8 S8 实测：{@code demo-web/demo-server/src/test/...}）。
+     */
+    public static boolean isBackendRelPath(String relPath, String backendBase) {
+        if (relPath == null || relPath.isEmpty()) {
+            return false;
+        }
+        if (StringUtils.hasText(backendBase)) {
+            if (relPath.startsWith(backendBase + "/") || relPath.contains(backendBase + "/")) {
+                return true;
+            }
+            // 多模块：模块目录在前，其后紧跟 src/main 或 src/test 都算后端
+            int srcIdx = backendBase.indexOf("/src/");
+            String modulePrefix = srcIdx > 0 ? backendBase.substring(0, srcIdx) : "";
+            if (!modulePrefix.isEmpty()
+                    && (relPath.startsWith(modulePrefix + "/src/main/")
+                    || relPath.startsWith(modulePrefix + "/src/test/"))) {
+                return true;
+            }
+        }
+        // 单模块：后端路径直接从 src/main|src/test 起头（前端是 src/api、src/views…）
+        return relPath.startsWith("src/main/") || relPath.startsWith("src/test/");
+    }
+
+    /**
      * 多模块时的相对路径前缀：{@code <stem>-<module>/}，插在产物 relPath 最前面
      * （backendBase 是包路径 src/main/java/...，模块目录在其工程根一层）。
      * 单模块、非后端产物（moduleOfTpl 为 null）、stem 为空时返回空串。

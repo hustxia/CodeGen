@@ -83,6 +83,15 @@ public class GenScaffoldDTO {
     @Schema(description = "V6.7 是否生成测试骨架（src/test 集成测试 + H2 内存库，打开即 mvn test 全绿），默认 true；multi/micro 工程暂不支持（P1）")
     private Boolean testEnabled;
 
+    @Schema(description = "V6.8 应用显示名（title/侧边栏/登录页统一取它）；空=回落到项目名")
+    private String appName;
+
+    @Schema(description = "V6.8 Logo 图片 URL；空=使用内置 logo")
+    private String appLogo;
+
+    @Schema(description = "V6.8 主题主色（#rgb / #rrggbb）；空或非法=回落 #e1251b")
+    private String appThemeColor;
+
     @Schema(description = "V6.1 需下发的流程定义（平台不直连产物库，由调用方查询组装）；空=只写流程表 DDL")
     private java.util.List<FlowDef> flowDefs;
 

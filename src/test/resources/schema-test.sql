@@ -210,6 +210,9 @@ CREATE TABLE `sys_project` (
   `mobile_enabled` tinyint DEFAULT NULL COMMENT '移动端工程:NULL=未配置(关) 1=生成 uni-app 单源 H5+微信小程序',
   `file_enabled` tinyint DEFAULT NULL COMMENT '文件能力包:NULL=未配置(关) 1=生成上传下载基座 0=不生成',
   `test_enabled` tinyint DEFAULT NULL COMMENT '测试骨架:NULL=未配置(开) 1=生成集成测试骨架 0=不生成',
+  `app_name` varchar(64) DEFAULT NULL COMMENT '应用显示名(空=项目名)',
+  `app_logo` varchar(255) DEFAULT NULL COMMENT 'Logo图片URL(空=内置logo)',
+  `app_theme_color` varchar(16) DEFAULT NULL COMMENT '主题主色(空=#e1251b)',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_project_code` (`project_code`,`deleted`),
   KEY `idx_default` (`is_default`)
