@@ -200,7 +200,7 @@
             <el-select
               v-model="form[sw.key]"
               clearable
-              placeholder="未配置（关）"
+              :placeholder="sw.placeholder || '未配置（关）'"
               size="mini"
               style="width: 150px"
             >
@@ -280,6 +280,8 @@ const defaultForm = () => ({
   mobileEnabled: null,
   // V6.6 文件能力包：null=未配置（关）
   fileEnabled: null,
+  // V6.7 测试骨架：null=未配置（开）——方向与其它能力包相反，测试零运行时侵入
+  testEnabled: null,
   // 工程结构：null/''=单模块，'multi'=Maven 多模块（微服务就绪单体），'micro'=微服务设施（V6.0：五模块+Nacos/Gateway/Feign）
   projectStructure: '',
   // V6.1 流程引擎：null/''=内置简易流，'activiti'=Activiti 8（BPMN 翻译+待办中心）
@@ -333,6 +335,12 @@ const triStateDefs = [
     key: 'fileEnabled',
     label: '文件能力包',
     tip: '开=生成文件上传下载基座（sys_file + /file 端点 + ImageUpload/FileUpload 组件），html_type=图片/文件上传 的列自动带控件；关=不生成；未配置=关'
+  },
+  {
+    key: 'testEnabled',
+    label: '测试骨架',
+    placeholder: '未配置（生成）',
+    tip: '生成=产物自带集成测试（每业务表一份 CRUD 测试，H2 内存库，打开即可 mvn test 全绿）；不生成=产物无 src/test 目录；未配置=生成（默认，与其他开关方向相反）。multi/micro 工程暂不支持'
   }
 ]
 
