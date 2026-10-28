@@ -57,6 +57,9 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         boolean multi = GenPathResolver.isMultiLike(dto.getProjectStructure());
         // V6.0 微服务设施：multi 基础上追加 gateway 模块 + Nacos/OpenFeign 设施（默认关，两栖运行）
         boolean micro = GenPathResolver.isMicro(dto.getProjectStructure());
+        // V6.7 产物测试出厂：缺省开（只写 src/test，零运行时侵入）；
+        // multi/micro 产物启动类在 bootstrap、业务类在 service，跨模块 @SpringBootTest 落点待 P1，先关保证不产坏文件
+        boolean testEnabled = !Boolean.FALSE.equals(dto.getTestEnabled()) && !multi;
         String stem = GenNaming.multiModuleStem(pkg);
         // 基座类（common/system 包）落 common 模块；启动类/yml/db 脚本落 bootstrap 模块；单模块两者都是 backendRoot
         Path commonRoot = multi ? backendRoot.resolve(stem + "-common") : backendRoot;
@@ -158,7 +161,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                         remoteSampleClientJava(pkg, stem), "backend", force, vo, counter);
             }
         } else {
-            write(backendRoot, "pom.xml", pomXml(dto, project, pkg, backendModule, serverPort, activiti, payEnabled), "backend", force, vo, counter);
+            write(backendRoot, "pom.xml", pomXml(dto, project, pkg, backendModule, serverPort, activiti, payEnabled, testEnabled), "backend", force, vo, counter);
         }
 
         String pkgPath = "src/main/java/" + pkg.replace('.', '/');
@@ -302,6 +305,28 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             vo.getNextSteps().add("文件能力包：上传目录默认 ./uploads（yml file.upload-dir 可改）；"
                     + "首次启动前导入 db/file.sql 建 sys_file 表（流水线自动导入），"
                     + "生成页面里 html_type=图片/文件上传 的列自动带上传控件与缩略图预览");
+        }
+        // V6.7 产物测试出厂：testEnabled 开启才生成（缺省开；multi/micro 已在上方置关）。
+        // src/test 全套：H2 测试 profile + 基座表 DDL + 登录态基类；业务表测试与建表在 /gen/apply 按表落盘。
+        // pom 测试依赖（starter-test + h2）随 pomXml 注入，本块只写文件
+        if (testEnabled) {
+            write(bootRoot, "src/test/resources/application-test.yml",
+                    testResource("application-test.yml", pkg), "backend", force, vo, counter);
+            write(bootRoot, "src/test/resources/schema/base.sql",
+                    testResource("base.sql", pkg), "backend", force, vo, counter);
+            if (payEnabled) {
+                write(bootRoot, "src/test/resources/schema/pay.sql",
+                        testResource("pay.sql", pkg), "backend", force, vo, counter);
+            }
+            if (fileEnabled) {
+                write(bootRoot, "src/test/resources/schema/file.sql",
+                        testResource("file.sql", pkg), "backend", force, vo, counter);
+            }
+            write(bootRoot, "src/test/java/" + pkg.replace('.', '/') + "/LoginStateTestSupport.java",
+                    testResource("LoginStateTestSupport.java", pkg), "backend", force, vo, counter);
+            vo.getNextSteps().add("测试骨架：cd " + bootRoot + " && mvn test（H2 内存库，无需外部 MySQL）；"
+                    + "业务表的集成测试在代码生成（/gen/apply）时逐表落盘到 src/test；"
+                    + "关掉请在 系统管理→项目 里把「测试骨架」设为不生成后重新脚手架");
         }
         write(bootRoot, "src/main/resources/application.yml",
                 applicationYml(dto, pkg, project, serverPort, stem, micro, payEnabled, fileEnabled),
@@ -1450,6 +1475,20 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     /**
+     * V6.7 产物测试出厂：读 scaffold-test/ 资源（fileResource 同款；__PKG__ 占位替换）。
+     * 每次改 scaffold-test/ 后必须重打包平台 jar 再 scaffold（V6.6 实测坑：平台读的是 jar 内资源）。
+     */
+    private String testResource(String file, String pkg) {
+        try {
+            org.springframework.core.io.ClassPathResource resource = new org.springframework.core.io.ClassPathResource("scaffold-test/" + file);
+            String content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            return content.replace("__PKG__", pkg);
+        } catch (java.io.IOException e) {
+            throw new com.codegen.common.exception.BusinessException(500, "测试骨架资源缺失：scaffold-test/" + file);
+        }
+    }
+
+    /**
      * V6.4：文件基座端点映射——上传/下载登录即可；文件管理（列表/删除）收紧为权限点。
      *
      * <p>page/delete 若也放「登录即可」，任意登录用户就能翻全量文件元数据、删他人文件记录（IDOR）。
@@ -1520,7 +1559,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
     // ============================ 模板内容 ============================
 
-    private String pomXml(GenScaffoldDTO dto, String project, String pkg, String module, int serverPort, boolean activiti, boolean payEnabled) {
+    private String pomXml(GenScaffoldDTO dto, String project, String pkg, String module, int serverPort,
+                          boolean activiti, boolean payEnabled, boolean testEnabled) {
         StringBuilder extras = new StringBuilder();
         if (dto.getExtraDependencies() != null) {
             for (String coord : dto.getExtraDependencies()) {
@@ -1609,10 +1649,24 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        <!-- 生成物 Controller 的 Excel 导入导出 -->\n"
                 + dep("org.apache.poi", "poi-ooxml", "5.2.5")
                 + extras
+                // V6.7 测试骨架：均 test scope，不进产物运行时 classpath
+                + (testEnabled
+                    ? dep("org.springframework.boot", "spring-boot-starter-test", null)
+                        + dep("com.h2database", "h2", null)
+                    : "")
                 + "    </dependencies>\n\n"
                 + "    <build>\n"
                 + "        <finalName>${project.artifactId}</finalName>\n"
                 + "        <plugins>\n"
+                // V6.7 spike 实测：本 POM 不继承 starter-parent，surefire 落到 Maven 默认 2.12.4
+                // 不识别 JUnit 5，mvn test 静默跑 0 个用例——显式钉到 3.1.2（testEnabled 时才需要）
+                + (testEnabled
+                    ? "            <plugin>\n"
+                    + "                <groupId>org.apache.maven.plugins</groupId>\n"
+                    + "                <artifactId>maven-surefire-plugin</artifactId>\n"
+                    + "                <version>3.1.2</version>\n"
+                    + "            </plugin>\n"
+                    : "")
                 + "            <!-- 必须保留 -parameters：Spring MVC 靠参数名绑定 @RequestParam/@PathVariable。\n"
                 + "                 本 POM 未继承 spring-boot-starter-parent，不显式声明会导致运行时\n"
                 + "                 \"Name for argument of type [X] not specified\" —— 所有带参接口 500 -->\n"

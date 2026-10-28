@@ -141,6 +141,14 @@ public class SysProject extends BaseEntity {
     private Integer fileEnabled;
 
     /**
+     * V6.7 产物测试出厂系统级开关。NULL = 未配置，回落硬编码<b>开</b>（1）；
+     * 回落唯一实现 {@link com.codegen.util.GenTemplateModel#resolveTest}。
+     * <p>方向与其它能力包相反：测试只写 src/test 目录，零运行时侵入，默认开收益最大。
+     * <p>三态可空同款约定（V4.4 教训）；保存时显式 SET（updateById NOT_NULL 不写 null）。
+     */
+    private Integer testEnabled;
+
+    /**
      * 备注
      */
     private String remark;

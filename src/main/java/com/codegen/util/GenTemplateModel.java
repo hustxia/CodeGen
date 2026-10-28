@@ -115,29 +115,29 @@ public final class GenTemplateModel {
     public record ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                                 String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                                 String projectStructure, Integer payEnabled, Integer mobileEnabled,
-                                Integer fileEnabled) {
+                                Integer fileEnabled, Integer testEnabled) {
 
         /** 兼容 V3.0 之前的构造：无系统编码，权限点不加前缀 */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage) {
-            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V3.0 构造：无级联默认值（V4.4 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage, String projectCode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V4.4 构造：无打印默认值（V4.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null, null, null, null);
         }
 
         /** 兼容 V4.5 构造：无工程结构（V5.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, null, null, null, null);
+                    defaultGenPrint, null, null, null, null, null);
         }
 
         /** 兼容 V6.2 构造：无支付开关（V6.3 前的调用方） */
@@ -145,7 +145,7 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, null, null, null);
+                    defaultGenPrint, projectStructure, null, null, null, null);
         }
 
         /** 兼容 V6.3/V6.4 构造：无移动端开关（V6.5 前的调用方） */
@@ -153,7 +153,7 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure, Integer payEnabled) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, payEnabled, null, null);
+                    defaultGenPrint, projectStructure, payEnabled, null, null, null);
         }
 
         /** 兼容 V6.5 构造：无文件能力开关（V6.6 前的调用方） */
@@ -161,7 +161,16 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure, Integer payEnabled, Integer mobileEnabled) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, null);
+                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, null, null);
+        }
+
+        /** 兼容 V6.6 构造：无测试骨架开关（V6.7 前的调用方） */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                             String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
+                             String projectStructure, Integer payEnabled, Integer mobileEnabled,
+                             Integer fileEnabled) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
+                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, fileEnabled, null);
         }
     }
 
@@ -222,6 +231,15 @@ public final class GenTemplateModel {
     }
 
     /**
+     * V6.7 测试骨架开关的回落唯一实现：系统级 → 硬编码<b>开</b>。
+     * 与 resolvePay/resolveFile 方向相反：测试只写 src/test 目录，零运行时侵入，
+     * 没有理由默认关；test_enabled=0 才显式关闭。
+     */
+    public static boolean resolveTest(Integer projectVal) {
+        return projectVal == null || projectVal == 1;
+    }
+
+    /**
      * 构建完整渲染模型（无子表）
      */
     public static Map<String, Object> build(GenTable table, List<GenTableColumn> cols) {
@@ -261,6 +279,15 @@ public final class GenTemplateModel {
         String prefix = firstText(table.getGatewayPrefix(), project == null ? null : project.gatewayPrefix(),
                 "");
         String backendBase = orDefault(table.getBackendPath(), "src/main/java/" + pkg.replace('.', '/'));
+        // V6.7 测试骨架落点：与 backendBase 同根推导（src/main/java → src/test/java|resources）。
+        // backendPath 自定义值不含 src/main/java 段时（罕见）按同前缀 + "-test" 兜底，
+        // 生成 nextSteps 里会提示核对路径，避免静默写错位置
+        String testJavaBase = backendBase.contains("src/main/java")
+                ? backendBase.replaceFirst("src/main/java", "src/test/java")
+                : backendBase + "-test";
+        String testResBase = backendBase.contains("src/main/java")
+                ? backendBase.replaceFirst("src/main/java", "src/test/resources")
+                : backendBase + "-test/resources";
         // 根包名不进 gen_table（它是工程级属性），所以只看系统 → 全局静态值
         String effectiveRootPkg = firstText(project == null ? null : project.rootPackage(), rootPkg);
         // 权限点前缀只在多系统场景需要；单系统（无 project）保持原样，避免存量页面权限码全变
@@ -288,6 +315,8 @@ public final class GenTemplateModel {
         m.put("pkg", pkg);
         m.put("rootPkg", effectiveRootPkg);
         m.put("backendBase", backendBase);
+        m.put("testJavaBase", testJavaBase);
+        m.put("testResBase", testResBase);
         m.put("className", className);
         m.put("varName", decap(className));
         m.put("tableName", table.getTableName());
@@ -340,6 +369,8 @@ public final class GenTemplateModel {
         m.put("columns", bizModels);
         m.put("queryColumns", toModel(queryCols));
         m.put("vueQueryColumns", toModel(vueQueryCols));
+        // V6.7 测试建表模板需要全量业务列（formColumns 只是 is_form 子集）
+        m.put("bizCols", toModel(biz));
         m.put("listColumns", toModel(listCols));
         m.put("formColumns", toModel(formCols));
 
@@ -459,6 +490,15 @@ public final class GenTemplateModel {
         // 本表作为子表：唯一外键字段
         boolean isChild = table.getMasterTableId() != null && table.getMasterTableId() > 0;
         m.put("isChild", isChild);
+        // V6.7 测试骨架：开关 + 出 Controller 的非从表 + 单模块工程才生成（multi/micro 启动类在
+        // bootstrap、业务类在 service，跨模块 @SpringBootTest 落点 P1 再支持，先保证不产坏文件）。
+        // 门控结果只算一次，引擎与模板只认结果（genPrint 同款约定）
+        boolean multiStructure = project != null
+                && ("multi".equals(orDefault(project.projectStructure(), ""))
+                    || "micro".equals(orDefault(project.projectStructure(), "")));
+        boolean testOn = resolveTest(project == null ? null : project.testEnabled()) && !multiStructure;
+        m.put("testEnabled", testOn);
+        m.put("hasControllerTest", testOn && on(table.getGenController()) && !isChild);
         m.put("masterFkColumn", isChild ? orDefault(table.getMasterForeignKey(), "") : "");
         m.put("masterFkField", isChild ? GenUtils.toCamel(orDefault(table.getMasterForeignKey(), "")) : "");
         m.put("masterFkInForm", isChild && formCols.stream().anyMatch(c -> c.getColumnName() != null
@@ -619,6 +659,9 @@ public final class GenTemplateModel {
                 .filter(c -> c.getUniqueFlag() != null && c.getUniqueFlag() == 1).toList();
         m.put("hasUnique", !uniqueCols.isEmpty());
         m.put("uniqueColumns", toModel(uniqueCols));
+        // V6.7 集成测试新增/修改 body：Java 侧算好 Java 表达式文本（模板只输出不拼 JSON，
+        // FreeMarker 里手拼转义引号必然翻车）；唯一列值运行时随机防测试互撞
+        m.put("testFieldsJsonExpr", testFieldsJsonExpr(formCols, uniqueCols));
         // 单列唯一时才做前端异步查重（联合唯一不适合逐字段实时校验）
         m.put("hasSingleUnique", uniqueCols.size() == 1);
 
@@ -635,6 +678,72 @@ public final class GenTemplateModel {
         m.put("scopeColumn", scopeCol == null ? "" : scopeCol.getColumnName());
         m.put("scopeType", scopeCol == null ? "" : scopeCol.getDataScope().trim());
         return m;
+    }
+
+    /**
+     * V6.7 产物测试出厂：集成测试新增/修改 body 的 Java 表达式文本。
+     * 选列 = is_form 且必填，再补首个字符串列（保证 update 有可改字段）；
+     * 值按 javaType 给最小合法字面量；唯一列的值运行时随机（suffix()）防测试互撞唯一键。
+     * 返回的是「Java 源码表达式」，如 {@code "{\"name\":\"it\",\"age\":1}"}，
+     * 含唯一列时为 {@code "{\"name\":\"" + suffix() + "\",\"age\":1}"}。
+     */
+    private static String testFieldsJsonExpr(List<GenTableColumn> formCols, List<GenTableColumn> uniqueCols) {
+        List<GenTableColumn> chosen = new ArrayList<>();
+        for (GenTableColumn c : formCols) {
+            if (on(c.getIsRequired())) {
+                chosen.add(c);
+            }
+        }
+        if (chosen.stream().noneMatch(c -> "String".equals(c.getJavaType()))) {
+            for (GenTableColumn c : formCols) {
+                if ("String".equals(c.getJavaType()) && !chosen.contains(c)) {
+                    chosen.add(c);
+                    break;
+                }
+            }
+        }
+        if (chosen.isEmpty()) {
+            return "\"{\\\"_gen_it\\\":1}\"";
+        }
+        java.util.Set<String> uniqueFields = new java.util.LinkedHashSet<>();
+        for (GenTableColumn c : uniqueCols) {
+            uniqueFields.add(c.getJavaField());
+        }
+        StringBuilder json = new StringBuilder("{");
+        for (int i = 0; i < chosen.size(); i++) {
+            GenTableColumn c = chosen.get(i);
+            if (i > 0) {
+                json.append(',');
+            }
+            json.append('"').append(c.getJavaField()).append("\":");
+            String jt = c.getJavaType() == null ? "String" : c.getJavaType();
+            if ("parentId".equals(c.getJavaField())) {
+                json.append('0');   // 树表根节点约定
+            } else if (uniqueFields.contains(c.getJavaField()) && "String".equals(jt)) {
+                json.append("@U@");
+            } else if (uniqueFields.contains(c.getJavaField())) {
+                json.append("@N@");
+            } else if ("String".equals(jt)) {
+                json.append("\"it\"");
+            } else if ("LocalDate".equals(jt)) {
+                json.append("\"2026-01-01\"");
+            } else if ("LocalDateTime".equals(jt)) {
+                json.append("\"2026-01-01T00:00:00\"");
+            } else if ("LocalTime".equals(jt)) {
+                json.append("\"00:00:00\"");
+            } else if ("Boolean".equals(jt)) {
+                json.append("true");
+            } else {
+                json.append('1');   // Integer/Long/BigDecimal 等数值
+            }
+        }
+        json.append('}');
+        // 转 Java 字符串字面量：引号转义后嵌引号成表达式；唯一列占位符换成运行时拼接
+        String escaped = json.toString().replace("\"", "\\\"");
+        String expr = "\"" + escaped + "\"";
+        expr = expr.replace("\\\"@U@\\\"", "\\\" + suffix() + \\\"");
+        expr = expr.replace("@N@", "\" + (System.nanoTime() % 1000000) + \"");
+        return expr;
     }
 
     /**

@@ -277,6 +277,14 @@ public class GenTemplateEngine {
         if (Boolean.TRUE.equals(model.get("genPrint"))) {
             put(files, "printPage", resolver, model, project);
         }
+        // V6.7 产物测试出厂：hasControllerTest（开关+出Controller的非从表）与 testEnabled&&genEntity
+        // 都在模型里算好，引擎只认结果。测试文件只调 generated 端点，从表随主表一起被测
+        if (Boolean.TRUE.equals(model.get("hasControllerTest"))) {
+            put(files, "crudControllerTest", resolver, model, project);
+        }
+        if (Boolean.TRUE.equals(model.get("testEnabled")) && GenTemplateModel.on(table.getGenEntity()) && !isChild) {
+            put(files, "testSchemaTable", resolver, model, project);
+        }
         return files;
     }
 

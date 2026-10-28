@@ -288,6 +288,8 @@ public class PipelineExecutor {
         dto.setMobileEnabled(com.codegen.util.GenTemplateModel.resolveMobile(project.getMobileEnabled()));
         // V6.6：文件能力包开关（回落唯一实现 resolveFile）
         dto.setFileEnabled(com.codegen.util.GenTemplateModel.resolveFile(project.getFileEnabled()));
+        // V6.7：测试骨架开关（回落唯一实现 resolveTest，缺省开——只写 src/test 零运行时侵入）
+        dto.setTestEnabled(com.codegen.util.GenTemplateModel.resolveTest(project.getTestEnabled()));
         GenScaffoldVO vo = scaffoldService.scaffold(dto);
 
         // 种子 SQL：脚手架带出 db/init_sys_user.sql（admin/admin123），导入到目标库

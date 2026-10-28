@@ -1,0 +1,14 @@
+package com.demo.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.demo.entity.DemoTag;
+
+/**
+ * 标签 Service
+ */
+public interface DemoTagService extends IService<DemoTag> {
+
+    // <gen:begin key="service-body">
+    // <gen:end key="service-body">
+    // ===== 以下为手写区：自定义方法写在这里，重新生成不会被覆盖 =====
+}

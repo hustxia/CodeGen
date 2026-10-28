@@ -133,12 +133,35 @@ class GenTemplateBaselineTest {
         compare("file", modelFile());
     }
 
+    @Test
+    @DisplayName("test：测试骨架（simple 同表 + testEnabled=1）的 15 个产物（13 + 集成测试/H2建表）")
+    void test() {
+        compareWithTestExtras("test", modelTest());
+    }
+
     // ------------------------------------------------------------------
     // 比对与更新
     // ------------------------------------------------------------------
 
     private void compare(String caseName, Map<String, Object> model) {
+        compareRendered(caseName, renderAll(model));
+    }
+
+    /** V6.7 test 场景用：在 13 个固定模板之外追加测试骨架两模板后比对 */
+    private void compareWithTestExtras(String caseName, Map<String, Object> model) {
         Map<String, String> actual = renderAll(model);
+        for (String tpl : List.of("crudControllerTest", "testSchemaTable")) {
+            String content = read(tplDir.resolve(tpl + ".ftl"));
+            try {
+                actual.put(tpl, normalize(GenTemplateEngine.renderString(content, model)));
+            } catch (Exception ex) {
+                fail("渲染模板 " + tpl + " 失败：" + ex.getMessage());
+            }
+        }
+        compareRendered(caseName, actual);
+    }
+
+    private void compareRendered(String caseName, Map<String, String> actual) {
         List<String> updated = new ArrayList<>();
         List<String> problems = new ArrayList<>();
 
@@ -498,6 +521,41 @@ class GenTemplateBaselineTest {
         return c;
     }
 
+    /** V6.7 测试骨架场景：simple 同表 + testEnabled=1（缺省开），钉住集成测试与 H2 建表脚本 */
+    private static Map<String, Object> modelTest() {
+        GenTable table = baseTable("demo_tag", "标签", "DemoTag", "tag");
+        List<GenTableColumn> cols = new ArrayList<>();
+        cols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        cols.add(col("tag_name", "标签名称", "varchar(50)", "tagName", "String", 0, 1, 1, "LIKE", 1, 1, 2));
+        cols.add(col("sort_no", "排序", "int", "sortNo", "Integer", 0, 0, 0, "EQ", 1, 1, 3));
+        GenTemplateModel.ProjectConfig project = new GenTemplateModel.ProjectConfig(
+                null, null, "com.codegen", "demo", null, null, null, null, null, null, 1);
+        return GenTemplateModel.build(table, cols, (java.util.List<GenTemplateModel.ChildInfo>) null, project);
+    }
+
+    @Test
+    void hasControllerTestGatedBySwitch() {
+        GenTable table = baseTable("demo_tag", "标签", "DemoTag", "tag");
+        List<GenTableColumn> cols = new ArrayList<>();
+        cols.add(col("id", "主键", "bigint", "id", "Long", 1, 0, 0, "EQ", 0, 0, 1));
+        cols.add(col("tag_name", "标签名称", "varchar(50)", "tagName", "String", 0, 1, 1, "LIKE", 1, 1, 2));
+        // 缺省（null）= 开
+        Map<String, Object> on = GenTemplateModel.build(table, cols, (java.util.List<GenTemplateModel.ChildInfo>) null,
+                new GenTemplateModel.ProjectConfig(null, null, "com.codegen", "demo",
+                        null, null, null, null, null, null, null));
+        assertTrue(Boolean.TRUE.equals(on.get("hasControllerTest")), "test_enabled 未配置（NULL）必须默认开");
+        // 显式关闭
+        Map<String, Object> off = GenTemplateModel.build(table, cols, (java.util.List<GenTemplateModel.ChildInfo>) null,
+                new GenTemplateModel.ProjectConfig(null, null, "com.codegen", "demo",
+                        null, null, null, null, null, null, 0));
+        assertTrue(Boolean.FALSE.equals(off.get("hasControllerTest")), "test_enabled=0 必须关闭测试骨架");
+        // multi/micro 不出测试（启动类在 bootstrap，跨模块 @SpringBootTest 落点 P1）
+        Map<String, Object> multi = GenTemplateModel.build(table, cols, (java.util.List<GenTemplateModel.ChildInfo>) null,
+                new GenTemplateModel.ProjectConfig(null, null, "com.codegen", "demo",
+                        null, null, "multi", null, null, null, 1));
+        assertTrue(Boolean.FALSE.equals(multi.get("hasControllerTest")), "multi 工程暂不出测试骨架（P1）");
+    }
+
     /** 兜底：基线目录里出现多余文件时提示（改名/删模板后遗留） */
     @Test
     @DisplayName("基线目录没有孤儿文件")
@@ -506,9 +564,14 @@ class GenTemplateBaselineTest {
             return;
         }
         List<String> known = new ArrayList<>();
-        for (String caseName : List.of("simple", "relation", "master-detail", "master-multichild", "multi", "micro", "flow", "pay", "file")) {
+        for (String caseName : List.of("simple", "relation", "master-detail", "master-multichild", "multi", "micro", "flow", "pay", "file", "test")) {
             for (String tpl : TEMPLATES) {
                 known.add(caseName + "/" + tpl + ".txt");
+            }
+            // V6.7 test 场景在 13 个固定模板外追加测试骨架两模板（compareWithTestExtras 同源）
+            if ("test".equals(caseName)) {
+                known.add("test/crudControllerTest.txt");
+                known.add("test/testSchemaTable.txt");
             }
         }
         try (Stream<Path> walk = Files.walk(baselineRoot)) {
