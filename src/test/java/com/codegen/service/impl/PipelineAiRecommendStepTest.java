@@ -4,6 +4,7 @@ import com.codegen.common.exception.BusinessException;
 import com.codegen.config.GenPipelineProperties;
 import com.codegen.entity.GenPipeline;
 import com.codegen.service.AiRecommendService;
+import com.codegen.vo.GenAiRecommendPreviewVO;
 import com.codegen.vo.GenAiRecommendVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -44,9 +45,32 @@ class PipelineAiRecommendStepTest {
     }
 
     private PipelineExecutor executor(GenPipelineProperties props, AiRecommendService svc) {
-        // 步骤只依赖 props 与 aiRecommendService，其余协作者本用例不触达
+        // 步骤只依赖 props 与 aiRecommendService，其余协作者本用例不触达（第 17 位 aiRecommendService，第 18 位 aiModelService）
         return new PipelineExecutor(null, null, null, null, null, null, null, props,
-                null, null, null, null, null, null, null, null, svc);
+                null, null, null, null, null, null, null, null, svc, null);
+    }
+
+    /**
+     * AiRecommendService 有三个方法、不是函数式接口，lambda 赋值编译不过；
+     * 本用例只触达 recommend，preview/apply 抛 AssertionError 防误调。
+     */
+    private AiRecommendService recommendStub(java.util.function.Function<Long, GenAiRecommendVO> fn) {
+        return new AiRecommendService() {
+            @Override
+            public GenAiRecommendVO recommend(Long projectId) {
+                return fn.apply(projectId);
+            }
+
+            @Override
+            public GenAiRecommendPreviewVO preview(Long pipelineId) {
+                throw new AssertionError("步骤执行不应调用 preview");
+            }
+
+            @Override
+            public int apply(Long pipelineId, com.codegen.dto.GenAiRecommendApplyDTO dto) {
+                throw new AssertionError("步骤执行不应调用 apply");
+            }
+        };
     }
 
     private GenPipeline pipeline() {
@@ -60,9 +84,9 @@ class PipelineAiRecommendStepTest {
     @Test
     @DisplayName("AC-1：AI 未启用 → 抛出 skipped 降级信号，不调 AI、不写产物")
     void aiDisabledMarkedSkipped() {
-        AiRecommendService svc = projectId -> {
+        AiRecommendService svc = recommendStub(projectId -> {
             throw new AssertionError("AI 未启用时不应发起推荐调用");
-        };
+        });
         PipelineExecutor executor = executor(props(false), svc);
 
         PipelineExecutor.AiRecommendDegradedException e = assertThrows(
@@ -75,9 +99,9 @@ class PipelineAiRecommendStepTest {
     @Test
     @DisplayName("AC-5：AI 调用失败 → 抛出 failed-degraded 降级信号（pipeline 继续）")
     void aiFailureMarkedFailedDegraded() {
-        AiRecommendService svc = projectId -> {
+        AiRecommendService svc = recommendStub(projectId -> {
             throw new BusinessException(500, "AI 请求失败（超时或网络异常）");
-        };
+        });
         PipelineExecutor executor = executor(props(true), svc);
 
         PipelineExecutor.AiRecommendDegradedException e = assertThrows(
@@ -107,7 +131,7 @@ class PipelineAiRecommendStepTest {
         vo.getMenus().add(ms);
         vo.getDrops().add("表 wms_stock 列 name：dictType「x」不在平台字典中");
 
-        AiRecommendService svc = projectId -> vo;
+        AiRecommendService svc = recommendStub(projectId -> vo);
         PipelineExecutor executor = executor(props(true), svc);
 
         String message = executor.stepAiRecommend(pipeline());
