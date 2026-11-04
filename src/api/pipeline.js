@@ -78,3 +78,13 @@ export function fixPipelineLint(id) {
 export function seedPipeline(id) {
   return request({ url: `/gen/pipeline/${id}/seed`, method: 'post', timeout: 300000 })
 }
+
+// V7.0 AI 建议预览：与现值 diff（只读，零写库）
+export function aiRecommendPreview(id) {
+  return request({ url: `/gen/pipeline/${id}/ai-recommend/preview`, method: 'get', timeout: 300000 })
+}
+
+// V7.0 AI 建议应用：只传勾选清单，建议值以服务端产物为准
+export function aiRecommendApply(id, data) {
+  return request({ url: `/gen/pipeline/${id}/ai-recommend/apply`, method: 'post', data, timeout: 300000 })
+}
