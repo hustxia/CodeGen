@@ -125,9 +125,10 @@
         <div class="seed-bar">
           <el-radio-group v-model="form.seedMode" size="small">
             <el-radio label="rule">规则生成示例数据（推荐）</el-radio>
+            <el-radio label="ai">AI 增强（贴合业务）</el-radio>
             <el-radio label="off">跳过</el-radio>
           </el-radio-group>
-          <div class="seed-tip">规则生成：建表后按外键依赖自动灌入中文示例数据（主数据 12 行、单据 8 行、明细跟随主表），枚举/唯一/必填约束全部满足，单次上限 2000 行。</div>
+          <div class="seed-tip">规则生成：建表后按外键依赖自动灌入中文示例数据（主数据 12 行、单据 8 行、明细跟随主表），枚举/唯一/必填约束全部满足，单次上限 2000 行。AI 增强：由 AI 依据系统名与表结构生成业务贴合的值池（商品名/公司名/备注等），约束仍由规则保证；AI 失败自动回落规则词库，需已配置 pipeline.ai。</div>
         </div>
 
         <div style="margin-top: 12px">
