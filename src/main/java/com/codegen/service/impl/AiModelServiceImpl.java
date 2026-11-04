@@ -95,6 +95,103 @@ public class AiModelServiceImpl implements AiModelService {
         return parseModules(json);
     }
 
+    // ==================== V7.1 种子数据 AI 增强 ====================
+
+    private static final String SEED_SYSTEM_PROMPT = """
+            你是业务数据专家。根据系统名称、描述和表结构，为示例种子数据生成业务贴合的候选值。
+            硬性要求：
+            1. 输出纯 JSON，不要 markdown 代码块，不要任何解释文字。
+            2. JSON 格式：{"persons":["..."],"companies":["..."],"cities":["..."],"streets":["..."],"depts":["..."],"products":["..."],"titles":["..."],"remarks":["..."],"specs":["..."],"columns":{"表名.列名":["值",...]}}
+            3. products 是关键：填该系统业务域内真实可信的商品/物料/业务对象名称（商城出数码家电、医院出药品耗材、餐饮出菜品），绝不能用通用的"不锈钢板材"之类。
+            4. companies/depts/titles/remarks/specs 也按该系统的行业习惯拟。
+            5. columns 只给核心业务列（品名/标题/名称类），键必须用给出的"表名.列名"原文，每列 8-16 个值。
+            6. 每个列表 8-16 项，简短中文；不要输出编号/金额/时间/手机号——这些由系统按格式规则生成。
+            7. 直接给出结果，不要逐步推理。/no_think
+            """;
+
+    /** 单次调用的表数上限：控制输出预算，本地小模型也不截断 */
+    private static final int SEED_BATCH_TABLES = 15;
+    /** 提示词里每表最多列出的列数（列太多会稀释重点） */
+    private static final int SEED_COLUMNS_PER_TABLE = 12;
+
+    @Override
+    public com.codegen.support.SeedValuePools seedPools(String systemName, String systemDesc,
+                                                        List<com.codegen.support.GenSeedGenerator.SeedTableMeta> tables) {
+        if (tables == null || tables.isEmpty()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "无表元数据，跳过 AI 值池");
+        }
+        // 分批调用并合并：各类别拼接去重，列级覆盖直接合并
+        List<String> persons = new ArrayList<>(), companies = new ArrayList<>(), cities = new ArrayList<>(),
+                streets = new ArrayList<>(), depts = new ArrayList<>(), products = new ArrayList<>(),
+                titles = new ArrayList<>(), remarks = new ArrayList<>(), specs = new ArrayList<>();
+        Map<String, List<String>> columns = new LinkedHashMap<>();
+
+        for (int from = 0; from < tables.size(); from += SEED_BATCH_TABLES) {
+            List<com.codegen.support.GenSeedGenerator.SeedTableMeta> batch =
+                    tables.subList(from, Math.min(from + SEED_BATCH_TABLES, tables.size()));
+            StringBuilder user = new StringBuilder();
+            user.append("系统名称：").append(systemName == null ? "" : systemName)
+                    .append("\n系统描述：").append(systemDesc == null || systemDesc.isBlank() ? systemName : systemDesc)
+                    .append("\n表结构（表名(注释): 列名(注释), ...）：\n");
+            for (var t : batch) {
+                user.append("- ").append(t.table()).append("(")
+                        .append(abbrev(t.tableComment(), 40)).append("): ");
+                StringBuilder cols = new StringBuilder();
+                for (var c : t.columns()) {
+                    if (cols.length() > 0) {
+                        cols.append(", ");
+                    }
+                    cols.append(c.name()).append("(").append(abbrev(c.comment(), 20)).append(")");
+                    if (cols.length() > 300) {
+                        break; // 列过多的表只取前若干列，保输出预算
+                    }
+                }
+                user.append(cols).append("\n");
+            }
+            user.append("/no_think");
+            String json = chatJson(SEED_SYSTEM_PROMPT, user.toString());
+            JsonNode root;
+            try {
+                root = objectMapper.readTree(json);
+            } catch (Exception e) {
+                throw new BusinessException(ResultCode.FAIL.getCode(), "AI 值池 JSON 解析失败：" + e.getMessage());
+            }
+            mergeAll(root, persons, companies, cities, streets, depts, products, titles, remarks, specs);
+            JsonNode colsNode = root.path("columns");
+            if (colsNode.isObject()) {
+                colsNode.fields().forEachRemaining(e -> {
+                    List<String> vals = new ArrayList<>();
+                    e.getValue().forEach(v -> vals.add(v.asText("")));
+                    columns.merge(e.getKey(), vals, (a, b) -> {
+                        a.addAll(b);
+                        return a;
+                    });
+                });
+            }
+        }
+        return com.codegen.support.SeedValuePools.of(persons, companies, cities, streets, depts,
+                products, titles, remarks, specs, columns);
+    }
+
+    /** 合并一批 AI 输出的九个类别池（逐字段拼接，去重交给 SeedValuePools.clean） */
+    private void mergeAll(JsonNode root, List<String>... lists) {
+        String[] keys = {"persons", "companies", "cities", "streets", "depts",
+                "products", "titles", "remarks", "specs"};
+        for (int i = 0; i < keys.length && i < lists.length; i++) {
+            JsonNode arr = root.path(keys[i]);
+            if (arr.isArray()) {
+                arr.forEach(v -> lists[i].add(v.asText("")));
+            }
+        }
+    }
+
+    private static String abbrev(String s, int max) {
+        if (s == null) {
+            return "";
+        }
+        return s.length() > max ? s.substring(0, max) : s;
+    }
+
     /**
      * 发一次 chat 请求并提取回复中的纯 JSON 串。
      */

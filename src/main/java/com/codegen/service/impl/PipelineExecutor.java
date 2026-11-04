@@ -60,9 +60,9 @@ import java.util.stream.Stream;
 @Component
 public class PipelineExecutor {
 
-    /** 步骤 key 常量（与 gen_pipeline_step 种子一致）。V5.2 起 db 后插入 seed */
+    /** 步骤 key 常量（与 gen_pipeline_step 种子一致）。V5.2 起 db 后插入 seed；V7.0 起 db 后插入 ai_recommend */
     public static final String[] STEP_KEYS = {
-            "model", "db", "seed", "scaffold", "gen",
+            "model", "db", "ai_recommend", "seed", "scaffold", "gen",
             "package_backend", "deploy_backend",
             "package_frontend", "package_mobile", "deploy_frontend",
             "health"
@@ -87,6 +87,8 @@ public class PipelineExecutor {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final com.codegen.support.GenBpmnBuilder bpmnBuilder;
     private final com.codegen.service.FlowDefBpmnService flowDefBpmnService;
+    private final com.codegen.service.AiRecommendService aiRecommendService;
+    private final com.codegen.service.AiModelService aiModelService;
 
     public PipelineExecutor(GenPipelineMapper pipelineMapper,
                             GenPipelineStepMapper stepMapper,
@@ -103,7 +105,9 @@ public class PipelineExecutor {
                             com.codegen.support.GenSeedGenerator seedGenerator,
                             JdbcTemplate jdbcTemplate,
                             com.codegen.support.GenBpmnBuilder bpmnBuilder,
-                            com.codegen.service.FlowDefBpmnService flowDefBpmnService) {
+                            com.codegen.service.FlowDefBpmnService flowDefBpmnService,
+                            com.codegen.service.AiRecommendService aiRecommendService,
+                            com.codegen.service.AiModelService aiModelService) {
         this.pipelineMapper = pipelineMapper;
         this.stepMapper = stepMapper;
         this.scaffoldService = scaffoldService;
@@ -120,6 +124,8 @@ public class PipelineExecutor {
         this.jdbcTemplate = jdbcTemplate;
         this.bpmnBuilder = bpmnBuilder;
         this.flowDefBpmnService = flowDefBpmnService;
+        this.aiRecommendService = aiRecommendService;
+        this.aiModelService = aiModelService;
     }
 
     /**
@@ -163,6 +169,7 @@ public class PipelineExecutor {
                     String message = switch (step.getStepKey()) {
                         case "model" -> stepModel(pipeline);
                         case "db" -> stepDb(pipeline);
+                        case "ai_recommend" -> stepAiRecommend(pipeline);
                         case "seed" -> stepSeed(pipeline);
                         case "scaffold" -> stepScaffold(pipeline);
                         case "gen" -> stepGen(pipeline);
@@ -175,6 +182,11 @@ public class PipelineExecutor {
                         default -> "未知步骤，跳过";
                     };
                     mark(step, "success", message, null);
+                } catch (AiRecommendDegradedException e) {
+                    // V7.0 降级不阻断：AI 推荐是增强步骤，失败/未启用只标记本步，
+                    // pipeline 用 V6.6 规则推断继续，整体仍可为成功（带降级标记）
+                    log.warn("AI 推荐降级 {}#{}: {}", pipeline.getPipelineNo(), step.getStepKey(), e.getMessage());
+                    mark(step, e.getStatus(), e.getMessage(), null);
                 } catch (Exception e) {
                     log.error("流水线步骤失败 {}#{}: {}", pipeline.getPipelineNo(), step.getStepKey(), e.getMessage(), e);
                     mark(step, "failed", e.getMessage(), tailOf(logFile(pipeline, step.getStepKey()), 40));
@@ -245,16 +257,82 @@ public class PipelineExecutor {
     }
 
     /**
+     * ai_recommend（V7.0）：表结构就绪后、模板生成前，AI 推荐三层页面配置。
+     *
+     * <p>纯增强步骤，产物只落 ai_recommend.json（不动 gen_table），
+     * 用户在前端 diff 预览勾选应用后才写库。两种降级都不阻断流水线：
+     * ai.enabled=false → skipped；AI 超时/失败/JSON 截断 → failed-degraded，
+     * 后续步骤照走 V6.6 规则推断，产物与 V6.8 行为一致。
+     */
+    String stepAiRecommend(GenPipeline pipeline) {
+        if (!props.getAi().isEnabled()) {
+            throw new AiRecommendDegradedException("skipped", "AI 未启用，按 V6.6 规则推断继续");
+        }
+        try {
+            com.codegen.vo.GenAiRecommendVO vo = aiRecommendService.recommend(pipeline.getProjectId());
+            Path artifact = logFile(pipeline, "ai_recommend").getParent().resolve("ai_recommend.json");
+            Files.writeString(artifact,
+                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(vo),
+                    StandardCharsets.UTF_8);
+            int columnSuggests = vo.getTables().stream().mapToInt(t -> t.getColumns().size()).sum();
+            return "建议：列级 " + columnSuggests + " 项 / 表级 " + vo.getTables().size()
+                    + " 表 / 菜单 " + vo.getMenus().size() + " 项"
+                    + (vo.getDrops().isEmpty() ? "" : "，丢弃非法项 " + vo.getDrops().size())
+                    + "，产物 ai_recommend.json";
+        } catch (AiRecommendDegradedException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("AI 推荐失败降级 {}: {}", pipeline.getPipelineNo(), e.getMessage());
+            throw new AiRecommendDegradedException("failed-degraded",
+                    "AI 推荐失败，已降级规则推断：" + abbreviate(e.getMessage(), 300));
+        }
+    }
+
+    /**
+     * V7.0 ai_recommend 步骤的降级信号：携带步骤终态（skipped / failed-degraded），
+     * 执行器捕获后标记本步并继续流水线，不把增强步骤的失败升级成整线失败。
+     */
+    static final class AiRecommendDegradedException extends RuntimeException {
+        private final String status;
+
+        AiRecommendDegradedException(String status, String message) {
+            super(message);
+            this.status = status;
+        }
+
+        String getStatus() {
+            return status;
+        }
+    }
+
+    /**
      * seed（V5.2）：按 seed_mode 规则生成示例数据；off/NULL 直接成功跳过。
      * 失败不阻断整条流水线是错误设计——示例数据缺失会让生成系统开箱即空，
      * 但插数失败通常是脏数据/权限问题，重跑流水线可恢复，所以这里照常抛出。
      */
     private String stepSeed(GenPipeline pipeline) {
-        if (!"rule".equals(pipeline.getSeedMode())) {
+        if (!"rule".equals(pipeline.getSeedMode()) && !"ai".equals(pipeline.getSeedMode())) {
             return "已跳过（未启用数据初始化）";
         }
-        var vo = seedGenerator.seedPipeline(pipeline);
-        return vo.getSummary();
+        // V7.1：ai 模式先用 AI 生成业务值池；任何失败都回落规则词库（不换种子行数/结构约束）
+        com.codegen.support.SeedValuePools pools = com.codegen.support.SeedValuePools.defaults();
+        String suffix = "";
+        if ("ai".equals(pipeline.getSeedMode())) {
+            try {
+                var metas = seedGenerator.loadTableMeta(pipeline.getDbName());
+                pools = aiModelService.seedPools(pipeline.getSystemName(), pipeline.getSystemDesc(), metas);
+                suffix = "（AI 值池已应用）";
+                log.info("seed AI 值池生成成功: pipeline={} tables={}", pipeline.getPipelineNo(), metas.size());
+            } catch (Exception e) {
+                // 降级原则同 V7.0 ai_recommend：AI 失败不阻断 seed，产物与 rule 模式一致
+                log.warn("seed AI 值池失败，回落规则词库: pipeline={} {}: {}",
+                        pipeline.getPipelineNo(), e.getClass().getSimpleName(), e.getMessage());
+                suffix = "；AI 增强失败已回落规则词库（" + abbreviate(e.getMessage() == null
+                        ? e.getClass().getSimpleName() : e.getMessage(), 80) + "）";
+            }
+        }
+        var vo = seedGenerator.seedPipeline(pipeline, pools);
+        return vo.getSummary() + suffix;
     }
 
     /** scaffold：调既有 scaffold API 生成前后端骨架 + 执行种子 SQL（sys_user） */

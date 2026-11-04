@@ -28,7 +28,7 @@ public class GenPipelineCreateDTO {
     @Schema(description = "ai=AI 建模 manual=手动粘贴 DDL", example = "ai")
     private String mode = "ai";
 
-    @Schema(description = "V5.2 数据初始化：rule=规则生成（默认） off=跳过", example = "rule")
+    @Schema(description = "V5.2 数据初始化：rule=规则生成（默认） ai=AI 值池增强（失败回落 rule） off=跳过", example = "rule")
     private String seedMode = "rule";
 
     @Schema(description = "manual 模式的建表 DDL")

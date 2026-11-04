@@ -13,6 +13,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import java.util.stream.Collectors;
@@ -106,6 +107,16 @@ public class GlobalExceptionHandler {
     public Result<Void> handleMethodOrMedia(Exception ex) {
         log.warn("请求方式或 Content-Type 不支持: {}", ex.getMessage());
         return Result.fail(ResultCode.PARAM_ERROR.getCode(), ex.getMessage());
+    }
+
+    /**
+     * 上传体积超限：Spring 在进入 controller 之前就抛了，
+     * 不单独映射会落到最后的 Exception 分支变成 500「服务异常」。
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public Result<Void> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        log.warn("上传文件超过限制: {}", ex.getMessage());
+        return Result.fail(ResultCode.PARAM_ERROR.getCode(), "上传文件超过大小限制（单文件 30MB / 请求 35MB）");
     }
 
     @ExceptionHandler(Exception.class)
