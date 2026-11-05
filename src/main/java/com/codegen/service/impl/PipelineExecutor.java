@@ -203,6 +203,8 @@ public class PipelineExecutor {
             GenPipeline done = pipelineMapper.selectById(pipelineId);
             done.setStatus("success");
             done.setFrontendUrl("http://localhost:" + done.getFrontendPort());
+            // V7.2：SQL 交付物落盘到目标工程 db/（失败只告警，不影响流水线成功状态）
+            deliverSqlArtifacts(done);
             pipelineMapper.updateById(done);
             push(done);
         } catch (Exception e) {
@@ -214,6 +216,77 @@ public class PipelineExecutor {
                 pipelineMapper.updateById(failed);
                 push(failed);
             }
+        }
+    }
+
+    // ==================== SQL 交付物落盘（V7.2） ====================
+
+    /**
+     * 流水线成功后，把业务库三份 SQL 交付物复制到目标工程 {@code db/} 目录：
+     * <ul>
+     *   <li>{@code init_tables.sql} ← 平台日志目录的 db.sql（业务表 DDL）</li>
+     *   <li>{@code init_seed.sql} ← 平台日志目录的 seed.sql（种子数据，可人工重放）</li>
+     *   <li>{@code init_menu.sql} ← {backendRoot}/.gen-artifacts/&lt;最新时间戳&gt;/menu.sql（菜单注册）</li>
+     * </ul>
+     * 此前三份产物只分别留在平台日志目录与 .gen-artifacts，目标工程 db/ 只有
+     * 基础架构脚本（dict/init_sys_user/init_sys_flow），交付后无法从零初始化业务库。
+     * .gen-artifacts 取 GenMenuProperties.artifactDir 的默认值（.gen-artifacts）。
+     * 全程不阻断：任一落盘失败只 warn，流水线仍算成功。
+     */
+    private void deliverSqlArtifacts(GenPipeline pipeline) {
+        var project = projectService.getById(pipeline.getProjectId());
+        if (project == null) {
+            log.warn("SQL 交付物落盘跳过：系统台账不存在 pipeline={}", pipeline.getPipelineNo());
+            return;
+        }
+        Path dbDir = Paths.get(project.getBackendRoot(), project.getProjectCode() + "-server", "db");
+        StringBuilder delivered = new StringBuilder();
+        Path logDir = logFile(pipeline, "db").getParent();
+        Path dbSql = logDir.resolve("db.sql");
+        if (Files.exists(dbSql) && copyArtifact(dbSql, dbDir.resolve("init_tables.sql"))) {
+            delivered.append(" init_tables.sql");
+        }
+        Path seedSql = logDir.resolve("seed.sql");
+        if (Files.exists(seedSql) && copyArtifact(seedSql, dbDir.resolve("init_seed.sql"))) {
+            delivered.append(" init_seed.sql");
+        }
+        Path menuSql = latestMenuSql(Paths.get(project.getBackendRoot(), ".gen-artifacts"));
+        if (menuSql != null && copyArtifact(menuSql, dbDir.resolve("init_menu.sql"))) {
+            delivered.append(" init_menu.sql");
+        }
+        if (delivered.length() > 0) {
+            log.info("SQL 交付物已落盘到目标工程 db/: {} ->{} ({})", pipeline.getPipelineNo(),
+                    delivered, dbDir.toAbsolutePath());
+        }
+    }
+
+    /** 单文件落盘：目录不存在则创建，已存在则覆盖。失败返回 false（不抛出）。 */
+    private boolean copyArtifact(Path from, Path to) {
+        try {
+            Files.createDirectories(to.getParent());
+            Files.copy(from, to, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            return true;
+        } catch (Exception e) {
+            log.warn("SQL 交付物落盘失败 {} -> {}: {}", from, to, e.getMessage());
+            return false;
+        }
+    }
+
+    /** 取 .gen-artifacts 下最新时间戳目录里的 menu.sql（目录名 yyyyMMddHHmmss，字典序即时间序）。 */
+    private Path latestMenuSql(Path artifactRoot) {
+        if (!Files.isDirectory(artifactRoot)) {
+            return null;
+        }
+        try (var dirs = Files.list(artifactRoot)) {
+            return dirs.filter(Files::isDirectory)
+                    .sorted(java.util.Comparator.reverseOrder())
+                    .map(d -> d.resolve("menu.sql"))
+                    .filter(Files::exists)
+                    .findFirst()
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("menu.sql 检索失败 {}: {}", artifactRoot, e.getMessage());
+            return null;
         }
     }
 

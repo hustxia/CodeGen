@@ -1,5 +1,7 @@
 package com.codegen.service;
 
+import com.codegen.dto.GenAiRecommendApplyDTO;
+import com.codegen.vo.GenAiRecommendPreviewVO;
 import com.codegen.vo.GenAiRecommendVO;
 
 /**
@@ -23,4 +25,22 @@ public interface AiRecommendService {
      * @throws com.codegen.common.exception.BusinessException AI 未启用 / 超时 / 解析失败
      */
     GenAiRecommendVO recommend(Long projectId);
+
+    /**
+     * 预览：读取 ai_recommend 步骤产物，与现值合并成 diff 视图（只装有差异的项）。
+     * 纯只读，不产生任何 UPDATE（AC-3）。
+     *
+     * @return exists=false 表示无产物（步骤未跑/被降级/被跳过）
+     */
+    GenAiRecommendPreviewVO preview(Long pipelineId);
+
+    /**
+     * 应用：把勾选项写回 gen_table / gen_table_column（AC-4）。
+     * 建议值以服务端产物为准（客户端只传勾选清单），
+     * 未勾选的字段一律不动，回落 V6.6 规则推断的现值。
+     *
+     * @return 实际写库的字段数（前端提示用）
+     * @throws com.codegen.common.exception.BusinessException 流水线不存在 / 产物不存在
+     */
+    int apply(Long pipelineId, GenAiRecommendApplyDTO dto);
 }

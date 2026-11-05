@@ -1,16 +1,22 @@
 package com.codegen.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.codegen.common.exception.BusinessException;
 import com.codegen.common.result.ResultCode;
 import com.codegen.config.GenPipelineProperties;
+import com.codegen.dto.GenAiRecommendApplyDTO;
+import com.codegen.entity.GenPipeline;
 import com.codegen.entity.GenTable;
 import com.codegen.entity.GenTableColumn;
+import com.codegen.mapper.GenPipelineMapper;
 import com.codegen.mapper.GenTableColumnMapper;
 import com.codegen.mapper.GenTableMapper;
 import com.codegen.service.AiRecommendService;
 import com.codegen.service.DictService;
 import com.codegen.support.AiRecommendSanitizer;
+import com.codegen.util.GenUtils;
 import com.codegen.vo.DictTypeVO;
+import com.codegen.vo.GenAiRecommendPreviewVO;
 import com.codegen.vo.GenAiRecommendVO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +29,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,8 +38,9 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -89,6 +98,9 @@ public class AiRecommendServiceImpl implements AiRecommendService {
 
     @Autowired
     private DictService dictService;
+
+    @Autowired
+    private GenPipelineMapper pipelineMapper;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -166,6 +178,271 @@ public class AiRecommendServiceImpl implements AiRecommendService {
             for (int i = 0; i < group.size(); i += maxPerBatch) {
                 result.add(group.subList(i, Math.min(i + maxPerBatch, group.size())));
             }
+        }
+        return result;
+    }
+
+    // ==================== 预览（AC-3：只读） ====================
+
+    @Override
+    public GenAiRecommendPreviewVO preview(Long pipelineId) {
+        GenAiRecommendPreviewVO vo = new GenAiRecommendPreviewVO();
+        GenPipeline pipeline = requirePipeline(pipelineId);
+        Path artifact = artifactPath(pipeline);
+        if (!Files.exists(artifact)) {
+            return vo;
+        }
+        GenAiRecommendVO suggest = readArtifact(artifact);
+        vo.setExists(true);
+        vo.setMenus(suggest.getMenus());
+        vo.setDrops(suggest.getDrops());
+
+        Map<String, GenTable> tablesByName = tablesOfProject(pipeline.getProjectId());
+        Map<Long, Map<String, GenTableColumn>> columnsByTable = columnsOfTables(tablesByName.values());
+        Map<Long, String> tableNameById = tablesByName.values().stream()
+                .collect(Collectors.toMap(GenTable::getId, GenTable::getTableName));
+
+        for (GenAiRecommendVO.TableSuggest ts : suggest.getTables()) {
+            GenTable table = tablesByName.get(ts.getTableName());
+            if (table == null) {
+                continue; // 产物生成后表被删了，跳过
+            }
+            GenAiRecommendPreviewVO.TablePreview tp = new GenAiRecommendPreviewVO.TablePreview();
+            tp.setTableId(table.getId());
+            tp.setTableName(table.getTableName());
+            tp.setTableComment(table.getTableComment());
+
+            addTableFieldDiff(tp, "moduleName", table.getModuleName(), ts.getModuleName(),
+                    !Objects.equals(table.getModuleName(), GenUtils.inferModuleName(table.getTableName())));
+            addTableFieldDiff(tp, "treeParentColumn", table.getTreeParentColumn(), ts.getTreeParentColumn(),
+                    StringUtils.hasText(table.getTreeParentColumn()));
+            addTableFieldDiff(tp, "treeLabelColumn", table.getTreeLabelColumn(), ts.getTreeLabelColumn(),
+                    StringUtils.hasText(table.getTreeLabelColumn()));
+            String currentMaster = table.getMasterTableId() == null ? null : tableNameById.get(table.getMasterTableId());
+            addTableFieldDiff(tp, "masterTable", currentMaster, ts.getMasterTableName(),
+                    table.getMasterTableId() != null);
+            addTableFieldDiff(tp, "relationType", table.getRelationType(), ts.getRelationType(),
+                    StringUtils.hasText(table.getRelationType()));
+
+            Map<String, GenTableColumn> cols = columnsByTable.getOrDefault(table.getId(), Map.of());
+            for (GenAiRecommendVO.ColumnSuggest cs : ts.getColumns()) {
+                GenTableColumn col = cols.get(cs.getColumnName());
+                if (col == null) {
+                    continue; // 列被删了
+                }
+                GenAiRecommendPreviewVO.ColumnPreview cp = new GenAiRecommendPreviewVO.ColumnPreview();
+                cp.setColumnName(col.getColumnName());
+                cp.setColumnComment(col.getColumnComment());
+                String ruleHtml = GenUtils.inferHtmlType(col.getColumnType(), col.getJavaType(), col.getColumnName());
+                addColumnFieldDiff(cp, "isQuery", col.getIsQuery(), cs.getIsQuery(),
+                        !Objects.equals(col.getIsQuery(), 0));
+                addColumnFieldDiff(cp, "queryType", col.getQueryType(), cs.getQueryType(),
+                        !Objects.equals(col.getQueryType(), "EQ"));
+                addColumnFieldDiff(cp, "isList", col.getIsList(), cs.getIsList(),
+                        !Objects.equals(col.getIsList(), 1));
+                addColumnFieldDiff(cp, "isForm", col.getIsForm(), cs.getIsForm(),
+                        !Objects.equals(col.getIsForm(), 1));
+                addColumnFieldDiff(cp, "htmlType", col.getHtmlType(), cs.getHtmlType(),
+                        !Objects.equals(col.getHtmlType(), ruleHtml));
+                addColumnFieldDiff(cp, "dictType", col.getDictType(), cs.getDictType(),
+                        !Objects.equals(col.getDictType(), GenUtils.inferDictType(ruleHtml, col.getColumnName())));
+                addColumnFieldDiff(cp, "sort", col.getSort(), cs.getSort(), false);
+                if (!cp.getFields().isEmpty()) {
+                    tp.getColumns().add(cp);
+                }
+            }
+            if (!tp.getTableFields().isEmpty() || !tp.getColumns().isEmpty()) {
+                vo.getTables().add(tp);
+            }
+        }
+        return vo;
+    }
+
+    /** 只装有差异的项：建议为空或与现值一致都不进 diff */
+    private void addTableFieldDiff(GenAiRecommendPreviewVO.TablePreview tp, String field,
+                                   Object current, Object suggested, boolean manual) {
+        if (suggested == null || Objects.equals(current, suggested)) {
+            return;
+        }
+        GenAiRecommendPreviewVO.FieldDiff d = new GenAiRecommendPreviewVO.FieldDiff();
+        d.setField(field);
+        d.setCurrent(current);
+        d.setSuggested(suggested);
+        d.setManual(manual);
+        tp.getTableFields().add(d);
+    }
+
+    private void addColumnFieldDiff(GenAiRecommendPreviewVO.ColumnPreview cp, String field,
+                                    Object current, Object suggested, boolean manual) {
+        if (suggested == null || Objects.equals(current, suggested)) {
+            return;
+        }
+        GenAiRecommendPreviewVO.FieldDiff d = new GenAiRecommendPreviewVO.FieldDiff();
+        d.setField(field);
+        d.setCurrent(current);
+        d.setSuggested(suggested);
+        d.setManual(manual);
+        cp.getFields().add(d);
+    }
+
+    // ==================== 应用（AC-4：勾选才写库） ====================
+
+    @Override
+    public int apply(Long pipelineId, GenAiRecommendApplyDTO dto) {
+        GenPipeline pipeline = requirePipeline(pipelineId);
+        Path artifact = artifactPath(pipeline);
+        if (!Files.exists(artifact)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                    "AI 建议产物不存在（ai_recommend 步骤未成功执行）");
+        }
+        GenAiRecommendVO suggest = readArtifact(artifact);
+        Map<String, GenAiRecommendVO.TableSuggest> suggestByTable = suggest.getTables().stream()
+                .collect(Collectors.toMap(GenAiRecommendVO.TableSuggest::getTableName, Function.identity(), (a, b) -> a));
+
+        Map<String, GenTable> tablesByName = tablesOfProject(pipeline.getProjectId());
+        Map<Long, Map<String, GenTableColumn>> columnsByTable = columnsOfTables(tablesByName.values());
+
+        int applied = 0;
+        for (GenAiRecommendApplyDTO.TablePick pick : dto.getTables()) {
+            GenTable table = tablesByName.get(pick.getTableName());
+            GenAiRecommendVO.TableSuggest ts = suggestByTable.get(pick.getTableName());
+            if (table == null || ts == null) {
+                continue; // 表被删或产物里没有，跳过
+            }
+            boolean tableDirty = false;
+            for (String field : pick.getFields()) {
+                boolean ok = switch (field) {
+                    case "moduleName" -> setIf(table::setModuleName, ts.getModuleName());
+                    case "treeParentColumn" -> setIf(table::setTreeParentColumn, ts.getTreeParentColumn());
+                    case "treeLabelColumn" -> setIf(table::setTreeLabelColumn, ts.getTreeLabelColumn());
+                    case "relationType" -> setIf(table::setRelationType, ts.getRelationType());
+                    case "masterTable" -> applyMaster(table, ts, tablesByName);
+                    default -> {
+                        log.warn("AI 建议应用：忽略未知表级字段 {}", field);
+                        yield false;
+                    }
+                };
+                tableDirty |= ok;
+                applied += ok ? 1 : 0;
+            }
+            if (tableDirty) {
+                tableMapper.updateById(table);
+            }
+
+            Map<String, GenAiRecommendVO.ColumnSuggest> suggestByColumn = ts.getColumns().stream()
+                    .collect(Collectors.toMap(GenAiRecommendVO.ColumnSuggest::getColumnName, Function.identity(), (a, b) -> a));
+            Map<String, GenTableColumn> cols = columnsByTable.getOrDefault(table.getId(), Map.of());
+            for (GenAiRecommendApplyDTO.ColumnPick cp : pick.getColumns()) {
+                GenTableColumn col = cols.get(cp.getColumnName());
+                GenAiRecommendVO.ColumnSuggest cs = suggestByColumn.get(cp.getColumnName());
+                if (col == null || cs == null) {
+                    continue;
+                }
+                boolean dirty = false;
+                for (String field : cp.getFields()) {
+                    boolean ok = switch (field) {
+                        case "isQuery" -> setIf(col::setIsQuery, cs.getIsQuery());
+                        case "queryType" -> setIf(col::setQueryType, cs.getQueryType());
+                        case "isList" -> setIf(col::setIsList, cs.getIsList());
+                        case "isForm" -> setIf(col::setIsForm, cs.getIsForm());
+                        case "htmlType" -> setIf(col::setHtmlType, cs.getHtmlType());
+                        case "dictType" -> setIf(col::setDictType, cs.getDictType());
+                        case "sort" -> setIf(col::setSort, cs.getSort());
+                        default -> {
+                            log.warn("AI 建议应用：忽略未知列级字段 {}", field);
+                            yield false;
+                        }
+                    };
+                    dirty |= ok;
+                    applied += ok ? 1 : 0;
+                }
+                if (dirty) {
+                    columnMapper.updateById(col);
+                }
+            }
+        }
+
+        // 菜单勾选：成员表 module_name 归到该模块（目录名/图标为参考，不落库）
+        Map<String, GenAiRecommendVO.MenuSuggest> menusByModule = suggest.getMenus().stream()
+                .collect(Collectors.toMap(GenAiRecommendVO.MenuSuggest::getModuleName, Function.identity(), (a, b) -> a));
+        for (String moduleName : dto.getMenus()) {
+            GenAiRecommendVO.MenuSuggest menu = menusByModule.get(moduleName);
+            if (menu == null) {
+                continue;
+            }
+            for (String tableName : menu.getTables()) {
+                GenTable table = tablesByName.get(tableName);
+                if (table != null && !Objects.equals(table.getModuleName(), menu.getModuleName())) {
+                    table.setModuleName(menu.getModuleName());
+                    tableMapper.updateById(table);
+                    applied++;
+                }
+            }
+        }
+        log.info("AI 建议应用 {}: {} 个字段写库", pipeline.getPipelineNo(), applied);
+        return applied;
+    }
+
+    /** 主子建议：按主表名解析 id 并推 masterDepth（主表是孙表则本表再深一级） */
+    private boolean applyMaster(GenTable table, GenAiRecommendVO.TableSuggest ts,
+                                Map<String, GenTable> tablesByName) {
+        GenTable master = ts.getMasterTableName() == null ? null : tablesByName.get(ts.getMasterTableName());
+        if (master == null) {
+            return false;
+        }
+        table.setMasterTableId(master.getId());
+        int masterDepth = master.getMasterDepth() == null ? 0 : master.getMasterDepth();
+        table.setMasterDepth(masterDepth + 1);
+        return true;
+    }
+
+    /** null 建议不落（未建议/被白名单丢弃的字段保持现值） */
+    private <T> boolean setIf(java.util.function.Consumer<T> setter, T suggested) {
+        if (suggested == null) {
+            return false;
+        }
+        setter.accept(suggested);
+        return true;
+    }
+
+    // ==================== 产物与台账 ====================
+
+    private GenPipeline requirePipeline(Long pipelineId) {
+        GenPipeline pipeline = pipelineMapper.selectById(pipelineId);
+        if (pipeline == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "流水线不存在：" + pipelineId);
+        }
+        return pipeline;
+    }
+
+    private Path artifactPath(GenPipeline pipeline) {
+        return Path.of(properties.getLogDir(), pipeline.getPipelineNo(), "ai_recommend.json");
+    }
+
+    private GenAiRecommendVO readArtifact(Path artifact) {
+        try {
+            return objectMapper.readValue(Files.readString(artifact), GenAiRecommendVO.class);
+        } catch (Exception e) {
+            throw new BusinessException(ResultCode.FAIL.getCode(), "AI 建议产物读取失败：" + e.getMessage());
+        }
+    }
+
+    private Map<String, GenTable> tablesOfProject(Long projectId) {
+        return tableMapper.selectList(new LambdaQueryWrapper<GenTable>()
+                        .eq(GenTable::getProjectId, projectId))
+                .stream().collect(Collectors.toMap(GenTable::getTableName, Function.identity(), (a, b) -> a,
+                        LinkedHashMap::new));
+    }
+
+    private Map<Long, Map<String, GenTableColumn>> columnsOfTables(java.util.Collection<GenTable> tables) {
+        if (tables.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> tableIds = tables.stream().map(GenTable::getId).toList();
+        Map<Long, Map<String, GenTableColumn>> result = new HashMap<>();
+        for (GenTableColumn c : columnMapper.selectList(new LambdaQueryWrapper<GenTableColumn>()
+                .in(GenTableColumn::getTableId, tableIds))) {
+            result.computeIfAbsent(c.getTableId(), k -> new HashMap<>()).put(c.getColumnName(), c);
         }
         return result;
     }

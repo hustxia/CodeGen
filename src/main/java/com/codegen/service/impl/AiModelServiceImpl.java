@@ -180,7 +180,8 @@ public class AiModelServiceImpl implements AiModelService {
         for (int i = 0; i < keys.length && i < lists.length; i++) {
             JsonNode arr = root.path(keys[i]);
             if (arr.isArray()) {
-                arr.forEach(v -> lists[i].add(v.asText("")));
+                List<String> target = lists[i];
+                arr.forEach(v -> target.add(v.asText("")));
             }
         }
     }

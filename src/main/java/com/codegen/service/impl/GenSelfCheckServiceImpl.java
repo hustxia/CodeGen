@@ -160,7 +160,14 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
                 checkPlaceholderResidue(result, path, content, dataTexts);
             }
             if (path.endsWith(".java")) {
-                javaSources.add(new JavaSource(path, content));
+                // V6.7 产物集成测试只计数不编译：包级私有的测试类用基座 classpath 编不了
+                // （JUnit/MockMvc/H2 都是 test-scope，不在 demo-lib 快照里），
+                // 强行编译只会把「基座缺 test 依赖」误报成生成器缺陷。
+                if (isGeneratedTestSource(path)) {
+                    result.setTestCount(result.getTestCount() + 1);
+                } else {
+                    javaSources.add(new JavaSource(path, content));
+                }
             } else if (path.endsWith(".vue")) {
                 checkVue(result, path, content);
             } else if (path.endsWith(".js")) {
@@ -355,6 +362,10 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         String classpath = StringUtils.hasText(projectClasspath)
                 ? GenSelfCheckProperties.expandWildcards(projectClasspath)
                 : selfCheckProperties.resolveClasspath();
+        // 基座 classpath（demo-lib 快照）由目标工程导出，可能缺平台已经用到的三方包
+        // （如 V6.4 基座 AuthController 的 spring-security-crypto）——用平台自身 classpath 兜底，
+        // 基座在前保证版本以目标工程为准。
+        classpath = mergeWithAppClasspath(classpath, System.getProperty("java.class.path"));
         if (selfCheckProperties.classpathLooksNested() && !StringUtils.hasText(projectClasspath)) {
             result.addIssue("javac", 0L, "WARNING",
                     "当前进程以单个肥 jar 启动，java.class.path 无法覆盖嵌套依赖，编译检查可能满屏 cannot find symbol；"
@@ -867,6 +878,32 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         }
         className = className.replace('/', '.');
         return classToPath.getOrDefault(className, className);
+    }
+
+    /**
+     * 产物测试源（src/test/java）识别：只计数、不参与 javac——
+     * 测试类是包级私有且依赖 test-scope 包，基座 classpath 不具备。
+     */
+    static boolean isGeneratedTestSource(String path) {
+        if (path == null) {
+            return false;
+        }
+        String normalized = path.replace('\\', '/');
+        return normalized.contains("/src/test/java/") || normalized.startsWith("src/test/java/");
+    }
+
+    /**
+     * 自检 classpath 合并平台自身 classpath：基座在前（版本以目标工程为准），
+     * 平台在后兜底基座快照缺的三方包（如 spring-security-crypto）。
+     */
+    static String mergeWithAppClasspath(String configured, String appClasspath) {
+        if (!StringUtils.hasText(appClasspath)) {
+            return configured == null ? "" : configured;
+        }
+        if (!StringUtils.hasText(configured)) {
+            return appClasspath;
+        }
+        return configured + java.io.File.pathSeparator + appClasspath;
     }
 
     private String classNameOf(String content) {

@@ -321,8 +321,11 @@ public final class GenTemplateModel {
         String testJavaBase = backendBase.contains("src/main/java")
                 ? backendBase.replaceFirst("src/main/java", "src/test/java")
                 : backendBase + "-test";
+        // resources 基路径只取模块根：src/test/resources 下没有包路径，
+        // 照搬 testJavaBase 的 replace 会把包尾巴带进来（.../resources/com/demo），
+        // application-test.yml 的 classpath*:schema/table-*.sql 就一张表也扫不到
         String testResBase = backendBase.contains("src/main/java")
-                ? backendBase.replaceFirst("src/main/java", "src/test/resources")
+                ? backendBase.substring(0, backendBase.indexOf("src/main/java")) + "src/test/resources"
                 : backendBase + "-test/resources";
         // 根包名不进 gen_table（它是工程级属性），所以只看系统 → 全局静态值
         String effectiveRootPkg = firstText(project == null ? null : project.rootPackage(), rootPkg);
