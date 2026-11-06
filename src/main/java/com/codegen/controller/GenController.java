@@ -313,6 +313,7 @@ public class GenController {
         result.setFiles(list);
         int ledgerErrors = genCodeService.ledgerErrorCount();
         result.setLedgerErrors(ledgerErrors);
+        result.setSqlDeliveries(genCodeService.lastSqlDeliveries());
         if (!list.isEmpty()) {
             result.setBatchNo(list.get(0).getBatchNo());
         }
@@ -435,5 +436,24 @@ public class GenController {
     public Result<List<com.codegen.vo.GenDdlImportVO>> importFromDdl(
             @Valid @RequestBody com.codegen.dto.GenDdlImportDTO dto) {
         return Result.ok(genDdlService.importFromDdl(dto));
+    }
+
+    // ==================== V7.3 P0-3 表级 AI 推荐 ====================
+
+    @Autowired
+    private com.codegen.service.AiRecommendService aiRecommendService;
+
+    @Operation(summary = "表级 AI 推荐：选中表直接出建议 diff（只读，零写库）")
+    @PostMapping("/ai-recommend/tables/preview")
+    public Result<com.codegen.vo.GenAiRecommendPreviewVO> aiRecommendTables(
+            @RequestBody com.codegen.dto.GenAiRecommendTableDTO dto) {
+        return Result.ok(aiRecommendService.recommendTables(dto));
+    }
+
+    @Operation(summary = "表级 AI 推荐应用：按 token 读回产物，勾选项写库")
+    @PostMapping("/ai-recommend/tables/apply")
+    public Result<Integer> aiRecommendTablesApply(
+            @RequestBody com.codegen.dto.GenAiRecommendApplyDTO dto) {
+        return Result.ok(aiRecommendService.applyTables(dto.getToken(), dto));
     }
 }

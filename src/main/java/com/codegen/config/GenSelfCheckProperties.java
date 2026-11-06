@@ -25,6 +25,14 @@ public class GenSelfCheckProperties {
     private String classpath;
 
     /**
+     * 产物测试（src/test/java）编译额外 classpath（分号或冒号分隔，支持 dir/* 通配符）；留空沿用主编译 classpath。
+     *
+     * <p>V7.3 P0-1：JUnit/MockMvc/H2 等 test-scope 包通常不在基座快照里。不配这里时，
+     * 产物测试编译会把「缺少测试依赖」降级为 WARNING，而不是误报成生成器 ERROR。
+     */
+    private String testClasspath;
+
+    /**
      * 注解处理器路径（含 lombok 等）；留空则回退到 classpath。
      *
      * <p>JDK 21 起注解处理不再隐式开启，且只从 {@code -classpath} 探测处理器时，
@@ -40,6 +48,13 @@ public class GenSelfCheckProperties {
             return expandWildcards(processorPath.trim());
         }
         return lombokSegmentsOf(resolveClasspath());
+    }
+
+    /**
+     * 解析产物测试 classpath：未配置返回空串（沿用主编译 classpath）。
+     */
+    public String resolveTestClasspath() {
+        return StringUtils.hasText(testClasspath) ? expandWildcards(testClasspath.trim()) : "";
     }
 
     /**

@@ -155,4 +155,87 @@ class GenSeedGeneratorTest {
         // 父表被跳过（无行数记录）→ 按普通表
         assertEquals(8, GenSeedGenerator.rowsFor("order_item", List.of("sale_order"), Map.of(), rnd));
     }
+
+    // ---------- V7.1 AI 值池 ----------
+
+    private SeedValuePools aiPools(Map<String, List<String>> overrides) {
+        return SeedValuePools.of(
+                List.of("林晚照", "沈千帆"),
+                List.of("云杉智能科技有限公司"),
+                List.of("成都市"), List.of("天府大道"),
+                List.of("客户成功部"),
+                List.of("旗舰降噪耳机", "智能体脂秤", "机械键盘青轴版"),
+                List.of("春季大促", "会员日专场"),
+                List.of("客户指定顺丰包邮", "赠品随单发"),
+                List.of("尊享版", "青春版"),
+                overrides);
+    }
+
+    @Test
+    void valueFor_columnOverrideApplied() {
+        GenSeedGenerator.ColMeta c = col("goods_name", "varchar", "varchar(64)", "商品名称");
+        String v = GenSeedGenerator.valueFor(c, 0, rnd, "mall_goods", false,
+                aiPools(Map.of("mall_goods.goods_name", List.of("旗舰降噪耳机"))));
+        assertEquals("'旗舰降噪耳机'", v);
+    }
+
+    @Test
+    void valueFor_columnOverrideStillTruncatedAndSuffixed() {
+        GenSeedGenerator.ColMeta c = new GenSeedGenerator.ColMeta("goods_name", "varchar", "varchar(8)",
+                true, false, false, false, "商品名称", 8, 0, 0);
+        String v = GenSeedGenerator.valueFor(c, 0, rnd, "mall_goods", true,
+                aiPools(Map.of("mall_goods.goods_name", List.of("旗舰降噪耳机尊享联名款"))));
+        String raw = v.substring(1, v.length() - 1);
+        assertTrue(raw.length() <= 8, "覆盖值也必须截断: " + raw);
+        assertTrue(raw.endsWith("-0001"), "唯一列覆盖值仍需序号后缀: " + raw);
+    }
+
+    @Test
+    void valueFor_overrideKeyCaseInsensitive() {
+        GenSeedGenerator.ColMeta c = col("Goods_Name", "varchar", "varchar(64)", "商品名称");
+        String v = GenSeedGenerator.valueFor(c, 0, rnd, "MALL_GOODS", false,
+                aiPools(Map.of("Mall_Goods.Goods_Name", List.of("机械键盘青轴版"))));
+        assertEquals("'机械键盘青轴版'", v);
+    }
+
+    @Test
+    void valueFor_semanticPoolReplacesDefaults() {
+        GenSeedGenerator.ColMeta c = col("contact_person", "varchar", "varchar(64)", "联系人");
+        String v = GenSeedGenerator.valueFor(c, 0, rnd, "t", false, aiPools(Map.of()));
+        assertTrue(v.contains("林晚照") || v.contains("沈千帆"),
+                "语义类应取 AI 池而非默认词库: " + v);
+    }
+
+    @Test
+    void valueFor_defaultsFallbackBaselineUnchanged() {
+        // 降级基线：defaults() 与 V5.2 词库一致（PRODUCT 语义取默认池，绝无 AI 值）
+        GenSeedGenerator.ColMeta c = col("product_name", "varchar", "varchar(64)", "产品名称");
+        String v = GenSeedGenerator.valueFor(c, 0, rnd, "t", false);
+        assertTrue(v.contains("不锈钢板材") || v.contains("包装纸箱") || v.contains("电子元器件")
+                        || v.contains("润滑油") || v.contains("精密轴承"),
+                "默认词库必须保持 V5.2 原值: " + v);
+    }
+
+    @Test
+    void pools_ofSanitizesInvalidInput() {
+        // 非法/超长/空白值被清洗，空类别回落默认词库，非法键被丢弃
+        SeedValuePools p = SeedValuePools.of(
+                null, List.of("  ", "x".repeat(200), "云杉智能科技有限公司"),
+                null, null, null, null, null, null, null,
+                Map.of("bad key no dot", List.of("a"), "t.col", List.of("", "ok")));
+        assertEquals(1, p.getCompanies().size());
+        assertTrue(p.getProducts().contains("不锈钢板材"), "空类别回落默认");
+        assertTrue(p.columnValues("t", "col").contains("ok"));
+        assertTrue(p.columnValues("bad key no dot", "x").isEmpty());
+    }
+
+    @Test
+    void pools_capsRespected() {
+        List<String> many = new java.util.ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            many.add("商品" + i);
+        }
+        SeedValuePools p = SeedValuePools.of(null, null, null, null, null, many, null, null, null, null);
+        assertEquals(SeedValuePools.MAX_PER_LIST, p.getProducts().size());
+    }
 }

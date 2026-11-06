@@ -54,6 +54,12 @@ public class GenDiffVO implements Serializable {
     private String drift;
 
     /**
+     * V6.8 受保护标记：文件已存在但台账里没有它的快照（不是本平台写过的，或台账丢失）。
+     * 这种文件「是否被手改过」无从判断，重生成默认按受保护跳过，需显式 force 才覆盖。
+     */
+    private Boolean protectedFile = Boolean.FALSE;
+
+    /**
      * 磁盘最后修改时间（漂移为 DRIFTED 时给用户做参照）
      */
     private String lastModified;

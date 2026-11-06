@@ -56,4 +56,10 @@ public class GenApplyDTO implements Serializable {
      * 只演练不落库落盘（默认 false）
      */
     private Boolean dryRun;
+
+    /**
+     * V6.8 强制覆盖受保护文件（既有 + 无台账快照）。
+     * 默认 false：宁可跳过让人看见，也不静默覆盖手改资产。
+     */
+    private Boolean force;
 }

@@ -114,29 +114,30 @@ public final class GenTemplateModel {
      */
     public record ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                                 String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
-                                String projectStructure, Integer payEnabled) {
+                                String projectStructure, Integer payEnabled, Integer mobileEnabled,
+                                Integer fileEnabled, Integer testEnabled) {
 
         /** 兼容 V3.0 之前的构造：无系统编码，权限点不加前缀 */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage) {
-            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V3.0 构造：无级联默认值（V4.4 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage, String projectCode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V4.4 构造：无打印默认值（V4.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null, null, null, null);
         }
 
         /** 兼容 V4.5 构造：无工程结构（V5.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, null, null);
+                    defaultGenPrint, null, null, null, null, null);
         }
 
         /** 兼容 V6.2 构造：无支付开关（V6.3 前的调用方） */
@@ -144,7 +145,32 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, null);
+                    defaultGenPrint, projectStructure, null, null, null, null);
+        }
+
+        /** 兼容 V6.3/V6.4 构造：无移动端开关（V6.5 前的调用方） */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                             String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
+                             String projectStructure, Integer payEnabled) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
+                    defaultGenPrint, projectStructure, payEnabled, null, null, null);
+        }
+
+        /** 兼容 V6.5 构造：无文件能力开关（V6.6 前的调用方） */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                             String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
+                             String projectStructure, Integer payEnabled, Integer mobileEnabled) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
+                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, null, null);
+        }
+
+        /** 兼容 V6.6 构造：无测试骨架开关（V6.7 前的调用方） */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                             String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
+                             String projectStructure, Integer payEnabled, Integer mobileEnabled,
+                             Integer fileEnabled) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
+                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, fileEnabled, null);
         }
     }
 
@@ -186,6 +212,70 @@ public final class GenTemplateModel {
     }
 
     /**
+     * V6.5 移动端支持开关的回落唯一实现：系统级 → 硬编码关。
+     * 与 resolvePay 同款语义；移动工程是系统级能力包，无表级开关
+     * （业务表经 gen_vue_page 开关 + 表形态自动接入，从表/树表缺省排除）。
+     */
+    public static boolean resolveMobile(Integer projectVal) {
+        return projectVal != null && projectVal == 1;
+    }
+
+    /**
+     * V6.6 文件能力包开关的回落唯一实现：系统级 → 硬编码关。
+     * 与 resolvePay 同款语义；文件上传下载基座（sys_file 表 + /file 端点 + 上传组件）
+     * 是系统级能力包，无表级开关（业务表经 html_type=image/file 列配置自动接入，
+     * 没开能力包时列仍按普通文本框渲染，不产生死链）。
+     */
+    public static boolean resolveFile(Integer projectVal) {
+        return projectVal != null && projectVal == 1;
+    }
+
+    /**
+     * V6.7 测试骨架开关的回落唯一实现：系统级 → 硬编码<b>开</b>。
+     * 与 resolvePay/resolveFile 方向相反：测试只写 src/test 目录，零运行时侵入，
+     * 没有理由默认关；test_enabled=0 才显式关闭。
+     */
+    public static boolean resolveTest(Integer projectVal) {
+        return projectVal == null || projectVal == 1;
+    }
+
+    /**
+     * V6.8 品牌主色的回落唯一实现：配置值 → 硬编码 {@code #e1251b}。
+     * <p>只做格式宽松校验（{@code #rgb}/{@code #rrggbb}），非法值回落默认色，
+     * 避免把 {@code red;} 这类串直接拼进 CSS 变量打坏整个页面。
+     */
+    public static String resolveThemeColor(String projectVal) {
+        if (projectVal == null) {
+            return DEFAULT_THEME_COLOR;
+        }
+        String v = projectVal.trim();
+        return v.matches("^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$") ? v : DEFAULT_THEME_COLOR;
+    }
+
+    /**
+     * V6.8 应用显示名的回落唯一实现：配置值 → 项目名 → 项目编码。
+     */
+    public static String resolveAppName(String projectVal, String projectName, String projectCode) {
+        return firstText(projectVal, projectName, projectCode, "应用");
+    }
+
+    /**
+     * V6.8 品牌 Logo：空 = 调用方自行回落（favicon 用 {@link #FALLBACK_APP_LOGO}，
+     * 侧边栏/登录页用文字标识）。绝不回落成不存在的 logo.png——那会让每个新工程的 favicon 都是 404。
+     */
+    public static final String FALLBACK_APP_LOGO = "placeholder.svg";
+
+    public static String resolveAppLogo(String projectVal) {
+        return projectVal == null ? "" : projectVal.trim();
+    }
+
+    /** V6.8 图片展示尺寸的唯一定义源（模板只消费模型键，禁止再写死像素） */
+    public static final int IMAGE_LIST_SIZE = 80;
+    public static final int IMAGE_DETAIL_SIZE = 120;
+    /** 主题默认色（与后台既有主色一致） */
+    public static final String DEFAULT_THEME_COLOR = "#e1251b";
+
+    /**
      * 构建完整渲染模型（无子表）
      */
     public static Map<String, Object> build(GenTable table, List<GenTableColumn> cols) {
@@ -225,6 +315,18 @@ public final class GenTemplateModel {
         String prefix = firstText(table.getGatewayPrefix(), project == null ? null : project.gatewayPrefix(),
                 "");
         String backendBase = orDefault(table.getBackendPath(), "src/main/java/" + pkg.replace('.', '/'));
+        // V6.7 测试骨架落点：与 backendBase 同根推导（src/main/java → src/test/java|resources）。
+        // backendPath 自定义值不含 src/main/java 段时（罕见）按同前缀 + "-test" 兜底，
+        // 生成 nextSteps 里会提示核对路径，避免静默写错位置
+        String testJavaBase = backendBase.contains("src/main/java")
+                ? backendBase.replaceFirst("src/main/java", "src/test/java")
+                : backendBase + "-test";
+        // resources 基路径只取模块根：src/test/resources 下没有包路径，
+        // 照搬 testJavaBase 的 replace 会把包尾巴带进来（.../resources/com/demo），
+        // application-test.yml 的 classpath*:schema/table-*.sql 就一张表也扫不到
+        String testResBase = backendBase.contains("src/main/java")
+                ? backendBase.substring(0, backendBase.indexOf("src/main/java")) + "src/test/resources"
+                : backendBase + "-test/resources";
         // 根包名不进 gen_table（它是工程级属性），所以只看系统 → 全局静态值
         String effectiveRootPkg = firstText(project == null ? null : project.rootPackage(), rootPkg);
         // 权限点前缀只在多系统场景需要；单系统（无 project）保持原样，避免存量页面权限码全变
@@ -252,6 +354,8 @@ public final class GenTemplateModel {
         m.put("pkg", pkg);
         m.put("rootPkg", effectiveRootPkg);
         m.put("backendBase", backendBase);
+        m.put("testJavaBase", testJavaBase);
+        m.put("testResBase", testResBase);
         m.put("className", className);
         m.put("varName", decap(className));
         m.put("tableName", table.getTableName());
@@ -259,7 +363,7 @@ public final class GenTemplateModel {
         // 规则统一放在 GenNaming，菜单服务与自检服务调的是同一个方法——
         // 这里若自己拼字符串，就会出现「大小写/空白处理不一致 → 按钮点了没反应」的静默 bug。
         m.put("permsPrefix", com.codegen.support.GenNaming.permsPrefix(effectiveProjectCode, table.getTableName()));
-        m.put("comment", orDefault(table.getTableComment(), className));
+        m.put("comment", sanitizeComment(orDefault(table.getTableComment(), className)));
         m.put("moduleName", module);
         m.put("gatewayPrefix", prefix);
         m.put("author", orDefault(table.getAuthor(), ""));
@@ -272,6 +376,10 @@ public final class GenTemplateModel {
         m.put("isMicro", microStructure);
         m.put("apiBase", microStructure ? "/" + module
                 : prefix.isEmpty() ? "/" + module : "/api/" + prefix + "/" + module);
+        // V6.8 字典等「非模块级」接口的前缀根：
+        // apiBase 带模块段（/api/{prefix}/{module}），字典是全局接口，必须去掉模块段再拼。
+        // 空前缀（直连 + dev 代理剥 /dev-api）时为 ""，micro（网关按 /{module} 路由）也为 ""。
+        m.put("apiRoot", microStructure || prefix.isEmpty() ? "" : "/api/" + prefix);
 
         // 原始开关
         m.put("genEntity", on(table.getGenEntity()));
@@ -304,6 +412,8 @@ public final class GenTemplateModel {
         m.put("columns", bizModels);
         m.put("queryColumns", toModel(queryCols));
         m.put("vueQueryColumns", toModel(vueQueryCols));
+        // V6.7 测试建表模板需要全量业务列（formColumns 只是 is_form 子集）
+        m.put("bizCols", toModel(biz));
         m.put("listColumns", toModel(listCols));
         m.put("formColumns", toModel(formCols));
 
@@ -423,6 +533,15 @@ public final class GenTemplateModel {
         // 本表作为子表：唯一外键字段
         boolean isChild = table.getMasterTableId() != null && table.getMasterTableId() > 0;
         m.put("isChild", isChild);
+        // V6.7 测试骨架：开关 + 出 Controller 的非从表 + 单模块工程才生成（multi/micro 启动类在
+        // bootstrap、业务类在 service，跨模块 @SpringBootTest 落点 P1 再支持，先保证不产坏文件）。
+        // 门控结果只算一次，引擎与模板只认结果（genPrint 同款约定）
+        boolean multiStructure = project != null
+                && ("multi".equals(orDefault(project.projectStructure(), ""))
+                    || "micro".equals(orDefault(project.projectStructure(), "")));
+        boolean testOn = resolveTest(project == null ? null : project.testEnabled()) && !multiStructure;
+        m.put("testEnabled", testOn);
+        m.put("hasControllerTest", testOn && on(table.getGenController()) && !isChild);
         m.put("masterFkColumn", isChild ? orDefault(table.getMasterForeignKey(), "") : "");
         m.put("masterFkField", isChild ? GenUtils.toCamel(orDefault(table.getMasterForeignKey(), "")) : "");
         m.put("masterFkInForm", isChild && formCols.stream().anyMatch(c -> c.getColumnName() != null
@@ -508,6 +627,21 @@ public final class GenTemplateModel {
                 && cols != null && cols.stream().anyMatch(c ->
                 "pay_status".equalsIgnoreCase(c.getColumnName())));
 
+        // V6.6 文件能力包：系统开了文件基座 + 页面里有 image/file 列 → 页面 import 上传组件（模板条件块）。
+        // 系统没开时列按普通文本框渲染（htmlType 仍是 image/file 但组件不注册，导入即坏）——
+        // 所以 hasUpload 一起受 fileEnabled 网控，与 hasPayStatus 防死链同款思路。
+        // 统计范围必须含子表/孙表：模板对 child.formColumns / gc.formColumns 同样渲染上传组件，
+        // 只看主表会让「主表无上传列、子表有」的页面漏注册组件（渲染即 Unknown custom element）
+        boolean fileOn = genFrontend && resolveFile(project == null ? null : project.fileEnabled());
+        m.put("fileEnabled", fileOn);
+        m.put("hasUpload", fileOn && (hasUploadColumn(toModel(biz))
+                || childrenModel.stream().anyMatch(GenTemplateModel::childHasUpload)));
+        // V6.8 图片展示尺寸与多图标记：唯一实现在 GenTemplateModel，模板只消费（禁止再写死 44/64px）
+        m.put("imageListSize", IMAGE_LIST_SIZE);
+        m.put("imageDetailSize", IMAGE_DETAIL_SIZE);
+        boolean hasMultiImage = biz.stream().anyMatch(c -> GenUtils.looksLikeMultiImageColumn(c.getColumnName()));
+        m.put("hasMultiImage", fileOn && hasMultiImage);
+
         // ===== P3-2 多对多 =====
         // 中间表本身不需要一整套 CRUD 页面：它是关系，不是实体。
         // 这里给出标记，由模板决定「中间表只生成只读接口 + 双侧主表挂多选」。
@@ -573,6 +707,9 @@ public final class GenTemplateModel {
                 .filter(c -> c.getUniqueFlag() != null && c.getUniqueFlag() == 1).toList();
         m.put("hasUnique", !uniqueCols.isEmpty());
         m.put("uniqueColumns", toModel(uniqueCols));
+        // V6.7 集成测试新增/修改 body：Java 侧算好 Java 表达式文本（模板只输出不拼 JSON，
+        // FreeMarker 里手拼转义引号必然翻车）；唯一列值运行时随机防测试互撞
+        m.put("testFieldsJsonExpr", testFieldsJsonExpr(formCols, uniqueCols));
         // 单列唯一时才做前端异步查重（联合唯一不适合逐字段实时校验）
         m.put("hasSingleUnique", uniqueCols.size() == 1);
 
@@ -592,6 +729,72 @@ public final class GenTemplateModel {
     }
 
     /**
+     * V6.7 产物测试出厂：集成测试新增/修改 body 的 Java 表达式文本。
+     * 选列 = is_form 且必填，再补首个字符串列（保证 update 有可改字段）；
+     * 值按 javaType 给最小合法字面量；唯一列的值运行时随机（suffix()）防测试互撞唯一键。
+     * 返回的是「Java 源码表达式」，如 {@code "{\"name\":\"it\",\"age\":1}"}，
+     * 含唯一列时为 {@code "{\"name\":\"" + suffix() + "\",\"age\":1}"}。
+     */
+    private static String testFieldsJsonExpr(List<GenTableColumn> formCols, List<GenTableColumn> uniqueCols) {
+        List<GenTableColumn> chosen = new ArrayList<>();
+        for (GenTableColumn c : formCols) {
+            if (on(c.getIsRequired())) {
+                chosen.add(c);
+            }
+        }
+        if (chosen.stream().noneMatch(c -> "String".equals(c.getJavaType()))) {
+            for (GenTableColumn c : formCols) {
+                if ("String".equals(c.getJavaType()) && !chosen.contains(c)) {
+                    chosen.add(c);
+                    break;
+                }
+            }
+        }
+        if (chosen.isEmpty()) {
+            return "\"{\\\"_gen_it\\\":1}\"";
+        }
+        java.util.Set<String> uniqueFields = new java.util.LinkedHashSet<>();
+        for (GenTableColumn c : uniqueCols) {
+            uniqueFields.add(c.getJavaField());
+        }
+        StringBuilder json = new StringBuilder("{");
+        for (int i = 0; i < chosen.size(); i++) {
+            GenTableColumn c = chosen.get(i);
+            if (i > 0) {
+                json.append(',');
+            }
+            json.append('"').append(c.getJavaField()).append("\":");
+            String jt = c.getJavaType() == null ? "String" : c.getJavaType();
+            if ("parentId".equals(c.getJavaField())) {
+                json.append('0');   // 树表根节点约定
+            } else if (uniqueFields.contains(c.getJavaField()) && "String".equals(jt)) {
+                json.append("@U@");
+            } else if (uniqueFields.contains(c.getJavaField())) {
+                json.append("@N@");
+            } else if ("String".equals(jt)) {
+                json.append("\"it\"");
+            } else if ("LocalDate".equals(jt)) {
+                json.append("\"2026-01-01\"");
+            } else if ("LocalDateTime".equals(jt)) {
+                json.append("\"2026-01-01T00:00:00\"");
+            } else if ("LocalTime".equals(jt)) {
+                json.append("\"00:00:00\"");
+            } else if ("Boolean".equals(jt)) {
+                json.append("true");
+            } else {
+                json.append('1');   // Integer/Long/BigDecimal 等数值
+            }
+        }
+        json.append('}');
+        // 转 Java 字符串字面量：引号转义后嵌引号成表达式；唯一列占位符换成运行时拼接
+        String escaped = json.toString().replace("\"", "\\\"");
+        String expr = "\"" + escaped + "\"";
+        expr = expr.replace("\\\"@U@\\\"", "\\\" + suffix() + \\\"");
+        expr = expr.replace("@N@", "\" + (System.nanoTime() % 1000000) + \"");
+        return expr;
+    }
+
+    /**
      * 单张子表的模板模型（V4.4 从 build 主流程抽出，支持一主多子循环调用）。
      *
      * <p>键名与 V3.x 单子表时代完全一致（className/varName/fkCapField/...），
@@ -606,7 +809,7 @@ public final class GenTemplateModel {
         cm.put("className", ct.getClassName());
         cm.put("varName", decap(ct.getClassName()));
         cm.put("tableName", ct.getTableName());
-        cm.put("comment", orDefault(ct.getTableComment(), ct.getClassName()));
+        cm.put("comment", sanitizeComment(orDefault(ct.getTableComment(), ct.getClassName())));
         cm.put("moduleName", orDefault(ct.getModuleName(), module));
         cm.put("pkg", childPkg);
         cm.put("rootPkg", rootPkg);
@@ -652,7 +855,7 @@ public final class GenTemplateModel {
         gcm.put("className", gct.getClassName());
         gcm.put("varName", decap(gct.getClassName()));
         gcm.put("tableName", gct.getTableName());
-        gcm.put("comment", orDefault(gct.getTableComment(), gct.getClassName()));
+        gcm.put("comment", sanitizeComment(orDefault(gct.getTableComment(), gct.getClassName())));
         gcm.put("pkg", orDefault(gct.getPackageName(), parentChildPkg));
         gcm.put("fkColumn", gFk);
         gcm.put("fkField", GenUtils.toCamel(gFk));
@@ -663,6 +866,32 @@ public final class GenTemplateModel {
                 .filter(c -> c.getColumnName() == null || !c.getColumnName().equalsIgnoreCase(gFk))
                 .toList()));
         return gcm;
+    }
+
+    /** 列模型是否带上传控件标记（image / file / multiImage，V6.8 起含多图） */
+    private static boolean isUploadColumn(Object colModel) {
+        return colModel instanceof Map<?, ?> cm && Boolean.TRUE.equals(cm.get("isUpload"));
+    }
+
+    private static boolean hasUploadColumn(List<?> columnModels) {
+        return columnModels != null && columnModels.stream().anyMatch(GenTemplateModel::isUploadColumn);
+    }
+
+    /** 子表是否自带上传列（含它自己的下级明细表单列）——hasUpload 判定用 */
+    private static boolean childHasUpload(Map<String, Object> child) {
+        if (hasUploadColumn(asList(child.get("formColumns")))) {
+            return true;
+        }
+        for (Object grand : asList(child.get("grandChildren"))) {
+            if (grand instanceof Map<?, ?> gm && hasUploadColumn(asList(gm.get("formColumns")))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<?> asList(Object value) {
+        return value instanceof List<?> list ? list : List.of();
     }
 
     /**
@@ -714,6 +943,11 @@ public final class GenTemplateModel {
     /** 「上级分类ID，0=顶级 1=一级」这类逗号枚举尾巴：主标题同样只取前半段 */
     private static final java.util.regex.Pattern COMMENT_ENUM_TAIL =
             java.util.regex.Pattern.compile("^([^,，:：（(]{1,40})[,，]\\s*\\d+\\s*[-=:：]?.+$");
+
+    /** 注释脱敏：剥掉单双引号，防止注释原文嵌进 Java/JS 字符串字面量打坏生成代码（坑 52） */
+    private static String sanitizeComment(String s) {
+        return s == null ? null : s.replace("\"", "").replace("'", "");
+    }
 
     private static String commentLabel(String comment) {
         return commentLabel(comment, null);
@@ -917,12 +1151,12 @@ public final class GenTemplateModel {
             // 数据库列名：查重、导出表头映射等需要按真实列名拼 SQL
             cm.put("dbField", c.getColumnName());
             cm.put("javaType", javaType);
-            // 原始注释：枚举说明等仍可能在少数场景被引用
-            cm.put("columnComment", c.getColumnComment());
+            // 原始注释：枚举说明等仍可能在少数场景被引用（剥掉引号，防止打进字符串字面量打坏生成代码，坑 52）
+            cm.put("columnComment", sanitizeComment(c.getColumnComment()));
             // 页面显示名：剥掉注释里的枚举说明（状态:1启用0停用 -> 状态）；
             // 注释整体是编号映射（1男 2女 0未知）时回落列名，映射串不再整段上屏。
             // vue 模板的 label/placeholder/校验消息统一用这个，原始注释不再直接上屏
-            cm.put("commentLabel", commentLabel(c.getColumnComment(), c.getColumnName()));
+            cm.put("commentLabel", sanitizeComment(commentLabel(c.getColumnComment(), c.getColumnName())));
             cm.put("columnType", c.getColumnType());
             cm.put("queryType", c.getQueryType());
             cm.put("queryOp", queryOp(c.getQueryType()));
@@ -946,6 +1180,13 @@ public final class GenTemplateModel {
             cm.put("isDate", "date".equals(htmlType));
             cm.put("isDatetime", "datetime".equals(htmlType));
             cm.put("isPick", GenValidateUtils.isPick(htmlType));
+            // V6.6 文件能力包：图片/文件上传控件派生标志（唯一实现在此，模板只消费）
+            cm.put("isImage", "image".equals(htmlType));
+            cm.put("isFile", "file".equals(htmlType));
+            // V6.8 多图字段：JSON 数组字符串列，列表取首图、详情/表单渲染多图组件
+            cm.put("isMultiImage", "multiImage".equals(htmlType));
+            // 上传类控件统一标志（image/file/multiImage）——统计口径只认这一个，避免各处各写一遍
+            cm.put("isUpload", "image".equals(htmlType) || "file".equals(htmlType) || "multiImage".equals(htmlType));
             // P1-2 列宽自适应：按控件类型与宽度语义给默认值，避免所有列等宽
             cm.put("colWidth", columnWidth(c, htmlType, javaType));
             cm.put("dictType", hasDict ? dictType.trim() : "");

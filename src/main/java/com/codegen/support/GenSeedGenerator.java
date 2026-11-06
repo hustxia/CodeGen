@@ -64,17 +64,51 @@ public class GenSeedGenerator {
 
     // ==================== 入口 ====================
 
-    /** 流水线 seed 步调用 */
+    /** 流水线 seed 步调用（规则词库，V5.2 行为基线） */
     public GenSeedVO seedPipeline(GenPipeline pipeline) {
-        return seedFor(pipeline.getProjectId(), pipeline.getDbName(), pipeline.getPipelineNo());
+        return seedPipeline(pipeline, SeedValuePools.defaults());
+    }
+
+    /**
+     * V7.1 AI 增强：pools 为业务贴合的语义值池。
+     * 结构约束（外键区间/唯一后缀/枚举/长度）仍由规则引擎保证，AI 只换取值来源。
+     */
+    public GenSeedVO seedPipeline(GenPipeline pipeline, SeedValuePools pools) {
+        return seedFor(pipeline.getProjectId(), pipeline.getDbName(), pipeline.getPipelineNo(), pools);
+    }
+
+    /** 独立补数（规则词库） */
+    public GenSeedVO seedFor(Long projectId, String schema, String pipelineNo) {
+        return seedFor(projectId, schema, pipelineNo, SeedValuePools.defaults());
     }
 
     /**
      * 独立补数：只处理台账中且目标库里 0 行的表。
      *
      * @param pipelineNo 非 null 时把 seed.sql 落盘到 logs/pipeline/{no}/ 供人工重放
+     * @param pools      V7.1 语义值池，null 时回落默认词库
      */
-    public GenSeedVO seedFor(Long projectId, String schema, String pipelineNo) {
+    public GenSeedVO seedFor(Long projectId, String schema, String pipelineNo, SeedValuePools pools) {
+        return buildSeed(projectId, schema, pipelineNo, pools, null, true).vo();
+    }
+
+    /**
+     * V7.3 P0-2：只生成 seed SQL、不连库执行，供手动写盘/下载的 SQL 交付物使用。
+     *
+     * <p>结构与取值规则复用同一实现，手工出口和流水线出口的 seed 内容不会漂移。
+     *
+     * @param onlyTables 仅生成这些表（null = 台账全部表）
+     */
+    public String renderSeedSql(Long projectId, String schema, java.util.Collection<String> onlyTables) {
+        return buildSeed(projectId, schema, null, SeedValuePools.defaults(), onlyTables, false).sql();
+    }
+
+    private record SeedBuild(GenSeedVO vo, String sql) {
+    }
+
+    private SeedBuild buildSeed(Long projectId, String schema, String pipelineNo, SeedValuePools pools,
+                                java.util.Collection<String> onlyTables, boolean execute) {
+        SeedValuePools vp = pools == null ? SeedValuePools.defaults() : pools;
         Random rnd = new Random();
         List<GenTable> ledger = tableService.lambdaQuery()
                 .eq(GenTable::getProjectId, projectId)
@@ -95,7 +129,14 @@ public class GenSeedGenerator {
         // 只保留目标库真实存在的表
         Set<String> real = new HashSet<>(jdbcTemplate.queryForList(
                 "SELECT table_name FROM information_schema.tables WHERE table_schema = ?", String.class, schema));
-        List<String> tables = ordered.stream().filter(real::contains).toList();
+        Set<String> only = onlyTables == null ? null : onlyTables.stream()
+                .map(n -> n == null ? "" : n.trim().toLowerCase())
+                .filter(n -> !n.isEmpty())
+                .collect(java.util.stream.Collectors.toSet());
+        List<String> tables = ordered.stream()
+                .filter(real::contains)
+                .filter(t -> only == null || only.contains(t))
+                .toList();
 
         // 外键依赖：table -> 指向的父表列表（仅表集内）
         Map<String, List<String>> parents = fkParents(schema, tables);
@@ -142,7 +183,7 @@ public class GenSeedGenerator {
             budget -= rows;
 
             TablePlan plan = buildTablePlan(schema, table, comment, cols,
-                    parents.getOrDefault(table, List.of()), parentFirstId, parentRows, rows, rnd);
+                    parents.getOrDefault(table, List.of()), parentFirstId, parentRows, rows, rnd, vp);
             if (plan.error != null) {
                 vo.getSkipped().add(skip(table, plan.error));
                 continue;
@@ -158,18 +199,20 @@ public class GenSeedGenerator {
             if (pipelineNo != null && !pipelineNo.isBlank()) {
                 writeFile(pipelineNo, sql.toString());
             }
-            GenDdlExecuteDTO exec = new GenDdlExecuteDTO();
-            exec.setDdl(sql.toString());
-            exec.setSchema(schema);
-            exec.setAutoImport(false);
-            var r = ddlService.execute(exec);
-            log.info("seed 执行完成: success={} failed={}", r.getSuccessCount(), r.getFailedCount());
+            if (execute) {
+                GenDdlExecuteDTO exec = new GenDdlExecuteDTO();
+                exec.setDdl(sql.toString());
+                exec.setSchema(schema);
+                exec.setAutoImport(false);
+                var r = ddlService.execute(exec);
+                log.info("seed 执行完成: success={} failed={}", r.getSuccessCount(), r.getFailedCount());
+            }
         }
 
         vo.setTotalRows(totalRows);
         vo.setSummary("共 " + vo.getInsertedTables() + " 表 " + totalRows + " 行"
                 + (vo.getSkipped().isEmpty() ? "" : "；跳过 " + vo.getSkipped().size() + " 张"));
-        return vo;
+        return new SeedBuild(vo, sql.toString());
     }
 
     // ==================== 行数策略 ====================
@@ -256,7 +299,8 @@ public class GenSeedGenerator {
     private TablePlan buildTablePlan(String schema, String table, String tableComment,
                                      List<ColMeta> cols, List<String> parentTables,
                                      Map<String, Integer> parentFirstId,
-                                     Map<String, Integer> parentRows, int rows, Random rnd) {
+                                     Map<String, Integer> parentRows, int rows, Random rnd,
+                                     SeedValuePools pools) {
         // 唯一列判定（information_schema.statistics，单列唯一）
         Map<String, Boolean> uniqueCols = new HashMap<>();
         List<Map<String, Object>> urows = jdbcTemplate.queryForList(
@@ -290,7 +334,7 @@ public class GenSeedGenerator {
         for (int r = 0; r < rows; r++) {
             List<String> values = new ArrayList<>();
             for (ColMeta c : fillCols) {
-                values.add(valueFor(c, r, rnd, table, uniqueCols.containsKey(c.name().toLowerCase())));
+                values.add(valueFor(c, r, rnd, table, uniqueCols.containsKey(c.name().toLowerCase()), pools));
             }
             // 外键列：指向表集内父表的列用父表实际 id 区间
             for (FkRef fk : fkRefs) {
@@ -369,26 +413,10 @@ public class GenSeedGenerator {
     }
 
     // ==================== 取值引擎（纯函数，单测覆盖） ====================
+    // V7.1：通用词库迁移到 SeedValuePools.defaults()（与原数组逐字一致，降级零行为差）；
+    // AI 增强时换业务值池，本类继续负责枚举/外键/唯一/长度等结构约束
 
-    private static final String[] PERSONS = {"张伟", "王芳", "李娜", "刘强", "陈静", "杨洋", "赵磊", "黄敏",
-            "周杰", "吴丽", "徐明", "孙娟", "马超", "朱婷", "胡军", "郭涛"};
-    private static final String[] COMPANIES = {"华信科技有限公司", "恒达贸易有限公司", "宏远物流有限公司",
-            "蓝天医疗器械公司", "瑞丰食品有限公司", "中兴建材集团", "汇金投资有限公司", "永昌实业",
-            "天成电子科技", "博雅文化传播"};
-    private static final String[] CITIES = {"北京市", "上海市", "广州市", "深圳市", "杭州市",
-            "成都市", "武汉市", "南京市", "西安市", "重庆市", "苏州市", "郑州市"};
-    private static final String[] STREETS = {"中山路", "人民路", "建设大道", "解放路", "和平街",
-            "科技园区", "工业园区", "滨江大道"};
-    private static final String[] DEPTS = {"综合办公室", "人力资源部", "财务部", "采购部", "销售部",
-            "仓储物流部", "质量管理部", "信息技术部"};
-    private static final String[] PRODUCTS = {"不锈钢板材", "包装纸箱", "电子元器件", "润滑油", "精密轴承",
-            "密封圈套装", "电缆线", "滤芯组件", "标签耗材", "标准紧固件"};
-    private static final String[] TITLES = {"综合管理", "生产运营", "客户服务", "质量管理", "技术研发",
-            "市场拓展", "供应链管理", "行政后勤", "财务管理", "信息服务"};
-    private static final String[] REMARKS = {"常规业务", "客户加急", "按合同执行", "样品试用",
-            "内部领用", "退货换货", "重点跟踪", ""};
-    private static final String[] SPECS = {"标准型", "加强型", "经济型", "定制型"};
-
+    /** 语义类别（按列名/注释关键词识别） */
     /** 语义类别（按列名/注释关键词识别） */
     enum Semantic {
         NONE, PERSON, COMPANY, ADDR, PHONE, EMAIL, DEPT, PRODUCT, AMOUNT, QTY, REMARK, CODE, TITLE, SPEC
@@ -448,17 +476,67 @@ public class GenSeedGenerator {
         return arr[rnd.nextInt(arr.length)];
     }
 
+    static String pick(List<String> arr, Random rnd) {
+        return arr.get(rnd.nextInt(arr.size()));
+    }
+
+    // ==================== V7.1：表元数据（AI 值池提示词素材） ====================
+
+    /** 简要列信息：只给 AI 看名称与注释，不给类型（类型约束由规则引擎负责） */
+    public record ColBrief(String name, String comment) {
+    }
+
+    public record SeedTableMeta(String table, String tableComment, List<ColBrief> columns) {
+    }
+
+    /** 单次提示词允许的最大表数 */
+    public static final int META_TABLE_CAP = 60;
+
+    /**
+     * 读取 schema 全部基表的表名/注释与列名/注释（上限 {@value #META_TABLE_CAP} 张），
+     * 供 AI 生成业务贴合值池用。读失败抛异常由调用方降级。
+     */
+    public List<SeedTableMeta> loadTableMeta(String schema) {
+        List<String> tables = jdbcTemplate.queryForList(
+                "SELECT table_name FROM information_schema.tables"
+                        + " WHERE table_schema = ? AND table_type = 'BASE TABLE'"
+                        + " ORDER BY table_name LIMIT " + META_TABLE_CAP, String.class, schema);
+        Map<String, List<ColBrief>> byTable = new LinkedHashMap<>();
+        jdbcTemplate.query(
+                "SELECT table_name, column_name, column_comment FROM information_schema.columns"
+                        + " WHERE table_schema = ? ORDER BY table_name, ordinal_position",
+                rs -> {
+                    byTable.computeIfAbsent(rs.getString(1), k -> new ArrayList<>())
+                            .add(new ColBrief(rs.getString(2), rs.getString(3)));
+                }, schema);
+        List<SeedTableMeta> out = new ArrayList<>();
+        for (String t : tables) {
+            String comment = jdbcTemplate.queryForObject(
+                    "SELECT table_comment FROM information_schema.tables WHERE table_schema = ? AND table_name = ?",
+                    String.class, schema, t);
+            out.add(new SeedTableMeta(t, comment == null ? "" : comment,
+                    byTable.getOrDefault(t, List.of())));
+        }
+        return out;
+    }
+
     static String q(String v) {
         return "'" + v.replace("\\", "\\\\").replace("'", "''") + "'";
     }
 
+    static String valueFor(ColMeta c, int seq, Random rnd, String tableName, boolean unique) {
+        return valueFor(c, seq, rnd, tableName, unique, SeedValuePools.defaults());
+    }
+
     /**
-     * 单列取值：枚举（注释解析）→ 语义词库 → 类型兜底。
+     * 单列取值：枚举（注释解析）→ 列级 AI 覆盖（仅文本列）→ 语义词池 → 类型兜底。
      *
      * @param seq     行内序号（0 起），唯一列用它保证不重复
      * @param unique  是否单列唯一
+     * @param pools   V7.1 语义值池
      */
-    static String valueFor(ColMeta c, int seq, Random rnd, String tableName, boolean unique) {
+    static String valueFor(ColMeta c, int seq, Random rnd, String tableName, boolean unique,
+                           SeedValuePools pools) {
         // 1. 枚举：注释「1启用0停用」等（复用模板模型唯一实现）
         List<String[]> opts = GenTemplateModel.parseEnumOptions(c.comment(), c.name(), "String");
         if (!opts.isEmpty()) {
@@ -523,8 +601,19 @@ public class GenSeedGenerator {
         // 5. 字符串语义
         if (dt.equals("varchar") || dt.equals("char") || dt.equals("text") || dt.equals("tinytext")
                 || dt.equals("mediumtext") || dt.equals("longtext")) {
-            String base = textFor(sem, c, seq, rnd, tableName, unique);
             int max = c.charLen() > 0 ? c.charLen() : 255;
+            // 5a. 列级 AI 覆盖：仅对文本列生效，类型安全由本分支保证
+            List<String> ov = pools.columnValues(tableName, c.name());
+            if (!ov.isEmpty()) {
+                // 先按列长预留后缀空间截断，再拼唯一后缀——顺序反了后缀会被截掉（单测抓过）
+                String sfx = unique && max > 5 ? "-" + String.format("%04d", seq + 1) : "";
+                String b = ov.get(rnd.nextInt(ov.size()));
+                if (b.length() > max - sfx.length()) {
+                    b = b.substring(0, max - sfx.length());
+                }
+                return q(b + sfx);
+            }
+            String base = textFor(sem, c, seq, rnd, tableName, unique, pools);
             // 汉字按 utf8mb4 是 1 字符计（MySQL varchar(N) 是字符数），直接截断
             return q(base.length() > max ? base.substring(0, max) : base);
         }
@@ -539,27 +628,34 @@ public class GenSeedGenerator {
         return c.nullable() ? "NULL" : "''";
     }
 
-    private static String textFor(Semantic sem, ColMeta c, int seq, Random rnd, String tableName, boolean unique) {
+    private static String textFor(Semantic sem, ColMeta c, int seq, Random rnd, String tableName,
+                                  boolean unique) {
+        return textFor(sem, c, seq, rnd, tableName, unique, SeedValuePools.defaults());
+    }
+
+    private static String textFor(Semantic sem, ColMeta c, int seq, Random rnd, String tableName,
+                                  boolean unique, SeedValuePools pools) {
         String suffix = unique ? "-" + String.format("%04d", seq + 1) : "";
         return switch (sem) {
-            case PERSON -> pick(PERSONS, rnd) + suffix;
-            case COMPANY -> pick(COMPANIES, rnd) + suffix;
-            case ADDR -> pick(CITIES, rnd) + pick(STREETS, rnd) + (1 + rnd.nextInt(200)) + "号" + suffix;
+            case PERSON -> pick(pools.getPersons(), rnd) + suffix;
+            case COMPANY -> pick(pools.getCompanies(), rnd) + suffix;
+            case ADDR -> pick(pools.getCities(), rnd) + pick(pools.getStreets(), rnd)
+                    + (1 + rnd.nextInt(200)) + "号" + suffix;
             case PHONE -> "138" + String.format("%08d", 10000000 + rnd.nextInt(90000000)) + (unique ? "-" + (seq + 1) : "");
             case EMAIL -> "user" + String.format("%03d", seq + 1) + "@example.com";
-            case DEPT -> pick(DEPTS, rnd) + suffix;
-            case PRODUCT -> pick(PRODUCTS, rnd) + suffix;
-            case TITLE -> pick(TITLES, rnd) + (unique ? "-" + (seq + 1) : "") + "系列" + (unique ? "" : "");
-            case SPEC -> pick(SPECS, rnd) + "-A" + (1 + rnd.nextInt(9));
+            case DEPT -> pick(pools.getDepts(), rnd) + suffix;
+            case PRODUCT -> pick(pools.getProducts(), rnd) + suffix;
+            case TITLE -> pick(pools.getTitles(), rnd) + (unique ? "-" + (seq + 1) : "") + "系列" + (unique ? "" : "");
+            case SPEC -> pick(pools.getSpecs(), rnd) + "-A" + (1 + rnd.nextInt(9));
             case REMARK -> {
-                String r = pick(REMARKS, rnd);
+                String r = pick(pools.getRemarks(), rnd);
                 yield r.isEmpty() && !unique ? "无" : r + suffix;
             }
             case CODE -> {
                 String abbr = tableName.length() > 6 ? tableName.substring(0, 6) : tableName;
                 yield (abbr + "2026" + String.format("%05d", seq + 1)).toUpperCase();
             }
-            default -> pick(TITLES, rnd) + "示例" + (seq + 1) + suffix;
+            default -> pick(pools.getTitles(), rnd) + "示例" + (seq + 1) + suffix;
         };
     }
 

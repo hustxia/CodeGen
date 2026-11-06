@@ -1,0 +1,29 @@
+package com.demo.entity;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.codegen.common.entity.BaseEntity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * 标签
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("demo_tag")
+public class DemoTag extends BaseEntity {
+
+    // <gen:begin key="entity-fields">
+    /**
+     * 标签名称
+     */
+    private String tagName;
+
+    /**
+     * 排序
+     */
+    private Integer sortNo;
+
+    // <gen:end key="entity-fields">
+    // ===== 以下为手写区：写在 gen:end 之后的内容，重新生成不会被覆盖 =====
+}

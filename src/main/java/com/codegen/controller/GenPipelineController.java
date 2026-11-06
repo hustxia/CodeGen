@@ -118,4 +118,20 @@ public class GenPipelineController {
     public Result<com.codegen.vo.GenSeedVO> seed(@PathVariable("id") Long id) {
         return Result.ok(pipelineService.seedExisting(id));
     }
+
+    @Autowired
+    private com.codegen.service.AiRecommendService aiRecommendService;
+
+    @Operation(summary = "V7.0 AI 建议预览：与现值 diff（只读，零写库）")
+    @GetMapping("/{id}/ai-recommend/preview")
+    public Result<com.codegen.vo.GenAiRecommendPreviewVO> aiRecommendPreview(@PathVariable("id") Long id) {
+        return Result.ok(aiRecommendService.preview(id));
+    }
+
+    @Operation(summary = "V7.0 AI 建议应用：勾选项写回 gen_table/gen_table_column，建议值以服务端产物为准")
+    @PostMapping("/{id}/ai-recommend/apply")
+    public Result<Integer> aiRecommendApply(@PathVariable("id") Long id,
+                                            @RequestBody com.codegen.dto.GenAiRecommendApplyDTO dto) {
+        return Result.ok(aiRecommendService.apply(id, dto));
+    }
 }

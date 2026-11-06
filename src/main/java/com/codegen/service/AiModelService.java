@@ -30,4 +30,16 @@ public interface AiModelService {
      * 把系统拆分为 8-12 个业务模块（完整系统模式第一步）
      */
     GenPipelineAiModulesVO modules(String systemName, String systemDesc);
+
+    /**
+     * V7.1 种子数据 AI 增强：根据系统名/描述与表结构元数据，生成业务贴合的语义值池
+     * （商品名/公司名/备注等 + 核心业务列的专属取值）。
+     *
+     * <p>结构约束仍由规则引擎保证——AI 只换取值来源，不直接产出行数据。
+     * AI 未启用/调用失败/解析失败一律抛业务异常，由 seed 步回落规则词库，不阻断流水线。
+     *
+     * @param tables 表元数据（表名/注释 + 列名/注释），超过 60 张时由实现截断或分批
+     */
+    com.codegen.support.SeedValuePools seedPools(String systemName, String systemDesc,
+                                                 java.util.List<com.codegen.support.GenSeedGenerator.SeedTableMeta> tables);
 }

@@ -14,6 +14,7 @@ import com.codegen.mapper.GenTableMapper;
 import com.codegen.mapper.SysProjectMapper;
 import com.codegen.service.GenCodeService;
 import com.codegen.service.GenDriftService;
+import com.codegen.service.GenSqlDeliverService;
 import com.codegen.service.GenTableColumnService;
 import com.codegen.support.GenPathResolver;
 import com.codegen.util.GenDigestUtils;
@@ -22,6 +23,7 @@ import com.codegen.util.GenTemplateEngine;
 import com.codegen.util.GenTemplateModel;
 import com.codegen.vo.GenDiffVO;
 import com.codegen.vo.GenFileVO;
+import com.codegen.vo.GenSqlDeliverVO;
 import com.codegen.vo.GenWriteVO;
 import com.codegen.common.context.UserContext;
 import com.codegen.common.exception.BusinessException;
@@ -67,6 +69,15 @@ public class GenCodeServiceImpl implements GenCodeService {
      * 否则就是静默丢账。用 ThreadLocal 是因为 Service 是单例，计数不能跨请求串。
      */
     private static final ThreadLocal<Integer> LEDGER_ERRORS = ThreadLocal.withInitial(() -> 0);
+
+    /**
+     * V7.3 P0-2：本次写盘的 SQL 交付物结果（按系统分组）。与台账计数同样的单例隔离理由。
+     */
+    private static final ThreadLocal<List<GenSqlDeliverVO>> SQL_DELIVERIES =
+            ThreadLocal.withInitial(ArrayList::new);
+
+    @Autowired
+    private GenSqlDeliverService sqlDeliverService;
 
     private static final DateTimeFormatter BATCH_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -140,6 +151,8 @@ public class GenCodeServiceImpl implements GenCodeService {
                     rendered.get(0).table(), projectConfigOf(rendered.get(0).table())).entrySet()) {
                 all.putIfAbsent(entry.getKey(), entry.getValue());
             }
+            // V7.3 P0-2：下载出口也带 SQL 交付物，与写盘/流水线同一套内容（db/ 下三个文件）
+            addSqlEntries(all, rendered.get(0).table(), dto == null ? null : dto.getIds());
             for (Map.Entry<String, String> entry : all.entrySet()) {
                 writeZipEntry(zip, entry.getKey(), entry.getValue());
             }
@@ -187,19 +200,29 @@ public class GenCodeServiceImpl implements GenCodeService {
     @Override
     public List<GenWriteVO> writeToDisk(GenWriteDTO dto, String batchNo) {
         LEDGER_ERRORS.set(0);
+        SQL_DELIVERIES.set(new ArrayList<>());
+        // 与 renderTables 同口径：写盘前清一次系统配置缓存，
+        // 否则管理页改完 sys_project（root/path 语义修正）后直调写盘仍用旧配置（坑 51）
+        clearProjectCache();
         List<Long> ids = dto == null ? null : dto.getIds();
         if (ids == null || ids.isEmpty()) {
             throw new BusinessException(400, "请先勾选要生成的表");
         }
         boolean overwrite = Boolean.TRUE.equals(dto.getOverwrite());
         boolean skipDrifted = Boolean.TRUE.equals(dto.getSkipDrifted());
+        // V6.8：受保护文件（既有 + 无台账快照）默认跳过，只有显式 force 才覆盖
+        boolean force = Boolean.TRUE.equals(dto.getForce());
         // 台账只取一次：逐文件查库会把「一个批次几十个文件」放大成几十次往返，
         // 而且同一批次内台账不会变，缓存一份没有一致性风险
         Map<String, GenDriftService.LedgerSnapshot> ledger = genDriftService.latestByPath();
         List<GenWriteVO> results = new ArrayList<>();
+        Map<Long, List<Long>> idsByProject = new LinkedHashMap<>();
         for (GenTable table : loadTablesInOrder(ids)) {
+            if (table.getProjectId() != null) {
+                idsByProject.computeIfAbsent(table.getProjectId(), k -> new ArrayList<>()).add(table.getId());
+            }
             int before = results.size();
-            results.addAll(writeTable(table, overwrite, skipDrifted, batchNo, ledger));
+            results.addAll(writeTable(table, overwrite, skipDrifted, force, batchNo, ledger));
             // 只看本表新增的结果：用累计 results 判断会让「第一张表写过」之后
             // 每张表都被打上生成时间，last_gen_time 直接失去意义
             boolean wrote = results.subList(before, results.size()).stream()
@@ -213,7 +236,47 @@ public class GenCodeServiceImpl implements GenCodeService {
             throw new BusinessException(404, "表配置不存在，无法写盘");
         }
         results.forEach(r -> r.setBatchNo(batchNo));
+        // V7.3 P0-2：写盘出口同步交付 SQL（db/init_tables.sql、init_seed.sql、init_menu.sql），
+        // 失败只记录不抛出——代码已经写好了，交付物失败不应该让整个写盘回滚。
+        deliverSqlForProjects(idsByProject, batchNo);
         return results;
+    }
+
+    @Override
+    public List<GenSqlDeliverVO> lastSqlDeliveries() {
+        return new ArrayList<>(SQL_DELIVERIES.get());
+    }
+
+    /**
+     * 按系统逐组交付 SQL；单个系统失败不影响其它系统，也不影响写盘结果。
+     */
+    private void deliverSqlForProjects(Map<Long, List<Long>> idsByProject, String batchNo) {
+        for (Map.Entry<Long, List<Long>> entry : idsByProject.entrySet()) {
+            try {
+                List<GenSqlDeliverService.SqlArtifact> artifacts =
+                        sqlDeliverService.buildProjectArtifacts(entry.getKey(), entry.getValue());
+                SQL_DELIVERIES.get().add(sqlDeliverService.deliver(entry.getKey(), batchNo, artifacts));
+            } catch (Exception e) {
+                log.warn("SQL 交付物生成失败 projectId={}: {}", entry.getKey(), e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * ZIP 出口：SQL 交付物以 {@code db/} 前缀追加到 manifest（首表所属系统为本包的系统）。
+     */
+    private void addSqlEntries(Map<String, String> all, GenTable first, List<Long> ids) {
+        if (first == null || first.getProjectId() == null || ids == null || ids.isEmpty()) {
+            return;
+        }
+        try {
+            for (GenSqlDeliverService.SqlArtifact artifact
+                    : sqlDeliverService.buildProjectArtifacts(first.getProjectId(), ids)) {
+                all.putIfAbsent("db/" + artifact.fileName(), artifact.content());
+            }
+        } catch (Exception e) {
+            log.warn("ZIP 追加 SQL 交付物失败 projectId={}: {}", first.getProjectId(), e.getMessage());
+        }
     }
 
     /**
@@ -241,13 +304,16 @@ public class GenCodeServiceImpl implements GenCodeService {
                 }
                 // V5.5 多模块：模块目录前缀 <stem>-domain/ 在 relPath 最前面，backendBase 段
                 // 不再顶头，改 contains 判定（前端路径不会含 backendBase 包路径段）
-                boolean isBackend = relPath.contains(backendBase + "/");
-                String root = isBackend ? backendRootOf(table) : frontendRootOf(table);
+                // V6.5 移动端：relPath 前缀 mobile/ = 第三侧 MOBILE
+                boolean isMobile = relPath.startsWith("mobile/");
+                boolean isBackend = !isMobile && GenPathResolver.isBackendRelPath(relPath, backendBase);
+                String root = isBackend ? backendRootOf(table)
+                        : isMobile ? mobileRootOf(table) : frontendRootOf(table);
                 if (!StringUtils.hasText(root)) {
                     continue;
                 }
                 Path rootPath = Paths.get(root).toAbsolutePath().normalize();
-                if (!isBackend) {
+                if (!isBackend && !isMobile) {
                     // 前端产物路径形如 src/api/x.js，可能叠加 gen.output.frontend-path 子目录
                     rootPath = frontendBaseOf(table, rootPath);
                 }
@@ -259,7 +325,7 @@ public class GenCodeServiceImpl implements GenCodeService {
                 vo.setTableName(table.getTableName());
                 vo.setPath(relPath);
                 vo.setAbsPath(target.toString());
-                vo.setSide(isBackend ? "BACKEND" : "FRONTEND");
+                vo.setSide(isBackend ? "BACKEND" : isMobile ? "MOBILE" : "FRONTEND");
                 String oldContent = null;
                 String actualMd5 = null;
                 if (Files.exists(target)) {
@@ -289,6 +355,9 @@ public class GenCodeServiceImpl implements GenCodeService {
                 // 「会不会被写入」取决于用户在第③步选的 overwrite 策略，由调用方推导，
                 // 不能混进 status——同一份差异不该因策略不同而变脸。
                 vo.setStatus(isNew ? "NEW" : (stats[0] + stats[1] == 0 ? "UNCHANGED" : "MODIFIED"));
+                // V6.8：既有文件但台账无快照 → 无法判断是否手改过，按受保护处理（与写盘侧同一判定）。
+                // 内容一致的文件无需写盘，不算受保护，否则第二次 dryRun 会冒出无意义的「受保护 N」。
+                vo.setProtectedFile(!isNew && snap == null && stats[0] + stats[1] > 0);
                 if (onlyChanged && "UNCHANGED".equals(vo.getStatus())) {
                     continue;
                 }
@@ -309,7 +378,7 @@ public class GenCodeServiceImpl implements GenCodeService {
      * @param batchNo 非空时，覆盖前先备份到 {@code <root>/.gen-backup/<batchNo>/} 并把
      *                备份路径、覆盖前 md5 一并记入 {@code gen_output} 台账
      */
-    private List<GenWriteVO> writeTable(GenTable table, boolean overwrite, boolean skipDrifted,
+    private List<GenWriteVO> writeTable(GenTable table, boolean overwrite, boolean skipDrifted, boolean force,
                                         String batchNo,
                                         Map<String, GenDriftService.LedgerSnapshot> ledger) {
         // 先解析目标模块，否则 backendBase 还是库里的旧值，后端文件会被误判成前端文件
@@ -325,18 +394,21 @@ public class GenCodeServiceImpl implements GenCodeService {
 
             try {
                 // V5.5 多模块：模块目录前缀在 relPath 最前面，同 diffTable 改 contains 判定
-                boolean isBackend = relPath.contains(backendBase + "/");
-                String group = isBackend ? "backend" : "frontend";
-                String root = isBackend ? backendRootOf(table) : frontendRootOf(table);
+                // V6.5 移动端：relPath 前缀 mobile/ = 第三侧 MOBILE，落 frontendModule-mobile 工程
+                boolean isMobile = relPath.startsWith("mobile/");
+                boolean isBackend = !isMobile && GenPathResolver.isBackendRelPath(relPath, backendBase);
+                String group = isBackend ? "backend" : isMobile ? "mobile" : "frontend";
+                String root = isBackend ? backendRootOf(table)
+                        : isMobile ? mobileRootOf(table) : frontendRootOf(table);
                 if (!StringUtils.hasText(root)) {
-                    String msg = (isBackend ? "后端" : "前端") + "根目录未配置：请在 gen.output."
+                    String msg = (isBackend ? "后端" : isMobile ? "移动端" : "前端") + "根目录未配置：请在 gen.output."
                             + (isBackend ? "backend-root" : "frontend-root") + " 或表配置中补充";
                     recordOutput(batchNo, table, group, relPath, "", "ERROR", 0, "", msg, null, null);
                     results.add(new GenWriteVO(table.getTableName(), relPath, "ERROR", msg));
                     continue;
                 }
                 Path rootPath = Paths.get(root).toAbsolutePath().normalize();
-                if (!isBackend) {
+                if (!isBackend && !isMobile) {
                     // 前端产物路径形如 src/api/x.js，可能叠加 gen.output.frontend-path 子目录
                     rootPath = frontendBaseOf(table, rootPath);
                 }
@@ -370,6 +442,18 @@ public class GenCodeServiceImpl implements GenCodeService {
                         continue;
                     }
                 }
+                // V6.8 受保护跳过：文件已存在但没有台账快照，说明它可能是用户手写的，
+                // 也可能台账丢过——两种情况都不该静默覆盖。要覆盖必须显式 force。
+                if (exists && overwrite && !force) {
+                    GenDriftService.LedgerSnapshot snap = ledger.get(target.toString());
+                    if (snap == null) {
+                        String msg = "既有文件且无台账快照（视为手改资产），按受保护跳过；确认要覆盖请传 force=true";
+                        recordOutput(batchNo, table, group, relPath, target.toString(), "SKIPPED", 0, "",
+                                msg, null, currentMd5);
+                        results.add(new GenWriteVO(table.getTableName(), relPath, "SKIPPED", msg));
+                        continue;
+                    }
+                }
                 // 覆盖前备份：只备份真正会被覆盖的已有文件
                 String backupPath = exists ? backup(rootPath, batchNo, relPath, target) : null;
                 String finalContent = content;
@@ -395,12 +479,13 @@ public class GenCodeServiceImpl implements GenCodeService {
                 byte[] writtenBytes = finalContent.getBytes(StandardCharsets.UTF_8);
                 boolean merged = "MERGED".equals(status);
                 String action = merged ? "MERGED" : (exists ? "OVERWRITTEN" : "WRITTEN");
-                recordOutput(batchNo, table, isBackend ? "backend" : "frontend", relPath, target.toString(),
+                recordOutput(batchNo, table, group, relPath, target.toString(),
                         action, writtenBytes.length, GenDigestUtils.md5Hex(writtenBytes), merged ? message : "",
                         backupPath, prevMd5);
                 results.add(new GenWriteVO(table.getTableName(), relPath, status, message, backupPath));
             } catch (Exception e) {
-                recordOutput(batchNo, table, relPath.contains(backendBase + "/") ? "backend" : "frontend",
+                recordOutput(batchNo, table, relPath.startsWith("mobile/") ? "mobile"
+                                : relPath.contains(backendBase + "/") ? "backend" : "frontend",
                         relPath, "", "ERROR", 0, "", e.getMessage(), null, null);
                 results.add(new GenWriteVO(table.getTableName(), relPath, "ERROR", e.getMessage()));
             }
@@ -582,7 +667,8 @@ public class GenCodeServiceImpl implements GenCodeService {
                 project.getRootPackage(), project.getGatewayPrefix(),
                 project.getRootPackage(), project.getProjectCode(),
                 project.getDefaultDeleteCascadeMode(), project.getDefaultGenPrint(),
-                project.getProjectStructure(), project.getPayEnabled());
+                project.getProjectStructure(), project.getPayEnabled(), project.getMobileEnabled(),
+                project.getFileEnabled(), project.getTestEnabled());
     }
 
     /**
@@ -800,6 +886,19 @@ public class GenCodeServiceImpl implements GenCodeService {
      *
      * <p>表级没有 frontendPath 字段（一张表不可能换前端工程），所以第一个有资格说话的就是系统。
      */
+    /**
+     * V6.5 移动端工程根：与前端工程平级的同级目录 {@code <前端工程目录名>-mobile}。
+     * 与 scaffold 侧 resolveRoot(dtoFrontendRoot, configRoot, frontendModule + "-mobile") 必须算出同一路径——
+     * 同一份 frontend 配置，scaffold 写骨架、生成写表配置，落进同一个 mobile 工程。
+     */
+    private String mobileRootOf(GenTable table) {
+        Path frontendBase = frontendBaseOf(table,
+                Paths.get(frontendRootOf(table)).toAbsolutePath().normalize());
+        Path parent = frontendBase.getParent();
+        String dirName = frontendBase.getFileName() == null ? "mobile" : frontendBase.getFileName().toString();
+        return (parent == null ? frontendBase : parent).resolve(dirName + "-mobile").toString();
+    }
+
     private String frontendPathOf(GenTable table) {
         return GenPathResolver.frontendPath(table, projectOf(table), outputProperties);
     }

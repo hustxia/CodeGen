@@ -207,8 +207,44 @@ CREATE TABLE `sys_project` (
   `flow_engine` varchar(16) DEFAULT NULL COMMENT '产物流程引擎：null/builtin=内置简易流，activiti=Activiti 8 引擎',
   `default_gen_deploy` tinyint DEFAULT NULL COMMENT '部署物默认:NULL=未配置(关) 1=生成 0=不生成',
   `pay_enabled` tinyint DEFAULT NULL COMMENT '支付能力包:NULL=未配置(关) 1=生成 0=不生成',
+  `mobile_enabled` tinyint DEFAULT NULL COMMENT '移动端工程:NULL=未配置(关) 1=生成 uni-app 单源 H5+微信小程序',
+  `file_enabled` tinyint DEFAULT NULL COMMENT '文件能力包:NULL=未配置(关) 1=生成上传下载基座 0=不生成',
+  `test_enabled` tinyint DEFAULT NULL COMMENT '测试骨架:NULL=未配置(开) 1=生成集成测试骨架 0=不生成',
+  `app_name` varchar(64) DEFAULT NULL COMMENT '应用显示名(空=项目名)',
+  `app_logo` varchar(255) DEFAULT NULL COMMENT 'Logo图片URL(空=内置logo)',
+  `app_theme_color` varchar(16) DEFAULT NULL COMMENT '主题主色(空=#e1251b)',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_project_code` (`project_code`,`deleted`),
   KEY `idx_default` (`is_default`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='系统台账（多系统输出的根配置）'
+;
+
+-- V7.0 起新增：流水线主表（预览/应用契约需要 gen_pipeline 行）
+DROP TABLE IF EXISTS `gen_pipeline`;
+CREATE TABLE `gen_pipeline` (
+  `id` bigint NOT NULL COMMENT '主键ID',
+  `pipeline_no` varchar(32) NOT NULL COMMENT '流水线号 PPL+时间戳',
+  `project_id` bigint DEFAULT NULL COMMENT '关联 sys_project',
+  `system_name` varchar(64) NOT NULL COMMENT '录入的系统名称',
+  `system_desc` varchar(512) DEFAULT NULL COMMENT '一句话业务描述',
+  `db_name` varchar(64) NOT NULL COMMENT '目标数据库名',
+  `backend_port` int DEFAULT NULL,
+  `frontend_port` int DEFAULT NULL,
+  `mode` varchar(16) NOT NULL DEFAULT 'ai',
+  `seed_mode` varchar(10) DEFAULT NULL COMMENT '数据初始化：rule/ai/off，NULL=off',
+  `status` varchar(16) NOT NULL DEFAULT 'draft',
+  `current_step` varchar(32) DEFAULT NULL,
+  `fail_reason` varchar(1024) DEFAULT NULL,
+  `frontend_url` varchar(256) DEFAULT NULL,
+  `backend_pid` bigint DEFAULT NULL,
+  `frontend_pid` bigint DEFAULT NULL,
+  `deleted` tinyint NOT NULL DEFAULT '0',
+  `create_by` bigint DEFAULT NULL,
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `update_by` bigint DEFAULT NULL,
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_no` (`pipeline_no`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='V5.0 一句话建系统流水线'
 ;

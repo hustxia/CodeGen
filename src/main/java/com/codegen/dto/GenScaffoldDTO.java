@@ -74,6 +74,24 @@ public class GenScaffoldDTO {
     @Schema(description = "V6.3 是否生成支付能力包（pay_order 表 + PaymentService 三渠道 + 收银台），默认 false；系统配置请把 sys_project.pay_enabled 设为同值")
     private Boolean payEnabled;
 
+    @Schema(description = "V6.5 是否生成移动端工程（uni-app 单源 H5+微信小程序，落 {frontendModule}-mobile），默认 false；系统配置请把 sys_project.mobile_enabled 设为同值")
+    private Boolean mobileEnabled;
+
+    @Schema(description = "V6.6 是否生成文件能力包（sys_file 表 + /file 上传下载端点 + ImageUpload/FileUpload 组件），默认 false；系统配置请把 sys_project.file_enabled 设为同值")
+    private Boolean fileEnabled;
+
+    @Schema(description = "V6.7 是否生成测试骨架（src/test 集成测试 + H2 内存库，打开即 mvn test 全绿），默认 true；multi/micro 工程暂不支持（P1）")
+    private Boolean testEnabled;
+
+    @Schema(description = "V6.8 应用显示名（title/侧边栏/登录页统一取它）；空=回落到项目名")
+    private String appName;
+
+    @Schema(description = "V6.8 Logo 图片 URL；空=使用内置 logo")
+    private String appLogo;
+
+    @Schema(description = "V6.8 主题主色（#rgb / #rrggbb）；空或非法=回落 #e1251b")
+    private String appThemeColor;
+
     @Schema(description = "V6.1 需下发的流程定义（平台不直连产物库，由调用方查询组装）；空=只写流程表 DDL")
     private java.util.List<FlowDef> flowDefs;
 

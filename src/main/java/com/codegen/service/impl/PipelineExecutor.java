@@ -60,11 +60,11 @@ import java.util.stream.Stream;
 @Component
 public class PipelineExecutor {
 
-    /** 步骤 key 常量（与 gen_pipeline_step 种子一致）。V5.2 起 db 后插入 seed */
+    /** 步骤 key 常量（与 gen_pipeline_step 种子一致）。V5.2 起 db 后插入 seed；V7.0 起 db 后插入 ai_recommend */
     public static final String[] STEP_KEYS = {
-            "model", "db", "seed", "scaffold", "gen",
+            "model", "db", "ai_recommend", "seed", "scaffold", "gen",
             "package_backend", "deploy_backend",
-            "package_frontend", "deploy_frontend",
+            "package_frontend", "package_mobile", "deploy_frontend",
             "health"
     };
 
@@ -87,6 +87,9 @@ public class PipelineExecutor {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final com.codegen.support.GenBpmnBuilder bpmnBuilder;
     private final com.codegen.service.FlowDefBpmnService flowDefBpmnService;
+    private final com.codegen.service.AiRecommendService aiRecommendService;
+    private final com.codegen.service.AiModelService aiModelService;
+    private final com.codegen.service.GenSqlDeliverService sqlDeliverService;
 
     public PipelineExecutor(GenPipelineMapper pipelineMapper,
                             GenPipelineStepMapper stepMapper,
@@ -103,7 +106,10 @@ public class PipelineExecutor {
                             com.codegen.support.GenSeedGenerator seedGenerator,
                             JdbcTemplate jdbcTemplate,
                             com.codegen.support.GenBpmnBuilder bpmnBuilder,
-                            com.codegen.service.FlowDefBpmnService flowDefBpmnService) {
+                            com.codegen.service.FlowDefBpmnService flowDefBpmnService,
+                            com.codegen.service.AiRecommendService aiRecommendService,
+                            com.codegen.service.AiModelService aiModelService,
+                            com.codegen.service.GenSqlDeliverService sqlDeliverService) {
         this.pipelineMapper = pipelineMapper;
         this.stepMapper = stepMapper;
         this.scaffoldService = scaffoldService;
@@ -120,6 +126,9 @@ public class PipelineExecutor {
         this.jdbcTemplate = jdbcTemplate;
         this.bpmnBuilder = bpmnBuilder;
         this.flowDefBpmnService = flowDefBpmnService;
+        this.aiRecommendService = aiRecommendService;
+        this.aiModelService = aiModelService;
+        this.sqlDeliverService = sqlDeliverService;
     }
 
     /**
@@ -163,17 +172,24 @@ public class PipelineExecutor {
                     String message = switch (step.getStepKey()) {
                         case "model" -> stepModel(pipeline);
                         case "db" -> stepDb(pipeline);
+                        case "ai_recommend" -> stepAiRecommend(pipeline);
                         case "seed" -> stepSeed(pipeline);
                         case "scaffold" -> stepScaffold(pipeline);
                         case "gen" -> stepGen(pipeline);
                         case "package_backend" -> stepPackageBackend(pipeline);
                         case "deploy_backend" -> stepDeployBackend(pipeline);
                         case "package_frontend" -> stepPackageFrontend(pipeline);
+                        case "package_mobile" -> stepPackageMobile(pipeline);
                         case "deploy_frontend" -> stepDeployFrontend(pipeline);
                         case "health" -> stepHealth(pipeline);
                         default -> "未知步骤，跳过";
                     };
                     mark(step, "success", message, null);
+                } catch (AiRecommendDegradedException e) {
+                    // V7.0 降级不阻断：AI 推荐是增强步骤，失败/未启用只标记本步，
+                    // pipeline 用 V6.6 规则推断继续，整体仍可为成功（带降级标记）
+                    log.warn("AI 推荐降级 {}#{}: {}", pipeline.getPipelineNo(), step.getStepKey(), e.getMessage());
+                    mark(step, e.getStatus(), e.getMessage(), null);
                 } catch (Exception e) {
                     log.error("流水线步骤失败 {}#{}: {}", pipeline.getPipelineNo(), step.getStepKey(), e.getMessage(), e);
                     mark(step, "failed", e.getMessage(), tailOf(logFile(pipeline, step.getStepKey()), 40));
@@ -190,6 +206,8 @@ public class PipelineExecutor {
             GenPipeline done = pipelineMapper.selectById(pipelineId);
             done.setStatus("success");
             done.setFrontendUrl("http://localhost:" + done.getFrontendPort());
+            // V7.2：SQL 交付物落盘到目标工程 db/（失败只告警，不影响流水线成功状态）
+            deliverSqlArtifacts(done);
             pipelineMapper.updateById(done);
             push(done);
         } catch (Exception e) {
@@ -201,6 +219,80 @@ public class PipelineExecutor {
                 pipelineMapper.updateById(failed);
                 push(failed);
             }
+        }
+    }
+
+    // ==================== SQL 交付物落盘（V7.2） ====================
+
+    /**
+     * 流水线成功后，把业务库三份 SQL 交付物复制到目标工程 {@code db/} 目录：
+     * <ul>
+     *   <li>{@code init_tables.sql} ← 平台日志目录的 db.sql（业务表 DDL）</li>
+     *   <li>{@code init_seed.sql} ← 平台日志目录的 seed.sql（种子数据，可人工重放）</li>
+     *   <li>{@code init_menu.sql} ← {backendRoot}/.gen-artifacts/&lt;最新时间戳&gt;/menu.sql（菜单注册）</li>
+     * </ul>
+     * 此前三份产物只分别留在平台日志目录与 .gen-artifacts，目标工程 db/ 只有
+     * 基础架构脚本（dict/init_sys_user/init_sys_flow），交付后无法从零初始化业务库。
+     * .gen-artifacts 取 GenMenuProperties.artifactDir 的默认值（.gen-artifacts）。
+     * 全程不阻断：任一落盘失败只 warn，流水线仍算成功。
+     */
+    private void deliverSqlArtifacts(GenPipeline pipeline) {
+        var project = projectService.getById(pipeline.getProjectId());
+        if (project == null) {
+            log.warn("SQL 交付物落盘跳过：系统台账不存在 pipeline={}", pipeline.getPipelineNo());
+            return;
+        }
+        Path logDir = logFile(pipeline, "db").getParent();
+        List<com.codegen.service.GenSqlDeliverService.SqlArtifact> artifacts = new ArrayList<>();
+        readArtifact(logDir.resolve("db.sql"), "init_tables.sql", artifacts);
+        readArtifact(logDir.resolve("seed.sql"), "init_seed.sql", artifacts);
+        readArtifact(latestMenuSql(Paths.get(project.getBackendRoot(), ".gen-artifacts")),
+                "init_menu.sql", artifacts);
+        if (artifacts.isEmpty()) {
+            return;
+        }
+        // V7.3 P0-2：落盘/备份逻辑收敛到 GenSqlDeliverService（与手动写盘、下载 ZIP 共用）
+        var vo = sqlDeliverService.deliver(pipeline.getProjectId(), pipeline.getPipelineNo(), artifacts);
+        if (vo.getErrors() > 0) {
+            log.warn("SQL 交付物部分落盘失败 {}: {} 个错误，目标目录 {}", pipeline.getPipelineNo(),
+                    vo.getErrors(), vo.getDbDir());
+        } else if (vo.getWritten() > 0) {
+            log.info("SQL 交付物已落盘到目标工程 db/: {} -> {} ({} 个文件)", pipeline.getPipelineNo(),
+                    vo.getDbDir(), vo.getWritten());
+        }
+    }
+
+    /**
+     * 读取平台侧 SQL 交付源文件；不存在或读取失败只告警，不影响流水线成功状态。
+     */
+    private void readArtifact(Path from, String fileName,
+                              List<com.codegen.service.GenSqlDeliverService.SqlArtifact> out) {
+        if (from == null || !Files.exists(from)) {
+            return;
+        }
+        try {
+            out.add(new com.codegen.service.GenSqlDeliverService.SqlArtifact(
+                    fileName, Files.readString(from, StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            log.warn("SQL 交付源读取失败 {}: {}", from, e.getMessage());
+        }
+    }
+
+    /** 取 .gen-artifacts 下最新时间戳目录里的 menu.sql（目录名 yyyyMMddHHmmss，字典序即时间序）。 */
+    private Path latestMenuSql(Path artifactRoot) {
+        if (!Files.isDirectory(artifactRoot)) {
+            return null;
+        }
+        try (var dirs = Files.list(artifactRoot)) {
+            return dirs.filter(Files::isDirectory)
+                    .sorted(java.util.Comparator.reverseOrder())
+                    .map(d -> d.resolve("menu.sql"))
+                    .filter(Files::exists)
+                    .findFirst()
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("menu.sql 检索失败 {}: {}", artifactRoot, e.getMessage());
+            return null;
         }
     }
 
@@ -244,16 +336,82 @@ public class PipelineExecutor {
     }
 
     /**
+     * ai_recommend（V7.0）：表结构就绪后、模板生成前，AI 推荐三层页面配置。
+     *
+     * <p>纯增强步骤，产物只落 ai_recommend.json（不动 gen_table），
+     * 用户在前端 diff 预览勾选应用后才写库。两种降级都不阻断流水线：
+     * ai.enabled=false → skipped；AI 超时/失败/JSON 截断 → failed-degraded，
+     * 后续步骤照走 V6.6 规则推断，产物与 V6.8 行为一致。
+     */
+    String stepAiRecommend(GenPipeline pipeline) {
+        if (!props.getAi().isEnabled()) {
+            throw new AiRecommendDegradedException("skipped", "AI 未启用，按 V6.6 规则推断继续");
+        }
+        try {
+            com.codegen.vo.GenAiRecommendVO vo = aiRecommendService.recommend(pipeline.getProjectId());
+            Path artifact = logFile(pipeline, "ai_recommend").getParent().resolve("ai_recommend.json");
+            Files.writeString(artifact,
+                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(vo),
+                    StandardCharsets.UTF_8);
+            int columnSuggests = vo.getTables().stream().mapToInt(t -> t.getColumns().size()).sum();
+            return "建议：列级 " + columnSuggests + " 项 / 表级 " + vo.getTables().size()
+                    + " 表 / 菜单 " + vo.getMenus().size() + " 项"
+                    + (vo.getDrops().isEmpty() ? "" : "，丢弃非法项 " + vo.getDrops().size())
+                    + "，产物 ai_recommend.json";
+        } catch (AiRecommendDegradedException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("AI 推荐失败降级 {}: {}", pipeline.getPipelineNo(), e.getMessage());
+            throw new AiRecommendDegradedException("failed-degraded",
+                    "AI 推荐失败，已降级规则推断：" + abbreviate(e.getMessage(), 300));
+        }
+    }
+
+    /**
+     * V7.0 ai_recommend 步骤的降级信号：携带步骤终态（skipped / failed-degraded），
+     * 执行器捕获后标记本步并继续流水线，不把增强步骤的失败升级成整线失败。
+     */
+    static final class AiRecommendDegradedException extends RuntimeException {
+        private final String status;
+
+        AiRecommendDegradedException(String status, String message) {
+            super(message);
+            this.status = status;
+        }
+
+        String getStatus() {
+            return status;
+        }
+    }
+
+    /**
      * seed（V5.2）：按 seed_mode 规则生成示例数据；off/NULL 直接成功跳过。
      * 失败不阻断整条流水线是错误设计——示例数据缺失会让生成系统开箱即空，
      * 但插数失败通常是脏数据/权限问题，重跑流水线可恢复，所以这里照常抛出。
      */
     private String stepSeed(GenPipeline pipeline) {
-        if (!"rule".equals(pipeline.getSeedMode())) {
+        if (!"rule".equals(pipeline.getSeedMode()) && !"ai".equals(pipeline.getSeedMode())) {
             return "已跳过（未启用数据初始化）";
         }
-        var vo = seedGenerator.seedPipeline(pipeline);
-        return vo.getSummary();
+        // V7.1：ai 模式先用 AI 生成业务值池；任何失败都回落规则词库（不换种子行数/结构约束）
+        com.codegen.support.SeedValuePools pools = com.codegen.support.SeedValuePools.defaults();
+        String suffix = "";
+        if ("ai".equals(pipeline.getSeedMode())) {
+            try {
+                var metas = seedGenerator.loadTableMeta(pipeline.getDbName());
+                pools = aiModelService.seedPools(pipeline.getSystemName(), pipeline.getSystemDesc(), metas);
+                suffix = "（AI 值池已应用）";
+                log.info("seed AI 值池生成成功: pipeline={} tables={}", pipeline.getPipelineNo(), metas.size());
+            } catch (Exception e) {
+                // 降级原则同 V7.0 ai_recommend：AI 失败不阻断 seed，产物与 rule 模式一致
+                log.warn("seed AI 值池失败，回落规则词库: pipeline={} {}: {}",
+                        pipeline.getPipelineNo(), e.getClass().getSimpleName(), e.getMessage());
+                suffix = "；AI 增强失败已回落规则词库（" + abbreviate(e.getMessage() == null
+                        ? e.getClass().getSimpleName() : e.getMessage(), 80) + "）";
+            }
+        }
+        var vo = seedGenerator.seedPipeline(pipeline, pools);
+        return vo.getSummary() + suffix;
     }
 
     /** scaffold：调既有 scaffold API 生成前后端骨架 + 执行种子 SQL（sys_user） */
@@ -283,6 +441,17 @@ public class PipelineExecutor {
         dto.setFlowDefs(collectFlowDefs(project.getId()));
         // V6.3：支付能力包开关（回落唯一实现 resolvePay）
         dto.setPayEnabled(com.codegen.util.GenTemplateModel.resolvePay(project.getPayEnabled()));
+        // V6.5：移动端工程开关（回落唯一实现 resolveMobile）
+        dto.setMobileEnabled(com.codegen.util.GenTemplateModel.resolveMobile(project.getMobileEnabled()));
+        // V6.6：文件能力包开关（回落唯一实现 resolveFile）
+        dto.setFileEnabled(com.codegen.util.GenTemplateModel.resolveFile(project.getFileEnabled()));
+        // V6.8：品牌三项原样下发（回落统一在 GenTemplateModel.resolveAppName/resolveThemeColor，
+        // 这里只搬运，不重复实现回落逻辑）
+        dto.setAppName(project.getAppName());
+        dto.setAppLogo(project.getAppLogo());
+        dto.setAppThemeColor(project.getAppThemeColor());
+        // V6.7：测试骨架开关（回落唯一实现 resolveTest，缺省开——只写 src/test 零运行时侵入）
+        dto.setTestEnabled(com.codegen.util.GenTemplateModel.resolveTest(project.getTestEnabled()));
         GenScaffoldVO vo = scaffoldService.scaffold(dto);
 
         // 种子 SQL：脚手架带出 db/init_sys_user.sql（admin/admin123），导入到目标库
@@ -330,7 +499,26 @@ public class PipelineExecutor {
                 log.warn("支付单表 SQL 导入失败（不阻断）: {}", e.getMessage());
             }
         }
-        return "写入 " + vo.getWritten() + " 个文件，跳过 " + vo.getSkipped() + " " + seedNote;
+        // V6.6：sys_file 文件元数据表导入产物库（幂等）。
+        // 缺这张表时上传接口插库即 500——比支付单表更「一用就炸」，失败要把原因带回步骤结果
+        String fileNote = "";
+        Path fileSql = Paths.get(project.getBackendRoot(), dto.getBackendModule(), "db", "file.sql");
+        if (Files.exists(fileSql)) {
+            try {
+                GenDdlExecuteDTO fileDto = new GenDdlExecuteDTO();
+                fileDto.setDdl(Files.readString(fileSql, StandardCharsets.UTF_8));
+                fileDto.setSchema(pipeline.getDbName());
+                fileDto.setAutoImport(false);
+                var fr = ddlService.execute(fileDto);
+                log.info("文件表 SQL 已导入 {}: {} 条语句", pipeline.getDbName(), fr.getSuccessCount());
+            } catch (Exception e) {
+                log.warn("文件表 SQL 导入失败: {}", e.getMessage());
+                fileNote = "（sys_file 建表失败：" + abbreviate(e.getMessage(), 80) + "，上传功能将不可用）";
+            }
+        } else if (Boolean.TRUE.equals(dto.getFileEnabled())) {
+            fileNote = "（未找到 db/file.sql，sys_file 缺失时上传功能不可用）";
+        }
+        return "写入 " + vo.getWritten() + " 个文件，跳过 " + vo.getSkipped() + " " + seedNote + fileNote;
     }
 
     /**
@@ -518,6 +706,43 @@ public class PipelineExecutor {
             throw new IllegalStateException("npm install 退出码 " + r.exitCode + "，详见日志 " + r.logFile);
         }
         return "依赖安装完成（" + r.durationSeconds + "s）";
+    }
+
+    /**
+     * package_mobile：V6.5 移动端出包（build:h5 静态包 + build:mp-weixin 小程序目录）。
+     * 未开启 mobile_enabled 时优雅跳过（步骤恒在种子清单里，开关决定它干活还是让路）；
+     * CI 只出包不发布——小程序真机预览/上传由用户在微信开发者工具完成（诚实边界）。
+     */
+    private String stepPackageMobile(GenPipeline pipeline) {
+        var project = projectService.getById(pipeline.getProjectId());
+        if (!com.codegen.util.GenTemplateModel.resolveMobile(project.getMobileEnabled())) {
+            return "未开启 mobile_enabled，跳过移动端构建";
+        }
+        Path mobileDir = Paths.get(project.getFrontendRoot(), project.getProjectCode() + "-web-mobile");
+        if (!Files.exists(mobileDir.resolve("package.json"))) {
+            throw new IllegalStateException("移动端工程不存在：" + mobileDir + "（请检查脚手架步骤是否成功）");
+        }
+        if (!Files.exists(mobileDir.resolve("node_modules"))) {
+            CommandResult r = runCommand(pipeline, "package_mobile", mobileDir.toFile(),
+                    "cmd", "/c", props.getNpm(), "install", "--no-audit", "--no-fund");
+            if (r.exitCode != 0) {
+                throw new IllegalStateException("npm install 退出码 " + r.exitCode + "，详见日志 " + r.logFile);
+            }
+        }
+        CommandResult h5 = runCommand(pipeline, "package_mobile", mobileDir.toFile(),
+                "cmd", "/c", props.getNpm(), "run", "build:h5");
+        if (h5.exitCode != 0) {
+            throw new IllegalStateException("build:h5 退出码 " + h5.exitCode + "，详见日志 " + h5.logFile);
+        }
+        CommandResult mp = runCommand(pipeline, "package_mobile", mobileDir.toFile(),
+                "cmd", "/c", props.getNpm(), "run", "build:mp-weixin");
+        if (mp.exitCode != 0) {
+            throw new IllegalStateException("build:mp-weixin 退出码 " + mp.exitCode + "，详见日志 " + mp.logFile);
+        }
+        if (!Files.exists(mobileDir.resolve(Paths.get("dist", "build", "mp-weixin", "app.json")))) {
+            throw new IllegalStateException("小程序包缺 app.json，出包可能不完整：" + mobileDir + "/dist/build/mp-weixin");
+        }
+        return "移动端出包完成：H5 静态包 + mp-weixin 目录（" + (h5.durationSeconds + mp.durationSeconds) + "s）";
     }
 
     /** deploy_frontend：npm run serve -- --port X，dev server 常驻 */

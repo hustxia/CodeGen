@@ -130,8 +130,10 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         pipeline.setSystemDesc(dto.getSystemDesc());
         pipeline.setDbName(dbName);
         pipeline.setMode("manual".equals(dto.getMode()) ? "manual" : "ai");
-        // V5.2：数据初始化模式，只认 rule（其余含 NULL 一律 off，回落语义唯一出口在 PipelineExecutor.stepSeed）
-        pipeline.setSeedMode("rule".equals(dto.getSeedMode()) ? "rule" : "off");
+        // V5.2：数据初始化模式；V7.1 起支持 ai（AI 值池增强，失败自动回落 rule）
+        // 其余含 NULL 一律 off，回落语义唯一出口在 PipelineExecutor.stepSeed
+        pipeline.setSeedMode("rule".equals(dto.getSeedMode()) || "ai".equals(dto.getSeedMode())
+                ? dto.getSeedMode() : "off");
         pipeline.setStatus("draft");
         pipelineMapper.insert(pipeline);
 
@@ -520,12 +522,14 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         String[][] defs = {
                 {"model", "AI 领域建模", "pipeline"},
                 {"db", "建库建表+导表", "pipeline"},
+                {"ai_recommend", "AI 页面与菜单推荐", "pipeline"},
                 {"seed", "数据初始化", "pipeline"},
                 {"scaffold", "前后端骨架", "pipeline"},
                 {"gen", "代码生成+自检", "pipeline"},
                 {"package_backend", "后端打包", "backend"},
                 {"deploy_backend", "后端启动", "backend"},
                 {"package_frontend", "前端依赖安装", "frontend"},
+                {"package_mobile", "移动端构建", "mobile"},
                 {"deploy_frontend", "前端启动", "frontend"},
                 {"health", "健康检查", "pipeline"}
         };

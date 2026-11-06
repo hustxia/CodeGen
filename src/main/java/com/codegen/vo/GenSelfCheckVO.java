@@ -27,9 +27,14 @@ public class GenSelfCheckVO implements Serializable {
     private int fileCount;
 
     /**
-     * 参与编译的 Java 文件数
+     * 参与编译的 Java 文件数（仅 src/main；产物测试见 {@link #testCount}）
      */
     private int javaCount;
+
+    /**
+     * 产物测试文件数（src/test/java，V7.3 起单独用测试 classpath 编译，不混入主编译）
+     */
+    private int testCount;
 
     private int errorCount;
 

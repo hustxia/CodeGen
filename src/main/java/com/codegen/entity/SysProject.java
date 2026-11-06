@@ -128,6 +128,45 @@ public class SysProject extends BaseEntity {
     private Integer payEnabled;
 
     /**
+     * V6.5 移动端支持系统级开关。NULL = 未配置，回落硬编码关（0）；
+     * 回落唯一实现 {@link com.codegen.util.GenTemplateModel#resolveMobile}。
+     */
+    private Integer mobileEnabled;
+
+    /**
+     * V6.6 文件能力包系统级开关。NULL = 未配置，回落硬编码关（0）；
+     * 回落唯一实现 {@link com.codegen.util.GenTemplateModel#resolveFile}。
+     * <p>三态可空同款约定（V4.4 教训）；保存时显式 SET（updateById NOT_NULL 不写 null）。
+     */
+    private Integer fileEnabled;
+
+    /**
+     * V6.7 产物测试出厂系统级开关。NULL = 未配置，回落硬编码<b>开</b>（1）；
+     * 回落唯一实现 {@link com.codegen.util.GenTemplateModel#resolveTest}。
+     * <p>方向与其它能力包相反：测试只写 src/test 目录，零运行时侵入，默认开收益最大。
+     * <p>三态可空同款约定（V4.4 教训）；保存时显式 SET（updateById NOT_NULL 不写 null）。
+     */
+    private Integer testEnabled;
+
+    /**
+     * V6.8 品牌参数化：应用显示名（title / 侧边栏 / 登录页 / README 统一取这一个值）。
+     * <p>空 = 回落 {@code projectName}，存量项目零 diff。
+     */
+    private String appName;
+
+    /**
+     * V6.8 品牌参数化：Logo 图片 URL（产物 {@code public/logo.png} 的远程替代）。
+     * <p>空 = 使用脚手架内置 logo。
+     */
+    private String appLogo;
+
+    /**
+     * V6.8 品牌参数化：主题主色（如 {@code #e1251b}）。
+     * <p>空 = 回落 {@code #e1251b}。唯一回落实现 {@link com.codegen.util.GenTemplateModel#resolveThemeColor}。
+     */
+    private String appThemeColor;
+
+    /**
      * 备注
      */
     private String remark;

@@ -231,6 +231,24 @@ public class SysProjectServiceImpl implements SysProjectService {
         projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
                 .eq(SysProject::getId, project.getId())
                 .set(SysProject::getPayEnabled, project.getPayEnabled()));
+        // V6.5 同款修复：mobile_enabled 三态
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getMobileEnabled, project.getMobileEnabled()));
+        // V6.6 同款修复：file_enabled 三态
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getFileEnabled, project.getFileEnabled()));
+        // V6.7 同款修复：test_enabled 三态（NULL=未配置开 / 1=生成 / 0=不生成）
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getTestEnabled, project.getTestEnabled()));
+        // V6.8 同款修复：品牌三项都是「空=回落」语义，null 必须能存回去（清空品牌要生效）
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getAppName, project.getAppName())
+                .set(SysProject::getAppLogo, project.getAppLogo())
+                .set(SysProject::getAppThemeColor, project.getAppThemeColor()));
     }
 
     @Override

@@ -59,6 +59,12 @@ public class GenApplyVO implements Serializable {
      */
     private List<GenWriteVO> files = new ArrayList<>();
 
+    /**
+     * V6.8 重生成影响面：dryRun 时回填（新增/修改/未变/受保护 + 逐文件明细），
+     * 实际写盘时也回填（此时 protected 项与 files 里的 SKIPPED 对应）。
+     */
+    private GenImpactVO impact;
+
     public GenApplyVO stage(GenApplyStageVO stage) {
         this.stages.add(stage);
         return this;

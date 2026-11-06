@@ -239,6 +239,14 @@ public final class GenUtils {
         if (ct.startsWith("enum") || ct.startsWith("set")) {
             return "select";
         }
+        // V6.6 文件能力包：varchar 列名带图片/文件语义 → 上传控件
+        // （仅 String 列参与；用户在平台显式改回其他控件时 htmlType 已落库，不再走到推断）
+        if ("String".equals(jt) && looksLikeMultiImageColumn(columnName)) {
+            return "multiImage";
+        }
+        if ("String".equals(jt) && looksLikeFileColumn(columnName)) {
+            return looksLikeImageColumn(columnName) ? "image" : "file";
+        }
         return switch (jt) {
             case "Boolean" -> "switch";
             case "LocalDate" -> "date";
@@ -247,6 +255,43 @@ public final class GenUtils {
             case "String" -> ct.contains("text") ? "textarea" : "input";
             default -> "input";
         };
+    }
+
+    /**
+     * V6.6 列名语义：image/img/pic/photo/logo/avatar/icon/cover 结尾或等于之 → 图片上传；
+     * file/attachment/annex 结尾或等于之 → 文件上传。
+     * 刻意不收裸 "url"（太泛，链接列不该变上传框）。
+     */
+    private static boolean looksLikeImageColumn(String columnName) {
+        String n = columnName == null ? "" : columnName.toLowerCase(Locale.ROOT);
+        return n.equals("image") || n.equals("img") || n.equals("pic") || n.equals("photo")
+                || n.equals("logo") || n.equals("avatar") || n.equals("icon") || n.equals("cover")
+                || n.endsWith("_image") || n.endsWith("_img") || n.endsWith("_pic")
+                || n.endsWith("_photo") || n.endsWith("_logo") || n.endsWith("_avatar")
+                || n.endsWith("_icon") || n.endsWith("_cover");
+    }
+
+    private static boolean looksLikeFileColumn(String columnName) {
+        if (looksLikeImageColumn(columnName)) {
+            return true;
+        }
+        String n = columnName == null ? "" : columnName.toLowerCase(Locale.ROOT);
+        return n.endsWith("_file") || n.equals("file") || n.endsWith("_attachment")
+                || n.equals("attachment") || n.endsWith("_annex") || n.equals("annex");
+    }
+
+    /**
+     * V6.8 多图列语义：列名以 <b>复数</b> 图片语义结尾 → JSON 数组字符串（如 {@code slider_images}）。
+     *
+     * <p>必须与 {@link #looksLikeImageColumn} 区分开：单数结尾是单图 URL（varchar 256），
+     * 复数结尾是 URL 数组的 JSON 串。判断顺序上 multiImage 先于单图，
+     * 否则 {@code *_images} 会被 {@code *_image} 之外的单图逻辑漏掉、按普通文本框渲染。
+     */
+    public static boolean looksLikeMultiImageColumn(String columnName) {
+        String n = columnName == null ? "" : columnName.toLowerCase(Locale.ROOT);
+        return n.equals("images") || n.equals("pics") || n.equals("photos") || n.equals("gallery")
+                || n.equals("slider_images") || n.endsWith("_images") || n.endsWith("_pics")
+                || n.endsWith("_photos") || n.endsWith("_gallery");
     }
 
     /**

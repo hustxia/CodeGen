@@ -5,6 +5,7 @@ import com.codegen.dto.GenDownloadDTO;
 import com.codegen.dto.GenWriteDTO;
 import com.codegen.vo.GenDiffVO;
 import com.codegen.vo.GenFileVO;
+import com.codegen.vo.GenSqlDeliverVO;
 import com.codegen.vo.GenWriteVO;
 
 import java.util.List;
@@ -54,6 +55,15 @@ public interface GenCodeService {
      * @return 失败条数，正常为 0
      */
     int ledgerErrorCount();
+
+    /**
+     * 本次写盘时 SQL 交付物（db/init_tables.sql 等）的落盘结果（V7.3 P0-2）。
+     *
+     * <p>按系统分组，一个系统一条；交付失败不阻断写盘，但要让调用方看见。
+     *
+     * @return 正常为空列表
+     */
+    List<GenSqlDeliverVO> lastSqlDeliveries();
 
     /**
      * 差异预览：渲染结果 vs 磁盘现状，逐文件行级 diff（不落盘）

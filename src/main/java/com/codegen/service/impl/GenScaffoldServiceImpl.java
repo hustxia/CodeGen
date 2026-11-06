@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 一键建工程实现。
@@ -47,6 +48,13 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 ? dto.getFrontendModule().trim() : project + "-web";
         int serverPort = dto.getServerPort() == null ? 8080 : dto.getServerPort();
         int webPort = dto.getWebPort() == null ? serverPort + 1000 : dto.getWebPort();
+        // V6.8 品牌参数化：显示名/主色统一走 GenTemplateModel 的回落实现（唯一实现；
+        // 非法色值会回落默认色，避免把 "red;" 这类串拼进 CSS 打坏整页）
+        String appName = com.codegen.util.GenTemplateModel.resolveAppName(
+                dto.getAppName(), project, null);
+        String themeColor = com.codegen.util.GenTemplateModel.resolveThemeColor(dto.getAppThemeColor());
+        // V6.8 Logo：空 = favicon 用自带 placeholder.svg、品牌区用文字标识（不拼不存在的 logo.png）
+        String appLogo = com.codegen.util.GenTemplateModel.resolveAppLogo(dto.getAppLogo());
 
         Path backendRoot = resolveRoot(dto.getBackendRoot(), outputProperties.getBackendRoot(), backendModule);
         Path frontendRoot = resolveRoot(dto.getFrontendRoot(), outputProperties.getFrontendRoot(), frontendModule);
@@ -56,6 +64,9 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         boolean multi = GenPathResolver.isMultiLike(dto.getProjectStructure());
         // V6.0 微服务设施：multi 基础上追加 gateway 模块 + Nacos/OpenFeign 设施（默认关，两栖运行）
         boolean micro = GenPathResolver.isMicro(dto.getProjectStructure());
+        // V6.7 产物测试出厂：缺省开（只写 src/test，零运行时侵入）；
+        // multi/micro 产物启动类在 bootstrap、业务类在 service，跨模块 @SpringBootTest 落点待 P1，先关保证不产坏文件
+        boolean testEnabled = !Boolean.FALSE.equals(dto.getTestEnabled()) && !multi;
         String stem = GenNaming.multiModuleStem(pkg);
         // 基座类（common/system 包）落 common 模块；启动类/yml/db 脚本落 bootstrap 模块；单模块两者都是 backendRoot
         Path commonRoot = multi ? backendRoot.resolve(stem + "-common") : backendRoot;
@@ -76,6 +87,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 StringUtils.hasText(dto.getFlowEngine()) ? dto.getFlowEngine().trim() : "");
         // V6.3 支付能力包：系统级开关（DTO 由调用方按 sys_project.pay_enabled + resolvePay 组装）
         boolean payEnabled = Boolean.TRUE.equals(dto.getPayEnabled());
+        // V6.6 文件能力包：系统级开关（DTO 由调用方按 sys_project.file_enabled + resolveFile 组装）
+        boolean fileEnabled = Boolean.TRUE.equals(dto.getFileEnabled());
         // ---------- 后端 ----------
         if (multi) {
             // 多模块：聚合 pom + 4 个子模块 pom；依赖拆分原则——common 承载全部基座依赖，
@@ -84,7 +97,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             // backendModule 默认取 projectName（用户常中文命名），中文直进 artifactId 产物 mvn 直接拒读。
             // 聚合坐标统一用 stem（rootPackage 最后一段，纯合法字符）；可读名放 <name>。
             String parentArtifactId = stem + "-parent";
-            write(backendRoot, "pom.xml", pomMultiParent(project, pkg, stem, backendModule, micro, activiti, payEnabled), "backend", force, vo, counter);
+            write(backendRoot, "pom.xml", pomMultiParent(appName, project, pkg, stem, backendModule, micro, activiti, payEnabled), "backend", force, vo, counter);
             write(backendRoot, stem + "-common/pom.xml", pomMultiModule(pkg, parentArtifactId, stem, "common",
                     dep("org.springframework.boot", "spring-boot-starter-web", null)
                             + dep("org.springframework.boot", "spring-boot-starter-validation", null)
@@ -92,6 +105,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                             + dep("com.baomidou", "mybatis-plus-spring-boot3-starter", "${mybatis-plus.version}")
                             // OpeLogController/MaskUtils 的 @Operation/@Schema 注解在这层
                             + dep("org.springdoc", "springdoc-openapi-starter-webmvc-ui", "2.3.0")
+                            // V6.4 密码 BCrypt：仅 crypto 单模块，不引 Spring Security 全家桶（版本走 BOM）
+                            + dep("org.springframework.security", "spring-security-crypto", null)
                             + dep("org.projectlombok", "lombok", "${lombok.version}")
                             // V6.3 支付模块类落 common 层，SDK 依赖随类归位（坑 41：谁 import 谁依赖）
                             + (payEnabled
@@ -153,14 +168,14 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                         remoteSampleClientJava(pkg, stem), "backend", force, vo, counter);
             }
         } else {
-            write(backendRoot, "pom.xml", pomXml(dto, project, pkg, backendModule, serverPort, activiti, payEnabled), "backend", force, vo, counter);
+            write(backendRoot, "pom.xml", pomXml(dto, appName, project, pkg, backendModule, serverPort, activiti, payEnabled, testEnabled), "backend", force, vo, counter);
         }
 
         String pkgPath = "src/main/java/" + pkg.replace('.', '/');
         // 启动类与运行配置归 bootstrap；包名不变（仍是 <pkg> 根），@SpringBootApplication 默认扫描覆盖全部模块；
         // micro 时启动类追加 @EnableFeignClients 扫 remote 包（跨服务调用骨架）
         write(bootRoot, pkgPath + "/" + appClass + "Application.java",
-                applicationJava(pkg, appClass, micro, activiti, payEnabled), "backend", force, vo, counter);
+                applicationJava(pkg, appClass, micro, activiti, payEnabled, fileEnabled), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/result/Result.java", resultJava(pkg), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/result/ResultCode.java", resultCodeJava(pkg), "backend", force, vo, counter);
         write(commonRoot, pkgPath + "/common/exception/BusinessException.java",
@@ -206,16 +221,42 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 "backend", force, vo, counter);
         if (Boolean.TRUE.equals(dto.getWithAuth())) {
             write(commonRoot, pkgPath + "/common/config/AuthContextFilter.java",
-                    authContextFilterJava(pkg, payEnabled), "backend", force, vo, counter);
+                    authContextFilterJava(pkg, payEnabled, fileEnabled), "backend", force, vo, counter);
             // V5.0 F-07：登录基座闭环——以前 filter「非空 token 即放行」是占位实现，
             // 401 拦得住陌生人却发不出合法 token，登录页成了摆设
             write(commonRoot, pkgPath + "/common/auth/TokenStore.java",
                     tokenStoreJava(pkg), "backend", force, vo, counter);
             write(commonRoot, pkgPath + "/common/auth/AuthController.java",
                     authControllerJava(pkg), "backend", force, vo, counter);
+            // V6.4 P0-3：接口权限点后端强制——贡献者接口 + 集中校验器 + 基座端点豁免清单
+            write(commonRoot, pkgPath + "/common/auth/ApiPermContributor.java",
+                    apiPermContributorJava(pkg), "backend", force, vo, counter);
+            write(commonRoot, pkgPath + "/common/auth/PermissionChecker.java",
+                    permissionCheckerJava(pkg), "backend", force, vo, counter);
+            write(commonRoot, pkgPath + "/common/auth/FlowApiPerms.java",
+                    flowApiPermsJava(pkg), "backend", force, vo, counter);
+            if (payEnabled) {
+                write(commonRoot, pkgPath + "/common/auth/PayApiPerms.java",
+                        payApiPermsJava(pkg), "backend", force, vo, counter);
+            }
+            // V6.4 P0-4：登录日志只读查询接口
+            write(commonRoot, pkgPath + "/system/LoginLogController.java",
+                    loginLogControllerJava(pkg), "backend", force, vo, counter);
             write(bootRoot, "db/init_sys_user.sql", seedSql(),
                     "backend", force, vo, counter);
         }
+        // V6.8 字典脚手架（恒写）：建表 + 通用种子 + 只读接口。
+        // 之前生成页面的字典下拉依赖目标库「恰好已有」sys_dict_data，新库直接空下拉；
+        // 现在产物自带表结构与种子，接口挂在 /system/dict（白名单只读）。
+        write(bootRoot, "db/dict.sql", loadScaffoldResource("scaffold/dict.sql"),
+                "backend", force, vo, counter);
+        write(commonRoot, pkgPath + "/system/SysDictController.java",
+                dictControllerJava(pkg), "backend", force, vo, counter);
+        // V6.8 素材链路：static/img 里放一张默认图，/img/placeholder.svg 开箱即 200
+        // （白名单常驻 /img，前端 devServer 代理 /img 不剥前缀——三处都对上这条路径）
+        write(bootRoot, "src/main/resources/static/img/placeholder.svg",
+                loadScaffoldResource("scaffold/web/placeholder.svg"), "backend", force, vo, counter);
+
         // V6.1 流程基座（恒写）：修复 controller.ftl 引用 ${pkg}.common.flow.FlowService
         // 而基座从未生成的历史断裂——绑定 flow_code 的表生成产物此前编译不过。
         // 引擎实现二选一：builtin=移植平台简易流（无第三方依赖）；activiti=引擎实现 + 部署 Runner
@@ -265,8 +306,49 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             vo.getNextSteps().add("支付能力包：缺省 mock 渠道开箱即跑（收银台 /pay/cashier，模拟支付走与真渠道同构链路）；"
                     + "接真渠道改 yml pay.channel 并配置 PAY_* 环境变量，零代码改动");
         }
+        // V6.6 文件能力包：fileEnabled 开启才生成（缺省关闭 → 存量产物与旧版逐文件一致）。
+        // sys_file 元数据表 + /file 上传下载端点 + ImageUpload/FileUpload 前端组件；
+        // 设计见 docs/design/V6.6文件能力包-设计.md。纯 Spring Web + MyBatis-Plus，无新依赖。
+        if (fileEnabled) {
+            write(bootRoot, "db/file.sql", fileResource("file.sql", pkg), "backend", force, vo, counter);
+            for (String f : List.of("FileRecord.java", "FileMapper.java", "FileProps.java",
+                    "FileController.java", "FileWebConfig.java")) {
+                write(commonRoot, pkgPath + "/common/file/" + f, fileResource(f, pkg),
+                        "backend", force, vo, counter);
+            }
+            // V6.4 权限闭环：/file 端点注册为「仅登录」（同 FlowApiPerms/PayApiPerms 模式）
+            if (Boolean.TRUE.equals(dto.getWithAuth())) {
+                write(commonRoot, pkgPath + "/common/auth/FileApiPerms.java",
+                        fileApiPermsJava(pkg), "backend", force, vo, counter);
+            }
+            vo.getNextSteps().add("文件能力包：上传目录默认 ./uploads（yml file.upload-dir 可改）；"
+                    + "首次启动前导入 db/file.sql 建 sys_file 表（流水线自动导入），"
+                    + "生成页面里 html_type=图片/文件上传 的列自动带上传控件与缩略图预览");
+        }
+        // V6.7 产物测试出厂：testEnabled 开启才生成（缺省开；multi/micro 已在上方置关）。
+        // src/test 全套：H2 测试 profile + 基座表 DDL + 登录态基类；业务表测试与建表在 /gen/apply 按表落盘。
+        // pom 测试依赖（starter-test + h2）随 pomXml 注入，本块只写文件
+        if (testEnabled) {
+            write(bootRoot, "src/test/resources/application-test.yml",
+                    testResource("application-test.yml", pkg), "backend", force, vo, counter);
+            write(bootRoot, "src/test/resources/schema/base.sql",
+                    testResource("base.sql", pkg), "backend", force, vo, counter);
+            if (payEnabled) {
+                write(bootRoot, "src/test/resources/schema/pay.sql",
+                        testResource("pay.sql", pkg), "backend", force, vo, counter);
+            }
+            if (fileEnabled) {
+                write(bootRoot, "src/test/resources/schema/file.sql",
+                        testResource("file.sql", pkg), "backend", force, vo, counter);
+            }
+            write(bootRoot, "src/test/java/" + pkg.replace('.', '/') + "/LoginStateTestSupport.java",
+                    testResource("LoginStateTestSupport.java", pkg), "backend", force, vo, counter);
+            vo.getNextSteps().add("测试骨架：cd " + bootRoot + " && mvn test（H2 内存库，无需外部 MySQL）；"
+                    + "业务表的集成测试在代码生成（/gen/apply）时逐表落盘到 src/test；"
+                    + "关掉请在 系统管理→项目 里把「测试骨架」设为不生成后重新脚手架");
+        }
         write(bootRoot, "src/main/resources/application.yml",
-                applicationYml(dto, pkg, project, serverPort, stem, micro, payEnabled),
+                applicationYml(dto, pkg, project, serverPort, stem, micro, payEnabled, fileEnabled),
                 "backend", force, vo, counter);
         if (micro) {
             // V6.0：Nacos 配置中心接入模板（注释态）。说明头里写清 Boot 3 默认不读 bootstrap.yml，
@@ -277,7 +359,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         write(bootRoot, "src/main/resources/application-local.yml.example",
                 applicationLocalExample(pkg), "backend", force, vo, counter);
         write(bootRoot, ".gitignore", backendGitignore(), "backend", force, vo, counter);
-        write(bootRoot, "README.md", backendReadme(project, pkg, backendModule, serverPort),
+        write(bootRoot, "README.md", backendReadme(appName, pkg, backendModule, serverPort),
                 "backend", force, vo, counter);
 
         // ---------- 前端 ----------
@@ -287,20 +369,27 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             // V6.0 micro：前端请求走网关（端口=服务端口+1），apiBase 不带 /api 前缀（网关按模块路由）
             int proxyPort = micro ? serverPort + 1 : serverPort;
             write(frontendRoot, "vue.config.js", frontendVueConfig(webPort, proxyPort,
-                    StringUtils.hasText(dto.getGatewayPrefix()) ? dto.getGatewayPrefix().trim() : "demo"),
+                    StringUtils.hasText(dto.getGatewayPrefix()) ? dto.getGatewayPrefix().trim() : "demo",
+                    fileEnabled),
                     "frontend", force, vo, counter);
             write(frontendRoot, "babel.config.js", frontendBabelConfig(), "frontend", force, vo, counter);
             write(frontendRoot, ".env.development",
                     frontendEnvDev(proxyPort), "frontend", force, vo, counter);
             write(frontendRoot, ".env.production", frontendEnvProd(), "frontend", force, vo, counter);
-            write(frontendRoot, "public/index.html", frontendIndexHtml(project), "frontend", force, vo, counter);
+            write(frontendRoot, "public/index.html", frontendIndexHtml(appName, appLogo, themeColor),
+                    "frontend", force, vo, counter);
+            // V6.8 素材链路：产物自带占位图，图片列 onerror / el-image error 槽统一指向它，
+            // 种子数据里指向不存在文件的 URL 不再显示浏览器破图
+            write(frontendRoot, "public/placeholder.svg", loadScaffoldResource("scaffold/web/placeholder.svg"),
+                    "frontend", force, vo, counter);
             write(frontendRoot, "src/main.js", frontendMainJs(), "frontend", force, vo, counter);
             write(frontendRoot, "src/App.vue", frontendAppVue(), "frontend", force, vo, counter);
             write(frontendRoot, "src/utils/request.js", frontendRequestJs(), "frontend", force, vo, counter);
-            write(frontendRoot, "src/layout/index.vue", frontendLayoutVue(project), "frontend", force, vo, counter);
-            write(frontendRoot, "src/views/index.vue", frontendHomeVue(project), "frontend", force, vo, counter);
+            write(frontendRoot, "src/layout/index.vue", frontendLayoutVue(appName, appLogo, themeColor),
+                    "frontend", force, vo, counter);
+            write(frontendRoot, "src/views/index.vue", frontendHomeVue(appName), "frontend", force, vo, counter);
             // V5.0 F-07：登录页与路由守卫（401 跳转目标从 request.js 来）
-            write(frontendRoot, "src/views/login.vue", frontendLoginVue(project), "frontend", force, vo, counter);
+            write(frontendRoot, "src/views/login.vue", frontendLoginVue(appName, appLogo, themeColor), "frontend", force, vo, counter);
             write(frontendRoot, "src/router/index.js", frontendRouterJs(), "frontend", force, vo, counter);
             // 占位：route-sync 未跑前保证 webpack 能解析 import（后续被 GenMenuServiceImpl 整文件重建）
             write(frontendRoot, "src/router/gen-routes.js",
@@ -309,9 +398,38 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                   + "export default []\n",
                     "frontend", force, vo, counter);
             write(frontendRoot, "src/store/index.js", frontendStoreJs(), "frontend", force, vo, counter);
+            // V6.6 文件能力包：上传组件随开关写盘（生成页面的 image/file 列 import 这两个组件）
+            if (fileEnabled) {
+                write(frontendRoot, "src/components/ImageUpload.vue",
+                        fileResource("ImageUpload.vue", pkg), "frontend", force, vo, counter);
+                write(frontendRoot, "src/components/FileUpload.vue",
+                        fileResource("FileUpload.vue", pkg), "frontend", force, vo, counter);
+                // V6.8 多图字段：multiImage 列 import 这个组件（JSON 数组字符串 v-model）
+                write(frontendRoot, "src/components/MultiImageUpload.vue",
+                        fileResource("MultiImageUpload.vue", pkg), "frontend", force, vo, counter);
+            }
             write(frontendRoot, ".gitignore", frontendGitignore(), "frontend", force, vo, counter);
-            write(frontendRoot, "README.md", frontendReadme(project, frontendModule, webPort, serverPort),
+            write(frontendRoot, "README.md", frontendReadme(appName, frontendModule, webPort, serverPort),
                     "frontend", force, vo, counter);
+        }
+
+        // ---------- V6.5 移动端工程（uni-app 单源 H5 + 微信小程序） ----------
+        // 与 PC 前端互不依赖：独立工程、独立构建；开关关闭时整段跳过，存量产物零 diff。
+        // 表业务配置（mobile/src/config/tables/**）由表生成侧产出，这里只出工程骨架与动态页。
+        if (Boolean.TRUE.equals(dto.getMobileEnabled())) {
+            Path mobileRoot = resolveRoot(dto.getFrontendRoot(), outputProperties.getFrontendRoot(),
+                    frontendModule + "-mobile");
+            vo.setMobilePath(mobileRoot.toString());
+            // micro 时 H5 代理指向网关（端口=服务端口+1），与 PC vue.config.js 同口径
+            int apiTarget = micro ? serverPort + 1 : serverPort;
+            String gwPrefix = StringUtils.hasText(dto.getGatewayPrefix())
+                    ? dto.getGatewayPrefix().trim() : "demo";
+            for (Map.Entry<String, String> e : mobileResources(project, apiTarget, gwPrefix).entrySet()) {
+                write(mobileRoot, e.getKey(), e.getValue(), "mobile", force, vo, counter);
+            }
+            vo.getNextSteps().add("移动端工程：cd " + mobileRoot + " && npm install && npm run dev:h5（H5 实机调试）；"
+                    + "小程序包 npm run build:mp-weixin，用微信开发者工具导入 dist/build/mp-weixin"
+                    + "（本地联调勾选「不校验合法域名」，发布前在 mp 后台配置 request 合法域名）");
         }
 
         vo.setWritten(counter[0]);
@@ -1373,9 +1491,104 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         }
     }
 
+    /** V6.6 文件能力包：源码资源读取（V6.3 payResource 同款模式，__PKG__ 占位替换） */
+    private String fileResource(String file, String pkg) {
+        try {
+            org.springframework.core.io.ClassPathResource resource = new org.springframework.core.io.ClassPathResource("scaffold-file/" + file);
+            String content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            return content.replace("__PKG__", pkg);
+        } catch (java.io.IOException e) {
+            throw new com.codegen.common.exception.BusinessException(500, "文件模块源码资源缺失：scaffold-file/" + file);
+        }
+    }
+
+    /**
+     * V6.7 产物测试出厂：读 scaffold-test/ 资源（fileResource 同款；__PKG__ 占位替换）。
+     * 每次改 scaffold-test/ 后必须重打包平台 jar 再 scaffold（V6.6 实测坑：平台读的是 jar 内资源）。
+     */
+    private String testResource(String file, String pkg) {
+        try {
+            org.springframework.core.io.ClassPathResource resource = new org.springframework.core.io.ClassPathResource("scaffold-test/" + file);
+            String content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            return content.replace("__PKG__", pkg);
+        } catch (java.io.IOException e) {
+            throw new com.codegen.common.exception.BusinessException(500, "测试骨架资源缺失：scaffold-test/" + file);
+        }
+    }
+
+    /**
+     * V6.4：文件基座端点映射——上传/下载登录即可；文件管理（列表/删除）收紧为权限点。
+     *
+     * <p>page/delete 若也放「登录即可」，任意登录用户就能翻全量文件元数据、删他人文件记录（IDOR）。
+     * 权限点 file:list / file:delete 默认不在任何菜单下 → 只有超管（*:*:*）直通，
+     * 需要开放给普通用户时在 sys_menu 挂按钮权限授予角色即可（与业务表 ApiPerms 同一套路）。
+     */
+    private String fileApiPermsJava(String pkg) {
+        return "package " + pkg + ".common.auth;\n\n"
+                + "import org.springframework.stereotype.Component;\n\n"
+                + "import java.util.HashMap;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * 文件基座端点映射：上传/下载是平台内置能力，登录即可操作；\n"
+                + " * 列表、删除是管理动作，收为权限点 file:list / file:delete（未授权即 403，超管直通）。\n"
+                + " */\n"
+                + "@Component\n"
+                + "public class FileApiPerms implements ApiPermContributor {\n\n"
+                + "    @Override\n"
+                + "    public Map<String, String> endpointPerms() {\n"
+                + "        Map<String, String> m = new HashMap<>();\n"
+                + "        m.put(\"POST /file/upload\", \"\");\n"
+                + "        m.put(\"GET /file/download/{id}\", \"\");\n"
+                + "        m.put(\"POST /file/page\", \"file:list\");\n"
+                + "        m.put(\"DELETE /file/{id}\", \"file:delete\");\n"
+                + "        return m;\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    // ============================ V6.5 移动端工程物料 ============================
+
+    /** mobile 工程骨架文件清单：显式枚举（classpath 资源无法可靠列目录，V6.3 scaffold-pay 同款取舍）。
+     * 注意 .gitignore 不走资源：dotfile 会被 jar 打包漏掉（S8 实测），内容内联在 mobileGitignore() */
+    private static final List<String> MOBILE_FILES = List.of(
+            "package.json", "vite.config.js", "index.html", "README.md",
+            "src/main.js", "src/App.vue", "src/manifest.json", "src/pages.json", "src/uni.scss",
+            "src/utils/request.js", "src/utils/tables.js", "src/store/user.js",
+            "src/pages/login/login.vue", "src/pages/index/index.vue",
+            "src/pages/dynamic/list.vue", "src/pages/dynamic/detail.vue", "src/pages/dynamic/form.vue",
+            "src/pages/todo/todo.vue", "src/pages/mine/mine.vue");
+
+    private Map<String, String> mobileResources(String project, int apiPort, String gwPrefix) {
+        Map<String, String> out = new java.util.LinkedHashMap<>();
+        for (String f : MOBILE_FILES) {
+            out.put(f, mobileResource(f, project, apiPort, gwPrefix));
+        }
+        out.put(".gitignore", mobileGitignore());
+        return out;
+    }
+
+    private String mobileGitignore() {
+        return "node_modules/\ndist/\n.hbuilderx/\n.DS_Store\n*.local\n";
+    }
+
+    /** 读 classpath scaffold-mobile/&lt;file&gt;，__PROJECT__/__API_PORT__/__GW__ 占位替换 */
+    private String mobileResource(String file, String project, int apiPort, String gwPrefix) {
+        try {
+            org.springframework.core.io.ClassPathResource resource =
+                    new org.springframework.core.io.ClassPathResource("scaffold-mobile/" + file);
+            String content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            return content.replace("__PROJECT__", project)
+                    .replace("__API_PORT__", String.valueOf(apiPort))
+                    .replace("__GW__", gwPrefix == null ? "" : gwPrefix);
+        } catch (java.io.IOException e) {
+            throw new com.codegen.common.exception.BusinessException(500, "移动端工程资源缺失：scaffold-mobile/" + file);
+        }
+    }
+
     // ============================ 模板内容 ============================
 
-    private String pomXml(GenScaffoldDTO dto, String project, String pkg, String module, int serverPort, boolean activiti, boolean payEnabled) {
+    private String pomXml(GenScaffoldDTO dto, String appName, String project, String pkg, String module, int serverPort,
+                          boolean activiti, boolean payEnabled, boolean testEnabled) {
         StringBuilder extras = new StringBuilder();
         if (dto.getExtraDependencies() != null) {
             for (String coord : dto.getExtraDependencies()) {
@@ -1417,7 +1630,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    <version>1.0.0</version>\n"
                 + "    <packaging>jar</packaging>\n"
                 + "    <name>" + module + "</name>\n"
-                + "    <description>" + project + " 后端服务（由 codegen-server 脚手架生成）</description>\n\n"
+                + "    <description>" + appName + " 后端服务（由 codegen-server 脚手架生成）</description>\n\n"
                 + "    <properties>\n"
                 + "        <java.version>21</java.version>\n"
                 + "        <maven.compiler.source>21</maven.compiler.source>\n"
@@ -1459,13 +1672,29 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        </dependency>\n"
                 + "        <!-- 生成物 Controller 带 @Tag/@Operation -->\n"
                 + dep("org.springdoc", "springdoc-openapi-starter-webmvc-ui", "2.3.0")
+                + "        <!-- V6.4 密码 BCrypt：仅 crypto 单模块，不引 Spring Security 全家桶 -->\n"
+                + dep("org.springframework.security", "spring-security-crypto", "6.2.4")
                 + "        <!-- 生成物 Controller 的 Excel 导入导出 -->\n"
                 + dep("org.apache.poi", "poi-ooxml", "5.2.5")
                 + extras
+                // V6.7 测试骨架：均 test scope，不进产物运行时 classpath
+                + (testEnabled
+                    ? dep("org.springframework.boot", "spring-boot-starter-test", null)
+                        + dep("com.h2database", "h2", null)
+                    : "")
                 + "    </dependencies>\n\n"
                 + "    <build>\n"
                 + "        <finalName>${project.artifactId}</finalName>\n"
                 + "        <plugins>\n"
+                // V6.7 spike 实测：本 POM 不继承 starter-parent，surefire 落到 Maven 默认 2.12.4
+                // 不识别 JUnit 5，mvn test 静默跑 0 个用例——显式钉到 3.1.2（testEnabled 时才需要）
+                + (testEnabled
+                    ? "            <plugin>\n"
+                    + "                <groupId>org.apache.maven.plugins</groupId>\n"
+                    + "                <artifactId>maven-surefire-plugin</artifactId>\n"
+                    + "                <version>3.1.2</version>\n"
+                    + "            </plugin>\n"
+                    : "")
                 + "            <!-- 必须保留 -parameters：Spring MVC 靠参数名绑定 @RequestParam/@PathVariable。\n"
                 + "                 本 POM 未继承 spring-boot-starter-parent，不显式声明会导致运行时\n"
                 + "                 \"Name for argument of type [X] not specified\" —— 所有带参接口 500 -->\n"
@@ -1550,7 +1779,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
      * <p>V6.0 micro=true：追加 spring-cloud / spring-cloud-alibaba BOM（版本矩阵复用 shop 实测：
      * Boot 3.2.5 + cloud 2023.0.1 + alibaba 2023.0.1.0）与 gateway 模块条目。
      */
-    private String pomMultiParent(String project, String pkg, String stem, String backendModule, boolean micro, boolean activiti, boolean payEnabled) {
+    private String pomMultiParent(String appName, String project, String pkg, String stem, String backendModule, boolean micro, boolean activiti, boolean payEnabled) {
         String gatewayModule = micro
                 ? "        <module>" + stem + "-gateway</module>\n" : "";
         // V6.1 Activiti 8 制品不在 Maven 中央仓库（7.1.x 起），产物 pom 必须自带 Alfresco 仓库声明
@@ -1588,8 +1817,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "                <scope>import</scope>\n"
                 + "            </dependency>\n" : "";
         String description = micro
-                ? project + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务设施：Nacos/Gateway/Feign 默认关闭）"
-                : project + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务就绪单体）";
+                ? appName + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务设施：Nacos/Gateway/Feign 默认关闭）"
+                : appName + " 后端服务聚合工程（由 codegen-server 脚手架生成，微服务就绪单体）";
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
                 + "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
@@ -1725,7 +1954,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "</project>\n";
     }
 
-    private String applicationJava(String pkg, String appClass, boolean micro, boolean activiti, boolean payEnabled) {
+    private String applicationJava(String pkg, String appClass, boolean micro, boolean activiti,
+                                   boolean payEnabled, boolean fileEnabled) {
         String feign = micro
                 ? "\n"
                 + "// V6.0 微服务设施：跨服务调用骨架，扫描 .remote 包；nacos 关闭时 Feign 走 url 直连\n"
@@ -1742,7 +1972,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         // 不加过滤会被 MyBatis 注册成 mapper 代理，注入时抢赢真正的渠道实现 bean，
         // 运行期报 Invalid bound statement: PaymentService.create（V6.3 冒烟实测踩坑，坑库 #44）
         String mapperScanBase = "basePackages = {\"" + pkg + ".mapper\", \"" + pkg + ".system\""
-                + (payEnabled ? ", \"" + pkg + ".common.pay\"" : "") + "}";
+                + (payEnabled ? ", \"" + pkg + ".common.pay\"" : "")
+                + (fileEnabled ? ", \"" + pkg + ".common.file\"" : "") + "}";
         String mapperScanAttr = "@MapperScan(markerInterface = com.baomidou.mybatisplus.core.mapper.BaseMapper.class, "
                 + mapperScanBase + ")";
         return "package " + pkg + ";\n\n"
@@ -2931,10 +3162,16 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "\n";
     }
 
-    private String authContextFilterJava(String pkg, boolean payEnabled) {
+    private String authContextFilterJava(String pkg, boolean payEnabled, boolean fileEnabled) {
         // V6.3：渠道异步通知由支付渠道服务器回调，无法携带登录 token，必须进白名单
         String payWhiteEntry = payEnabled ? ",\n            \"/pay/notify\"" : "";
+        // V6.6：图片直链 /uploads/** 是静态资源（img 标签/浏览器直开不带 token），必须进白名单
+        String fileWhiteEntry = fileEnabled ? ",\n            \"/uploads\"" : "";
+        // V6.8 素材链路：/img（产物自带静态素材）+ /system/dict（只读字典）常驻白名单；
+        // /shop 预留给 V6.9 的 C 端公开接口，先放行空前缀不影响后台
+        String baseWhiteEntry = ",\n            \"/img\",\n            \"/system/dict\",\n            \"/shop\"";
         return "package " + pkg + ".common.config;\n\n"
+                + "import " + pkg + ".common.auth.PermissionChecker;\n"
                 + "import " + pkg + ".common.auth.TokenStore;\n"
                 + "import " + pkg + ".common.context.UserContext;\n"
                 + "import " + pkg + ".common.result.Result;\n"
@@ -2955,10 +3192,11 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "import java.nio.charset.StandardCharsets;\n"
                 + "import java.util.List;\n\n"
                 + "/**\n"
-                + " * 登录上下文填充 + 鉴权拦截。\n"
+                + " * 登录上下文填充 + 两级鉴权拦截。\n"
                 + " *\n"
-                + " * <p>单体服务前面没有网关兜底，鉴权必须自己完成：白名单外的请求若无合法 token，直接 401。\n"
-                + " * 校验通过则把用户写入 {@link UserContext}，供审计字段填充使用。\n"
+                + " * <p>V6.4 权限闭环：第一级登录校验（token 有效性，401）；\n"
+                + " * 第二级接口权限点校验（{@link PermissionChecker}，无权 403）——\n"
+                + " * 结束「前端 v-hasPermi 藏按钮、后端裸奔」的历史。\n"
                 + " */\n"
                 + "@Component\n"
                 + "@Order(Ordered.HIGHEST_PRECEDENCE + 10)\n"
@@ -2966,16 +3204,21 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    private static final String BEARER_PREFIX = \"Bearer \";\n\n"
                 + "    @Autowired\n"
                 + "    private TokenStore tokenStore;\n\n"
+                + "    @Autowired\n"
+                + "    private PermissionChecker permissionChecker;\n\n"
                 + "    /** 无需 token 即可访问的路径前缀 */\n"
                 + "    private static final List<String> WHITE_LIST = List.of(\n"
                 + "            \"/auth/login\",\n"
+                + "            \"/auth/captcha\",\n"
                 + "            \"/health\",\n"
                 + "            \"/actuator\",\n"
                 + "            \"/v3/api-docs\",\n"
                 + "            \"/swagger-ui\",\n"
                 + "            \"/swagger-resources\",\n"
                 + "            \"/error\""
-                + payWhiteEntry + "\n"
+                + payWhiteEntry
+                + fileWhiteEntry
+                + baseWhiteEntry + "\n"
                 + "    );\n\n"
                 + "    private final ObjectMapper objectMapper = new ObjectMapper();\n\n"
                 + "    @Override\n"
@@ -2990,10 +3233,15 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        boolean hasToken = StringUtils.hasText(authorization) && authorization.startsWith(BEARER_PREFIX);\n\n"
                 + "        if (hasToken) {\n"
                 + "            String token = authorization.substring(BEARER_PREFIX.length());\n"
-                + "            // V5.0 F-07：token 由 /auth/login 签发，TokenStore 校验有效性（过期/登出即 401）\n"
+                + "            // 第一级：登录校验（过期/登出即 401）\n"
                 + "            String username = tokenStore.usernameOf(token);\n"
                 + "            if (username == null) {\n"
                 + "                writeUnauthorized(response, \"登录状态已失效，请重新登录\");\n"
+                + "                return;\n"
+                + "            }\n"
+                + "            // 第二级：接口权限点校验（V6.4 fail-closed：映射缺失读放行写拒绝）\n"
+                + "            if (!permissionChecker.check(request, username)) {\n"
+                + "                writeForbidden(response, \"无该操作权限\");\n"
                 + "                return;\n"
                 + "            }\n"
                 + "            UserContext.setUsername(username);\n"
@@ -3029,101 +3277,300 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        response.setContentType(MediaType.APPLICATION_JSON_VALUE);\n"
                 + "        Result<Void> body = Result.fail(ResultCode.UNAUTHORIZED.getCode(), msg);\n"
                 + "        response.getWriter().write(objectMapper.writeValueAsString(body));\n"
+                + "    }\n\n"
+                + "    private void writeForbidden(HttpServletResponse response, String msg) throws IOException {\n"
+                + "        response.setStatus(HttpServletResponse.SC_FORBIDDEN);\n"
+                + "        response.setCharacterEncoding(StandardCharsets.UTF_8.name());\n"
+                + "        response.setContentType(MediaType.APPLICATION_JSON_VALUE);\n"
+                + "        Result<Void> body = Result.fail(ResultCode.FORBIDDEN.getCode(), msg);\n"
+                + "        response.getWriter().write(objectMapper.writeValueAsString(body));\n"
                 + "    }\n"
                 + "}\n";
     }
 
     /**
-     * V5.0 F-07：登录令牌内存存储。
-     * 骨架级实现（重启即失效），接真实项目换 Redis/JWT——但「登录能发出合法 token」
-     * 这件事必须开箱即用，否则 withAuth 生成的 401 拦截只是把所有人拦在门外。
+     * V6.4 P0-1：登录令牌持久化存储（内存缓存 + sys_session 落盘双层）。
+     * 修复历史欠账：旧内存实现重启即全员掉线（10-24 真实工单）。
      */
     private String tokenStoreJava(String pkg) {
         return "package " + pkg + ".common.auth;\n\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
+                + "import org.springframework.beans.factory.annotation.Value;\n"
+                + "import org.springframework.jdbc.core.JdbcTemplate;\n"
                 + "import org.springframework.stereotype.Component;\n\n"
+                + "import java.sql.Timestamp;\n"
                 + "import java.time.Instant;\n"
+                + "import java.time.LocalDateTime;\n"
                 + "import java.util.Map;\n"
                 + "import java.util.UUID;\n"
                 + "import java.util.concurrent.ConcurrentHashMap;\n\n"
                 + "/**\n"
-                + " * 登录令牌内存存储：/auth/login 签发，AuthContextFilter 校验。\n"
-                + " * 骨架级实现（重启即全员下线），接真实项目请换 Redis/JWT。\n"
+                + " * 登录令牌存储：/auth/login 签发，AuthContextFilter 校验。\n"
+                + " * V6.4：签发写 sys_session 落盘，校验先查内存缓存（TTL 60s）miss 回源查库——\n"
+                + " * 内存加速、重启不丢；校验命中即滑动续期。登出删行删缓存。\n"
                 + " */\n"
                 + "@Component\n"
                 + "public class TokenStore {\n\n"
-                + "    private static final long TTL_SECONDS = 24 * 3600L;\n\n"
-                + "    private final Map<String, Entry> store = new ConcurrentHashMap<>();\n\n"
-                + "    public String create(String username) {\n"
+                + "    private static final long CACHE_TTL_SECONDS = 60;\n\n"
+                + "    @Autowired\n"
+                + "    private JdbcTemplate jdbcTemplate;\n\n"
+                + "    /** 会话时长（小时），yml auth.session-hours 可配 */\n"
+                + "    @Value(\"${auth.session-hours:24}\")\n"
+                + "    private int sessionHours;\n\n"
+                + "    private final Map<String, Entry> cache = new ConcurrentHashMap<>();\n"
+                + "    private volatile long lastCleanupAt = 0;\n\n"
+                + "    public String create(String username, String loginIp) {\n"
                 + "        String token = UUID.randomUUID().toString().replace(\"-\", \"\");\n"
-                + "        store.put(token, new Entry(username, Instant.now().plusSeconds(TTL_SECONDS)));\n"
+                + "        LocalDateTime expire = LocalDateTime.now().plusHours(sessionHours);\n"
+                + "        jdbcTemplate.update(\"INSERT INTO sys_session (token, username, login_ip, expire_time) VALUES (?, ?, ?, ?)\",\n"
+                + "                token, username, loginIp, Timestamp.valueOf(expire));\n"
+                + "        cache.put(token, new Entry(username, Instant.now().plusSeconds(CACHE_TTL_SECONDS)));\n"
+                + "        cleanupExpiredIfDue();\n"
                 + "        return token;\n"
                 + "    }\n\n"
                 + "    public String usernameOf(String token) {\n"
-                + "        Entry entry = store.get(token);\n"
-                + "        if (entry == null) {\n"
+                + "        Entry cached = cache.get(token);\n"
+                + "        Instant now = Instant.now();\n"
+                + "        if (cached != null && now.isBefore(cached.cachedUntil())) {\n"
+                + "            return cached.username();\n"
+                + "        }\n"
+                + "        // 缓存过期/未命中 → 回源查库；库里有则滑动续期并回填缓存\n"
+                + "        var rows = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT username, expire_time FROM sys_session WHERE token = ? AND deleted = 0\",\n"
+                + "                token);\n"
+                + "        if (rows.isEmpty()) {\n"
+                + "            cache.remove(token);\n"
                 + "            return null;\n"
                 + "        }\n"
-                + "        if (Instant.now().isAfter(entry.expireAt())) {\n"
-                + "            store.remove(token);\n"
+                + "        Object expireRaw = rows.get(0).get(\"expire_time\");\n"
+                + "        LocalDateTime expire = expireRaw instanceof java.time.LocalDateTime ldt\n"
+                + "                ? ldt : ((Timestamp) expireRaw).toLocalDateTime();\n"
+                + "        if (LocalDateTime.now().isAfter(expire)) {\n"
+                + "            remove(token);\n"
                 + "            return null;\n"
                 + "        }\n"
-                + "        return entry.username();\n"
+                + "        String username = String.valueOf(rows.get(0).get(\"username\"));\n"
+                + "        LocalDateTime newExpire = LocalDateTime.now().plusHours(sessionHours);\n"
+                + "        jdbcTemplate.update(\"UPDATE sys_session SET expire_time = ? WHERE token = ?\",\n"
+                + "                Timestamp.valueOf(newExpire), token);\n"
+                + "        cache.put(token, new Entry(username, now.plusSeconds(CACHE_TTL_SECONDS)));\n"
+                + "        return username;\n"
                 + "    }\n\n"
                 + "    public void remove(String token) {\n"
-                + "        store.remove(token);\n"
+                + "        cache.remove(token);\n"
+                + "        jdbcTemplate.update(\"DELETE FROM sys_session WHERE token = ?\", token);\n"
                 + "    }\n\n"
-                + "    private record Entry(String username, Instant expireAt) {\n"
+                + "    /** 惰性清理过期会话：距上次清理超 1 小时才扫一次，不依赖调度器 */\n"
+                + "    private void cleanupExpiredIfDue() {\n"
+                + "        long now = System.currentTimeMillis();\n"
+                + "        if (now - lastCleanupAt < 3600_000L) {\n"
+                + "            return;\n"
+                + "        }\n"
+                + "        lastCleanupAt = now;\n"
+                + "        try {\n"
+                + "            jdbcTemplate.update(\"DELETE FROM sys_session WHERE expire_time < NOW()\");\n"
+                + "        } catch (Exception ignored) {\n"
+                + "            // 清理失败不影响登录主链路，下次再试\n"
+                + "        }\n"
+                + "    }\n\n"
+                + "    private record Entry(String username, Instant cachedUntil) {\n"
                 + "    }\n"
                 + "}\n";
     }
 
     private String authControllerJava(String pkg) {
+        // V6.4：BCrypt 分派迁移 + 算术验证码 + 失败锁定 + 登录日志 + perms 下发
         return "package " + pkg + ".common.auth;\n\n"
+                + "import " + pkg + ".common.log.IpRegionResolver;\n"
+                + "import jakarta.servlet.http.HttpServletRequest;\n"
                 + "import org.springframework.beans.factory.annotation.Autowired;\n"
                 + "import org.springframework.jdbc.core.JdbcTemplate;\n"
+                + "import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;\n"
                 + "import org.springframework.util.StringUtils;\n"
                 + "import org.springframework.web.bind.annotation.GetMapping;\n"
                 + "import org.springframework.web.bind.annotation.PostMapping;\n"
                 + "import org.springframework.web.bind.annotation.RequestBody;\n"
                 + "import org.springframework.web.bind.annotation.RequestHeader;\n"
                 + "import org.springframework.web.bind.annotation.RequestMapping;\n"
+                + "import org.springframework.web.bind.annotation.RequestParam;\n"
                 + "import org.springframework.web.bind.annotation.RestController;\n\n"
+                + "import javax.imageio.ImageIO;\n"
+                + "import java.awt.BasicStroke;\n"
+                + "import java.awt.Color;\n"
+                + "import java.awt.Font;\n"
+                + "import java.awt.Graphics2D;\n"
+                + "import java.awt.image.BufferedImage;\n"
+                + "import java.io.ByteArrayOutputStream;\n"
                 + "import java.nio.charset.StandardCharsets;\n"
                 + "import java.security.MessageDigest;\n"
+                + "import java.security.SecureRandom;\n"
+                + "import java.sql.Timestamp;\n"
+                + "import java.time.LocalDateTime;\n"
+                + "import java.util.ArrayList;\n"
+                + "import java.util.Base64;\n"
                 + "import java.util.HashMap;\n"
                 + "import java.util.List;\n"
-                + "import java.util.Map;\n\n"
+                + "import java.util.Map;\n"
+                + "import java.util.UUID;\n"
+                + "import java.util.concurrent.ConcurrentHashMap;\n\n"
                 + "/**\n"
-                + " * 登录基座：POST /auth/login、POST /auth/logout、GET /auth/me。\n"
-                + " * 密码存 SHA-256（种子 SQL 里用 MySQL SHA2 写入，两边口径一致）。\n"
-                + " * 接真实项目请升级 BCrypt + 验证码 + 锁定策略。\n"
+                + " * 登录基座：POST /auth/login、POST /auth/logout、GET /auth/me、GET /auth/captcha。\n"
+                + " * V6.4 安全基线：\n"
+                + " * <ul>\n"
+                + " *   <li>密码 BCrypt（password_algo 分派，旧 SHA-256 存量用户登录成功即无感迁移）</li>\n"
+                + " *   <li>算术验证码（60s 一次性，内存存答案）</li>\n"
+                + " *   <li>失败锁定：连续 5 次锁 10 分钟（计数落库，重启不清零）</li>\n"
+                + " *   <li>登录日志 sys_login_log（含 IP 归属地异步回填）</li>\n"
+                + " * </ul>\n"
                 + " */\n"
                 + "@RestController\n"
                 + "@RequestMapping(\"/auth\")\n"
                 + "public class AuthController {\n\n"
+                + "    private static final int MAX_FAIL = 5;\n"
+                + "    private static final int LOCK_MINUTES = 10;\n"
+                + "    private static final long CAPTCHA_TTL_MS = 60_000L;\n\n"
                 + "    @Autowired\n"
                 + "    private JdbcTemplate jdbcTemplate;\n\n"
                 + "    @Autowired\n"
                 + "    private TokenStore tokenStore;\n\n"
+                + "    @Autowired\n"
+                + "    private IpRegionResolver ipRegionResolver;\n\n"
+                + "    private final BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();\n"
+                + "    private final SecureRandom random = new SecureRandom();\n"
+                + "    private final Map<String, CaptchaEntry> captchas = new ConcurrentHashMap<>();\n\n"
+                + "    /** 算术验证码：题目画进图里，答案只存服务端内存 */\n"
+                + "    @GetMapping(\"/captcha\")\n"
+                + "    public Map<String, Object> captcha() {\n"
+                + "        captchas.entrySet().removeIf(e -> e.getValue().expiredAt() < System.currentTimeMillis());\n"
+                + "        int a = random.nextInt(9) + 1;\n"
+                + "        int b = random.nextInt(9) + 1;\n"
+                + "        boolean plus = random.nextBoolean();\n"
+                + "        int x = Math.max(a, b);\n"
+                + "        int y = Math.min(a, b);\n"
+                + "        int answer = plus ? x + y : x - y;\n"
+                + "        String text = x + (plus ? \"+\" : \"-\") + y + \"=?\";\n"
+                + "        String captchaId = UUID.randomUUID().toString().replace(\"-\", \"\");\n"
+                + "        captchas.put(captchaId, new CaptchaEntry(String.valueOf(answer),\n"
+                + "                System.currentTimeMillis() + CAPTCHA_TTL_MS));\n"
+                + "        Map<String, Object> data = new HashMap<>();\n"
+                + "        data.put(\"captchaId\", captchaId);\n"
+                + "        data.put(\"image\", toBase64Png(text));\n"
+                + "        return Map.of(\"code\", 200, \"msg\", \"success\", \"data\", data);\n"
+                + "    }\n\n"
                 + "    @PostMapping(\"/login\")\n"
-                + "    public Map<String, Object> login(@RequestBody Map<String, String> body) {\n"
+                + "    public Map<String, Object> login(@RequestBody Map<String, String> body, HttpServletRequest request) {\n"
                 + "        String username = body.getOrDefault(\"username\", \"\");\n"
                 + "        String password = body.getOrDefault(\"password\", \"\");\n"
                 + "        if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {\n"
                 + "            return Map.of(\"code\", 400, \"msg\", \"用户名或密码不能为空\");\n"
                 + "        }\n"
-                + "        List<Map<String, Object>> users = jdbcTemplate.queryForList(\n"
-                + "                \"SELECT id, username, password FROM sys_user WHERE username = ? AND deleted = 0\",\n"
-                + "                username);\n"
-                + "        if (users.isEmpty() || !sha256(password).equalsIgnoreCase(\n"
-                + "                String.valueOf(users.get(0).get(\"password\")))) {\n"
-                + "            return Map.of(\"code\", 400, \"msg\", \"用户名或密码错误\");\n"
+                + "        String ip = clientIp(request);\n"
+                + "        // 1) 验证码：一次性 + 60s，防脚本撞库（答案校验放在密码比对前）\n"
+                + "        String captchaId = body.getOrDefault(\"captchaId\", \"\");\n"
+                + "        String captchaAnswer = body.getOrDefault(\"captchaAnswer\", \"\");\n"
+                + "        CaptchaEntry cap = captchas.remove(captchaId);\n"
+                + "        if (cap == null || cap.expiredAt() < System.currentTimeMillis()\n"
+                + "                || !cap.answer().equals(captchaAnswer.trim())) {\n"
+                + "            return loginLogAndRespond(username, ip, false, \"验证码错误或已过期\", null);\n"
                 + "        }\n"
-                + "        String token = tokenStore.create(username);\n"
+                + "        // 2) 失败锁定：计数落库，重启不清零\n"
+                + "        List<Map<String, Object>> users = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT id, username, password, password_algo, fail_count, lock_until FROM sys_user WHERE username = ? AND deleted = 0\",\n"
+                + "                username);\n"
+                + "        if (users.isEmpty()) {\n"
+                + "            return loginLogAndRespond(username, ip, false, \"用户名或密码错误\", null);\n"
+                + "        }\n"
+                + "        Map<String, Object> user = users.get(0);\n"
+                + "        long userId = ((Number) user.get(\"id\")).longValue();\n"
+                + "        int failCount = ((Number) user.getOrDefault(\"fail_count\", 0)).intValue();\n"
+                + "        Object lockUntilObj = user.get(\"lock_until\");\n"
+                + "        if (lockUntilObj != null) {\n"
+                + "            LocalDateTime lockUntil = lockUntilObj instanceof java.time.LocalDateTime ldt2\n"
+                + "                    ? ldt2 : ((Timestamp) lockUntilObj).toLocalDateTime();\n"
+                + "            if (LocalDateTime.now().isBefore(lockUntil)) {\n"
+                + "                long minutes = java.time.Duration.between(LocalDateTime.now(), lockUntil).toMinutes() + 1;\n"
+                + "                return loginLogAndRespond(username, ip, false, \"失败次数过多，账号已锁定，请 \" + minutes + \" 分钟后再试\", null);\n"
+                + "            }\n"
+                + "        }\n"
+                + "        // 3) 密码校验：按 password_algo 分派；旧 SHA-256 命中后立即 BCrypt 重哈希写回\n"
+                + "        String stored = String.valueOf(user.get(\"password\"));\n"
+                + "        String algo = String.valueOf(user.getOrDefault(\"password_algo\", \"sha256\"));\n"
+                + "        boolean matched;\n"
+                + "        if (\"bcrypt\".equalsIgnoreCase(algo)) {\n"
+                + "            matched = bcrypt.matches(password, stored);\n"
+                + "        } else {\n"
+                + "            matched = sha256(password).equalsIgnoreCase(stored);\n"
+                + "            if (matched) {\n"
+                + "                // 无感迁移：旧哈希命中即升级 BCrypt，全量用户在自然登录中完成\n"
+                + "                jdbcTemplate.update(\"UPDATE sys_user SET password = ?, password_algo = 'bcrypt' WHERE id = ?\",\n"
+                + "                        bcrypt.encode(password), userId);\n"
+                + "            }\n"
+                + "        }\n"
+                + "        if (!matched) {\n"
+                + "            int nextFail = failCount + 1;\n"
+                + "            String msg = \"用户名或密码错误\";\n"
+                + "            if (nextFail >= MAX_FAIL) {\n"
+                + "                LocalDateTime lockUntil = LocalDateTime.now().plusMinutes(LOCK_MINUTES);\n"
+                + "                jdbcTemplate.update(\"UPDATE sys_user SET fail_count = ?, lock_until = ? WHERE id = ?\",\n"
+                + "                        nextFail, Timestamp.valueOf(lockUntil), userId);\n"
+                + "                msg = \"连续失败 \" + nextFail + \" 次，账号锁定 \" + LOCK_MINUTES + \" 分钟\";\n"
+                + "            } else {\n"
+                + "                jdbcTemplate.update(\"UPDATE sys_user SET fail_count = ? WHERE id = ?\", nextFail, userId);\n"
+                + "            }\n"
+                + "            return loginLogAndRespond(username, ip, false, msg, null);\n"
+                + "        }\n"
+                + "        // 4) 成功：清零失败计数 + 签发 token + 下发 perms\n"
+                + "        jdbcTemplate.update(\"UPDATE sys_user SET fail_count = 0, lock_until = NULL WHERE id = ?\", userId);\n"
+                + "        String token = tokenStore.create(username, ip);\n"
+                + "        List<String> perms = loadPerms(userId);\n"
                 + "        Map<String, Object> data = new HashMap<>();\n"
                 + "        data.put(\"token\", token);\n"
                 + "        data.put(\"username\", username);\n"
+                + "        data.put(\"perms\", perms);\n"
+                + "        loginLogAndRespond(username, ip, true, null, userId);\n"
                 + "        return Map.of(\"code\", 200, \"msg\", \"success\", \"data\", data);\n"
+                + "    }\n\n"
+                + "    /** 用户权限点集：sys_user_role → sys_role_menu.perms；admin 角色直通下发 *:*:* */\n"
+                + "    private List<String> loadPerms(long userId) {\n"
+                + "        List<String> perms = new ArrayList<>();\n"
+                + "        Integer admin = jdbcTemplate.queryForObject(\n"
+                + "                \"SELECT COUNT(*) FROM sys_user_role ur JOIN sys_role r ON r.id = ur.role_id \"\n"
+                + "                        + \"WHERE ur.user_id = ? AND r.deleted = 0 AND (r.role_key = 'admin' OR r.id = 1)\",\n"
+                + "                Integer.class, userId);\n"
+                + "        if (admin != null && admin > 0) {\n"
+                + "            perms.add(\"*:*:*\");\n"
+                + "            return perms;\n"
+                + "        }\n"
+                + "        List<Map<String, Object>> rows = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT DISTINCT m.perms FROM sys_user_role ur \"\n"
+                + "                        + \"JOIN sys_role_menu rm ON rm.role_id = ur.role_id \"\n"
+                + "                        + \"JOIN sys_menu m ON m.id = rm.menu_id \"\n"
+                + "                        + \"WHERE ur.user_id = ? AND m.deleted = 0 AND m.perms IS NOT NULL AND m.perms <> ''\",\n"
+                + "                userId);\n"
+                + "        for (Map<String, Object> row : rows) {\n"
+                + "            perms.add(String.valueOf(row.get(\"perms\")));\n"
+                + "        }\n"
+                + "        return perms;\n"
+                + "    }\n\n"
+                + "    /** 登录日志：结果先落库，归属地异步回填（查询走网络，不能阻塞登录链路） */\n"
+                + "    private Map<String, Object> loginLogAndRespond(String username, String ip, boolean success,\n"
+                + "                                                   String failReason, Long userId) {\n"
+                + "        jdbcTemplate.update(\n"
+                + "                \"INSERT INTO sys_login_log (username, ip, success, fail_reason) VALUES (?, ?, ?, ?)\",\n"
+                + "                username, ip, success ? 1 : 0, failReason);\n"
+                + "        if (ip != null && !ip.isBlank()) {\n"
+                + "            Long logId = jdbcTemplate.queryForObject(\n"
+                + "                    \"SELECT MAX(id) FROM sys_login_log WHERE username = ?\", Long.class, username);\n"
+                + "            if (logId != null) {\n"
+                + "                ipRegionResolver.resolveAsync(ip, region ->\n"
+                + "                        jdbcTemplate.update(\"UPDATE sys_login_log SET region = ? WHERE id = ?\",\n"
+                + "                                region.province() + (region.city() == null ? \"\" : \" \" + region.city()), logId));\n"
+                + "            }\n"
+                + "        }\n"
+                + "        if (failReason == null) {\n"
+                + "            return null;\n"
+                + "        }\n"
+                + "        return Map.of(\"code\", 400, \"msg\", failReason);\n"
                 + "    }\n\n"
                 + "    @PostMapping(\"/logout\")\n"
                 + "    public Map<String, Object> logout(@RequestHeader(value = \"Authorization\", required = false) String authorization) {\n"
@@ -3143,6 +3590,40 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        }\n"
                 + "        return Map.of(\"code\", 200, \"msg\", \"success\", \"data\", Map.of(\"username\", username));\n"
                 + "    }\n\n"
+                + "    private String toBase64Png(String text) {\n"
+                + "        try {\n"
+                + "            int w = 120;\n"
+                + "            int h = 40;\n"
+                + "            BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);\n"
+                + "            Graphics2D g = img.createGraphics();\n"
+                + "            g.setColor(new Color(240, 244, 248));\n"
+                + "            g.fillRect(0, 0, w, h);\n"
+                + "            // 干扰线\n"
+                + "            for (int i = 0; i < 4; i++) {\n"
+                + "                g.setColor(new Color(random.nextInt(200), random.nextInt(200), random.nextInt(200)));\n"
+                + "                g.setStroke(new BasicStroke(1.2f));\n"
+                + "                g.drawLine(random.nextInt(w), random.nextInt(h), random.nextInt(w), random.nextInt(h));\n"
+                + "            }\n"
+                + "            g.setColor(new Color(40, 60, 90));\n"
+                + "            g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));\n"
+                + "            g.drawString(text, 18, 28);\n"
+                + "            g.dispose();\n"
+                + "            ByteArrayOutputStream bos = new ByteArrayOutputStream();\n"
+                + "            ImageIO.write(img, \"png\", bos);\n"
+                + "            return \"data:image/png;base64,\" + Base64.getEncoder().encodeToString(bos.toByteArray());\n"
+                + "        } catch (Exception e) {\n"
+                + "            throw new IllegalStateException(\"验证码图片生成失败\", e);\n"
+                + "        }\n"
+                + "    }\n\n"
+                + "    private String clientIp(HttpServletRequest request) {\n"
+                + "        for (String header : new String[]{\"X-Forwarded-For\", \"X-Real-IP\"}) {\n"
+                + "            String value = request.getHeader(header);\n"
+                + "            if (value != null && !value.isBlank()) {\n"
+                + "                return value.split(\",\")[0].trim();\n"
+                + "            }\n"
+                + "        }\n"
+                + "        return request.getRemoteAddr();\n"
+                + "    }\n\n"
                 + "    private String sha256(String text) {\n"
                 + "        try {\n"
                 + "            MessageDigest digest = MessageDigest.getInstance(\"SHA-256\");\n"
@@ -3155,17 +3636,327 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        } catch (Exception e) {\n"
                 + "            throw new IllegalStateException(\"SHA-256 不可用\", e);\n"
                 + "        }\n"
+                + "    }\n\n"
+                + "    private record CaptchaEntry(String answer, long expiredAt) {\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    /** V6.4 P0-3：端点→perms 映射贡献者接口。key="METHOD /path"，value=所需 perms，空串=仅登录即可 */
+    private String apiPermContributorJava(String pkg) {
+        return "package " + pkg + ".common.auth;\n\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * 接口权限点映射贡献者：业务模块声明自己的端点-权限映射，PermissionChecker 汇集后集中校验。\n"
+                + " * <p>key 形如 {@code POST /fee/page}（路径段可用 {@code {id}} 通配）。\n"
+                + " * value 为所需权限串（如 {@code demo_fee:add}），空串表示仅登录即可（基座能力豁免）。\n"
+                + " * 未注册的端点走安全缺省：GET 放行、写方法拒绝（fail-closed）。\n"
+                + " */\n"
+                + "public interface ApiPermContributor {\n\n"
+                + "    Map<String, String> endpointPerms();\n"
+                + "}\n";
+    }
+
+    /** V6.4 P0-3：权限集中校验器。加载用户 perms（60s 缓存）+ admin 直通 + fail-closed 缺省 */
+    private String permissionCheckerJava(String pkg) {
+        return "package " + pkg + ".common.auth;\n\n"
+                + "import jakarta.servlet.http.HttpServletRequest;\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
+                + "import org.springframework.jdbc.core.JdbcTemplate;\n"
+                + "import org.springframework.stereotype.Component;\n"
+                + "import org.springframework.util.StringUtils;\n\n"
+                + "import java.util.Arrays;\n"
+                + "import java.util.HashSet;\n"
+                + "import java.util.List;\n"
+                + "import java.util.Map;\n"
+                + "import java.util.Set;\n"
+                + "import java.util.concurrent.ConcurrentHashMap;\n\n"
+                + "/**\n"
+                + " * 接口权限点集中校验（V6.4 P0-3）。\n"
+                + " *\n"
+                + " * <p>映射来源：所有 {@link ApiPermContributor} bean（业务表生成 {@code XxxApiPerms}，\n"
+                + " * 基座自带 Flow/Pay 豁免清单）。用户 perms 从 sys_user_role→sys_role_menu.perms 加载，60s 缓存。\n"
+                + " * admin 角色（role_key=admin 或 id=1）直通。\n"
+                + " * <p>安全缺省 fail-closed：映射缺失时 GET 放行、写方法拒绝——存量系统升级后\n"
+                + " * 宁可补一次授权配置，也不能让写接口继续裸奔。\n"
+                + " */\n"
+                + "@Component\n"
+                + "public class PermissionChecker {\n\n"
+                + "    private static final long CACHE_TTL_MS = 60_000L;\n\n"
+                + "    @Autowired\n"
+                + "    private JdbcTemplate jdbcTemplate;\n\n"
+                + "    private final Map<String, String> endpointPerms = new ConcurrentHashMap<>();\n"
+                + "    private final Map<String, PermsCacheEntry> permsCache = new ConcurrentHashMap<>();\n\n"
+                + "    public PermissionChecker(List<ApiPermContributor> contributors) {\n"
+                + "        for (ApiPermContributor contributor : contributors) {\n"
+                + "            endpointPerms.putAll(contributor.endpointPerms());\n"
+                + "        }\n"
+                + "    }\n\n"
+                + "    public boolean check(HttpServletRequest request, String username) {\n"
+                + "        String path = request.getRequestURI();\n"
+                + "        String contextPath = request.getContextPath();\n"
+                + "        if (StringUtils.hasText(contextPath) && path.startsWith(contextPath)) {\n"
+                + "            path = path.substring(contextPath.length());\n"
+                + "        }\n"
+                + "        String method = request.getMethod().toUpperCase();\n"
+                + "        String required = resolveRequired(method, path);\n"
+                + "        if (required == null) {\n"
+                + "            // 未注册映射：管理员直通（基座 sys 端点未注册权限点，超管必须可用）；\n"
+                + "            // 普通用户读放行、写拒绝（fail-closed）\n"
+                + "            if (hasPerm(permsOf(username), \"*:*:*\")) {\n"
+                + "                return true;\n"
+                + "            }\n"
+                + "            return \"GET\".equals(method);\n"
+                + "        }\n"
+                + "        if (required.isEmpty()) {\n"
+                + "            // 仅登录即可（基座能力豁免）\n"
+                + "            return true;\n"
+                + "        }\n"
+                + "        return hasPerm(permsOf(username), required);\n"
+                + "    }\n\n"
+                + "    /** 先精确匹配，再按段通配（/{id} 段匹配任意一段） */\n"
+                + "    private String resolveRequired(String method, String path) {\n"
+                + "        String exact = endpointPerms.get(method + \" \" + path);\n"
+                + "        if (exact != null) {\n"
+                + "            return exact;\n"
+                + "        }\n"
+                + "        String[] actualSegs = path.split(\"/\");\n"
+                + "        for (Map.Entry<String, String> entry : endpointPerms.entrySet()) {\n"
+                + "            String[] keySegs = entry.getKey().split(\" \");\n"
+                + "            if (keySegs.length != 2 || !keySegs[0].equals(method)) {\n"
+                + "                continue;\n"
+                + "            }\n"
+                + "            if (segmentMatch(keySegs[1].split(\"/\"), actualSegs)) {\n"
+                + "                return entry.getValue();\n"
+                + "            }\n"
+                + "        }\n"
+                + "        return null;\n"
+                + "    }\n\n"
+                + "    private boolean segmentMatch(String[] pattern, String[] actual) {\n"
+                + "        if (pattern.length != actual.length) {\n"
+                + "            return false;\n"
+                + "        }\n"
+                + "        for (int i = 0; i < pattern.length; i++) {\n"
+                + "            String p = pattern[i];\n"
+                + "            if (p.startsWith(\"{\") && p.endsWith(\"}\")) {\n"
+                + "                if (actual[i].isEmpty()) {\n"
+                + "                    return false;\n"
+                + "                }\n"
+                + "            } else if (!p.equals(actual[i])) {\n"
+                + "                return false;\n"
+                + "            }\n"
+                + "        }\n"
+                + "        return true;\n"
+                + "    }\n\n"
+                + "    /** perms 匹配：精确值、前缀通配（demo_fee:*）、超级通配（*:*:*） */\n"
+                + "    private boolean hasPerm(Set<String> perms, String required) {\n"
+                + "        if (perms.contains(\"*:*:*\") || perms.contains(required)) {\n"
+                + "            return true;\n"
+                + "        }\n"
+                + "        int i = required.lastIndexOf(':');\n"
+                + "        return i > 0 && perms.contains(required.substring(0, i) + \":*\");\n"
+                + "    }\n\n"
+                + "    private Set<String> permsOf(String username) {\n"
+                + "        PermsCacheEntry cached = permsCache.get(username);\n"
+                + "        long now = System.currentTimeMillis();\n"
+                + "        if (cached != null && cached.expiredAt() > now) {\n"
+                + "            return cached.perms();\n"
+                + "        }\n"
+                + "        Set<String> perms = loadPerms(username);\n"
+                + "        permsCache.put(username, new PermsCacheEntry(perms, now + CACHE_TTL_MS));\n"
+                + "        return perms;\n"
+                + "    }\n\n"
+                + "    private Set<String> loadPerms(String username) {\n"
+                + "        List<Long> userIds = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT id FROM sys_user WHERE username = ? AND deleted = 0\", Long.class, username);\n"
+                + "        if (userIds.isEmpty()) {\n"
+                + "            return Set.of();\n"
+                + "        }\n"
+                + "        Integer admin = jdbcTemplate.queryForObject(\n"
+                + "                \"SELECT COUNT(*) FROM sys_user_role ur JOIN sys_role r ON r.id = ur.role_id \"\n"
+                + "                        + \"WHERE ur.user_id = ? AND r.deleted = 0 AND (r.role_key = 'admin' OR r.id = 1)\",\n"
+                + "                Integer.class, userIds.get(0));\n"
+                + "        if (admin != null && admin > 0) {\n"
+                + "            return Set.of(\"*:*:*\");\n"
+                + "        }\n"
+                + "        List<String> rows = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT DISTINCT m.perms FROM sys_user_role ur \"\n"
+                + "                        + \"JOIN sys_role_menu rm ON rm.role_id = ur.role_id \"\n"
+                + "                        + \"JOIN sys_menu m ON m.id = rm.menu_id \"\n"
+                + "                        + \"WHERE ur.user_id = ? AND m.deleted = 0 AND m.perms IS NOT NULL AND m.perms <> ''\",\n"
+                + "                String.class, userIds.get(0));\n"
+                + "        return new HashSet<>(rows);\n"
+                + "    }\n\n"
+                + "    private record PermsCacheEntry(Set<String> perms, long expiredAt) {\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    /** V6.4：流程基座端点豁免清单——审批是平台能力不接业务 perms，登录即可 */
+    private String flowApiPermsJava(String pkg) {
+        return "package " + pkg + ".common.auth;\n\n"
+                + "import org.springframework.stereotype.Component;\n\n"
+                + "import java.util.HashMap;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * 流程基座端点映射：审批流是平台内置能力，不接业务 perms，登录即可操作。\n"
+                + " * 值为空串 = 仅登录。若业务要求审批权限管控，可改为具体 perms 值。\n"
+                + " */\n"
+                + "@Component\n"
+                + "public class FlowApiPerms implements ApiPermContributor {\n\n"
+                + "    @Override\n"
+                + "    public Map<String, String> endpointPerms() {\n"
+                + "        Map<String, String> m = new HashMap<>();\n"
+                + "        m.put(\"POST /flow/submit\", \"\");\n"
+                + "        m.put(\"POST /flow/approve\", \"\");\n"
+                + "        m.put(\"POST /flow/reject\", \"\");\n"
+                + "        m.put(\"GET /flow/records\", \"\");\n"
+                + "        m.put(\"GET /flow/state\", \"\");\n"
+                + "        m.put(\"GET /flow/todo\", \"\");\n"
+                + "        m.put(\"GET /flow/done\", \"\");\n"
+                + "        m.put(\"GET /flow/task/{taskId}\", \"\");\n"
+                + "        return m;\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    /** V6.4：支付基座端点豁免清单——收银台链路登录即可（notify 在白名单） */
+    private String payApiPermsJava(String pkg) {
+        return "package " + pkg + ".common.auth;\n\n"
+                + "import org.springframework.stereotype.Component;\n\n"
+                + "import java.util.HashMap;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * 支付基座端点映射：支付链路是平台内置能力，登录即可（/pay/notify 在 Filter 白名单）。\n"
+                + " */\n"
+                + "@Component\n"
+                + "public class PayApiPerms implements ApiPermContributor {\n\n"
+                + "    @Override\n"
+                + "    public Map<String, String> endpointPerms() {\n"
+                + "        Map<String, String> m = new HashMap<>();\n"
+                + "        m.put(\"POST /pay/order\", \"\");\n"
+                + "        m.put(\"GET /pay/channel\", \"\");\n"
+                + "        m.put(\"GET /pay/order/{outTradeNo}\", \"\");\n"
+                + "        m.put(\"POST /pay/mock/pay/{outTradeNo}\", \"\");\n"
+                + "        m.put(\"POST /pay/close/{outTradeNo}\", \"\");\n"
+                + "        return m;\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    /** V6.4 P0-4：登录日志只读查询（管理页 P1 接入） */
+    /**
+     * V6.8 字典只读接口：GET /system/dict/data/type/{code} → [{value,label}]。
+     *
+     * <p>用 JdbcTemplate 而不是实体+Mapper：字典表由 {@code db/dict.sql} 保证存在，
+     * 多一套实体只会多一处漂移面。表不存在/查询异常时返回空数组——下拉降级为空，
+     * 页面照常可用（前端本来就有「取不到就当空选项」的兜底）。
+     */
+    private String dictControllerJava(String pkg) {
+        return "package " + pkg + ".system;\n\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
+                + "import org.springframework.jdbc.core.JdbcTemplate;\n"
+                + "import org.springframework.web.bind.annotation.GetMapping;\n"
+                + "import org.springframework.web.bind.annotation.PathVariable;\n"
+                + "import org.springframework.web.bind.annotation.RequestMapping;\n"
+                + "import org.springframework.web.bind.annotation.RestController;\n\n"
+                + "import java.util.ArrayList;\n"
+                + "import java.util.LinkedHashMap;\n"
+                + "import java.util.List;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * 字典数据只读接口（V6.8 字典脚手架）：前端按 dict_code 取 value/label 列表。\n"
+                + " * 表结构与种子由 db/dict.sql 提供；端点在白名单里（/system/dict），免登录可读。\n"
+                + " */\n"
+                + "@RestController\n"
+                + "@RequestMapping(\"/system/dict\")\n"
+                + "public class SysDictController {\n\n"
+                + "    @Autowired\n"
+                + "    private JdbcTemplate jdbcTemplate;\n\n"
+                + "    @GetMapping(\"/data/type/{code}\")\n"
+                + "    public List<Map<String, String>> byType(@PathVariable(\"code\") String code) {\n"
+                + "        List<Map<String, String>> out = new ArrayList<>();\n"
+                + "        try {\n"
+                + "            for (Map<String, Object> row : jdbcTemplate.queryForList(\n"
+                + "                    \"SELECT dict_value, dict_label FROM sys_dict_data \"\n"
+                + "                            + \"WHERE dict_code = ? AND deleted = 0 ORDER BY sort, id\", code)) {\n"
+                + "                Map<String, String> item = new LinkedHashMap<>();\n"
+                + "                item.put(\"value\", String.valueOf(row.get(\"dict_value\")));\n"
+                + "                item.put(\"label\", String.valueOf(row.get(\"dict_label\")));\n"
+                + "                out.add(item);\n"
+                + "            }\n"
+                + "        } catch (Exception e) {\n"
+                + "            // 表没建/库抖动：返回空列表，前端下拉为空但页面不炸\n"
+                + "            return List.of();\n"
+                + "        }\n"
+                + "        return out;\n"
+                + "    }\n"
+                + "}\n";
+    }
+
+    private String loginLogControllerJava(String pkg) {
+        return "package " + pkg + ".system;\n\n"
+                + "import org.springframework.beans.factory.annotation.Autowired;\n"
+                + "import org.springframework.jdbc.core.JdbcTemplate;\n"
+                + "import org.springframework.web.bind.annotation.PostMapping;\n"
+                + "import org.springframework.web.bind.annotation.RequestBody;\n"
+                + "import org.springframework.web.bind.annotation.RequestMapping;\n"
+                + "import org.springframework.web.bind.annotation.RestController;\n\n"
+                + "import java.util.List;\n"
+                + "import java.util.Map;\n\n"
+                + "/**\n"
+                + " * 登录日志只读查询（V6.4 P0-4）：谁在什么时候从哪里登录、成败与原因。\n"
+                + " * 写入端在 AuthController；本控制器只读，端点纳入权限校验 fail-closed 缺省（GET/POST/page 读放行）。\n"
+                + " */\n"
+                + "@RestController\n"
+                + "@RequestMapping(\"/loginLog\")\n"
+                + "public class LoginLogController {\n\n"
+                + "    @Autowired\n"
+                + "    private JdbcTemplate jdbcTemplate;\n\n"
+                + "    @PostMapping(\"/page\")\n"
+                + "    public Map<String, Object> page(@RequestBody(required = false) Map<String, Object> body) {\n"
+                + "        int pageNum = body == null || body.get(\"pageNum\") == null ? 1 : ((Number) body.get(\"pageNum\")).intValue();\n"
+                + "        int pageSize = body == null || body.get(\"pageSize\") == null ? 10 : ((Number) body.get(\"pageSize\")).intValue();\n"
+                + "        pageSize = Math.min(Math.max(pageSize, 1), 100);\n"
+                + "        StringBuilder where = new StringBuilder(\" WHERE 1=1\");\n"
+                + "        var args = new java.util.ArrayList<Object>();\n"
+                + "        if (body != null && body.get(\"username\") != null && !String.valueOf(body.get(\"username\")).isBlank()) {\n"
+                + "            where.append(\" AND username LIKE ?\");\n"
+                + "            args.add(\"%\" + body.get(\"username\") + \"%\");\n"
+                + "        }\n"
+                + "        if (body != null && body.get(\"success\") != null) {\n"
+                + "            where.append(\" AND success = ?\");\n"
+                + "            args.add(((Number) body.get(\"success\")).intValue());\n"
+                + "        }\n"
+                + "        Integer total = jdbcTemplate.queryForObject(\n"
+                + "                \"SELECT COUNT(*) FROM sys_login_log\" + where, Integer.class, args.toArray());\n"
+                + "        List<Map<String, Object>> records = jdbcTemplate.queryForList(\n"
+                + "                \"SELECT id, username, ip, region, success, fail_reason AS failReason, create_time AS createTime \"\n"
+                + "                        + \"FROM sys_login_log\" + where + \" ORDER BY id DESC LIMIT ? OFFSET ?\",\n"
+                + "                args.toArray(), pageSize, (pageNum - 1) * pageSize);\n"
+                + "        Map<String, Object> data = new java.util.HashMap<>();\n"
+                + "        data.put(\"records\", records);\n"
+                + "        data.put(\"total\", total == null ? 0 : total);\n"
+                + "        data.put(\"current\", pageNum);\n"
+                + "        data.put(\"size\", pageSize);\n"
+                + "        return Map.of(\"code\", 200, \"msg\", \"success\", \"data\", data);\n"
                 + "    }\n"
                 + "}\n";
     }
 
     private String seedSql() {
-        return "-- 骨架自带登录基座：admin / admin123\n"
+        // V6.4：admin 种子密码升级 BCrypt（预生成值，admin123）；旧 SHA-256 存量用户登录时无感迁移
+        String adminBcrypt = "$2a$10$BQz.XdhOV7sJOpH9z/BeheARd01UQKdchBsEgPfa.rYgmwTh75PaO";
+        return "-- 骨架自带登录基座与权限体系：admin / admin123\n"
                 + "-- 由建系统流水线在建库后自动执行；手工部署时也可以手动跑本文件\n"
+                + "-- V6.4：密码 BCrypt（password_algo 标记算法，旧 SHA-256 存量用户登录时无感迁移）\n"
                 + "CREATE TABLE IF NOT EXISTS sys_user (\n"
                 + "  id bigint NOT NULL AUTO_INCREMENT COMMENT '主键',\n"
                 + "  username varchar(64) NOT NULL COMMENT '登录名',\n"
-                + "  password varchar(64) NOT NULL COMMENT '密码（SHA-256）',\n"
+                + "  password varchar(72) NOT NULL COMMENT '密码（BCrypt 60位，兼容旧 SHA-256 64位）',\n"
+                + "  password_algo varchar(16) NOT NULL DEFAULT 'bcrypt' COMMENT '密码算法：bcrypt/sha256',\n"
+                + "  fail_count int NOT NULL DEFAULT 0 COMMENT '连续失败次数（V6.4 登录锁定）',\n"
+                + "  lock_until datetime NULL COMMENT '锁定截止时间',\n"
                 + "  nickname varchar(64) NULL COMMENT '昵称',\n"
                 + "  create_time datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',\n"
                 + "  update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',\n"
@@ -3175,15 +3966,102 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "  PRIMARY KEY (id),\n"
                 + "  UNIQUE KEY uk_username (username)\n"
                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统用户';\n\n"
-                + "INSERT IGNORE INTO sys_user (username, password, nickname)\n"
-                + "VALUES ('admin', SHA2('admin123', 256), '管理员');\n";
+                + "CREATE TABLE IF NOT EXISTS sys_session (\n"
+                + "  token varchar(64) NOT NULL COMMENT '登录令牌',\n"
+                + "  username varchar(64) NOT NULL COMMENT '登录名',\n"
+                + "  login_ip varchar(64) NULL COMMENT '登录IP',\n"
+                + "  login_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '登录时间',\n"
+                + "  expire_time datetime NOT NULL COMMENT '过期时间（滑动续期）',\n"
+                + "  deleted tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',\n"
+                + "  PRIMARY KEY (token),\n"
+                + "  KEY idx_session_expire (expire_time)\n"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录会话（V6.4 持久化，重启不掉线）';\n\n"
+                + "CREATE TABLE IF NOT EXISTS sys_login_log (\n"
+                + "  id bigint NOT NULL AUTO_INCREMENT COMMENT '主键',\n"
+                + "  username varchar(64) NULL COMMENT '尝试登录的用户名',\n"
+                + "  ip varchar(64) NULL COMMENT '来源IP',\n"
+                + "  region varchar(128) NULL COMMENT 'IP归属地',\n"
+                + "  success tinyint NOT NULL DEFAULT 0 COMMENT '是否成功：1是0否',\n"
+                + "  fail_reason varchar(255) NULL COMMENT '失败原因',\n"
+                + "  create_time datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '时间',\n"
+                + "  PRIMARY KEY (id),\n"
+                + "  KEY idx_login_log_time (create_time)\n"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录日志（V6.4）';\n\n"
+                // 坑48：操作日志表此前不在任何种子 SQL 里，新建库一调业务接口就 500
+                + "CREATE TABLE IF NOT EXISTS sys_oper_log (\n"
+                + "  id bigint NOT NULL AUTO_INCREMENT COMMENT '主键',\n"
+                + "  title varchar(64) NULL COMMENT '模块标题',\n"
+                + "  oper_type varchar(32) NULL COMMENT '操作类型',\n"
+                + "  method varchar(128) NULL COMMENT '方法名',\n"
+                + "  request_uri varchar(128) NULL COMMENT '请求URI',\n"
+                + "  request_method varchar(16) NULL COMMENT '请求方式',\n"
+                + "  oper_param text NULL COMMENT '请求参数',\n"
+                + "  json_result text NULL COMMENT '返回结果',\n"
+                + "  status tinyint NULL COMMENT '1成功 0失败',\n"
+                + "  error_msg varchar(512) NULL COMMENT '错误消息',\n"
+                + "  oper_user_id bigint NULL COMMENT '操作人ID',\n"
+                + "  oper_name varchar(64) NULL COMMENT '操作人',\n"
+                + "  oper_ip varchar(64) NULL COMMENT '来源IP',\n"
+                + "  province varchar(32) NULL COMMENT '省份',\n"
+                + "  city varchar(32) NULL COMMENT '城市',\n"
+                + "  cost_ms bigint NULL COMMENT '耗时毫秒',\n"
+                + "  deleted tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',\n"
+                + "  create_by bigint NULL, create_time datetime NULL, update_by bigint NULL, update_time datetime NULL,\n"
+                + "  PRIMARY KEY (id),\n"
+                + "  KEY idx_oper_log_time (create_time)\n"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志（V6.4 补齐种子）';\n\n"
+                // V6.4 权限体系表基座：字段口径与 V3.0 菜单注册 SQL 一致（目标工程此前缺失）
+                + "CREATE TABLE IF NOT EXISTS sys_role (\n"
+                + "  id bigint NOT NULL AUTO_INCREMENT COMMENT '主键',\n"
+                + "  role_name varchar(64) NOT NULL COMMENT '角色名',\n"
+                + "  role_key varchar(64) NOT NULL COMMENT '角色标识（admin 直通）',\n"
+                + "  remark varchar(255) NULL COMMENT '备注',\n"
+                + "  create_time datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',\n"
+                + "  update_time datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',\n"
+                + "  deleted tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',\n"
+                + "  PRIMARY KEY (id)\n"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统角色';\n\n"
+                + "CREATE TABLE IF NOT EXISTS sys_menu (\n"
+                + "  id bigint NOT NULL AUTO_INCREMENT COMMENT '主键',\n"
+                + "  parent_id bigint NOT NULL DEFAULT 0 COMMENT '父菜单ID',\n"
+                + "  name varchar(64) NOT NULL COMMENT '名称',\n"
+                + "  path varchar(128) NULL COMMENT '路由路径',\n"
+                + "  component varchar(128) NULL COMMENT '组件路径',\n"
+                + "  perms varchar(128) NULL COMMENT '权限标识（如 demo_fee:list）',\n"
+                + "  type tinyint NOT NULL DEFAULT 1 COMMENT '类型：1目录2菜单3按钮',\n"
+                + "  sort int NOT NULL DEFAULT 0 COMMENT '排序',\n"
+                + "  status tinyint NOT NULL DEFAULT 1 COMMENT '状态：1启用0停用',\n"
+                + "  deleted tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',\n"
+                + "  PRIMARY KEY (id)\n"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='菜单与权限点';\n\n"
+                + "CREATE TABLE IF NOT EXISTS sys_user_role (\n"
+                + "  user_id bigint NOT NULL COMMENT '用户ID',\n"
+                + "  role_id bigint NOT NULL COMMENT '角色ID',\n"
+                + "  PRIMARY KEY (user_id, role_id)\n"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户角色关联';\n\n"
+                + "CREATE TABLE IF NOT EXISTS sys_role_menu (\n"
+                + "  role_id bigint NOT NULL COMMENT '角色ID',\n"
+                + "  menu_id bigint NOT NULL COMMENT '菜单ID',\n"
+                + "  PRIMARY KEY (role_id, menu_id)\n"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色菜单（perms 随菜单授予）';\n\n"
+                + "INSERT IGNORE INTO sys_user (username, password, password_algo, nickname)\n"
+                + "VALUES ('admin', '" + adminBcrypt + "', 'bcrypt', '管理员');\n\n"
+                + "INSERT IGNORE INTO sys_role (id, role_name, role_key, remark)\n"
+                + "VALUES (1, '超级管理员', 'admin', '内置角色：接口权限点直通');\n"
+                + "INSERT IGNORE INTO sys_user_role (user_id, role_id)\n"
+                + "SELECT u.id, 1 FROM sys_user u WHERE u.username = 'admin';\n";
     }
 
-    private String frontendLoginVue(String project) {
+    private String frontendLoginVue(String appName, String appLogo, String themeColor) {
+        // V6.4：登录页带算术验证码（GET /auth/captcha，60s 一次性，点图刷新）
+        // V6.8：品牌 Logo 置于标题上方（空则整行不出现，不留空洞）
+        String logoTag = appLogo == null || appLogo.isBlank() ? ""
+                : "      <img class=\"login-logo\" src=\"" + appLogo + "\" alt=\"" + appName + "\" />\n";
         return "<template>\n"
                 + "  <div class=\"login-wrap\">\n"
                 + "    <el-card class=\"login-card\">\n"
-                + "      <h2>" + project + "</h2>\n"
+                + logoTag
+                + "      <h2>" + appName + "</h2>\n"
                 + "      <el-form @submit.native.prevent=\"doLogin\">\n"
                 + "        <el-form-item>\n"
                 + "          <el-input v-model=\"form.username\" placeholder=\"用户名\" />\n"
@@ -3191,7 +4069,13 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        <el-form-item>\n"
                 + "          <el-input v-model=\"form.password\" type=\"password\" placeholder=\"密码\" show-password />\n"
                 + "        </el-form-item>\n"
-                + "        <el-button type=\"primary\" :loading=\"loading\" native-type=\"submit\" style=\"width:100%\">登 录</el-button>\n"
+                + "        <el-form-item>\n"
+                + "          <div class=\"captcha-row\">\n"
+                + "            <el-input v-model=\"form.captchaAnswer\" placeholder=\"计算结果\" @keyup.enter.native=\"doLogin\" />\n"
+                + "            <img v-if=\"captchaImage\" :src=\"captchaImage\" class=\"captcha-img\" title=\"点击刷新\" @click=\"loadCaptcha\" />\n"
+                + "          </div>\n"
+                + "        </el-form-item>\n"
+                + "        <el-button type=\"primary\" :loading=\"loading\" native-type=\"submit\" style=\"width:100%; background:" + themeColor + "; border-color:" + themeColor + "\">登 录</el-button>\n"
                 + "      </el-form>\n"
                 + "      <p class=\"tip\">默认账号 admin / admin123</p>\n"
                 + "    </el-card>\n"
@@ -3202,17 +4086,39 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "export default {\n"
                 + "  name: 'Login',\n"
                 + "  data() {\n"
-                + "    return { form: { username: 'admin', password: '' }, loading: false }\n"
+                + "    return {\n"
+                + "      form: { username: 'admin', password: '', captchaId: '', captchaAnswer: '' },\n"
+                + "      captchaImage: '',\n"
+                + "      loading: false\n"
+                + "    }\n"
+                + "  },\n"
+                + "  created() {\n"
+                + "    this.loadCaptcha()\n"
                 + "  },\n"
                 + "  methods: {\n"
+                + "    async loadCaptcha() {\n"
+                + "      const res = await request.get('/auth/captcha')\n"
+                + "      this.captchaImage = res.data.image\n"
+                + "      this.form.captchaId = res.data.captchaId\n"
+                + "      this.form.captchaAnswer = ''\n"
+                + "    },\n"
                 + "    async doLogin() {\n"
                 + "      if (!this.form.username || !this.form.password) return\n"
+                + "      if (!this.form.captchaAnswer) {\n"
+                + "        this.$message.warning('请输入验证码')\n"
+                + "        return\n"
+                + "      }\n"
                 + "      this.loading = true\n"
                 + "      try {\n"
                 + "        const res = await request.post('/auth/login', this.form)\n"
                 + "        localStorage.setItem('token', res.data.token)\n"
                 + "        localStorage.setItem('username', res.data.username)\n"
+                + "        // V6.4：perms 落地供 v-hasPermi 指令与后端权限校验对齐\n"
+                + "        localStorage.setItem('perms', JSON.stringify(res.data.perms || []))\n"
                 + "        this.$router.push('/')\n"
+                + "      } catch (e) {\n"
+                + "        // 验证码一次性：失败（含密码错）后必须换新码，否则重放必错\n"
+                + "        this.loadCaptcha()\n"
                 + "      } finally {\n"
                 + "        this.loading = false\n"
                 + "      }\n"
@@ -3223,12 +4129,15 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "<style scoped>\n"
                 + ".login-wrap { display: flex; align-items: center; justify-content: center; height: 100vh; background: #f0f2f5; }\n"
                 + ".login-card { width: 360px; text-align: center; }\n"
+                + ".login-logo { width: 56px; height: 56px; object-fit: contain; margin-bottom: 6px; }\n"
+                + ".captcha-row { display: flex; gap: 8px; width: 100%; }\n"
+                + ".captcha-img { height: 40px; cursor: pointer; border-radius: 4px; }\n"
                 + ".tip { color: #999; font-size: 12px; margin-bottom: 0; }\n"
                 + "</style>\n";
     }
 
     private String applicationYml(GenScaffoldDTO dto, String pkg, String project, int serverPort,
-                                  String stem, boolean micro, boolean payEnabled) {
+                                  String stem, boolean micro, boolean payEnabled, boolean fileEnabled) {
         String db = StringUtils.hasText(dto.getDbName()) ? dto.getDbName() : project.replace('-', '_');
         String host = StringUtils.hasText(dto.getDbHost()) ? dto.getDbHost() : "127.0.0.1:3306";
         String user = StringUtils.hasText(dto.getDbUsername()) ? dto.getDbUsername() : "root";
@@ -3281,13 +4190,34 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "  # 回调不可达兜底：定时查单补偿（本机/内网部署靠它对账收状态）\n"
                 + "  reconcile-enabled: true\n"
                 + "  reconcile-interval-ms: 300000\n" : "";
+        // V6.6 文件能力包：Spring 默认 multipart 上限 1MB，不配的话 2MB 图片在解析层就 500，
+        // 业务层的大小校验（file.max-size-mb）根本轮不到——留 2 倍余量，让业务层给出友好提示。
+        // Tomcat 侧还有一层 max-http-form-post-size 默认 10MB（实测 11MB 上传被 Tomcat 直接拒 500），
+        // 必须同步放宽，否则 Spring 配了也白配
+        // 注意缩进：spring 的直接子键是 2 空格（写成 4 会变成 application.servlet，配置静默失效——S8 实测踩过）
+        String multipartBlock = fileEnabled
+                ? "  servlet:\n"
+                + "    multipart:\n"
+                + "      max-file-size: 20MB\n"
+                + "      max-request-size: 25MB\n" : "";
+        String tomcatBlock = fileEnabled
+                ? "  tomcat:\n"
+                + "    max-http-form-post-size: 25MB\n" : "";
+        // V6.6 文件能力包：顶层键块放 yml 末尾（坑 40）；白名单扩展名可省略（FileProps 内置默认）
+        String fileBlock = fileEnabled
+                ? "\n# V6.6 文件能力包：上传落盘目录相对启动目录；生产容器建议挂卷到独立数据盘\n"
+                + "file:\n"
+                + "  upload-dir: ${FILE_UPLOAD_DIR:./uploads}\n"
+                + "  max-size-mb: ${FILE_MAX_SIZE_MB:10}\n" : "";
         // V6.2 配置安全：url/username/password 改环境变量占位符——冒号后默认值=本机直跑原行为，
         // 生产由 DB_* 环境变量覆盖，yml 本身不再含可提交泄露的明文密码
         return "server:\n"
-                + "  port: " + serverPort + "\n\n"
+                + "  port: " + serverPort + "\n"
+                + tomcatBlock + "\n"
                 + "spring:\n"
                 + "  application:\n"
                 + "    name: " + appName + "\n"
+                + multipartBlock
                 + microBlock
                 + activitiBlock
                 + "  profiles:\n"
@@ -3329,7 +4259,12 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "  level:\n"
                 + "    " + pkg + ": info\n"
                 + feignBlock
-                + payBlock;
+                + payBlock
+                + fileBlock
+                // V6.4 P0-1：会话时长（滑动续期）；顶层键块放 yml 末尾（坑 40：插进 spring: 会挤坏后续块）
+                + "\n# V6.4 登录会话：token 持久化 sys_session，滑动续期；改短便于验证过期清理\n"
+                + "auth:\n"
+                + "  session-hours: 24\n";
     }
 
     private String applicationLocalExample(String pkg) {
@@ -3413,9 +4348,22 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "}\n";
     }
 
-    private String frontendVueConfig(int webPort, int serverPort, String gatewayPrefix) {
+    private String frontendVueConfig(int webPort, int serverPort, String gatewayPrefix, boolean fileEnabled) {
         // api.js 的路径带 /api/{gatewayPrefix}（给网关预留），本地直连后端没有网关，
         // 代理必须把这段前缀剥掉，否则后端收到 /api/demo/xxx 全部 404
+        // V6.6 文件能力包：图片直链 /uploads/** 在后端，dev 必须单独代理（不剥任何前缀）
+        // V6.8 素材链路：/img/** 是产物自带的静态素材（resources/static/img），dev 必须代理；
+        // 漏了这一条整页图片都会落到 dev server 自己身上变成 404 → 全站占位图
+        String imgProxy = ",\n      // 静态素材（后端 resources/static/img），漏配会整页显示占位图\n"
+                + "      '/img': {\n"
+                + "        target: 'http://127.0.0.1:" + serverPort + "',\n"
+                + "        changeOrigin: true\n"
+                + "      }";
+        String uploadsProxy = fileEnabled
+                ? ",\n      '/uploads': {\n"
+                + "        target: 'http://127.0.0.1:" + serverPort + "',\n"
+                + "        changeOrigin: true\n"
+                + "      }" : "";
         return "const { defineConfig } = require('@vue/cli-service')\n\n"
                 + "module.exports = defineConfig({\n"
                 + "  transpileDependencies: true,\n"
@@ -3430,7 +4378,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        changeOrigin: true,\n"
                 + "        // http-proxy-middleware 多条 pathRewrite 不保证顺序执行，合并成一条正则\n"
                 + "        pathRewrite: { '^/dev-api(/api/" + gatewayPrefix + ")?': '' }\n"
-                + "      }\n"
+                + "      }" + imgProxy + uploadsProxy + "\n"
                 + "    }\n"
                 + "  }\n"
                 + "})\n";
@@ -3457,14 +4405,20 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "VUE_APP_BASE_API = '/prod-api'\n";
     }
 
-    private String frontendIndexHtml(String project) {
+    private String frontendIndexHtml(String appName, String appLogo, String themeColor) {
+        // favicon 必须指向真的存在的文件：空 Logo 回落 placeholder.svg（脚手架必写），
+        // 历史上写死的 logo.png 从来没有被生成过，等于每个新工程都挂一个 404
+        String favicon = appLogo == null || appLogo.isBlank()
+                ? com.codegen.util.GenTemplateModel.FALLBACK_APP_LOGO : appLogo;
         return "<!DOCTYPE html>\n"
                 + "<html lang=\"zh-CN\">\n"
                 + "<head>\n"
                 + "  <meta charset=\"utf-8\">\n"
                 + "  <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n"
                 + "  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n"
-                + "  <title>" + project + "</title>\n"
+                + "  <title>" + appName + "</title>\n"
+                + "  <link rel=\"icon\" href=\"" + favicon + "\">\n"
+                + "  <style>:root { --app-primary: " + themeColor + "; }</style>\n"
                 + "</head>\n"
                 + "<body>\n"
                 + "  <noscript>请启用 JavaScript 后继续访问。</noscript>\n"
@@ -3474,6 +4428,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     private String frontendMainJs() {
+        // V6.4：注册 v-hasPermi 指令——perms 与后端权限点校验同源（登录响应下发），前后端一致
         return "import Vue from 'vue'\n"
                 + "import ElementUI from 'element-ui'\n"
                 + "import 'element-ui/lib/theme-chalk/index.css'\n"
@@ -3482,6 +4437,19 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "import store from './store'\n\n"
                 + "Vue.use(ElementUI, { size: 'small' })\n"
                 + "Vue.config.productionTip = false\n\n"
+                + "// V6.4 按钮级权限：v-hasPermi=\"['demo_fee:add']\"，命中任一即显示；超管 *:*:* 直通\n"
+                + "Vue.directive('hasPermi', {\n"
+                + "  inserted(el, binding) {\n"
+                + "    let perms = []\n"
+                + "    try { perms = JSON.parse(localStorage.getItem('perms') || '[]') } catch (e) { perms = [] }\n"
+                + "    const need = binding.value || []\n"
+                + "    const ok = perms.includes('*:*:*') || need.some(p => perms.includes(p)\n"
+                + "      || perms.includes(p.replace(/:[^:]*$/, ':*')))\n"
+                + "    if (!ok) {\n"
+                + "      el.parentNode && el.parentNode.removeChild(el)\n"
+                + "    }\n"
+                + "  }\n"
+                + "})\n\n"
                 + "new Vue({\n"
                 + "  router,\n"
                 + "  store,\n"
@@ -3563,12 +4531,17 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "export default service\n";
     }
 
-    private String frontendLayoutVue(String project) {
-        String name = project == null || project.isBlank() ? "业务系统" : project;
+    private String frontendLayoutVue(String appName, String appLogo, String themeColor) {
+        String name = appName == null || appName.isBlank() ? "业务系统" : appName;
         String initial = name.length() > 1 ? name.substring(0, 1) : name;
+        // 品牌区二选一：配了 Logo 用图，没配用首字标识（绝不留空占位）
+        String brandMark = appLogo == null || appLogo.isBlank()
+                ? "<div class=\"brand-mark\">" + initial + "</div>"
+                : "<img class=\"brand-logo\" src=\"" + appLogo + "\" alt=\"" + name + "\">";
         return loadScaffoldResource("scaffold/web/layout.vue")
-                .replace("__PROJECT_INITIAL__", initial)
-                .replace("__PROJECT__", name);
+                .replace("__BRAND_MARK__", brandMark)
+                .replace("__PROJECT__", name)
+                .replace("__THEME_COLOR__", themeColor);
     }
 
     /**

@@ -63,7 +63,11 @@ public class GenTemplateSeeder implements ApplicationRunner {
             new SeedMeta("payCashier", "收银台页", "frontend", "src/views/pay/cashier.vue"),
             new SeedMeta("payOrderPage", "支付记录页", "frontend", "src/views/pay/order.vue"),
             new SeedMeta("routerSnippet", "路由片段", "shared", "router-snippet.txt"),
-            new SeedMeta("readme", "使用说明", "shared", "README-使用说明.txt"));
+            new SeedMeta("readme", "使用说明", "shared", "README-使用说明.txt"),
+            // V6.7 产物测试出厂：test_enabled 开启时随业务表出集成测试与 H2 建表脚本。
+            // 路径锚定 testJavaBase/testResBase（与 backendBase 同根推导），multi 模块下自然落 bootstrap 所在工程
+            new SeedMeta("crudControllerTest", "集成测试（CRUD）", "test", "${testJavaBase}/${className}ControllerTest.java"),
+            new SeedMeta("testSchemaTable", "测试库建表（H2）", "test", "${testResBase}/schema/table-${tableName}.sql"));
 
     @Autowired
     private GenTemplateMapper genTemplateMapper;
