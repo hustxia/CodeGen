@@ -1,154 +1,139 @@
-# 码匠后端 (CodeGen Server)
+代码生成器（CodeGen）项目介绍
+面向 Spring Boot + Vue 的多工程代码生成器：从数据库表结构出发，产出可编译、可运行、带菜单权限的前后端业务代码，并负责写盘、备份、记账、回滚的完整交付闭环。
+一、这是什么
+CodeGen 是一套"以表为源"的代码工厂。你只要把业务表接进来（连库导入或贴一段 DDL），配置好字段与生成开关，点一下"生成"，它就替你把后端 Entity/Mapper/Service/Controller/DTO/VO、前端 api.js 与 Vue 页面、菜单与路由、甚至 A4 打印页和集成测试骨架全部生成好，并安全地写进你的目标工程。
+它不只"吐代码"，而是一条带质量门禁与回滚能力的交付流水线：
+接表（库导入 / DDL）
+   → 字段与生成开关配置（含 AI 推荐）
+      → 一键生成：自检 → 备份 → 写盘 → 编译/校验 → 注册菜单 → 重建路由
+         → 台账记账 → 可回滚
+二、解决什么问题
+痛点
+CodeGen 的做法
+重复 CRUD 地狱，每张表都要手写一堆样板代码
+表级开关一键产出完整前后端，含增删改查、分页、校验、导入导出
+前后端字段/接口对不齐，联调反复改
+同一份表元数据同时驱动后端接口与前端页面，字段语义零偏差
+团队规范难以统一，每人写出来的风格各异
+模板即规范，22 个 FreeMarker 模板集中管控、支持在线编辑与版本回滚
+生成器"覆盖即丢失"，手写逻辑被冲掉
+标记块（marker block）合并机制：手写代码被保留，只替换生成区
+生成物不可信，编译才发现问题
+内存编译自检（真实 javac）、结构契约检查、磁盘 diff 预览，编译不过不准落盘
+新系统从 0 搭脚手架费时
+流水线"一句话建系统"：建库→脚手架→生成→打包→注册菜单全自动
+三、核心能力全景
+接表：DDL 解析、库表直连导入、批量接管向导、列配置自动推导（控件 / 校验 / 字典 / 关联）。
+表形态：单表、树形表（tree 接口 + 树表格）、主子表（同事务保存 + 明细 Tab）、多对多中间表。
+生成产物：Entity / Mapper / Service / Controller / DTO / VO + api.js + Vue 页面 + A4 打印页 + 集成测试骨架。
+业务增强：关联下拉、字典翻译、脱敏、唯一性校验、表单联动、数据权限、Excel 导入导出、审批流、支付 / 文件 / 移动端能力包。
+质量门禁：内存编译自检（真实 javac）、结构契约检查、权限一致性检查、磁盘 diff 预览、前端产物真校验。
+安全落地：写盘 + .gen-backup 批次备份、标记块合并保留手写代码、gen_output 四态台账（新建 / 合并 / 跳过 / 失败）、历史回滚。
+多系统隔离：每套目标工程是一份"系统配置"（前后端路径、包名、网关前缀、依赖 classpath、生成开关默认值），可并行服务多个项目。
+AI 增强：一句话建系统（AI 建模）、种子数据 AI 增强、表级 AI 推荐配置（diff 预览 + 勾选应用）。
+四、典型场景
+场景
+说明
+树形表
+商品分类等层级数据，自动产出 tree 接口与树表格、上级选择下拉
+单表 CRUD
+客户、商品等，外键下拉 + 字典翻译 + 导入导出开箱即用
+主子表
+销售订单 + 订单明细，同事务保存，详情抽屉双 Tab（主表信息 / 明细）
+只读 / 统计
+库存流水等，关闭增删改开关，仅保留查询与导出
+打印单据
+勾选"打印"开关，产出 A4 打印页与路由，支持表头 + 明细表
+一句话建系统
+描述业务域，AI 建库建表 + 脚手架 + 全量生成 + 注册菜单一气呵成
+以上场景均有可运行演示（demo_admin 工程）与配套截图，详见《典型场景操作指南 - 演示后台 demo》。
+五、核心工作流
+┌──────────┐   ┌──────────────┐   ┌───────────────────────────────────────┐
+│  接表     │ → │  字段/开关配置 │ → │  一键生成（自检→备份→写盘→编译→菜单→路由）│ → │ 台账 · 回滚 │
+└──────────┘   └──────────────┘   └───────────────────────────────────────┘
+   库导入/DDL      控件/校验/字典       质量门禁全过才落盘，手写代码保留           批次级追溯
+差异预览：生成物与磁盘现状逐文件 diff，确认后再落盘，避免误覆盖。
+生成台账：每个文件记录动作、字节数、MD5、备份位置，批次可整体回滚。
+六、一句话建系统（Pipeline）
+面向"从零搭一个后台"的高阶能力。描述业务域后，流水线按 5 个阶段全自动推进：
+阶段
+含义
+CHECK
+校验目标工程配置与依赖 classpath
+WRITE
+建库、建表、写脚手架与生成物
+COMPILE
+后端 mvn package / 前端构建，内存编译自检
+MENU
+产出并注册菜单权限（双出口：artifact SQL / internal 直写）
+ROUTE
+重建前端路由片段
+任一阶段失败即中断并给出可读错误，便于定位。
+七、系统架构
+前后端分离，两个仓库协同：
+仓库
+角色
+技术栈
+codegen-server
+后端：生成引擎、模板、校验、台账、流水线
+Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi
+codegen-web
+前端：控制台（表配置 / 模板 / 台账 / 系统管理）
+Vue 2.7 · Element UI · axios · Vue Router(history)
+后端分层：
+controller/   接口层（Gen* 生成链路 / Sys* 系统管理 / 流水线）
+service/impl/ 核心实现（生成链路、模板引擎、合并、校验、流水线执行）
+util/         模板引擎、模型装配、标记块合并、自检编译
+config/       输出配置、自检配置、模板种子器
+common/       Result / BaseEntity / 异常 / 审计
+resources/gen-templates/   22 个 FreeMarker 模板（backend / frontend / shared / test 分组）
+目标工程必须自带的基座能力（生成器只产业务代码，基座缺失会静默故障）：
+MyBatis-Plus 分页插件（PaginationInnerInterceptor）
+Result / BaseEntity / PageQuery 等基座类（包名前缀与 root-package 一致）
+前端 utils/request.js 的 toPageData（把 Page{records,total} 转成 {list,total}）
+依赖 springdoc-openapi-starter-webmvc-ui（生成物用 @Operation）与 poi-ooxml（Excel）
+八、技术栈一览
+维度
+选型
+后端语言 / 框架
+Java 21 / Spring Boot 3.2.5
+持久层
+MyBatis-Plus 3.5.5
+模板引擎
+FreeMarker（22 个种子模板，支持在线编辑 + 版本回滚）
+安全
+JWT 鉴权
+数据库
+MySQL 8
+前端
+Vue 2.7 + Element UI
+本地 AI
+qwen2.5-coder:7b（建模 / 推荐配置 / 种子数据增强）
+接口文档
+springdoc-openapi（Swagger UI）
+九、快速开始（概览）
+# 1. 建库（13 张平台表 + 默认账号 admin/admin123）
+mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
+mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
 
-代码生成平台的服务端 — Spring Boot + MySQL，默认监听 http://127.0.0.1:8120，为 [codegen-web](https://gitee.com/hustxiayuhong/code-survivor-frontend) 前端控制台提供全部业务接口。
+# 2. 启动后端（默认端口 8120，Swagger: /swagger-ui.html）
+cd codegen-server && mvn package -DskipTests && java -jar target/codegen-server.jar
 
-## 简介
-
-码匠后端是代码生成平台的核心引擎，承载 **建表建模 → 模板渲染 → 差异比对 → 产物落盘 → 台账回滚** 的完整流水线，并对外提供鉴权、菜单下发、字典、模板版本、批次台账等能力。
-
-前端侧边栏菜单由本服务的 `/auth/routers` 接口下发，前端按 component 字符串动态解析视图 —— 新增页面只需在后端配置菜单，无需改动前端路由文件。
-
-## 技术栈
-
-| 分类 | 选型 |
-|------|------|
-| 语言 / 框架 | Java + Spring Boot |
-| 构建工具 | Maven（`mvn package -DskipTests`） |
-| 数据库 | MySQL（库名 gen_platform，字符集 utf8mb4） |
-| 鉴权 | Token 持久化 + BCrypt 密码加密 + 登录防护 |
-| 模板引擎 | 12 套可在线编辑的代码模板，支持版本历史与回滚 |
-| 工作流 | 双引擎：内置引擎 / Activiti 8.7.0（GenBpmnBuilder 翻译） |
-| 交付形态 | 可执行 JAR（target/codegen-server.jar） |
-
-## 功能模块
-
-| 模块 | 说明 |
-|------|------|
-| 代码生成 | 表配置、列级控件/校验/字典、批量接管、路径回落、命名 |
-| 差异预览 | 生成物与磁盘现状 diff 计算，确认后才执行落盘 |
-| 自检 | 内存编译检查、结构与权限一致性问题清单 |
-| 生成台账 | 批次历史、产出文件四态（新建/合并/跳过/失败）、备份覆盖与撤销回滚 |
-| 代码模板 | 12 个模板的在线编辑、版本快照与回滚 |
-| 系统管理 | 用户、角色、菜单、字典 |
-| 权限安全 | 菜单下发、接口权限后端强制、登录防护 |
-| 工作流 | 双引擎待办中心，BPMN 自动翻译 |
-| 支付能力 | pay_enabled 三态 + 微信/支付宝/mock 三渠道 + markPaid 幂等 |
-| 移动端 | mobile_enabled 三态 + uni-app 单源工程骨架 |
-
-## 快速开始
-
-### 环境要求
-
-- JDK 17+
-- Maven 3.8+
-- MySQL 5.7+
-
-### 配置数据库
-
-```sql
--- 创建数据库
-CREATE DATABASE gen_platform DEFAULT CHARACTER SET utf8mb4;
-
--- 执行初始化脚本
-source docs/sql/V1.0__init.sql
-```
-
-### 配置修改
-
-复制配置示例文件并修改数据库连接：
-
-```bash
-cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
-```
-
-修改 `application-local.yml` 中的数据库连接信息：
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/gen_platform?useUnicode=true&characterEncoding=utf8
-    username: root
-    password: your_password
-```
-
-### 编译运行
-
-```bash
-# 编译
-mvn clean package -DskipTests
-
-# 运行
-java -jar target/codegen-server.jar --spring.profiles.active=local
-```
-
-服务启动后访问 http://127.0.0.1:8120
-
-## 默认账号
-
-- 用户名：`admin`
-- 密码：`admin123`
-
-## 主要接口
-
-### 认证接口
-
-| 接口 | 说明 |
-|------|------|
-| `POST /auth/login` | 用户登录 |
-| `GET /auth/info` | 获取当前用户信息 |
-| `GET /auth/routers` | 获取动态路由（菜单） |
-
-### 代码生成接口
-
-| 接口 | 说明 |
-|------|------|
-| `POST /gen/table` | 保存表配置 |
-| `POST /gen/apply` | 一键生成（自检→备份→写盘→编译→注册菜单） |
-| `POST /gen/diff` | 差异预览 |
-| `POST /gen/history/rollback` | 回滚某个批次 |
-| `POST /gen/template` | 创建模板 |
-
-### 字典接口
-
-| 接口 | 说明 |
-|------|------|
-| `GET /dict/{code}` | 查询字典项 |
-| `POST /dict/type/save` | 保存字典类型 |
-| `POST /dict/data/save` | 保存字典项 |
-
-### 工作流接口
-
-| 接口 | 说明 |
-|------|------|
-| `POST /flow/submit` | 提交审批 |
-| `POST /flow/approve` | 审批通过 |
-| `POST /flow/reject` | 驳回 |
-
-## 项目结构
-
-```
-src/
-├── main/
-│   ├── java/com/codegen/
-│   │   ├── common/           # 公共组件（异常处理、日志、数据权限等）
-│   │   ├── config/           # 配置类
-│   │   ├── controller/       # 控制器
-│   │   ├── dto/              # 数据传输对象
-│   │   ├── entity/           # 实体类
-│   │   ├── mapper/           # MyBatis Mapper
-│   │   ├── service/          # 服务接口及实现
-│   │   ├── support/          # 工具类与支持类
-│   │   ├── util/             # 通用工具
-│   │   └── vo/               # 视图对象
-│   └── resources/
-│       ├── gen-templates/    # 代码生成模板
-│       ├── scaffold-file/    # 文件能力脚手架
-│       ├── scaffold-mobile/  # 移动端脚手架
-│       └── scaffold-pay/     # 支付能力脚手架
-└── test/                     # 单元测试
-    └── java/com/codegen/
-```
-
-## 许可证
-
-MIT License
+# 3. 启动前端（默认端口 9530，/dev-api 代理到 8120）
+cd codegen-web && npm install && npm run serve
+默认账号 admin / admin123。完整部署、目标工程配置、字段配置、批量接管、模板管理、回滚等，见《代码生成器操作手册（V7.3）》。
+十、文档导航
+文档
+内容
+docs/代码生成器-操作手册.md
+部署、五分钟上手、表配置、批量接管、模板管理、台账、接口目录、流水线全流程（含 9 张实拍截图）
+docs/典型场景操作指南-演示后台demo.md
+6 张表覆盖 5 类典型场景，含可运行 demo 与实跑截图
+docs/代码生成器-Vx.x-规划.md
+V3.1 → V7.3 各版本规划与功能盘点
+README.md / codegen-web/README.md
+两仓库的快速上手参考
+十一、项目状态
+当前规划版本线已达 V7.3，能力持续迭代（AI 建模、种子数据增强、能力包体系等）。
+已沉淀配套演示工程 demo_admin（后端 8140 / 前端 9040），覆盖树形 / CRUD / 主子表 / 只读 / 打印全场景，可独立运行验证。
+两仓库均托管于 Gitee：https://gitee.com/hustxiayuhong/CodeGen.git
