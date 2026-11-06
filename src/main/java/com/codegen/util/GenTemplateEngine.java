@@ -333,7 +333,8 @@ public class GenTemplateEngine {
                             + "{ path: 'flow/todo', name: 'FlowTodo', component: () => import('@/views/flow/todo.vue'), meta: { title: '待办中心' } }\n");
             return shared;
         } catch (Exception e) {
-            // 模板缺失（老库未跑 Seeder）不阻断主产物
+            // 模板缺失（老库未跑 Seeder）不阻断主产物；但要把原因吐进日志，静默吞掉排查不动
+            log.warn("renderFlowShared 注入失败（projectId={}）: {}", table.getProjectId(), e.getMessage());
             return Map.of();
         }
     }

@@ -178,7 +178,7 @@ public class ApiCatalogServiceImpl implements ApiCatalogService {
     private boolean isGenerated(Long tableId) {
         try {
             Integer c = jdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) FROM gen_output WHERE table_id = ?", Integer.class, tableId);
+                    "SELECT COUNT(*) FROM gen_output WHERE deleted = 0 AND table_id = ?", Integer.class, tableId);
             return c != null && c > 0;
         } catch (Exception e) {
             // gen_output 不存在时不影响目录展示

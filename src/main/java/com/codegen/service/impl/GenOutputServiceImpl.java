@@ -50,7 +50,7 @@ public class GenOutputServiceImpl implements GenOutputService {
                         + "SUM(action = 'MERGED') AS merged, SUM(action = 'SKIPPED') AS skipped, "
                         + "SUM(action = 'ERROR') AS errors, SUM(file_size) AS total_bytes, "
                         + "MAX(operator) AS operator, MAX(create_time) AS last_time "
-                        + "FROM gen_output GROUP BY batch_no ORDER BY MAX(create_time) DESC LIMIT " + size);
+                        + "FROM gen_output WHERE deleted = 0 GROUP BY batch_no ORDER BY MAX(create_time) DESC LIMIT " + size);
         return rows.stream().map(this::toVO).toList();
     }
 

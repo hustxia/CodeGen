@@ -227,7 +227,7 @@ public class GenRefServiceImpl implements GenRefService {
         String in = String.join(",", tableIds.stream().map(String::valueOf).toList());
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
                 "SELECT id, table_id, column_name, column_comment, column_type, html_type, "
-                        + "is_pk, ref_table, ref_label FROM gen_table_column WHERE table_id IN (" + in + ") "
+                        + "is_pk, ref_table, ref_label FROM gen_table_column WHERE deleted = 0 AND table_id IN (" + in + ") "
                         + "ORDER BY sort");
         for (Map<String, Object> row : rows) {
             Long tableId = ((Number) row.get("table_id")).longValue();
