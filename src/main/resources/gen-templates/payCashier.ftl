@@ -85,7 +85,11 @@ export default {
     this.form.businessType = q.businessType || ''
     this.form.businessId = q.businessId || ''
     this.form.redirect = q.redirect || ''
-    try { this.channel = (await getPayChannel()).channel || 'mock' } catch (e) { this.channel = 'mock' }
+    try {
+      // 拦截器按 code 判成败后 return res（整个 body），渠道字符串在 res.data
+      const res = await getPayChannel()
+      this.channel = res.data || 'mock'
+    } catch (e) { this.channel = 'mock' }
   },
   beforeDestroy() {
     if (this.timer) clearInterval(this.timer)

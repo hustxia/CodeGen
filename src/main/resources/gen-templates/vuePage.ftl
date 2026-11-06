@@ -858,7 +858,7 @@ export default {
           return
         }
         request({
-          url: '/${tableName}/check-unique',
+          url: '${apiBase}/check-unique',
           method: 'get',
           params: { field, value, excludeId: this.form.id || undefined }
         }).then(res => {
@@ -1260,7 +1260,7 @@ export default {
       }
       try {
         const res = await request({
-          url: '/${tableName}/import/failed',
+          url: '${apiBase}/import/failed',
           method: 'get',
           params: { msg: list.map(f => f.row + '|' + f.msg) },
           responseType: 'blob'

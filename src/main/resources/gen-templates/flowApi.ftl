@@ -30,7 +30,7 @@ export function getFlowDone() {
 }
 
 export function getFlowTaskDetail(taskId) {
-  return request({ url: `/flow/task/${taskId}`, method: 'get' })
+  return request({ url: `/flow/task/${'$'}{taskId}`, method: 'get' })
 }
 
 // ===== 以下为手写区：自定义请求写在这里，重新生成不会被覆盖 =====

@@ -44,24 +44,24 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 </#if>
 <#if ctrlDeleteApi>import org.springframework.web.bind.annotation.DeleteMapping;
 </#if>
-<#if ctrlDetailApi || genTree || hasRef || hasExcelExport || hasUnique>import org.springframework.web.bind.annotation.GetMapping;
+<#if ctrlDetailApi || genTree || hasRef || hasExcelExport || hasUnique || hasExcelImport || hasFlow>import org.springframework.web.bind.annotation.GetMapping;
 </#if>
 import org.springframework.web.bind.annotation.PathVariable;
-<#if ctrlPageApi || ctrlAddApi || hasChild>import org.springframework.web.bind.annotation.PostMapping;
+<#if ctrlPageApi || ctrlAddApi || hasChild || hasFlow>import org.springframework.web.bind.annotation.PostMapping;
 </#if>
 <#if ctrlEditApi>import org.springframework.web.bind.annotation.PutMapping;
 </#if>
 <#if ctrlPageApi || ctrlAddApi || ctrlEditApi || hasChild>import org.springframework.web.bind.annotation.RequestBody;
 </#if>
 import org.springframework.web.bind.annotation.RequestMapping;
-<#if genTree || hasRef || hasExcelImport || hasUnique>import org.springframework.web.bind.annotation.RequestParam;
+<#if genTree || hasRef || hasExcelImport || hasUnique || hasFlow>import org.springframework.web.bind.annotation.RequestParam;
 </#if>
 import org.springframework.web.bind.annotation.RestController;
-<#if ctrlPageApi || genTree || hasChild || hasExcelImport>import java.util.ArrayList;
+<#if ctrlPageApi || genTree || hasChild || hasExcelImport || hasFlow>import java.util.ArrayList;
 </#if>
-<#if ctrlPageApi || genTree || hasChild || hasRef>import java.util.List;
+<#if ctrlPageApi || genTree || hasChild || hasRef || hasFlow>import java.util.List;
 </#if>
-<#if hasRef || hasExcelImport || hasChild>import java.util.LinkedHashMap;
+<#if hasRef || hasExcelImport || hasChild || hasFlow>import java.util.LinkedHashMap;
 import java.util.Map;
 </#if>
 <#if hasExcelExport || hasExcelImport>import org.apache.poi.ss.usermodel.Cell;

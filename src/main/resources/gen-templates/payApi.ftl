@@ -22,4 +22,9 @@ export function payOrderPage(query) {
   return request({ url: '/pay/order/page', method: 'post', data: query })
 }
 
+// 当前支付渠道（Result<String>：拦截器返回整个 body，调用方取 res.data）
+export function getPayChannel() {
+  return request({ url: '/pay/channel', method: 'get' })
+}
+
 // ===== 以下为手写区：自定义请求写在这里，重新生成不会被覆盖 =====
