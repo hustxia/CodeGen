@@ -11,10 +11,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -60,7 +60,7 @@ public class SysOperLogController {
 
     @Operation(summary = "按时间清理日志（只删早于 before 的记录）")
     @DeleteMapping("/before")
-    public Result<Integer> cleanBefore(@PathVariable("before") String before) {
+    public Result<Integer> cleanBefore(@RequestParam("before") String before) {
         LocalDateTime time = parse(before);
         if (time == null) {
             return Result.fail(400, "时间格式应为 yyyy-MM-dd HH:mm:ss");
