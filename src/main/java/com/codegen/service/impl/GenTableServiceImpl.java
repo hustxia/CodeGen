@@ -185,7 +185,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         Map<Long, Set<String>> configColumns = new HashMap<>();
         if (!ids.isEmpty()) {
             jdbcTemplate.query("SELECT table_id, column_name FROM gen_table_column "
-                            + "WHERE table_id IN (" + placeholders(ids.size()) + ")",
+                            + "WHERE deleted = 0 AND table_id IN (" + placeholders(ids.size()) + ")",
                     rs -> {
                         configColumns.computeIfAbsent(rs.getLong(1), k -> new LinkedHashSet<>())
                                 .add(rs.getString(2).toLowerCase());
