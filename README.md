@@ -36,33 +36,30 @@
 
 ## 🎯 典型应用场景
 
-> 截图统一放在 `docs/images/scenarios/`，建议尺寸 1440×900，敏感字段打码。  
-> 图片需随仓库提交，路径使用 `./docs/images/scenarios/` 相对路径；本地预览请用 VSCode / Typora 打开仓库根目录。
+> 本节图片使用在线占位图（dummyimage.com），可直接显示。  
+> 替换为真实截图时，把 `src` 改为 `./docs/images/scenarios/xx.png` 并把图片提交到仓库即可。  
+> 建议尺寸 1440×900，敏感字段打码。
 
-| 场景 | 适合人群 | 关键能力 | 截图 |
-|---|---|---|---|
-| 从 DDL 一句话建系统 | 后端 / 全栈 | 建系统向导、DDL 导入、建模规模选择 | `01-wizard.png`、`02-ddl-import.png` |
-| 单表 / 主从表 CRUD 后台 | 业务研发 | 表配置、控件校验、一主多子表、级联删除 | `03-table-config.png`、`04-detail-tabs.png` |
-| 生成前差异预览与落盘 | 谨慎交付型团队 | diff 预览、确认落盘、四态台账 | `05-diff-preview.png`、`06-output-ledger.png` |
-| 批次回滚与产物治理 | 运维 / 交付 | 备份覆盖、RBK 撤销回滚、批次重名治理 | `07-rollback.png` |
-| 模板在线定制与回归护栏 | 平台管理员 | 12 套模板编辑、版本快照、基线零 diff 门禁 | `08-template-editor.png`、`09-verify-all.png` |
-| 工作流待办中心 | 审批型业务 | 内置引擎 / Activiti 双引擎、BPMN 翻译 | `10-workflow-todo.png` |
-| 支付收银台接入 | 商业化项目 | `pay_enabled` 三态、微信/支付宝/mock、`markPaid` 幂等 | `11-pay-cashier.png` |
-| 移动端 uni-app 骨架 | 多端交付 | `mobile_enabled` 三态、单源工程、动态页三件套 | `12-mobile-preview.png` |
-| A4 打印单据 | 行政 / 财务 / 仓储 | `printPage` 模板、`gen_print` 三态、打印路由 | `13-print-page.png` |
-| 微服务 / 多模块工程生成 | 架构 / 平台组 | `project_structure` 第三态 micro、多模块收尾 | `14-micro-structure.png` |
+| 场景 | 适合人群 | 关键能力 |
+|---|---|---|
+| 从 DDL 一句话建系统 | 后端 / 全栈 | 建系统向导、DDL 导入、建模规模选择 |
+| 单表 / 主从表 CRUD 后台 | 业务研发 | 表配置、控件校验、一主多子表、级联删除 |
+| 生成前差异预览与落盘 | 谨慎交付型团队 | diff 预览、确认落盘、四态台账 |
+| 批次回滚与产物治理 | 运维 / 交付 | 备份覆盖、RBK 撤销回滚、批次重名治理 |
+| 模板在线定制与回归护栏 | 平台管理员 | 12 套模板编辑、版本快照、基线零 diff 门禁 |
+| 工作流待办中心 | 审批型业务 | 内置引擎 / Activiti 双引擎、BPMN 翻译 |
+| 支付收银台接入 | 商业化项目 | `pay_enabled` 三态、微信/支付宝/mock、`markPaid` 幂等 |
+| 移动端 uni-app 骨架 | 多端交付 | `mobile_enabled` 三态、单源工程、动态页三件套 |
+| A4 打印单据 | 行政 / 财务 / 仓储 | `printPage` 模板、`gen_print` 三态、打印路由 |
+| 微服务 / 多模块工程生成 | 架构 / 平台组 | `project_structure` 第三态 micro、多模块收尾 |
 
 ### 场景一：从 DDL 一句话建系统
 
 登录后进入建系统向导，选择建模规模，或直接导入已有 DDL。系统完成表配置、命名与路径回落、菜单下发，生成后即可打开管理后台。
 
-<p align="center">
-  <img src="./docs/images/scenarios/01-wizard.png" alt="建系统向导" width="900">
-</p>
+![建系统向导](https://dummyimage.com/1200x750/1e293b/ffffff&text=01+Wizard)
 
-<p align="center">
-  <img src="./docs/images/scenarios/02-ddl-import.png" alt="从 DDL 导入" width="900">
-</p>
+![从 DDL 导入](https://dummyimage.com/1200x750/1e293b/ffffff&text=02+DDL+Import)
 
 **价值**：把“建库建表 → 表配置 → 代码生成 → 菜单接入”压缩为一条向导链路，适合新项目冷启动和存量表快速接管。
 
@@ -70,13 +67,9 @@
 
 在表配置中设置列级控件、校验和字典，支持一主多子表、级联删除三态和详情多 tab。生成物先差异预览，确认后落盘。
 
-<p align="center">
-  <img src="./docs/images/scenarios/03-table-config.png" alt="表配置" width="900">
-</p>
+![表配置](https://dummyimage.com/1200x750/1e293b/ffffff&text=03+Table+Config)
 
-<p align="center">
-  <img src="./docs/images/scenarios/04-detail-tabs.png" alt="主从表详情多 tab" width="900">
-</p>
+![主从表详情多 tab](https://dummyimage.com/1200x750/1e293b/ffffff&text=04+Detail+Tabs)
 
 **价值**：常规业务后台不必从零写增删改查，主从表详情页也能直接生成。
 
@@ -84,13 +77,9 @@
 
 生成前展示“生成物 vs 磁盘现状”的 diff，确认后才写盘；台账记录批次、新建 / 合并 / 跳过 / 失败四态。
 
-<p align="center">
-  <img src="./docs/images/scenarios/05-diff-preview.png" alt="差异预览" width="900">
-</p>
+![差异预览](https://dummyimage.com/1200x750/1e293b/ffffff&text=05+Diff+Preview)
 
-<p align="center">
-  <img src="./docs/images/scenarios/06-output-ledger.png" alt="生成台账" width="900">
-</p>
+![生成台账](https://dummyimage.com/1200x750/1e293b/ffffff&text=06+Output+Ledger)
 
 **价值**：避免覆盖已有代码，交付过程可追溯。
 
@@ -98,9 +87,7 @@
 
 针对备份覆盖、批次重名和撤销回滚，通过 RBK 机制恢复到生成前状态。
 
-<p align="center">
-  <img src="./docs/images/scenarios/07-rollback.png" alt="批次回滚" width="900">
-</p>
+![批次回滚](https://dummyimage.com/1200x750/1e293b/ffffff&text=07+Rollback)
 
 **价值**：生成器敢用、可退，降低“生成一时爽、回滚火葬场”的风险。
 
@@ -108,13 +95,9 @@
 
 在线编辑 12 套代码模板，保存版本快照并支持回滚；改完模板后跑 `verify-all`，基线快照零 diff 门禁和契约测试会拦截异常产物。
 
-<p align="center">
-  <img src="./docs/images/scenarios/08-template-editor.png" alt="模板编辑器" width="900">
-</p>
+![模板编辑器](https://dummyimage.com/1200x750/1e293b/ffffff&text=08+Template+Editor)
 
-<p align="center">
-  <img src="./docs/images/scenarios/09-verify-all.png" alt="verify-all 校验" width="900">
-</p>
+![verify-all 校验](https://dummyimage.com/1200x750/1e293b/ffffff&text=09+verify-all)
 
 **价值**：模板可定制，但改动有护栏，适合平台组长期维护。
 
@@ -122,9 +105,7 @@
 
 内置引擎与 Activiti 8.7.0 双引擎，BPMN 由 `GenBpmnBuilder` 翻译，待办中心统一处理审批任务。
 
-<p align="center">
-  <img src="./docs/images/scenarios/10-workflow-todo.png" alt="工作流待办中心" width="900">
-</p>
+![工作流待办中心](https://dummyimage.com/1200x750/1e293b/ffffff&text=10+Workflow+Todo)
 
 **价值**：生成后台不止 CRUD，审批流可直接进入待办闭环。
 
@@ -132,9 +113,7 @@
 
 通过 `pay_enabled` 三态控制支付能力，支持微信、支付宝、mock 三渠道，`markPaid` 幂等处理回调。
 
-<p align="center">
-  <img src="./docs/images/scenarios/11-pay-cashier.png" alt="支付收银台" width="900">
-</p>
+![支付收银台](https://dummyimage.com/1200x750/1e293b/ffffff&text=11+Pay+Cashier)
 
 **价值**：商业化项目可在生成阶段接入支付骨架，减少重复对接。
 
@@ -142,9 +121,7 @@
 
 `mobile_enabled` 三态控制移动端产物，生成 uni-app 单源工程骨架和动态页三件套。
 
-<p align="center">
-  <img src="./docs/images/scenarios/12-mobile-preview.png" alt="移动端预览" width="900">
-</p>
+![移动端预览](https://dummyimage.com/1200x750/1e293b/ffffff&text=12+Mobile+Preview)
 
 **价值**：同一套模型同时服务 PC 管理后台与移动端。
 
@@ -152,9 +129,7 @@
 
 使用 `printPage` 模板生成 A4 打印页，结合 `gen_print` 三态和打印路由，适用于订单、出库单、对账单等单据。
 
-<p align="center">
-  <img src="./docs/images/scenarios/13-print-page.png" alt="A4 打印单据" width="900">
-</p>
+![A4 打印单据](https://dummyimage.com/1200x750/1e293b/ffffff&text=13+Print+Page)
 
 **价值**：业务单据打印不再单独手写页面。
 
@@ -162,29 +137,22 @@
 
 `project_structure` 支持第三态 `micro`，输出多模块 / 微服务工程骨架；默认关闭 Nacos，跨服务接口按需手写。
 
-<p align="center">
-  <img src="./docs/images/scenarios/14-micro-structure.png" alt="微服务工程结构" width="900">
-</p>
+![微服务工程结构](https://dummyimage.com/1200x750/1e293b/ffffff&text=14+Micro+Structure)
 
 **价值**：提供微服务设施但不夸大“一键微服务”，边界诚实、可按需启用。
 
 ---
 
-**截图目录与命名约定**
+**替换为真实截图的方法**
 
-```text
-docs/images/scenarios/
-├── 01-wizard.png
-├── 02-ddl-import.png
-├── 03-table-config.png
-├── 04-detail-tabs.png
-├── 05-diff-preview.png
-├── 06-output-ledger.png
-├── 07-rollback.png
-├── 08-template-editor.png
-├── 09-verify-all.png
-├── 10-workflow-todo.png
-├── 11-pay-cashier.png
-├── 12-mobile-preview.png
-├── 13-print-page.png
-└── 14-micro-structure.png
+1. 把截图放进 `docs/images/scenarios/`，命名与场景表一致（`01-wizard.png` … `14-micro-structure.png`）。
+2. 将对应图片地址改为 `./docs/images/scenarios/01-wizard.png`。
+3. 执行 `git add docs/images/scenarios && git commit -m "docs: 场景截图" && git push`。
+4. Gitee 网页仍不显示时，改用 raw 外链：
+   `https://gitee.com/hustxiayuhong/code-survivor-backend/raw/master/docs/images/scenarios/01-wizard.png`
+
+🚀 快速开始
+① 初始化数据库
+```bash
+mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
+mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
