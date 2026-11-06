@@ -576,9 +576,9 @@ import {
 </#if>
 <#if hasExcelImport>  import${className}, download${className}Template<#if genAddApi || genEditApi || genDeleteApi || hasFlow>,</#if>
 </#if>
-<#if genAddApi>  create${className}<#if genEditApi || genDeleteApi>,</#if>
+<#if genAddApi>  create${className}<#if genEditApi || genDeleteApi || hasFlow>,</#if>
 </#if>
-<#if genEditApi>  update${className}<#if genDeleteApi>,</#if>
+<#if genEditApi>  update${className}<#if genDeleteApi || hasFlow>,</#if>
 </#if>
 <#if genDeleteApi>  delete${className}<#if hasFlow>,</#if>
 </#if>
@@ -976,7 +976,12 @@ export default {
       this.fetchList()
     },
 <#else>
+    // 未开列表/树接口时没有数据可拉，但筛选区与分页条仍会渲染并绑定这些方法，
+    // 缺一个就是点击即 TypeError: xxx is not a function —— 必须给齐空实现。
     async fetchList() {},
+    handleSearch() {},
+    handleReset() {},
+    handleSizeChange() {},
 </#if>
 <#if hasRef>
     async searchRef(field, refTable, label, keyword) {

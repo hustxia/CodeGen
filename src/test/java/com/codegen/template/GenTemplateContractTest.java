@@ -145,6 +145,88 @@ class GenTemplateContractTest {
                 "拦截器 return res（整个 body），Result<String> 的渠道值在 res.data，不能取 res.channel");
     }
 
+    /** F-01：hasFlow 与 CRUD 开关任意组合时，import 块相邻两项之间必须有逗号 */
+    @Test
+    @DisplayName("关闭删除、开启审批流时 vuePage 的 import 块不能缺逗号")
+    void vuePageImportCommaWithFlowWithoutDelete() {
+        GenTable table = table("demo_leave", "leave", "DemoLeave");
+        table.setFlowCode("hr_leave_flow");
+        table.setGenDeleteApi(0);
+        String out = render("vuePage", GenTemplateModel.build(table, List.of(col("id", "id", "Long", 1))));
+        assertCommaBetween(out, "updateDemoLeave", "flowSubmitDemoLeave",
+                "genEditApi + hasFlow 且 genDeleteApi=0：update 后缺逗号会让整个 script 语法错误");
+
+        // 只开新增、不开编辑/删除时，衔接 flow 函数的同样变成 create 这一行
+        table.setGenEditApi(0);
+        String out2 = render("vuePage", GenTemplateModel.build(table, List.of(col("id", "id", "Long", 1))));
+        assertCommaBetween(out2, "createDemoLeave", "flowSubmitDemoLeave",
+                "仅 genAddApi + hasFlow：create 后缺逗号会让整个 script 语法错误");
+    }
+
+    /** F-02：genPageApi=0 时 methods 落 <#else>，但筛选区/分页条仍绑定三个方法 */
+    @Test
+    @DisplayName("未开列表接口时筛选区按钮绑定的方法仍要有定义")
+    void vuePageElseBranchDefinesSearchHandlers() {
+        GenTable table = table("demo_tag", "tag", "DemoTag");
+        table.setGenPageApi(0);
+        table.setGenDetailApi(0);
+        table.setGenAddApi(0);
+        table.setGenEditApi(0);
+        table.setGenDeleteApi(0);
+        List<GenTableColumn> cols = new ArrayList<>();
+        cols.add(col("id", "id", "Long", 1));
+        GenTableColumn q = col("tag_name", "tagName", "String", 2);
+        q.setIsQuery(1);
+        cols.add(q);
+
+        String out = render("vuePage", GenTemplateModel.build(table, cols));
+        assertTrue(out.contains("@click=\"handleSearch\""), "前提：筛选区确实渲染了查询按钮");
+        assertTrue(out.contains("async fetchList() {}"), "前提：methods 必须落在 <#else> 分支");
+        assertTrue(out.contains("handleSearch() {}"), "<#else> 分支缺 handleSearch，点击即 TypeError");
+        assertTrue(out.contains("handleReset() {}"), "<#else> 分支缺 handleReset，点击即 TypeError");
+        assertTrue(out.contains("handleSizeChange() {}"), "<#else> 分支缺 handleSizeChange，翻页即 TypeError");
+    }
+
+    /** F-03：hasMultiImage 必须按列级 isMultiImage 统计，并覆盖子表/孙表 */
+    @Test
+    @DisplayName("多图门控按列级 isMultiImage 且覆盖子表，不能只按主表列名猜")
+    void multiImageGateUsesColumnModel() {
+        GenTemplateModel.ProjectConfig project = new GenTemplateModel.ProjectConfig(
+                "com.demo", "demo", "com.demo", null, null, null, null, null, null, 1, null);
+
+        // 显式 htmlType=multiImage 但列名不含 images/pics 语义：旧实现按列名猜会漏
+        List<GenTableColumn> cols = new ArrayList<>();
+        cols.add(col("id", "id", "Long", 1));
+        GenTableColumn attach = col("attachment", "attachment", "String", 2);
+        attach.setHtmlType("multiImage");
+        cols.add(attach);
+        Map<String, Object> model = GenTemplateModel.build(table("demo_goods", "goods", "DemoGoods"),
+                cols, List.<GenTemplateModel.ChildInfo>of(), project);
+        assertTrue(Boolean.TRUE.equals(model.get("hasMultiImage")),
+                "显式 htmlType=multiImage 的列必须打开多图门控");
+        String out = render("vuePage", model);
+        assertTrue(out.contains("import MultiImageUpload"), "门控打开时必须注册多图组件");
+        assertTrue(out.contains("imageListOf(raw)"), "门控打开时必须生成图片解析方法");
+
+        // 多图列只在子表：主表 biz 一列多图都没有
+        GenTableColumn childPhoto = col("sku_photo", "skuPhoto", "String", 2);
+        childPhoto.setHtmlType("multiImage");
+        GenTemplateModel.ChildInfo child = new GenTemplateModel.ChildInfo(
+                table("demo_goods_item", "goods", "DemoGoodsItem"),
+                List.of(col("id", "id", "Long", 1), childPhoto), List.of());
+        Map<String, Object> model2 = GenTemplateModel.build(table("demo_goods", "goods", "DemoGoods"),
+                List.of(col("id", "id", "Long", 1)), List.of(child), project);
+        assertTrue(Boolean.TRUE.equals(model2.get("hasMultiImage")),
+                "子表多图列同样会渲染 <multi-image-upload>，门控必须覆盖子表");
+    }
+
+    private static void assertCommaBetween(String out, String from, String to, String msg) {
+        int a = out.indexOf(from);
+        int b = out.indexOf(to);
+        assertTrue(a >= 0 && b > a, msg + "（前提：两项都要出现在 import 块里）");
+        assertTrue(out.substring(a, b).contains(","), msg);
+    }
+
     // ------------------------------------------------------------------
     // 工具
     // ------------------------------------------------------------------

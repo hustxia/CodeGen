@@ -634,13 +634,18 @@ public final class GenTemplateModel {
         // 只看主表会让「主表无上传列、子表有」的页面漏注册组件（渲染即 Unknown custom element）
         boolean fileOn = genFrontend && resolveFile(project == null ? null : project.fileEnabled());
         m.put("fileEnabled", fileOn);
-        m.put("hasUpload", fileOn && (hasUploadColumn(toModel(biz))
+        List<Map<String, Object>> bizModel = toModel(biz);
+        m.put("hasUpload", fileOn && (hasUploadColumn(bizModel)
                 || childrenModel.stream().anyMatch(GenTemplateModel::childHasUpload)));
         // V6.8 图片展示尺寸与多图标记：唯一实现在 GenTemplateModel，模板只消费（禁止再写死 44/64px）
         m.put("imageListSize", IMAGE_LIST_SIZE);
         m.put("imageDetailSize", IMAGE_DETAIL_SIZE);
-        boolean hasMultiImage = biz.stream().anyMatch(c -> GenUtils.looksLikeMultiImageColumn(c.getColumnName()));
-        m.put("hasMultiImage", fileOn && hasMultiImage);
+        // 多图门控必须与模板消费端同口径：模板按列级 isMultiImage 渲染 <multi-image-upload>、
+        // firstImage/imageListOf；只按主表列名猜会让「显式配 htmlType=multiImage」或
+        // 「多图列只在子表/孙表」的页面漏注册组件、漏生成方法（渲染即 TypeError）。
+        boolean hasMultiImage = fileOn && (hasMultiImageColumn(bizModel)
+                || childrenModel.stream().anyMatch(GenTemplateModel::childHasMultiImage));
+        m.put("hasMultiImage", hasMultiImage);
 
         // ===== P3-2 多对多 =====
         // 中间表本身不需要一整套 CRUD 页面：它是关系，不是实体。
@@ -884,6 +889,27 @@ public final class GenTemplateModel {
         }
         for (Object grand : asList(child.get("grandChildren"))) {
             if (grand instanceof Map<?, ?> gm && hasUploadColumn(asList(gm.get("formColumns")))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isMultiImageColumn(Object colModel) {
+        return colModel instanceof Map<?, ?> cm && Boolean.TRUE.equals(cm.get("isMultiImage"));
+    }
+
+    private static boolean hasMultiImageColumn(List<?> columnModels) {
+        return columnModels != null && columnModels.stream().anyMatch(GenTemplateModel::isMultiImageColumn);
+    }
+
+    /** 子表是否自带多图列（含下级明细表单列）——hasMultiImage 判定用，与 childHasUpload 同口径 */
+    private static boolean childHasMultiImage(Map<String, Object> child) {
+        if (hasMultiImageColumn(asList(child.get("formColumns")))) {
+            return true;
+        }
+        for (Object grand : asList(child.get("grandChildren"))) {
+            if (grand instanceof Map<?, ?> gm && hasMultiImageColumn(asList(gm.get("formColumns")))) {
                 return true;
             }
         }
