@@ -30,7 +30,7 @@
               v-for="p in projectOptions"
               :key="p.id"
               :label="p.projectName"
-              :value="Number(p.id)"
+              :value="p.id"
             />
             <!-- -1 是后端约定的「未绑定」哨兵值，用来捞出迁移前的存量表 -->
             <el-option label="未绑定系统" :value="-1" />
