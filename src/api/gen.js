@@ -343,3 +343,15 @@ export function setDefaultProject(id) {
 export function resetGenSwitchDefaults(id) {
   return request({ url: `/gen/table/${id}/switch-defaults/reset`, method: 'post' })
 }
+
+/* ---------- V7.3 P0-3 表级 AI 推荐 ---------- */
+
+// 选中表直接出建议 diff（只读，零写库）；返回体带 token，应用时回传
+export function aiRecommendTables(data) {
+  return request({ url: '/gen/ai-recommend/tables/preview', method: 'post', data, timeout: 300000 })
+}
+
+// 应用勾选项：只传 token + 勾选清单，建议值以服务端产物为准
+export function aiRecommendTablesApply(data) {
+  return request({ url: '/gen/ai-recommend/tables/apply', method: 'post', data, timeout: 300000 })
+}

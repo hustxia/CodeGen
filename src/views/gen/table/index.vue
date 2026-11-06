@@ -96,6 +96,7 @@
       <div v-if="selected.length" class="batch-bar">
         <span class="batch-count">已选 {{ selected.length }} 张表</span>
         <el-button size="mini" icon="el-icon-setting" @click="openBatchDialog">批量设置</el-button>
+        <el-button size="mini" icon="el-icon-cpu" :loading="aiRecLoading" @click="openAiRecommend">AI 推荐配置</el-button>
         <el-button size="mini" type="success" icon="el-icon-magic-stick" :loading="applying" @click="openApplyDialog()">批量一键生成</el-button>
         <el-button size="mini" type="warning" icon="el-icon-circle-check" :loading="checking" @click="handleSelfCheck">批量自检</el-button>
         <el-button size="mini" icon="el-icon-document-copy" @click="openDiffDialog">差异预览</el-button>
@@ -276,6 +277,21 @@
         <el-button @click="previewVisible = false">关 闭</el-button>
       </div>
     </el-dialog>
+
+    <!-- 弹窗：AI 推荐配置（V7.3 P0-3 表级入口，与流水线共用同一套 diff 预览组件） -->
+    <ai-recommend-dialog
+      :visible.sync="aiRecVisible"
+      :loading="aiRecLoading"
+      :apply-loading="aiRecApplyLoading"
+      :exists="aiRecExists"
+      :tables="aiRecData.tables"
+      :menus="aiRecData.menus"
+      :drops="aiRecData.drops"
+      :show-menus="false"
+      title="AI 推荐配置（选中表）"
+      empty-text="AI 未返回可用建议，请重试或检查服务端 LLM 配置"
+      @apply="onApplyAiRecommend"
+    />
 
     <!-- 弹窗：差异预览（V2.0 拆到 GenDiffDialog，自己拉数据） -->
     <gen-diff-dialog :visible.sync="diffVisible" :table-ids="diffTableIds" />
@@ -828,13 +844,15 @@ import {
   listDbSchemas, listDbTables, importDbTables, previewGenCode, writeGenCode,
   getGenOutputConfig, selfCheckGenCode, registerGenMenu,
   applyGenCode, rollbackGenBatch, batchUpdateGenTables, batchDeleteGenTables,
-  syncGenColumns, listProjectOptions, resetGenSwitchDefaults
+  syncGenColumns, listProjectOptions, resetGenSwitchDefaults,
+  aiRecommendTables, aiRecommendTablesApply
 } from '@/api/gen'
 import { listDictTypes } from '@/api/dict'
 import GenDiffDialog from './GenDiffDialog.vue'
 import GenCheckDialog from './GenCheckDialog.vue'
 import DictDetectDialog from './DictDetectDialog.vue'
 import RelationDialog from './RelationDialog.vue'
+import AiRecommendDialog from '../components/AiRecommendDialog.vue'
 
 // V3.0：包名 / 网关前缀 / 输出路径不再硬编码具体系统。
 // 原先写死 'com.shop.admin' 在多系统下会把新表填进旧系统的包，
@@ -870,7 +888,7 @@ const defaultTableConfig = () => ({
 
 export default {
   name: 'SystemGen',
-  components: { GenDiffDialog, GenCheckDialog, DictDetectDialog, RelationDialog },
+  components: { GenDiffDialog, GenCheckDialog, DictDetectDialog, RelationDialog, AiRecommendDialog },
   data() {
     return {
       loading: false,
@@ -886,6 +904,13 @@ export default {
       // V3.0 系统下拉：表列表按系统筛选，新建表时预选默认系统
       projectOptions: [],
       selected: [],
+      // V7.3 P0-3 表级 AI 推荐：token 由服务端签发，应用时原样回传
+      aiRecVisible: false,
+      aiRecLoading: false,
+      aiRecApplyLoading: false,
+      aiRecExists: false,
+      aiRecToken: '',
+      aiRecData: { tables: [], menus: [], drops: [] },
       // 数据库导入
       dbVisible: false,
       dbSchema: 'shop',
@@ -1700,6 +1725,59 @@ export default {
     },
 
     /* ---------- V1.3 diff 预览（弹窗已拆到 GenDiffDialog） ---------- */
+    /* ---------- V7.3 P0-3 表级 AI 推荐 ---------- */
+
+    /**
+     * 选中表直接出建议：不依赖流水线，也不需要先跑生成。
+     * 服务端把建议落盘并返回 token，应用时凭 token 读回——建议值不经客户端。
+     */
+    async openAiRecommend() {
+      const ids = this.selected.map(t => t.id)
+      if (!ids.length) return this.$message.warning('请先勾选要推荐配置的表')
+      const projectIds = [...new Set(this.selected.map(t => t.projectId).filter(Boolean))]
+      if (!projectIds.length) {
+        return this.$message.warning('选中的表未绑定系统，请先在「批量设置」里指定所属系统')
+      }
+      if (projectIds.length > 1) {
+        return this.$message.warning('AI 推荐一次只能处理同一个系统的表，请分批勾选')
+      }
+      this.aiRecVisible = true
+      this.aiRecLoading = true
+      this.aiRecExists = false
+      this.aiRecToken = ''
+      this.aiRecData = { tables: [], menus: [], drops: [] }
+      try {
+        const res = await aiRecommendTables({ projectId: projectIds[0], tableIds: ids })
+        const vo = res.data || {}
+        this.aiRecExists = !!vo.exists
+        this.aiRecToken = vo.token || ''
+        this.aiRecData = {
+          tables: vo.tables || [],
+          menus: vo.menus || [],
+          drops: vo.drops || []
+        }
+      } catch (e) {
+        // 请求层已提示具体原因（AI 未启用/超时），关掉空壳对话框
+        this.aiRecVisible = false
+      } finally {
+        this.aiRecLoading = false
+      }
+    },
+
+    async onApplyAiRecommend(dto) {
+      if (!this.aiRecToken) return this.$message.warning('建议已过期，请重新推荐')
+      this.aiRecApplyLoading = true
+      try {
+        const res = await aiRecommendTablesApply({ token: this.aiRecToken, ...dto })
+        const n = res.data || 0
+        this.$message.success(`已应用 ${n} 个字段，重新生成即可生效`)
+        this.aiRecVisible = false
+        this.handleSearch()
+      } finally {
+        this.aiRecApplyLoading = false
+      }
+    },
+
     openDiffDialog() {
       if (!this.selected.length) {
         this.$message.warning('请先勾选要对比的表')
