@@ -90,6 +90,8 @@
 
 ![销售订单打印](images/demo/08-print.png)
 
+
+
 ---
 
 ## 6. 进阶场景（平台能力，本 demo 未逐一落表）
@@ -99,8 +101,6 @@
 | **结构漂移同步** | 平台：代码生成 → 字段配置 → 同步            | 数据库表结构变更后，一键把新增/删除列同步回生成配置，再重新生成，不丢已有配置                                     |
 | **生成回滚**   | 平台：生成台账 → 某批次 → 回滚             | 每次生成/写入都有批次记录，可整批回退到上一个稳定版本                                                 |
 | **微服务多模块** | 另见 `wms_warehouse-cloud`（V8.0） | 同一份表配置可生成 Spring Cloud Alibaba 多服务（Gateway + Nacos + OpenFeign），本 demo 为单体版 |
-
-
 
 ---
 
@@ -132,5 +132,5 @@
 | 登录    | ✅       | admin/admin123 + 算术验证码 |
 | 控制台报错 | ✅ 无     | `CONSOLE_ERRORS: none` |
 
-> 截图说明：上述 9 张图（`docs/images/demo/*.png`）由无头浏览器实跑登录 + 逐页渲染所得，全程零报错。
+> 截图说明：上述 9 张图（`docs/images/demo/*.png`）由无头浏览器实跑登录 + 逐页渲染所得，全程零报错。  
 > 期间修复了一处真实缺陷：字典只读接口 `GET /system/dict/data/type/{code}` 原本直接返回裸数组，与全局响应拦截器约定的 `{code,data,msg}` 包装不一致，导致每个列表页都弹「请求失败」且字典翻译为空；已改为 `Result.ok(list)` 统一包装（见 `demo_admin-server/.../system/SysDictController.java`），修复后菜单/字典翻译与状态列均正常。
