@@ -89,6 +89,25 @@ public class GenSeedGenerator {
      * @param pools      V7.1 语义值池，null 时回落默认词库
      */
     public GenSeedVO seedFor(Long projectId, String schema, String pipelineNo, SeedValuePools pools) {
+        return buildSeed(projectId, schema, pipelineNo, pools, null, true).vo();
+    }
+
+    /**
+     * V7.3 P0-2：只生成 seed SQL、不连库执行，供手动写盘/下载的 SQL 交付物使用。
+     *
+     * <p>结构与取值规则复用同一实现，手工出口和流水线出口的 seed 内容不会漂移。
+     *
+     * @param onlyTables 仅生成这些表（null = 台账全部表）
+     */
+    public String renderSeedSql(Long projectId, String schema, java.util.Collection<String> onlyTables) {
+        return buildSeed(projectId, schema, null, SeedValuePools.defaults(), onlyTables, false).sql();
+    }
+
+    private record SeedBuild(GenSeedVO vo, String sql) {
+    }
+
+    private SeedBuild buildSeed(Long projectId, String schema, String pipelineNo, SeedValuePools pools,
+                                java.util.Collection<String> onlyTables, boolean execute) {
         SeedValuePools vp = pools == null ? SeedValuePools.defaults() : pools;
         Random rnd = new Random();
         List<GenTable> ledger = tableService.lambdaQuery()
@@ -110,7 +129,14 @@ public class GenSeedGenerator {
         // 只保留目标库真实存在的表
         Set<String> real = new HashSet<>(jdbcTemplate.queryForList(
                 "SELECT table_name FROM information_schema.tables WHERE table_schema = ?", String.class, schema));
-        List<String> tables = ordered.stream().filter(real::contains).toList();
+        Set<String> only = onlyTables == null ? null : onlyTables.stream()
+                .map(n -> n == null ? "" : n.trim().toLowerCase())
+                .filter(n -> !n.isEmpty())
+                .collect(java.util.stream.Collectors.toSet());
+        List<String> tables = ordered.stream()
+                .filter(real::contains)
+                .filter(t -> only == null || only.contains(t))
+                .toList();
 
         // 外键依赖：table -> 指向的父表列表（仅表集内）
         Map<String, List<String>> parents = fkParents(schema, tables);
@@ -173,18 +199,20 @@ public class GenSeedGenerator {
             if (pipelineNo != null && !pipelineNo.isBlank()) {
                 writeFile(pipelineNo, sql.toString());
             }
-            GenDdlExecuteDTO exec = new GenDdlExecuteDTO();
-            exec.setDdl(sql.toString());
-            exec.setSchema(schema);
-            exec.setAutoImport(false);
-            var r = ddlService.execute(exec);
-            log.info("seed 执行完成: success={} failed={}", r.getSuccessCount(), r.getFailedCount());
+            if (execute) {
+                GenDdlExecuteDTO exec = new GenDdlExecuteDTO();
+                exec.setDdl(sql.toString());
+                exec.setSchema(schema);
+                exec.setAutoImport(false);
+                var r = ddlService.execute(exec);
+                log.info("seed 执行完成: success={} failed={}", r.getSuccessCount(), r.getFailedCount());
+            }
         }
 
         vo.setTotalRows(totalRows);
         vo.setSummary("共 " + vo.getInsertedTables() + " 表 " + totalRows + " 行"
                 + (vo.getSkipped().isEmpty() ? "" : "；跳过 " + vo.getSkipped().size() + " 张"));
-        return vo;
+        return new SeedBuild(vo, sql.toString());
     }
 
     // ==================== 行数策略 ====================

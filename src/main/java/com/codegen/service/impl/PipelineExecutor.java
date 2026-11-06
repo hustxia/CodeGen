@@ -89,6 +89,7 @@ public class PipelineExecutor {
     private final com.codegen.service.FlowDefBpmnService flowDefBpmnService;
     private final com.codegen.service.AiRecommendService aiRecommendService;
     private final com.codegen.service.AiModelService aiModelService;
+    private final com.codegen.service.GenSqlDeliverService sqlDeliverService;
 
     public PipelineExecutor(GenPipelineMapper pipelineMapper,
                             GenPipelineStepMapper stepMapper,
@@ -107,7 +108,8 @@ public class PipelineExecutor {
                             com.codegen.support.GenBpmnBuilder bpmnBuilder,
                             com.codegen.service.FlowDefBpmnService flowDefBpmnService,
                             com.codegen.service.AiRecommendService aiRecommendService,
-                            com.codegen.service.AiModelService aiModelService) {
+                            com.codegen.service.AiModelService aiModelService,
+                            com.codegen.service.GenSqlDeliverService sqlDeliverService) {
         this.pipelineMapper = pipelineMapper;
         this.stepMapper = stepMapper;
         this.scaffoldService = scaffoldService;
@@ -126,6 +128,7 @@ public class PipelineExecutor {
         this.flowDefBpmnService = flowDefBpmnService;
         this.aiRecommendService = aiRecommendService;
         this.aiModelService = aiModelService;
+        this.sqlDeliverService = sqlDeliverService;
     }
 
     /**
@@ -239,36 +242,39 @@ public class PipelineExecutor {
             log.warn("SQL 交付物落盘跳过：系统台账不存在 pipeline={}", pipeline.getPipelineNo());
             return;
         }
-        Path dbDir = Paths.get(project.getBackendRoot(), project.getProjectCode() + "-server", "db");
-        StringBuilder delivered = new StringBuilder();
         Path logDir = logFile(pipeline, "db").getParent();
-        Path dbSql = logDir.resolve("db.sql");
-        if (Files.exists(dbSql) && copyArtifact(dbSql, dbDir.resolve("init_tables.sql"))) {
-            delivered.append(" init_tables.sql");
+        List<com.codegen.service.GenSqlDeliverService.SqlArtifact> artifacts = new ArrayList<>();
+        readArtifact(logDir.resolve("db.sql"), "init_tables.sql", artifacts);
+        readArtifact(logDir.resolve("seed.sql"), "init_seed.sql", artifacts);
+        readArtifact(latestMenuSql(Paths.get(project.getBackendRoot(), ".gen-artifacts")),
+                "init_menu.sql", artifacts);
+        if (artifacts.isEmpty()) {
+            return;
         }
-        Path seedSql = logDir.resolve("seed.sql");
-        if (Files.exists(seedSql) && copyArtifact(seedSql, dbDir.resolve("init_seed.sql"))) {
-            delivered.append(" init_seed.sql");
-        }
-        Path menuSql = latestMenuSql(Paths.get(project.getBackendRoot(), ".gen-artifacts"));
-        if (menuSql != null && copyArtifact(menuSql, dbDir.resolve("init_menu.sql"))) {
-            delivered.append(" init_menu.sql");
-        }
-        if (delivered.length() > 0) {
-            log.info("SQL 交付物已落盘到目标工程 db/: {} ->{} ({})", pipeline.getPipelineNo(),
-                    delivered, dbDir.toAbsolutePath());
+        // V7.3 P0-2：落盘/备份逻辑收敛到 GenSqlDeliverService（与手动写盘、下载 ZIP 共用）
+        var vo = sqlDeliverService.deliver(pipeline.getProjectId(), pipeline.getPipelineNo(), artifacts);
+        if (vo.getErrors() > 0) {
+            log.warn("SQL 交付物部分落盘失败 {}: {} 个错误，目标目录 {}", pipeline.getPipelineNo(),
+                    vo.getErrors(), vo.getDbDir());
+        } else if (vo.getWritten() > 0) {
+            log.info("SQL 交付物已落盘到目标工程 db/: {} -> {} ({} 个文件)", pipeline.getPipelineNo(),
+                    vo.getDbDir(), vo.getWritten());
         }
     }
 
-    /** 单文件落盘：目录不存在则创建，已存在则覆盖。失败返回 false（不抛出）。 */
-    private boolean copyArtifact(Path from, Path to) {
+    /**
+     * 读取平台侧 SQL 交付源文件；不存在或读取失败只告警，不影响流水线成功状态。
+     */
+    private void readArtifact(Path from, String fileName,
+                              List<com.codegen.service.GenSqlDeliverService.SqlArtifact> out) {
+        if (from == null || !Files.exists(from)) {
+            return;
+        }
         try {
-            Files.createDirectories(to.getParent());
-            Files.copy(from, to, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            return true;
+            out.add(new com.codegen.service.GenSqlDeliverService.SqlArtifact(
+                    fileName, Files.readString(from, StandardCharsets.UTF_8)));
         } catch (Exception e) {
-            log.warn("SQL 交付物落盘失败 {} -> {}: {}", from, to, e.getMessage());
-            return false;
+            log.warn("SQL 交付源读取失败 {}: {}", from, e.getMessage());
         }
     }
 

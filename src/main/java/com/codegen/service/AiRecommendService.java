@@ -1,6 +1,7 @@
 package com.codegen.service;
 
 import com.codegen.dto.GenAiRecommendApplyDTO;
+import com.codegen.dto.GenAiRecommendTableDTO;
 import com.codegen.vo.GenAiRecommendPreviewVO;
 import com.codegen.vo.GenAiRecommendVO;
 
@@ -43,4 +44,27 @@ public interface AiRecommendService {
      * @throws com.codegen.common.exception.BusinessException 流水线不存在 / 产物不存在
      */
     int apply(Long pipelineId, GenAiRecommendApplyDTO dto);
+
+    /**
+     * 表级推荐（V7.3 P0-3）：表配置页选中若干表后直接出建议，不依赖流水线。
+     *
+     * <p>与 {@link #recommend(Long)} 的差异：
+     * <ul>
+     *   <li>只推荐选中表，不生成「菜单组织」——只看一部分表归纳不出可靠分组，
+     *       moduleName 的表级建议已覆盖分组诉求；</li>
+     *   <li>返回的预览 VO 带 {@code token}，产物落在 {@code <logDir>/ai-recommend/<token>.json}，
+     *       供 {@link #applyTables} 读取，保持「建议值以服务端产物为准、客户端只传勾选清单」的契约。</li>
+     * </ul>
+     *
+     * @throws com.codegen.common.exception.BusinessException AI 未启用 / 超时 / 解析失败 / 表不属于该系统
+     */
+    GenAiRecommendPreviewVO recommendTables(GenAiRecommendTableDTO dto);
+
+    /**
+     * 表级应用：按 token 读回产物，走与流水线完全相同的写库逻辑（勾选才写）。
+     *
+     * @return 实际写库的字段数
+     * @throws com.codegen.common.exception.BusinessException token 非法 / 产物不存在或已过期
+     */
+    int applyTables(String token, GenAiRecommendApplyDTO dto);
 }

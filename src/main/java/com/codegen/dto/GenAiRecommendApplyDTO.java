@@ -12,6 +12,12 @@ import java.util.List;
 @Data
 public class GenAiRecommendApplyDTO {
 
+    /**
+     * 表级入口（V7.3 P0-3）专用：推荐时返回的产物 token，服务端按它读回建议值。
+     * 流水线入口不传（按 pipelineId 取产物）。
+     */
+    private String token;
+
     private List<TablePick> tables = new ArrayList<>();
 
     /** 勾选的菜单 moduleName 列表（应用 = 成员表 module_name 归到该模块） */

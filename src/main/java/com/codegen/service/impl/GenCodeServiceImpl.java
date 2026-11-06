@@ -14,6 +14,7 @@ import com.codegen.mapper.GenTableMapper;
 import com.codegen.mapper.SysProjectMapper;
 import com.codegen.service.GenCodeService;
 import com.codegen.service.GenDriftService;
+import com.codegen.service.GenSqlDeliverService;
 import com.codegen.service.GenTableColumnService;
 import com.codegen.support.GenPathResolver;
 import com.codegen.util.GenDigestUtils;
@@ -22,6 +23,7 @@ import com.codegen.util.GenTemplateEngine;
 import com.codegen.util.GenTemplateModel;
 import com.codegen.vo.GenDiffVO;
 import com.codegen.vo.GenFileVO;
+import com.codegen.vo.GenSqlDeliverVO;
 import com.codegen.vo.GenWriteVO;
 import com.codegen.common.context.UserContext;
 import com.codegen.common.exception.BusinessException;
@@ -67,6 +69,15 @@ public class GenCodeServiceImpl implements GenCodeService {
      * 否则就是静默丢账。用 ThreadLocal 是因为 Service 是单例，计数不能跨请求串。
      */
     private static final ThreadLocal<Integer> LEDGER_ERRORS = ThreadLocal.withInitial(() -> 0);
+
+    /**
+     * V7.3 P0-2：本次写盘的 SQL 交付物结果（按系统分组）。与台账计数同样的单例隔离理由。
+     */
+    private static final ThreadLocal<List<GenSqlDeliverVO>> SQL_DELIVERIES =
+            ThreadLocal.withInitial(ArrayList::new);
+
+    @Autowired
+    private GenSqlDeliverService sqlDeliverService;
 
     private static final DateTimeFormatter BATCH_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -140,6 +151,8 @@ public class GenCodeServiceImpl implements GenCodeService {
                     rendered.get(0).table(), projectConfigOf(rendered.get(0).table())).entrySet()) {
                 all.putIfAbsent(entry.getKey(), entry.getValue());
             }
+            // V7.3 P0-2：下载出口也带 SQL 交付物，与写盘/流水线同一套内容（db/ 下三个文件）
+            addSqlEntries(all, rendered.get(0).table(), dto == null ? null : dto.getIds());
             for (Map.Entry<String, String> entry : all.entrySet()) {
                 writeZipEntry(zip, entry.getKey(), entry.getValue());
             }
@@ -187,6 +200,7 @@ public class GenCodeServiceImpl implements GenCodeService {
     @Override
     public List<GenWriteVO> writeToDisk(GenWriteDTO dto, String batchNo) {
         LEDGER_ERRORS.set(0);
+        SQL_DELIVERIES.set(new ArrayList<>());
         // 与 renderTables 同口径：写盘前清一次系统配置缓存，
         // 否则管理页改完 sys_project（root/path 语义修正）后直调写盘仍用旧配置（坑 51）
         clearProjectCache();
@@ -202,7 +216,11 @@ public class GenCodeServiceImpl implements GenCodeService {
         // 而且同一批次内台账不会变，缓存一份没有一致性风险
         Map<String, GenDriftService.LedgerSnapshot> ledger = genDriftService.latestByPath();
         List<GenWriteVO> results = new ArrayList<>();
+        Map<Long, List<Long>> idsByProject = new LinkedHashMap<>();
         for (GenTable table : loadTablesInOrder(ids)) {
+            if (table.getProjectId() != null) {
+                idsByProject.computeIfAbsent(table.getProjectId(), k -> new ArrayList<>()).add(table.getId());
+            }
             int before = results.size();
             results.addAll(writeTable(table, overwrite, skipDrifted, force, batchNo, ledger));
             // 只看本表新增的结果：用累计 results 判断会让「第一张表写过」之后
@@ -218,7 +236,47 @@ public class GenCodeServiceImpl implements GenCodeService {
             throw new BusinessException(404, "表配置不存在，无法写盘");
         }
         results.forEach(r -> r.setBatchNo(batchNo));
+        // V7.3 P0-2：写盘出口同步交付 SQL（db/init_tables.sql、init_seed.sql、init_menu.sql），
+        // 失败只记录不抛出——代码已经写好了，交付物失败不应该让整个写盘回滚。
+        deliverSqlForProjects(idsByProject, batchNo);
         return results;
+    }
+
+    @Override
+    public List<GenSqlDeliverVO> lastSqlDeliveries() {
+        return new ArrayList<>(SQL_DELIVERIES.get());
+    }
+
+    /**
+     * 按系统逐组交付 SQL；单个系统失败不影响其它系统，也不影响写盘结果。
+     */
+    private void deliverSqlForProjects(Map<Long, List<Long>> idsByProject, String batchNo) {
+        for (Map.Entry<Long, List<Long>> entry : idsByProject.entrySet()) {
+            try {
+                List<GenSqlDeliverService.SqlArtifact> artifacts =
+                        sqlDeliverService.buildProjectArtifacts(entry.getKey(), entry.getValue());
+                SQL_DELIVERIES.get().add(sqlDeliverService.deliver(entry.getKey(), batchNo, artifacts));
+            } catch (Exception e) {
+                log.warn("SQL 交付物生成失败 projectId={}: {}", entry.getKey(), e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * ZIP 出口：SQL 交付物以 {@code db/} 前缀追加到 manifest（首表所属系统为本包的系统）。
+     */
+    private void addSqlEntries(Map<String, String> all, GenTable first, List<Long> ids) {
+        if (first == null || first.getProjectId() == null || ids == null || ids.isEmpty()) {
+            return;
+        }
+        try {
+            for (GenSqlDeliverService.SqlArtifact artifact
+                    : sqlDeliverService.buildProjectArtifacts(first.getProjectId(), ids)) {
+                all.putIfAbsent("db/" + artifact.fileName(), artifact.content());
+            }
+        } catch (Exception e) {
+            log.warn("ZIP 追加 SQL 交付物失败 projectId={}: {}", first.getProjectId(), e.getMessage());
+        }
     }
 
     /**

@@ -31,4 +31,9 @@ public class GenWriteResultVO implements Serializable {
     private Integer ledgerErrors = 0;
 
     private List<GenWriteVO> files = new ArrayList<>();
+
+    /**
+     * SQL 交付物落盘结果（V7.3 P0-2）：按系统一条，含 db/ 下文件明细与失败计数。
+     */
+    private List<GenSqlDeliverVO> sqlDeliveries = new ArrayList<>();
 }

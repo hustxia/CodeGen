@@ -5,6 +5,7 @@ import com.codegen.common.exception.BusinessException;
 import com.codegen.common.result.ResultCode;
 import com.codegen.config.GenPipelineProperties;
 import com.codegen.dto.GenAiRecommendApplyDTO;
+import com.codegen.dto.GenAiRecommendTableDTO;
 import com.codegen.entity.GenPipeline;
 import com.codegen.entity.GenTable;
 import com.codegen.entity.GenTableColumn;
@@ -106,13 +107,22 @@ public class AiRecommendServiceImpl implements AiRecommendService {
 
     @Override
     public GenAiRecommendVO recommend(Long projectId) {
-        List<GenTable> tables = tableMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<GenTable>()
-                        .eq(GenTable::getProjectId, projectId)
-                        .orderByAsc(GenTable::getId));
+        List<GenTable> tables = tablesOfProject(projectId).values().stream()
+                .sorted(java.util.Comparator.comparing(GenTable::getId))
+                .toList();
         if (tables.isEmpty()) {
             throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "系统下没有表配置，无法推荐");
         }
+        return doRecommend(tables, true);
+    }
+
+    /**
+     * 推荐主体：给定表集合出建议。
+     *
+     * @param withMenu 是否追加「菜单组织」跨表归纳。表级入口（V7.3 P0-3）只看一部分表，
+     *                 归纳不出可靠分组，传 false——moduleName 的表级建议已经覆盖分组诉求。
+     */
+    private GenAiRecommendVO doRecommend(List<GenTable> tables, boolean withMenu) {
         List<Long> tableIds = tables.stream().map(GenTable::getId).toList();
         List<GenTableColumn> columns = columnMapper.selectList(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<GenTableColumn>()
@@ -148,17 +158,19 @@ public class AiRecommendServiceImpl implements AiRecommendService {
             merged.getTables().addAll(part.getTables());
             merged.getDrops().addAll(part.getDrops());
         }
-        // 菜单组织：跨表归纳，一次轻量调用（只带表名/注释，输出预算小）
-        try {
-            String menuJson = chatJson(MENU_SYSTEM_PROMPT, buildMenuUserContent(tables));
-            GenAiRecommendVO menuPart = AiRecommendSanitizer.sanitize(
-                    parseJson(menuJson), tableColumns, knownDictCodes);
-            merged.getMenus().addAll(menuPart.getMenus());
-            merged.getDrops().addAll(menuPart.getDrops());
-        } catch (BusinessException e) {
-            // 菜单层失败不株连列/表建议：记一条丢弃原因，产物主体仍可用
-            log.warn("AI 菜单组织建议失败（列/表建议保留）: {}", e.getMessage());
-            merged.getDrops().add("菜单组织建议生成失败：" + e.getMessage());
+        if (withMenu) {
+            // 菜单组织：跨表归纳，一次轻量调用（只带表名/注释，输出预算小）
+            try {
+                String menuJson = chatJson(MENU_SYSTEM_PROMPT, buildMenuUserContent(tables));
+                GenAiRecommendVO menuPart = AiRecommendSanitizer.sanitize(
+                        parseJson(menuJson), tableColumns, knownDictCodes);
+                merged.getMenus().addAll(menuPart.getMenus());
+                merged.getDrops().addAll(menuPart.getDrops());
+            } catch (BusinessException e) {
+                // 菜单层失败不株连列/表建议：记一条丢弃原因，产物主体仍可用
+                log.warn("AI 菜单组织建议失败（列/表建议保留）: {}", e.getMessage());
+                merged.getDrops().add("菜单组织建议生成失败：" + e.getMessage());
+            }
         }
         return merged;
     }
@@ -186,18 +198,22 @@ public class AiRecommendServiceImpl implements AiRecommendService {
 
     @Override
     public GenAiRecommendPreviewVO preview(Long pipelineId) {
-        GenAiRecommendPreviewVO vo = new GenAiRecommendPreviewVO();
         GenPipeline pipeline = requirePipeline(pipelineId);
         Path artifact = artifactPath(pipeline);
         if (!Files.exists(artifact)) {
-            return vo;
+            return new GenAiRecommendPreviewVO();
         }
-        GenAiRecommendVO suggest = readArtifact(artifact);
+        return toPreview(readArtifact(artifact), pipeline.getProjectId());
+    }
+
+    /** 产物 → 可勾选 diff 视图。流水线与表级入口共用（V7.3 P0-3）。 */
+    private GenAiRecommendPreviewVO toPreview(GenAiRecommendVO suggest, Long projectId) {
+        GenAiRecommendPreviewVO vo = new GenAiRecommendPreviewVO();
         vo.setExists(true);
         vo.setMenus(suggest.getMenus());
         vo.setDrops(suggest.getDrops());
 
-        Map<String, GenTable> tablesByName = tablesOfProject(pipeline.getProjectId());
+        Map<String, GenTable> tablesByName = tablesOfProject(projectId);
         Map<Long, Map<String, GenTableColumn>> columnsByTable = columnsOfTables(tablesByName.values());
         Map<Long, String> tableNameById = tablesByName.values().stream()
                 .collect(Collectors.toMap(GenTable::getId, GenTable::getTableName));
@@ -295,11 +311,16 @@ public class AiRecommendServiceImpl implements AiRecommendService {
             throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
                     "AI 建议产物不存在（ai_recommend 步骤未成功执行）");
         }
-        GenAiRecommendVO suggest = readArtifact(artifact);
+        return applyInternal(readArtifact(artifact), pipeline.getProjectId(), dto, pipeline.getPipelineNo());
+    }
+
+    /** 应用主体：勾选项写回 gen_table / gen_table_column，未勾选一律不动。两个入口共用。 */
+    private int applyInternal(GenAiRecommendVO suggest, Long projectId,
+                              GenAiRecommendApplyDTO dto, String label) {
         Map<String, GenAiRecommendVO.TableSuggest> suggestByTable = suggest.getTables().stream()
                 .collect(Collectors.toMap(GenAiRecommendVO.TableSuggest::getTableName, Function.identity(), (a, b) -> a));
 
-        Map<String, GenTable> tablesByName = tablesOfProject(pipeline.getProjectId());
+        Map<String, GenTable> tablesByName = tablesOfProject(projectId);
         Map<Long, Map<String, GenTableColumn>> columnsByTable = columnsOfTables(tablesByName.values());
 
         int applied = 0;
@@ -379,7 +400,7 @@ public class AiRecommendServiceImpl implements AiRecommendService {
                 }
             }
         }
-        log.info("AI 建议应用 {}: {} 个字段写库", pipeline.getPipelineNo(), applied);
+        log.info("AI 建议应用 {}: {} 个字段写库", label, applied);
         return applied;
     }
 
@@ -403,6 +424,106 @@ public class AiRecommendServiceImpl implements AiRecommendService {
         }
         setter.accept(suggested);
         return true;
+    }
+
+    // ==================== 表级入口（V7.3 P0-3） ====================
+
+    /**
+     * 表级产物 token：{@code AIT<projectId>-<yyyyMMddHHmmss>-<8位hex>}。
+     * 正则先行既做格式校验，也是路径穿越防线（token 直接参与文件名拼接）。
+     */
+    private static final java.util.regex.Pattern TABLE_TOKEN =
+            java.util.regex.Pattern.compile("^AIT(\\d+)-(\\d{14})-([0-9a-f]{8})$");
+
+    /** 同一系统最多保留多少份表级产物，超出按文件名（含时间戳）排序删最旧 */
+    private static final int TABLE_ARTIFACT_KEEP = 5;
+
+    @Override
+    public GenAiRecommendPreviewVO recommendTables(GenAiRecommendTableDTO dto) {
+        if (dto == null || dto.getProjectId() == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "projectId 不能为空");
+        }
+        Map<String, GenTable> byName = tablesOfProject(dto.getProjectId());
+        if (byName.isEmpty()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "系统下没有表配置，无法推荐");
+        }
+        List<GenTable> picked;
+        if (dto.getTableIds() == null || dto.getTableIds().isEmpty()) {
+            picked = byName.values().stream()
+                    .sorted(java.util.Comparator.comparing(GenTable::getId)).toList();
+        } else {
+            Set<Long> wanted = new HashSet<>(dto.getTableIds());
+            picked = byName.values().stream()
+                    .filter(t -> wanted.contains(t.getId()))
+                    .sorted(java.util.Comparator.comparing(GenTable::getId))
+                    .toList();
+            if (picked.isEmpty()) {
+                throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "选中的表不属于该系统");
+            }
+        }
+        GenAiRecommendVO suggest = doRecommend(picked, false);
+        String token = writeTableArtifact(dto.getProjectId(), suggest);
+        GenAiRecommendPreviewVO vo = toPreview(suggest, dto.getProjectId());
+        vo.setToken(token);
+        return vo;
+    }
+
+    @Override
+    public int applyTables(String token, GenAiRecommendApplyDTO dto) {
+        Path artifact = resolveTableArtifact(token);
+        if (!Files.exists(artifact)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                    "AI 建议已过期或不存在，请重新推荐");
+        }
+        return applyInternal(readArtifact(artifact), tableTokenProjectId(token), dto, token);
+    }
+
+    String writeTableArtifact(Long projectId, GenAiRecommendVO suggest) {
+        String token = "AIT" + projectId + "-"
+                + java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+                        .format(java.time.LocalDateTime.now())
+                + "-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        Path file = resolveTableArtifact(token);
+        try {
+            Files.createDirectories(file.getParent());
+            objectMapper.writeValue(file.toFile(), suggest);
+        } catch (Exception e) {
+            throw new BusinessException(ResultCode.FAIL.getCode(), "AI 建议产物写入失败：" + e.getMessage());
+        }
+        pruneTableArtifacts(projectId);
+        return token;
+    }
+
+    Path resolveTableArtifact(String token) {
+        if (token == null || !TABLE_TOKEN.matcher(token).matches()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "AI 建议 token 非法");
+        }
+        return Path.of(properties.getLogDir(), "ai-recommend", token + ".json");
+    }
+
+    Long tableTokenProjectId(String token) {
+        java.util.regex.Matcher m = TABLE_TOKEN.matcher(token == null ? "" : token);
+        if (!m.matches()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "AI 建议 token 非法");
+        }
+        return Long.parseLong(m.group(1));
+    }
+
+    /** 清旧产物：目录里按文件名排（带时间戳）保留最新 N 份，失败不影响本次推荐 */
+    void pruneTableArtifacts(Long projectId) {
+        Path dir = Path.of(properties.getLogDir(), "ai-recommend");
+        String prefix = "AIT" + projectId + "-";
+        try (var stream = Files.list(dir)) {
+            List<Path> mine = stream
+                    .filter(p -> p.getFileName().toString().startsWith(prefix))
+                    .sorted()
+                    .toList();
+            for (int i = 0; i < mine.size() - TABLE_ARTIFACT_KEEP; i++) {
+                Files.deleteIfExists(mine.get(i));
+            }
+        } catch (Exception e) {
+            log.debug("清理表级 AI 产物失败（忽略）: {}", e.getMessage());
+        }
     }
 
     // ==================== 产物与台账 ====================

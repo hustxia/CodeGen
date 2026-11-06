@@ -8,12 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * V7.0 自检回归：产物测试源码不参与 javac、编译 classpath 兜底平台自身依赖。
+ * V7.0 自检回归：产物测试源识别、编译 classpath 兜底平台自身依赖。
  *
- * <p>背景：产物集成测试（V6.7）是包级私有类，且依赖 JUnit/MockMvc 等 test-scope 包，
- * 基座 classpath（demo-lib 快照）里没有这些包。自检把它当普通 java 源编译，
- * 会先报「无法从源码中解析出类名」，放开正则后又满屏 cannot find symbol——
- * 两难。正确做法：测试源只计数不编译。
+ * <p>V7.3 P0-1 起测试源不再只计数：单独用测试 classpath 编译（见 {@link GenSelfCheckTestCompileTest}），
+ * 不混入主编译——测试类依赖 JUnit/MockMvc 等 test-scope 包，基座快照里没有。
  *
  * <p>同理，V6.4 基座 AuthController 引入 BCrypt，但 demo-lib 快照可能缺
  * spring-security-crypto；平台自身依赖里已经带了该 jar，自检 classpath 需要兜底合入。

@@ -47,12 +47,12 @@ class PipelineAiRecommendStepTest {
     private PipelineExecutor executor(GenPipelineProperties props, AiRecommendService svc) {
         // 步骤只依赖 props 与 aiRecommendService，其余协作者本用例不触达（第 17 位 aiRecommendService，第 18 位 aiModelService）
         return new PipelineExecutor(null, null, null, null, null, null, null, props,
-                null, null, null, null, null, null, null, null, svc, null);
+                null, null, null, null, null, null, null, null, svc, null, null);
     }
 
     /**
-     * AiRecommendService 有三个方法、不是函数式接口，lambda 赋值编译不过；
-     * 本用例只触达 recommend，preview/apply 抛 AssertionError 防误调。
+     * AiRecommendService 有五个方法、不是函数式接口，lambda 赋值编译不过；
+     * 本用例只触达 recommend，其余方法抛 AssertionError 防误调。
      */
     private AiRecommendService recommendStub(java.util.function.Function<Long, GenAiRecommendVO> fn) {
         return new AiRecommendService() {
@@ -69,6 +69,16 @@ class PipelineAiRecommendStepTest {
             @Override
             public int apply(Long pipelineId, com.codegen.dto.GenAiRecommendApplyDTO dto) {
                 throw new AssertionError("步骤执行不应调用 apply");
+            }
+
+            @Override
+            public GenAiRecommendPreviewVO recommendTables(com.codegen.dto.GenAiRecommendTableDTO dto) {
+                throw new AssertionError("步骤执行不应调用表级 recommendTables");
+            }
+
+            @Override
+            public int applyTables(String token, com.codegen.dto.GenAiRecommendApplyDTO dto) {
+                throw new AssertionError("步骤执行不应调用表级 applyTables");
             }
         };
     }

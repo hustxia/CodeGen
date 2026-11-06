@@ -58,6 +58,25 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
     private static final Pattern CLASS_PATTERN = Pattern.compile("(?m)^\\s*public\\s+(?:final\\s+|abstract\\s+)?(?:class|interface|enum|record)\\s+(\\w+)");
 
     /**
+     * 产物测试类通常是包级私有（{@code class XxxControllerTest}），不能复用只匹配 public 的 CLASS_PATTERN，
+     * 否则整批测试源都会因为「解析不出类名」被误报为错误。
+     */
+    private static final Pattern TEST_TYPE_PATTERN = Pattern.compile(
+            "(?m)^\\s*(?:public\\s+|protected\\s+|private\\s+)?(?:static\\s+)?(?:final\\s+|abstract\\s+)?"
+                    + "(?:class|interface|enum|record)\\s+(\\w+)");
+
+    /**
+     * 产物测试专属依赖（test-scope）：基座 classpath 快照通常不含这些包。
+     * 自检编译产物测试时，命中这些符号缺失只降级为 WARNING，不把「基座缺 test 依赖」误报成生成器缺陷。
+     */
+    private static final String[] TEST_SCOPE_MARKERS = {
+            "org.junit", "org.mockito", "org.springframework.test", "org.springframework.boot.test",
+            "org.hamcrest", "com.h2database", "org.assertj", "org.testcontainers",
+            "org.springframework.security.test", "MockMvc", "SpringBootTest", "TestRestTemplate",
+            "Mockito", "Assertions", "junit"
+    };
+
+    /**
      * import 语句里的全限定类名
      */
     private static final Pattern IMPORT_PATTERN = Pattern.compile("(?m)^\\s*import\\s+([\\w.]+(?:\\.\\*)?)\\s*;");
@@ -151,6 +170,7 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         List<String> dataTexts = collectDataTexts(columns);
 
         List<JavaSource> javaSources = new ArrayList<>();
+        List<JavaSource> testSources = new ArrayList<>();
         for (GenFileVO file : files) {
             String content = file.getContent() == null ? "" : file.getContent();
             String path = file.getPath();
@@ -160,11 +180,11 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
                 checkPlaceholderResidue(result, path, content, dataTexts);
             }
             if (path.endsWith(".java")) {
-                // V6.7 产物集成测试只计数不编译：包级私有的测试类用基座 classpath 编不了
-                // （JUnit/MockMvc/H2 都是 test-scope，不在 demo-lib 快照里），
-                // 强行编译只会把「基座缺 test 依赖」误报成生成器缺陷。
+                // V7.3（P0-1）：src/test/java 不再只计数——单独用「产物测试 classpath」编译，
+                // 与主编译隔离（测试依赖 test-scope 包，混进主编译会污染结果）。
                 if (isGeneratedTestSource(path)) {
                     result.setTestCount(result.getTestCount() + 1);
+                    testSources.add(new JavaSource(path, content));
                 } else {
                     javaSources.add(new JavaSource(path, content));
                 }
@@ -177,7 +197,11 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         result.setJavaCount(javaSources.size());
 
         // 2) 真实编译（带上所属系统：源码根/编译产物/包名都按系统解析，多系统下不再回落全局）
-        compile(result, javaSources, projectClasspathOf(ids), projectOfIds(ids));
+        com.codegen.entity.SysProject project = projectOfIds(ids);
+        String projectClasspath = project == null ? null : project.getSelfcheckClasspath();
+        compile(result, javaSources, projectClasspath, project);
+        // 2.1) 产物测试独立编译：语法/符号错误按文件+行号报 ERROR，测试依赖缺口降级 WARNING
+        compileTests(result, testSources, javaSources, projectClasspath, project);
 
         // 3) 语义提示：下拉/单选没有字典，生成出来的控件是空选项
         checkDictBinding(result, columns);
@@ -359,13 +383,7 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
 
         // V3.0：系统自带 classpath 优先。多系统下各系统依赖版本不同，
         // 共用一份会出现「依赖明明在却报 cannot find symbol」，比不配还难排查。
-        String classpath = StringUtils.hasText(projectClasspath)
-                ? GenSelfCheckProperties.expandWildcards(projectClasspath)
-                : selfCheckProperties.resolveClasspath();
-        // 基座 classpath（demo-lib 快照）由目标工程导出，可能缺平台已经用到的三方包
-        // （如 V6.4 基座 AuthController 的 spring-security-crypto）——用平台自身 classpath 兜底，
-        // 基座在前保证版本以目标工程为准。
-        classpath = mergeWithAppClasspath(classpath, System.getProperty("java.class.path"));
+        String classpath = baseClasspath(projectClasspath);
         if (selfCheckProperties.classpathLooksNested() && !StringUtils.hasText(projectClasspath)) {
             result.addIssue("javac", 0L, "WARNING",
                     "当前进程以单个肥 jar 启动，java.class.path 无法覆盖嵌套依赖，编译检查可能满屏 cannot find symbol；"
@@ -527,6 +545,201 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
             }
             deleteQuietly(outDir);
         }
+    }
+
+    /**
+     * 自检 classpath 的公共底座：所属系统 classpath 优先（版本以目标工程为准），平台自身 classpath 兜底。
+     */
+    private String baseClasspath(String projectClasspath) {
+        String classpath = StringUtils.hasText(projectClasspath)
+                ? GenSelfCheckProperties.expandWildcards(projectClasspath)
+                : selfCheckProperties.resolveClasspath();
+        return mergeWithAppClasspath(classpath, System.getProperty("java.class.path"));
+    }
+
+    private String appendClassRoots(String classpath, List<Path> roots) {
+        String result = classpath;
+        for (Path root : roots) {
+            result = result == null || result.isEmpty()
+                    ? root.toString()
+                    : result + java.io.File.pathSeparator + root;
+        }
+        return result;
+    }
+
+    /**
+     * 定位产物相对路径里 src/test/java 的起始下标；不是测试产物路径返回 -1。
+     */
+    static int srcTestJavaStart(String rel) {
+        if (rel.startsWith("src/test/java/")) {
+            return 0;
+        }
+        int idx = rel.indexOf("/src/test/java/");
+        return idx < 0 ? -1 : idx + 1;
+    }
+
+    /**
+     * 由测试产物路径反推目标工程的测试编译产物目录（target/test-classes）。
+     *
+     * <p>产物测试会继承基座里的 {@code LoginStateTestSupport}，它属于脚手架（不在本次预览产物里）。
+     * 目标工程跑过 {@code mvn test-compile} 后该类就在 target/test-classes，挂上它测试类才能解析基类。
+     */
+    private List<Path> backendTestClasses(List<JavaSource> sources, String backendRootOverride) {
+        Set<Path> roots = new LinkedHashSet<>();
+        for (JavaSource source : sources) {
+            String rel = source.path().replace('\\', '/');
+            int start = srcTestJavaStart(rel);
+            if (start < 0) {
+                continue;
+            }
+            Path moduleRoot = Path.of(effectiveBackendRoot(backendRootOverride), rel.substring(0, start));
+            for (String sub : new String[]{"target/test-classes", "build/classes/java/test"}) {
+                Path cls = moduleRoot.resolve(sub);
+                if (Files.isDirectory(cls)) {
+                    roots.add(cls.toAbsolutePath());
+                }
+            }
+        }
+        return new ArrayList<>(roots);
+    }
+
+    /**
+     * 产物测试编译（V7.3 P0-1）：与主编译隔离，单独用测试 classpath 编译 src/test/java。
+     *
+     * <p>取舍：测试类依赖 JUnit/MockMvc/H2 等 test-scope 包，基座快照通常没有。
+     * 这些「依赖缺口」降级为 WARNING（并汇总成一条），语法/符号错误仍然按文件+行号报 ERROR——
+     * 这样故意写坏测试能在自检阶段暴露，而不会因为基座缺测试依赖满屏假错。
+     */
+    private void compileTests(GenSelfCheckVO result, List<JavaSource> testSources, List<JavaSource> mainSources,
+                              String projectClasspath, com.codegen.entity.SysProject project) {
+        if (testSources.isEmpty()) {
+            return;
+        }
+        if (Boolean.FALSE.equals(selfCheckProperties.getCompileEnabled())) {
+            return;
+        }
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        if (compiler == null) {
+            // compile() 已就「无 JDK」给出一次 WARNING，这里不重复
+            return;
+        }
+
+        String backendRootOverride = project != null && StringUtils.hasText(project.getBackendRoot())
+                ? project.getBackendRoot().trim() : null;
+        String classpath = baseClasspath(projectClasspath);
+        String testClasspath = selfCheckProperties.resolveTestClasspath();
+        if (StringUtils.hasText(testClasspath)) {
+            classpath = mergeWithAppClasspath(classpath, testClasspath);
+        }
+        // 主编译产物：测试类引用 Controller/Service 等生成物
+        List<Path> mainClassRoots = backendTargetClasses(mainSources, backendRootOverride);
+        classpath = appendClassRoots(classpath, mainClassRoots);
+        // 测试编译产物：基座测试支持类（LoginStateTestSupport 等）
+        classpath = appendClassRoots(classpath, backendTestClasses(testSources, backendRootOverride));
+        if (mainClassRoots.isEmpty()) {
+            classpath = withBackendSourceRoot(classpath, mainSources, backendRootOverride);
+        }
+
+        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+        StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, StandardCharsets.UTF_8);
+        Path outDir = null;
+        try {
+            outDir = Files.createTempDirectory("gen-self-check-test-");
+            List<String> options = new ArrayList<>(List.of(
+                    "-classpath", classpath,
+                    "-d", outDir.toString(),
+                    "-encoding", "UTF-8",
+                    "-nowarn"));
+            if (Runtime.version().feature() >= 21) {
+                options.add("-proc:full");
+            }
+            String processorPath = selfCheckProperties.resolveProcessorPath();
+            if (!StringUtils.hasText(processorPath)) {
+                processorPath = selfCheckProperties.lombokSegmentsOf(classpath);
+            }
+            if (StringUtils.hasText(processorPath)) {
+                options.add("-processorpath");
+                options.add(processorPath);
+            }
+
+            List<JavaFileObject> units = new ArrayList<>();
+            Map<String, String> classToPath = new HashMap<>();
+            for (JavaSource source : testSources) {
+                String className = classNameOfTestSource(source.content());
+                if (className == null) {
+                    result.addIssue(source.path(), 0L, "ERROR", "无法从测试源码中解析出类名（package/class 声明缺失）");
+                    continue;
+                }
+                units.add(new StringSource(className, source.content()));
+                classToPath.put(className, source.path());
+            }
+            if (units.isEmpty()) {
+                return;
+            }
+
+            boolean ok = compiler.getTask(new StringWriter(), fileManager, diagnostics, options, null, units).call();
+            if (!ok) {
+                Set<String> gapFiles = new LinkedHashSet<>();
+                for (Diagnostic<? extends JavaFileObject> d : diagnostics.getDiagnostics()) {
+                    if (d.getKind() != Diagnostic.Kind.ERROR) {
+                        continue;
+                    }
+                    String message = d.getMessage(Locale.ROOT);
+                    String file = resolveFile(d, classToPath);
+                    long line = d.getLineNumber() > 0 ? d.getLineNumber() : 0L;
+                    if (isTestDependencyGap(message)) {
+                        gapFiles.add(file);
+                        continue;
+                    }
+                    result.addIssue(file, line, "ERROR", message);
+                }
+                if (!gapFiles.isEmpty()) {
+                    result.addIssue("产物测试", 0L, "WARNING",
+                            "产物测试依赖的 test-scope 包不在自检 classpath，已降级为告警（涉及 "
+                                    + gapFiles.size() + " 个文件）；可配置 gen.selfcheck.test-classpath 补齐："
+                                    + String.join(", ", gapFiles));
+                }
+            }
+        } catch (Exception e) {
+            result.addIssue("产物测试", 0L, "WARNING",
+                    "产物测试编译检查执行失败（已降级，不影响主编译结果）：" + e.getMessage());
+        } finally {
+            try {
+                fileManager.close();
+            } catch (Exception ignored) {
+                // 忽略关闭异常
+            }
+            deleteQuietly(outDir);
+        }
+    }
+
+    /**
+     * 测试源码里的类名：测试类通常是包级私有，允许省略访问修饰符。
+     */
+    static String classNameOfTestSource(String content) {
+        Matcher pm = PACKAGE_PATTERN.matcher(content);
+        Matcher cm = TEST_TYPE_PATTERN.matcher(content);
+        if (!cm.find()) {
+            return null;
+        }
+        String simple = cm.group(1);
+        return pm.find() ? pm.group(1) + "." + simple : simple;
+    }
+
+    /**
+     * 诊断是否属于「产物测试专属依赖缺失」：命中 test-scope 包/API 名即视为依赖缺口。
+     */
+    static boolean isTestDependencyGap(String message) {
+        if (message == null) {
+            return false;
+        }
+        String lower = message.toLowerCase(Locale.ROOT);
+        for (String marker : TEST_SCOPE_MARKERS) {
+            if (lower.contains(marker.toLowerCase(Locale.ROOT))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void checkVue(GenSelfCheckVO result, String path, String content) {
@@ -881,8 +1094,8 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
     }
 
     /**
-     * 产物测试源（src/test/java）识别：只计数、不参与 javac——
-     * 测试类是包级私有且依赖 test-scope 包，基座 classpath 不具备。
+     * 产物测试源（src/test/java）识别：V7.3 起单独参与测试编译（compileTests），
+     * 不再混进主编译——测试类可能是包级私有且依赖 test-scope 包。
      */
     static boolean isGeneratedTestSource(String path) {
         if (path == null) {

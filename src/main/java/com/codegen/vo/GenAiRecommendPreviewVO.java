@@ -17,6 +17,13 @@ public class GenAiRecommendPreviewVO {
     /** 产物是否存在（ai_recommend 步成功才有） */
     private boolean exists;
 
+    /**
+     * 表级入口（V7.3 P0-3）专用：本次建议的产物 token。
+     * 应用时原样回传，服务端按 token 读回产物再写库——建议值仍以服务端产物为准。
+     * 流水线入口为 null（应用按 pipelineId 取产物）。
+     */
+    private String token;
+
     private List<TablePreview> tables = new ArrayList<>();
 
     /** 菜单组织建议（应用 = 成员表 moduleName 归到该模块；目录名/图标为参考） */
