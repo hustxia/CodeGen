@@ -3846,14 +3846,19 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
     /** V6.4 P0-4：登录日志只读查询（管理页 P1 接入） */
     /**
-     * V6.8 字典只读接口：GET /system/dict/data/type/{code} → [{value,label}]。
+     * V6.8 字典只读接口：GET /system/dict/data/type/{code} → Result.ok([{value,label}])。
      *
      * <p>用 JdbcTemplate 而不是实体+Mapper：字典表由 {@code db/dict.sql} 保证存在，
      * 多一套实体只会多一处漂移面。表不存在/查询异常时返回空数组——下拉降级为空，
      * 页面照常可用（前端本来就有「取不到就当空选项」的兜底）。
+     *
+     * <p><b>必须套 Result.ok 包装</b>：目标工程 request 拦截器按 {@code res.code === 200}
+     * 判成功，vuePage.ftl 的 loadDicts 取 {@code res.data}。若直接返回裸 List，
+     * 每个带字典的列表页都会弹「请求失败」且字典翻译全空（V6.8 同源缺陷）。
      */
     private String dictControllerJava(String pkg) {
         return "package " + pkg + ".system;\n\n"
+                + "import " + pkg + ".common.result.Result;\n"
                 + "import org.springframework.beans.factory.annotation.Autowired;\n"
                 + "import org.springframework.jdbc.core.JdbcTemplate;\n"
                 + "import org.springframework.web.bind.annotation.GetMapping;\n"
@@ -3867,6 +3872,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "/**\n"
                 + " * 字典数据只读接口（V6.8 字典脚手架）：前端按 dict_code 取 value/label 列表。\n"
                 + " * 表结构与种子由 db/dict.sql 提供；端点在白名单里（/system/dict），免登录可读。\n"
+                + " * 返回统一包装 Result，与 request 拦截器按 code 判断的契约一致。\n"
                 + " */\n"
                 + "@RestController\n"
                 + "@RequestMapping(\"/system/dict\")\n"
@@ -3874,7 +3880,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    @Autowired\n"
                 + "    private JdbcTemplate jdbcTemplate;\n\n"
                 + "    @GetMapping(\"/data/type/{code}\")\n"
-                + "    public List<Map<String, String>> byType(@PathVariable(\"code\") String code) {\n"
+                + "    public Result<List<Map<String, String>>> byType(@PathVariable(\"code\") String code) {\n"
                 + "        List<Map<String, String>> out = new ArrayList<>();\n"
                 + "        try {\n"
                 + "            for (Map<String, Object> row : jdbcTemplate.queryForList(\n"
@@ -3887,9 +3893,9 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "            }\n"
                 + "        } catch (Exception e) {\n"
                 + "            // 表没建/库抖动：返回空列表，前端下拉为空但页面不炸\n"
-                + "            return List.of();\n"
+                + "            return Result.ok(List.of());\n"
                 + "        }\n"
-                + "        return out;\n"
+                + "        return Result.ok(out);\n"
                 + "    }\n"
                 + "}\n";
     }
