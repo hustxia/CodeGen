@@ -29,6 +29,15 @@ module.exports = {
       }
     }
   },
+  chainWebpack: config => {
+    // pdf.js 的 worker：约 1MB 的独立脚本，既不能经 babel 处理，也不该内联进主包。
+    // 排除 js 规则后强制按 asset/resource 产出，PdfViewer 里 import 拿到的是 URL 字符串。
+    config.module.rule('js').exclude.add(/pdf\.worker\.min\.js$/)
+    config.module.rule('pdfjs-worker')
+      .test(/pdf\.worker\.min\.js$/)
+      .type('asset/resource')
+      .set('generator', { filename: 'static/js/[name].[contenthash:8][ext]' })
+  },
   configureWebpack: {
     name: 'codegen-web',
     resolve: {

@@ -42,11 +42,29 @@ function toLogin() {
   })
 }
 
+// 错误体取可读文案：二进制请求（arraybuffer）失败时，后端返回的是 JSON 体而非文件，需先解码
+function messageOf(resp, fallback) {
+  const data = resp && resp.data
+  if (!data) {
+    return fallback
+  }
+  if (data instanceof ArrayBuffer) {
+    try {
+      const json = JSON.parse(new TextDecoder('utf-8').decode(new Uint8Array(data)))
+      return json.msg || json.message || fallback
+    } catch (e) {
+      return fallback
+    }
+  }
+  return data.msg || data.message || fallback
+}
+
 // 响应拦截器：统一处理业务码与异常
 service.interceptors.response.use(
   response => {
-    // blob 流（文件下载）直接放行，不走业务码校验
-    if (response.config.responseType === 'blob') {
+    // 二进制流（文件下载 / 文档预览）直接放行，不走业务码校验：
+    // 这类端点成功时返回文件本身，失败时用 HTTP 4xx + JSON 体（见 DocController#error）
+    if (response.config.responseType === 'blob' || response.config.responseType === 'arraybuffer') {
       return response
     }
     const res = response.data
@@ -69,10 +87,10 @@ service.interceptors.response.use(
     // 后端鉴权失败会以 HTTP 401 返回（axios 走 error 分支），这里同样导回登录页
     if (resp && resp.status === 401) {
       toLogin()
-      return Promise.reject(new Error((resp.data && resp.data.msg) || '登录状态已失效'))
+      return Promise.reject(new Error(messageOf(resp, '登录状态已失效')))
     }
     Message({
-      message: (resp && resp.data && (resp.data.msg || resp.data.message)) || error.message,
+      message: messageOf(resp, error.message),
       type: 'error',
       duration: 5 * 1000
     })
