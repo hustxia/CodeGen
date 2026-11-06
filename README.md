@@ -36,8 +36,8 @@
 
 ## 🎯 典型应用场景
 
-> 以下截图统一放在 `docs/images/scenarios/`，建议尺寸 1440×900，敏感字段打码。  
-> 图片路径为占位，请替换为真实截图文件。
+> 截图统一放在 `docs/images/scenarios/`，建议尺寸 1440×900，敏感字段打码。  
+> 图片需随仓库提交，路径使用 `./docs/images/scenarios/` 相对路径；本地预览请用 VSCode / Typora 打开仓库根目录。
 
 | 场景 | 适合人群 | 关键能力 | 截图 |
 |---|---|---|---|
@@ -56,9 +56,13 @@
 
 登录后进入建系统向导，选择建模规模，或直接导入已有 DDL。系统完成表配置、命名与路径回落、菜单下发，生成后即可打开管理后台。
 
-![建系统向导](docs/images/scenarios/01-wizard.png)
+<p align="center">
+  <img src="./docs/images/scenarios/01-wizard.png" alt="建系统向导" width="900">
+</p>
 
-![从 DDL 导入](docs/images/scenarios/02-ddl-import.png)
+<p align="center">
+  <img src="./docs/images/scenarios/02-ddl-import.png" alt="从 DDL 导入" width="900">
+</p>
 
 **价值**：把“建库建表 → 表配置 → 代码生成 → 菜单接入”压缩为一条向导链路，适合新项目冷启动和存量表快速接管。
 
@@ -66,9 +70,13 @@
 
 在表配置中设置列级控件、校验和字典，支持一主多子表、级联删除三态和详情多 tab。生成物先差异预览，确认后落盘。
 
-![表配置](docs/images/scenarios/03-table-config.png)
+<p align="center">
+  <img src="./docs/images/scenarios/03-table-config.png" alt="表配置" width="900">
+</p>
 
-![主从表详情多 tab](docs/images/scenarios/04-detail-tabs.png)
+<p align="center">
+  <img src="./docs/images/scenarios/04-detail-tabs.png" alt="主从表详情多 tab" width="900">
+</p>
 
 **价值**：常规业务后台不必从零写增删改查，主从表详情页也能直接生成。
 
@@ -76,9 +84,13 @@
 
 生成前展示“生成物 vs 磁盘现状”的 diff，确认后才写盘；台账记录批次、新建 / 合并 / 跳过 / 失败四态。
 
-![差异预览](docs/images/scenarios/05-diff-preview.png)
+<p align="center">
+  <img src="./docs/images/scenarios/05-diff-preview.png" alt="差异预览" width="900">
+</p>
 
-![生成台账](docs/images/scenarios/06-output-ledger.png)
+<p align="center">
+  <img src="./docs/images/scenarios/06-output-ledger.png" alt="生成台账" width="900">
+</p>
 
 **价值**：避免覆盖已有代码，交付过程可追溯。
 
@@ -86,7 +98,9 @@
 
 针对备份覆盖、批次重名和撤销回滚，通过 RBK 机制恢复到生成前状态。
 
-![批次回滚](docs/images/scenarios/07-rollback.png)
+<p align="center">
+  <img src="./docs/images/scenarios/07-rollback.png" alt="批次回滚" width="900">
+</p>
 
 **价值**：生成器敢用、可退，降低“生成一时爽、回滚火葬场”的风险。
 
@@ -94,9 +108,13 @@
 
 在线编辑 12 套代码模板，保存版本快照并支持回滚；改完模板后跑 `verify-all`，基线快照零 diff 门禁和契约测试会拦截异常产物。
 
-![模板编辑器](docs/images/scenarios/08-template-editor.png)
+<p align="center">
+  <img src="./docs/images/scenarios/08-template-editor.png" alt="模板编辑器" width="900">
+</p>
 
-![verify-all 校验](docs/images/scenarios/09-verify-all.png)
+<p align="center">
+  <img src="./docs/images/scenarios/09-verify-all.png" alt="verify-all 校验" width="900">
+</p>
 
 **价值**：模板可定制，但改动有护栏，适合平台组长期维护。
 
@@ -104,7 +122,9 @@
 
 内置引擎与 Activiti 8.7.0 双引擎，BPMN 由 `GenBpmnBuilder` 翻译，待办中心统一处理审批任务。
 
-![工作流待办中心](docs/images/scenarios/10-workflow-todo.png)
+<p align="center">
+  <img src="./docs/images/scenarios/10-workflow-todo.png" alt="工作流待办中心" width="900">
+</p>
 
 **价值**：生成后台不止 CRUD，审批流可直接进入待办闭环。
 
@@ -112,7 +132,9 @@
 
 通过 `pay_enabled` 三态控制支付能力，支持微信、支付宝、mock 三渠道，`markPaid` 幂等处理回调。
 
-![支付收银台](docs/images/scenarios/11-pay-cashier.png)
+<p align="center">
+  <img src="./docs/images/scenarios/11-pay-cashier.png" alt="支付收银台" width="900">
+</p>
 
 **价值**：商业化项目可在生成阶段接入支付骨架，减少重复对接。
 
@@ -120,7 +142,9 @@
 
 `mobile_enabled` 三态控制移动端产物，生成 uni-app 单源工程骨架和动态页三件套。
 
-![移动端预览](docs/images/scenarios/12-mobile-preview.png)
+<p align="center">
+  <img src="./docs/images/scenarios/12-mobile-preview.png" alt="移动端预览" width="900">
+</p>
 
 **价值**：同一套模型同时服务 PC 管理后台与移动端。
 
@@ -128,7 +152,9 @@
 
 使用 `printPage` 模板生成 A4 打印页，结合 `gen_print` 三态和打印路由，适用于订单、出库单、对账单等单据。
 
-![A4 打印单据](docs/images/scenarios/13-print-page.png)
+<p align="center">
+  <img src="./docs/images/scenarios/13-print-page.png" alt="A4 打印单据" width="900">
+</p>
 
 **价值**：业务单据打印不再单独手写页面。
 
@@ -136,13 +162,15 @@
 
 `project_structure` 支持第三态 `micro`，输出多模块 / 微服务工程骨架；默认关闭 Nacos，跨服务接口按需手写。
 
-![微服务工程结构](docs/images/scenarios/14-micro-structure.png)
+<p align="center">
+  <img src="./docs/images/scenarios/14-micro-structure.png" alt="微服务工程结构" width="900">
+</p>
 
 **价值**：提供微服务设施但不夸大“一键微服务”，边界诚实、可按需启用。
 
 ---
 
-**截图规范建议**
+**截图目录与命名约定**
 
 ```text
 docs/images/scenarios/
