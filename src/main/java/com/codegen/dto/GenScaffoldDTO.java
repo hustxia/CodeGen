@@ -2,6 +2,7 @@ package com.codegen.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.util.List;
@@ -22,12 +23,15 @@ public class GenScaffoldDTO {
 
     @Schema(description = "基座根包名，生成物按 {rootPackage}.common.* 引用", example = "com.order")
     @NotBlank(message = "包名不能为空")
+    @Pattern(regexp = "^[A-Za-z][A-Za-z0-9_.]*$", message = "根包名必须是合法 Java 包名")
     private String rootPackage;
 
     @Schema(description = "后端模块目录名（相对后端输出根），默认 {projectName}-server", example = "order-server")
+    @Pattern(regexp = "^[A-Za-z0-9_.-]+$", message = "模块目录名只能含字母、数字、下划线、点与横线")
     private String backendModule;
 
     @Schema(description = "前端模块目录名（相对前端输出根），默认 {projectName}-web", example = "order-web")
+    @Pattern(regexp = "^[A-Za-z0-9_.-]+$", message = "模块目录名只能含字母、数字、下划线、点与横线")
     private String frontendModule;
 
     @Schema(description = "后端输出根目录（绝对路径），留空用 gen.output.backend-root")

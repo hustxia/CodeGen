@@ -38,8 +38,13 @@ mybatis-plus:
 
 springdoc:
   api-docs:
+    # 生产部署设 SPRINGDOC_API_DOCS_ENABLED=false / SPRINGDOC_UI_ENABLED=false 即可关闭接口清单；
+    # 默认 true 保持既有行为不变，仅提供 opt-out 能力；端点关掉后不再返回接口清单，
+    # 但旧路径目前会被全局异常兜底成 HTTP 200 + code 500（见台账 W-08），不是干净的 404。
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
     path: /v3/api-docs
   swagger-ui:
+    enabled: ${SPRINGDOC_UI_ENABLED:true}
     path: /swagger-ui.html
 
 logging:

@@ -1,5 +1,6 @@
 package com.codegen.service.impl;
 
+import com.codegen.common.exception.BusinessException;
 import com.codegen.common.log.Ip2RegionSearcher;
 import com.codegen.config.GenOutputProperties;
 import com.codegen.dto.GenScaffoldDTO;
@@ -461,18 +462,45 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
      * 三种理解。现全链路统一为「容器根 + 模块子目录」，谁都不许再特立独行。
      */
     private Path resolveRoot(String dtoRoot, String configRoot, String module) {
+        String safeModule = safeModule(module);
         if (StringUtils.hasText(dtoRoot)) {
-            return Paths.get(dtoRoot.trim()).toAbsolutePath().normalize().resolve(module);
+            return Paths.get(dtoRoot.trim()).toAbsolutePath().normalize().resolve(safeModule).normalize();
         }
         if (!StringUtils.hasText(configRoot)) {
             throw new IllegalStateException("未配置输出根目录：请在 gen.output.backend-root / frontend-root 配置，或显式传入路径");
         }
-        return Paths.get(configRoot.trim(), module).toAbsolutePath().normalize();
+        return Paths.get(configRoot.trim(), safeModule).toAbsolutePath().normalize();
+    }
+
+    /**
+     * 模块目录名只认单层目录。{@code Path.resolve} 遇到绝对路径参数会直接丢弃左侧根，
+     * 遇到 {@code ../} 又能逃出根——而 backendModule/frontendModule 可由请求指定，
+     * 不校验就等于允许把整个基座写到任意可写目录。
+     */
+    static String safeModule(String module) {
+        String v = module == null ? "" : module.trim();
+        if (v.isEmpty() || ".".equals(v) || "..".equals(v) || v.contains("..")
+                || !v.matches("[A-Za-z0-9_.-]+")
+                || Paths.get(v).isAbsolute() || Paths.get(v).getNameCount() != 1) {
+            throw new BusinessException(400, "非法模块目录名：" + module);
+        }
+        return v;
+    }
+
+    /** 生成物必须落在自己的输出根内：relPath 由 rootPackage 等入参派生，越界一律拒绝 */
+    static Path safeTarget(Path root, String relPath) {
+        // 两侧都 normalize：只归一化一侧会因根里带 .. / 相对路径而误判合法路径（坑库坑 51 同源）
+        Path base = root.toAbsolutePath().normalize();
+        Path target = base.resolve(relPath).normalize();
+        if (!target.startsWith(base)) {
+            throw new BusinessException(400, "非法生成路径（越界）：" + relPath);
+        }
+        return target;
     }
 
     private void write(Path root, String relPath, String content, String side,
                        boolean force, GenScaffoldVO vo, int[] counter) {
-        Path target = root.resolve(relPath);
+        Path target = safeTarget(root, relPath);
         try {
             boolean existed = Files.exists(target);
             if (existed && !force) {

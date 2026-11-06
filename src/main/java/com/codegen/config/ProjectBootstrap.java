@@ -73,7 +73,9 @@ public class ProjectBootstrap implements ApplicationRunner {
             }
         } catch (Exception e) {
             // 引导失败不能影响服务启动：配置缺失时生成会回落到全局 yml，仍可工作
-            log.warn("ProjectBootstrap: 同步默认系统配置失败，已跳过：{}", e.getMessage());
+            // 不带堆栈时「缺表 / 连不上库 / 字段不存在」全被压成一行 message，
+            // 服务照常 UP 却要到运行期才炸，排查只能靠猜；末尾传 e 让 slf4j 打完整堆栈。
+            log.warn("ProjectBootstrap: 同步默认系统配置失败，已跳过：{}", e.getMessage(), e);
         }
     }
 
