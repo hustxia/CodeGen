@@ -248,3 +248,59 @@ CREATE TABLE `gen_pipeline` (
   KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='V5.0 一句话建系统流水线'
 ;
+
+-- V7.4 起补齐：操作日志表 + 流水线步骤明细
+-- 原因：此前测试库快照只有 7 张表，没有这两张，导致 240 例测试全绿也证明不了
+--       docs/sql/ 全量脚本在空库能跑通（坑库 mysql.md:181 的同款教训）。
+-- 结构必须与 docs/sql/V2.0__quick_build.sql（已补 4 审计列）和 V5.0__pipeline.sql 一致。
+DROP TABLE IF EXISTS `sys_oper_log`;
+CREATE TABLE `sys_oper_log` (
+  `id` bigint NOT NULL COMMENT '主键',
+  `title` varchar(64) NOT NULL COMMENT '模块标题',
+  `oper_type` varchar(16) NOT NULL COMMENT 'INSERT/UPDATE/DELETE/IMPORT/EXPORT/OTHER',
+  `method` varchar(200) DEFAULT NULL,
+  `request_uri` varchar(255) DEFAULT NULL,
+  `request_method` varchar(10) DEFAULT NULL,
+  `oper_param` text,
+  `json_result` text,
+  `status` tinyint NOT NULL DEFAULT '1',
+  `error_msg` text,
+  `oper_user_id` bigint DEFAULT NULL,
+  `oper_name` varchar(64) DEFAULT NULL,
+  `oper_ip` varchar(64) DEFAULT NULL,
+  `cost_ms` bigint DEFAULT NULL,
+  `oper_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `deleted` tinyint NOT NULL DEFAULT '0',
+  `create_by` bigint DEFAULT NULL,
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `update_by` bigint DEFAULT NULL,
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_oper_time` (`oper_time`),
+  KEY `idx_oper_user` (`oper_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志'
+;
+
+DROP TABLE IF EXISTS `gen_pipeline_step`;
+CREATE TABLE `gen_pipeline_step` (
+  `id` bigint NOT NULL COMMENT '主键ID',
+  `pipeline_id` bigint NOT NULL COMMENT 'gen_pipeline.id',
+  `step_key` varchar(32) NOT NULL COMMENT '步骤key',
+  `step_name` varchar(64) NOT NULL COMMENT '步骤中文名',
+  `step_order` int NOT NULL COMMENT '执行顺序',
+  `side` varchar(16) NOT NULL DEFAULT 'pipeline',
+  `status` varchar(16) NOT NULL DEFAULT 'pending',
+  `message` varchar(1024) DEFAULT NULL,
+  `log_excerpt` text,
+  `started_at` datetime DEFAULT NULL,
+  `finished_at` datetime DEFAULT NULL,
+  `deleted` tinyint NOT NULL DEFAULT '0',
+  `create_by` bigint DEFAULT NULL,
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `update_by` bigint DEFAULT NULL,
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_pipe_step` (`pipeline_id`, `step_key`),
+  KEY `idx_pipeline` (`pipeline_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='V5.0 流水线步骤明细'
+;
