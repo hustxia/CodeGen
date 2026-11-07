@@ -2,7 +2,8 @@
 /**
  * smoke-fresh-db.mjs —— V7.4 空库可部署冒烟
  *
- * 做什么：在一个全新空 schema 上按文件名顺序执行 docs/sql/*.sql，
+ * 做什么：在一个全新空 schema 上按文件名顺序执行 docs/sql/*.sql（默认跑两遍，
+ *         第二遍验证幂等——裸 ADD COLUMN / 重复建表会立刻现形），
  *         然后断言 F-07 / F-08 修复点真的生效：
  *           - sys_oper_log 有 4 个审计列且能写入
  *           - gen_pipeline / gen_pipeline_step 存在
@@ -12,10 +13,12 @@
  *   - 目标库名必须含 _smoke 或 _test，且绝不可以是 gen_platform
  *   - 默认不删库（--drop-after 才删），便于失败后排查
  *   - 只在显式执行时连数据库，不写入任何现有业务库
+ *   - 脚本内所有 USE / CREATE DATABASE / DROP DATABASE 先剥离再全文检测，残留即拒执行
  *
  * 用法：
  *   node scripts/smoke-fresh-db.mjs
  *   node scripts/smoke-fresh-db.mjs --with-server --drop-after
+ *   node scripts/smoke-fresh-db.mjs --no-twice            # 只跑一遍（调试用）
  *   CG_MYSQL="C:/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe" node ...
  *
  * 环境变量：CG_MYSQL / CG_DB_HOST / CG_DB_USER / CG_DB_PASSWORD / CG_JAVA_HOME / CG_SERVER_PORT
@@ -45,6 +48,7 @@ const DB = opt('db', 'codegen_v74_smoke')
 const PORT = opt('port', process.env.CG_SERVER_PORT || '8124')
 const WITH_SERVER = has('--with-server')
 const DROP_AFTER = has('--drop-after')
+const TWICE = !has('--no-twice')
 
 const lines = []
 const say = (s) => { console.log(s); lines.push(s) }
@@ -116,17 +120,31 @@ function sanitize(file, content) {
 }
 
 let executed = 0
-for (const f of files) {
-  const content = sanitize(f, readFileSync(path.join(SQL_DIR, f), 'utf8'))
-  const r = sql(content)
-  // mysql 客户端会把部分告警写到 stderr，只有非 0 退出码才算真失败
-  if (!r.ok) {
-    fail(`执行 ${f} 失败：\n${r.err}\n${r.out}`)
+/** 按文件名顺序执行全部脚本；pass 为遍次（1=空库首跑，2=幂等重跑） */
+function runAllScripts(pass) {
+  let done = 0
+  for (const f of files) {
+    const content = sanitize(f, readFileSync(path.join(SQL_DIR, f), 'utf8'))
+    const r = sql(content)
+    // mysql 客户端会把部分告警写到 stderr，只有非 0 退出码才算真失败
+    if (!r.ok) {
+      fail(`第 ${pass} 遍执行 ${f} 失败：\n${r.err}\n${r.out}`)
+    }
+    done++
+    if (r.err && pass === 1) say(`WARN  ${f}: ${r.err.split('\n')[0]}`)
   }
-  executed++
-  if (r.err) say(`WARN  ${f}: ${r.err.split('\n')[0]}`)
+  return done
 }
+
+executed = runAllScripts(1)
 say(`PASS  全量脚本执行完成 ${executed}/${files.length}，0 ERROR`)
+
+// 幂等回归：同一库再跑一遍，任何裸 ADD COLUMN / 重复建表都会在这里现形
+// （2026-11-07 实测抓到 V2.0 mask_type、V6.1 flow_engine、V6.3 pay_enabled、V6.8 app_name 四处）
+if (TWICE) {
+  const again = runAllScripts(2)
+  say(`PASS  二次执行幂等通过 ${again}/${files.length}，0 ERROR（迁移脚本可重跑）`)
+}
 
 const cols = sql(`SELECT COLUMN_NAME FROM information_schema.COLUMNS
   WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_oper_log'
@@ -137,7 +155,8 @@ const want = ['create_by', 'create_time', 'update_by', 'update_time']
 if (JSON.stringify(got) !== JSON.stringify(want)) fail(`sys_oper_log 审计列不齐：实际 ${got.join(',')} / 期望 ${want.join(',')}`)
 say('PASS  sys_oper_log 4 个审计列齐全')
 
-const ins = sql(`INSERT INTO sys_oper_log
+const ins = sql(`DELETE FROM sys_oper_log WHERE id = 990001;
+INSERT INTO sys_oper_log
   (id, title, oper_type, oper_param, status, create_by, create_time, update_by, update_time)
   VALUES (990001, 'V7.4 空库冒烟', 'OTHER', 'smoke', 1, 0, NOW(), 0, NOW());
 SELECT COUNT(*) FROM sys_oper_log WHERE id = 990001;`)

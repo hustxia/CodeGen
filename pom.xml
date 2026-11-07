@@ -152,7 +152,10 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
                 <configuration>
-                    <failIfNoTests>false</failIfNoTests>
+                    <!-- V7.4 P0-2：测试数为 0 必须失败。原先 false 是为掩盖「离线仓库
+                         surefire 版本错配导致一个用例都没跑却 BUILD SUCCESS」，
+                         固定到 3.5.4 后该问题不复现（见上方注释）。 -->
+                    <failIfNoTests>true</failIfNoTests>
                 </configuration>
             </plugin>
             <plugin>
