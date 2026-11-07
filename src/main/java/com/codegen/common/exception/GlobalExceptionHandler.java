@@ -10,8 +10,12 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -117,6 +121,28 @@ public class GlobalExceptionHandler {
     public Result<Void> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
         log.warn("上传文件超过限制: {}", ex.getMessage());
         return Result.fail(ResultCode.PARAM_ERROR.getCode(), "上传文件超过大小限制（单文件 30MB / 请求 35MB）");
+    }
+
+    @ExceptionHandler(MissingPathVariableException.class)
+    public Result<Void> handleMissingPathVariable(MissingPathVariableException ex) {
+        String msg = "缺少路径变量：" + ex.getVariableName();
+        log.warn(msg);
+        return Result.fail(ResultCode.PARAM_ERROR.getCode(), msg);
+    }
+
+    /**
+     * 静态资源 / 端点不存在（Spring 6.1 起抛 {@code NoResourceFoundException}）。
+     *
+     * <p>不单独映射会落到下面 {@code Exception.class} 兜底，表现是
+     * {@code HTTP 200 + code:500 "服务异常"} 并打一整页 ERROR 堆栈：
+     * V7.4 起服务实证，关闭 springdoc 后访问 /v3/api-docs 即命中。
+     * 这里返回真正的 404，同时保持 {@code Result} 响应体形状不变。
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Result<Void>> handleNoResource(NoResourceFoundException ex) {
+        log.debug("资源不存在: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Result.fail(ResultCode.NOT_FOUND));
     }
 
     @ExceptionHandler(Exception.class)

@@ -139,6 +139,29 @@ class GenTemplateBaselineTest {
         compareWithTestExtras("test", modelTest());
     }
 
+    /**
+     * V7.4 P0-3（第四轮建议 1）：5 个共享模板以「空模型」渲染的产物快照。
+     *
+     * <p>这 5 个模板是能力包注入用的（{@code GenTemplateEngine.renderFlowShared /
+     * renderPayShared} 内部就是 {@code Map.of()} 空模型渲染），一旦有人往模板里加
+     * 需要模型提供的变量，渲染会抛异常并被 catch 成「注入失败」——整个能力包静默丢失。
+     * 单有「能渲染」的断言不够：产物长什么样没人看得见，所以这里锁快照。
+     */
+    @Test
+    @DisplayName("shared-empty：5 个共享模板（flow/pay 能力包）空模型产物快照")
+    void sharedEmpty() {
+        Map<String, String> actual = new LinkedHashMap<>();
+        for (String name : List.of("flowApi", "flowTodo", "payApi", "payCashier", "payOrderPage")) {
+            String content = read(tplDir.resolve(name + ".ftl"));
+            try {
+                actual.put(name, normalize(GenTemplateEngine.renderString(content, Map.of())));
+            } catch (Exception ex) {
+                fail("共享模板 " + name + " 空模型渲染失败：" + ex.getMessage());
+            }
+        }
+        compareRendered("shared-empty", actual);
+    }
+
     // ------------------------------------------------------------------
     // 比对与更新
     // ------------------------------------------------------------------
@@ -573,6 +596,10 @@ class GenTemplateBaselineTest {
                 known.add("test/crudControllerTest.txt");
                 known.add("test/testSchemaTable.txt");
             }
+        }
+        // V7.4：共享模板（能力包注入用）走空模型快照，不在 TEMPLATES 13 个之列
+        for (String name : List.of("flowApi", "flowTodo", "payApi", "payCashier", "payOrderPage")) {
+            known.add("shared-empty/" + name + ".txt");
         }
         try (Stream<Path> walk = Files.walk(baselineRoot)) {
             List<String> orphans = walk.filter(Files::isRegularFile)
