@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>码匠 · CodeGen — 带质量护栏的小型低代码平台</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      /* 用变量做首屏底色：变量被内联脚本改写后，这里会同步变成对应主题的页面底色，
+         不会出现「深色主题 + 白色闪屏」 */
+      html {
+        background: var(--cg-bg-page, #f3f5fa);
+      }
+      #app {
+        height: 100%;
+      }
+    </style>
+    <script>
+      /* =========================================================
+         防闪白：在首帧渲染前把「已保存主题」的变量贴到 :root 上。
+         缓存由 src/utils/theme.js 的 applyTheme() 写入，结构为
+         { id: 'blue-light-rounded', vars: { '--cg-primary': '#3d6df5', ... } }
+
+         为什么缓存里存「算好的变量」而不是只存 id：
+         内联脚本处在 Vue 与构建产物之外，拿不到主题引擎模块；
+         只存 id 就得在这里再内嵌一份颜色算法，重复且必然漂移。
+
+         无缓存（新设备首次访问）时不做任何事，直接使用 theme.css
+         里 :root 的默认值，等登录后由后端下发的主题接管。
+         ========================================================= */
+      (function () {
+        try {
+          var raw = localStorage.getItem('cg-theme')
+          if (!raw) return
+          var data = JSON.parse(raw)
+          if (!data || !data.id || !data.vars) return
+
+          var root = document.documentElement
+          var vars = data.vars
+          for (var k in vars) {
+            if (Object.prototype.hasOwnProperty.call(vars, k)) {
+              root.style.setProperty(k, vars[k])
+            }
+          }
+
+          // 形如 blue-light-rounded；色相 id 理论上可能含连字符，因此从末尾切两段
+          var id = String(data.id)
+          root.setAttribute('data-theme', id)
+          var i = id.lastIndexOf('-')
+          var j = i > 0 ? id.lastIndexOf('-', i - 1) : -1
+          if (j > 0) {
+            root.setAttribute('data-hue', id.slice(0, j))
+            root.setAttribute('data-mode', id.slice(j + 1, i))
+            root.setAttribute('data-shape', id.slice(i + 1))
+          }
+        } catch (e) {
+          /* 缓存损坏或浏览器禁用存储：静默回落 theme.css 的默认值，不阻断应用启动 */
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <strong>请开启 JavaScript 后再访问本站。</strong>
+    </noscript>
+    <div id="app"></div>
+  </body>
+</html>

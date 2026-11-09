@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V6.9 平台文档中心 — 预览弹窗效果图</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+  body { background:#f3f5fa; padding:22px 24px; color:#1f2d50; }
+  h1 { font-size:17px; margin-bottom:4px; }
+  .sub { color:#8a93a6; font-size:13px; margin-bottom:16px; }
+  .case-tag { display:inline-block; padding:2px 10px; border-radius:10px; background:#eef2ff; color:#4d7cfe; font-size:12px; font-weight:600; margin:18px 0 8px; }
+  .case-desc { font-size:12.5px; color:#7c87a3; margin-bottom:10px; line-height:1.7; }
+
+  /* 弹窗外壳：与 Element UI el-dialog 对齐（80vw × 85vh 比例，此处等宽呈现） */
+  .dlg { width:100%; max-width:1060px; background:#fff; border-radius:10px; box-shadow:0 8px 32px rgba(15,23,42,.16); overflow:hidden; border:1px solid #e9eef8; }
+  .dlg-head { height:46px; padding:0 16px 0 20px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #eef1f7; background:#fff; }
+  .dlg-title { font-size:14px; font-weight:600; color:#1f2d50; max-width:520px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .badge { font-size:11px; padding:1px 8px; border-radius:10px; font-weight:600; }
+  .badge-pdf { background:#e8effd; color:#3d6df5; }
+  .badge-hi { background:#e8f7ef; color:#0f9d58; }
+  .badge-simple { background:#fff4e6; color:#d97706; }
+  .dlg-head .sp { flex:1; }
+  .icon-btn { width:28px; height:28px; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#7c87a3; cursor:pointer; font-size:15px; }
+  .icon-btn:hover { background:#f5f8fe; color:#3d6df5; }
+
+  /* PDF 工具栏 */
+  .pdf-bar { display:flex; align-items:center; gap:6px; padding:8px 14px; background:#f7f9fc; border-bottom:1px solid #eef1f7; font-size:12.5px; color:#5a6478; }
+  .pbtn { height:26px; min-width:26px; padding:0 8px; border:1px solid #dde5f2; border-radius:4px; background:#fff; color:#3b4867; cursor:pointer; font-size:12.5px; }
+  .pbtn:hover { border-color:#3d6df5; color:#3d6df5; }
+  .pbtn.on { background:#ecf0fe; border-color:#3d6df5; color:#3d6df5; font-weight:600; }
+  .page-no { height:26px; width:44px; text-align:center; border:1px solid #dde5f2; border-radius:4px; font-size:12.5px; color:#1f2d50; }
+  .divider { width:1px; height:18px; background:#e3e9f4; margin:0 6px; }
+
+  /* PDF 画布区（灰底居中页面） */
+  .pdf-stage { height:430px; background:#ebedf2; display:flex; justify-content:center; padding:18px; overflow:hidden; }
+  .pdf-page { width:340px; background:#fff; box-shadow:0 2px 10px rgba(15,23,42,.14); padding:26px 30px; font-size:11px; color:#333; line-height:1.9; }
+  .pdf-page .t1 { font-size:15px; font-weight:700; text-align:center; margin-bottom:4px; color:#111; }
+  .pdf-page .t2 { font-size:10.5px; text-align:center; color:#888; margin-bottom:14px; letter-spacing:1px; }
+  .pdf-page .h { font-weight:700; font-size:11.5px; margin:10px 0 4px; color:#111; }
+  .pdf-page p { text-indent:2em; color:#444; }
+  .pdf-page table { width:100%; border-collapse:collapse; margin:8px 0; font-size:10px; }
+  .pdf-page th, .pdf-page td { border:1px solid #bbb; padding:3px 5px; }
+  .pdf-page th { background:#f2f2f2; font-weight:600; }
+  .ph { height:40px; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:11px; }
+
+  /* Word 简易渲染区 */
+  .docx-stage { height:430px; background:#f3f5fa; padding:0; overflow:hidden; display:flex; flex-direction:column; }
+  .banner { background:#fffaf0; border-bottom:1px solid #fbe3b3; color:#92400e; font-size:12px; padding:8px 14px; display:flex; align-items:center; gap:8px; }
+  .banner a { color:#b45309; text-decoration:underline; cursor:pointer; }
+  .docx-scroll { flex:1; overflow:auto; padding:18px; display:flex; justify-content:center; }
+  .docx-page { width:620px; background:#fff; box-shadow:0 2px 10px rgba(15,23,42,.14); padding:40px 56px; font-size:13px; color:#333; line-height:1.95; }
+  .docx-page .dt { font-size:17px; font-weight:700; text-align:center; margin-bottom:6px; }
+  .docx-page .dm { text-align:center; color:#999; font-size:11px; margin-bottom:18px; }
+  .docx-page .dh { font-weight:700; margin:14px 0 6px; }
+  .docx-page table { width:100%; border-collapse:collapse; margin:10px 0; font-size:12px; }
+  .docx-page th, .docx-page td { border:1px solid #ccc; padding:5px 8px; }
+  .docx-page th { background:#f5f5f5; }
+
+  /* 仅下载兜底 */
+  .unsupported { height:430px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; background:#fff; }
+  .unsupported .big { font-size:40px; }
+  .unsupported .txt { font-size:14px; color:#1f2d50; font-weight:600; }
+  .unsupported .hint { font-size:12.5px; color:#8a93a6; max-width:460px; text-align:center; line-height:1.8; }
+  .btn { height:34px; padding:0 18px; border-radius:4px; border:1px solid #dde5f2; background:#fff; font-size:13px; color:#3b4867; cursor:pointer; }
+  .btn-primary { background:#3d6df5; border-color:#3d6df5; color:#fff; font-weight:500; }
+
+  .note { background:#ecf0fe; border:1px solid #c9d7fd; border-radius:8px; padding:11px 15px; font-size:12.5px; color:#2b4a9e; line-height:1.8; margin:6px 0 4px; }
+  .spec { background:#fff; border:1px solid #e9eef8; border-radius:8px; padding:12px 16px; font-size:12.5px; color:#5a6478; line-height:1.9; margin-top:6px; }
+  .spec b { color:#1f2d50; }
+</style>
+</head>
+<body>
+
+<h1>文档预览弹窗 — 四种形态</h1>
+<div class="sub">同一份数据，预览渲染方式由「文档类型 × 当前引擎」决定；弹窗只负责把结果如实呈现，不给用户「文件坏了」的错觉。</div>
+
+<div class="note">
+  <b>取流方式</b>：axios <code>arraybuffer</code>（带 Authorization 头）→ 交给渲染器；<b>不用 iframe、不把 token 拼进 URL</b>（避免 token 进日志/历史/Referrer）。
+  预览器均为异步加载，首屏包体不受影响。
+</div>
+
+<!-- 1. PDF -->
+<div class="case-tag">形态 A ｜ PDF 文档（pdf.js 原生渲染）</div>
+<div class="case-desc">工具栏：上一页 / 下一页 / 页码跳转 / 缩放 / 适宽 / 下载 / 关闭。滚轮与键盘 PageUp/PageDown 可用。</div>
+<div class="dlg">
+  <div class="dlg-head">
+    <div class="dlg-title">星辰X7Pro-产品需求说明书-v2.pdf</div>
+    <span class="badge badge-pdf">PDF 原生</span>
+    <span class="sp"></span>
+    <div class="icon-btn" title="下载">⤓</div>
+    <div class="icon-btn" title="关闭">✕</div>
+  </div>
+  <div class="pdf-bar">
+    <button class="pbtn">‹</button>
+    <input class="page-no" value="1">
+    <span>/ 30</span>
+    <button class="pbtn">›</button>
+    <span class="divider"></span>
+    <button class="pbtn">−</button>
+    <button class="pbtn" style="min-width:64px">100%</button>
+    <button class="pbtn">＋</button>
+    <button class="pbtn on">适宽</button>
+  </div>
+  <div class="pdf-stage">
+    <div class="pdf-page">
+      <div class="t1">星辰 X7 Pro 产品需求说明书</div>
+      <div class="t2">VERSION 2.0　·　2026-10-28　·　内部资料</div>
+      <div class="h">1. 项目背景</div>
+      <p>本期目标是完成 X7 Pro 旗舰机型的首发版本交付，覆盖商品建档、库存联动与售后工单三条主链路。</p>
+      <div class="h">2. 功能范围</div>
+      <table>
+        <tr><th style="width:30%">模块</th><th>核心能力</th><th style="width:22%">负责人</th></tr>
+        <tr><td>商品中心</td><td>多规格 SKU、图片与说明书附件</td><td>张三</td></tr>
+        <tr><td>库存中心</td><td>下单条件扣减、超卖拦截</td><td>李四</td></tr>
+        <tr><td>售后工单</td><td>换货/维修/退款三段流转</td><td>王五</td></tr>
+      </table>
+      <div class="h">3. 验收口径</div>
+      <p>核心链路压测 200 QPS 下 P99 ≤ 300ms；附件上传成功率 ≥ 99.5%。</p>
+      <div class="ph">— 第 1 页 / 共 30 页 —</div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Word 高保真 -->
+<div class="case-tag">形态 B ｜ Word 文档 · 引擎 = LibreOffice（高保真）</div>
+<div class="case-desc">服务端把 .docx 转成 PDF（首次 3-8 秒，之后命中缓存 <100ms），前端仍用 pdf.js 渲染——版式、页眉页脚、表格合并与原文件一致。</div>
+<div class="dlg">
+  <div class="dlg-head">
+    <div class="dlg-title">客户验收单-2026Q3.docx</div>
+    <span class="badge badge-hi">高保真 · LibreOffice</span>
+    <span class="sp"></span>
+    <div class="icon-btn" title="下载">⤓</div>
+    <div class="icon-btn" title="关闭">✕</div>
+  </div>
+  <div class="pdf-bar">
+    <button class="pbtn">‹</button>
+    <input class="page-no" value="1">
+    <span>/ 6</span>
+    <button class="pbtn">›</button>
+    <span class="divider"></span>
+    <button class="pbtn">−</button>
+    <button class="pbtn" style="min-width:64px">100%</button>
+    <button class="pbtn">＋</button>
+    <button class="pbtn on">适宽</button>
+    <span class="sp" style="flex:1"></span>
+    <span style="color:#9fa8bd;font-size:11.5px">已转换并缓存 · 用时 0.02s</span>
+  </div>
+  <div class="pdf-stage">
+    <div class="pdf-page">
+      <div class="t1">客户验收单</div>
+      <div class="t2">NO. YS-2026Q3-014　·　验收日期 2026-10-29</div>
+      <table>
+        <tr><th style="width:26%">客户名称</th><td>杭州星辰科技有限公司</td></tr>
+        <tr><th>项目名称</th><td>X7 Pro 旗舰机电商城系统</td></tr>
+        <tr><th>验收结论</th><td>☑ 通过　□ 有条件通过　□ 不通过</td></tr>
+      </table>
+      <div class="h">验收项明细</div>
+      <table>
+        <tr><th style="width:46%">检查项</th><th style="width:18%">结果</th><th>备注</th></tr>
+        <tr><td>商品建档与附件上传</td><td>通过</td><td>图片/说明书均可上传</td></tr>
+        <tr><td>订单与库存联动</td><td>通过</td><td>并发 200 无超卖</td></tr>
+        <tr><td>售后工单流转</td><td>通过</td><td>三段状态机正确</td></tr>
+      </table>
+      <p style="text-indent:0;margin-top:14px">客户代表签字：____________________　　日期：2026-10-29</p>
+      <div class="ph">— 第 1 页 / 共 6 页 —</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Word 简易渲染 -->
+<div class="case-tag">形态 C ｜ Word 文档 · 引擎 = 浏览器（简易渲染）</div>
+<div class="case-desc">未安装 LibreOffice 的部署环境走 docx-preview，在浏览器里排版。顶部黄条如实说明局限，避免用户误判「文件坏了」。</div>
+<div class="dlg">
+  <div class="dlg-head">
+    <div class="dlg-title">技术方案评审记录.docx</div>
+    <span class="badge badge-simple">简易渲染 · 浏览器</span>
+    <span class="sp"></span>
+    <div class="icon-btn" title="下载">⤓</div>
+    <div class="icon-btn" title="关闭">✕</div>
+  </div>
+  <div class="docx-stage">
+    <div class="banner">
+      ⚠ 当前为浏览器简易渲染，页眉页脚、表格合并、嵌入对象可能与原件有差异。<a>需要高保真？</a>请让管理员安装 LibreOffice 并配置 <code>doc.preview.engine=auto</code>。
+    </div>
+    <div class="docx-scroll">
+      <div class="docx-page">
+        <div class="dt">技术方案评审记录</div>
+        <div class="dm">评审时间 2026-10-29 14:00　·　参与人：张三、李四、王五</div>
+        <div class="dh">一、评审议题</div>
+        <p style="text-indent:2em">V6.9 平台文档中心是否引入服务端文档转换，以及转换引擎的默认策略。</p>
+        <div class="dh">二、结论</div>
+        <table>
+          <tr><th style="width:32%">事项</th><th style="width:20%">结论</th><th>说明</th></tr>
+          <tr><td>默认引擎</td><td>auto</td><td>探测到 soffice 则高保真，否则浏览器</td></tr>
+          <tr><td>转换并发</td><td>2</td><td>每次独立 profile，避免单实例锁互杀</td></tr>
+          <tr><td>缓存键</td><td>id+size+mtime</td><td>记录不可变，重传即新行</td></tr>
+        </table>
+        <div class="dh">三、遗留问题</div>
+        <p style="text-indent:2em">老版本 .doc 在浏览器引擎下无法渲染，统一降级为「仅下载」。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. 仅下载 -->
+<div class="case-tag">形态 D ｜ 不支持预览（自动降级）</div>
+<div class="case-desc">.doc（97-2003 二进制）在浏览器引擎下、或引擎被强制指为 libreoffice 但探测不到 soffice 时，给出明确原因与下载入口，绝不白屏。</div>
+<div class="dlg">
+  <div class="dlg-head">
+    <div class="dlg-title">旧版合同模板（97-2003）.doc</div>
+    <span class="sp"></span>
+    <div class="icon-btn" title="关闭">✕</div>
+  </div>
+  <div class="unsupported">
+    <div class="big">📄</div>
+    <div class="txt">该文档暂不支持在线预览</div>
+    <div class="hint">老版本 .doc 需要服务端转换（LibreOffice）才能预览；当前引擎为「浏览器简易渲染」，只能读取 .docx。你可以直接下载查看。</div>
+    <button class="btn btn-primary">⤓ 下载文档（512 KB）</button>
+  </div>
+</div>
+
+<div class="spec">
+  <b>交互约定</b><br>
+  · 弹窗尺寸 80vw × 85vh，标题栏固定、内容区独立滚动；ESC 关闭，遮罩点击不关闭（防误触）<br>
+  · 首次打开显示 loading（「首次转换约需 3-8 秒」），转换失败自动回退浏览器引擎并提示一次<br>
+  · 「预览方式」徽标与列表列同源（同一个 <code>previewMode</code> 字段），不重复判断<br>
+  · 下载按钮始终可用：预览失败也一定能拿到原件
+</div>
+
+</body>
+</html>

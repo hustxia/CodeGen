@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V5.1 审计列自动补齐 - 流水线页面效果图</title>
+<style>
+  body { font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; margin: 0; padding: 24px; color: #303133; }
+  .page { max-width: 960px; margin: 0 auto; }
+  .mock-note { background: #ecf5ff; border: 1px solid #a0cfff; border-radius: 4px; padding: 8px 14px; font-size: 13px; color: #409eff; margin-bottom: 16px; }
+  .card { background: #fff; border-radius: 4px; box-shadow: 0 2px 12px rgba(0,0,0,.06); padding: 20px; margin-bottom: 16px; }
+  .card h3 { margin: 0 0 14px; font-size: 15px; }
+  .progress-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .sys-name { font-size: 16px; font-weight: 600; margin-right: 8px; }
+  .meta { color: #909399; font-size: 12px; margin-left: 8px; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 3px; border: 1px solid; line-height: 18px; }
+  .tag-warning { color: #e6a23c; background: #fdf6ec; border-color: #f5dab1; }
+  .tag-success { color: #67c23a; background: #f0f9eb; border-color: #c2e7b0; }
+  .tag-info { color: #909399; background: #f4f4f5; border-color: #d3d4d6; }
+  .btn { display: inline-block; font-size: 12px; padding: 7px 14px; border-radius: 4px; border: 1px solid #dcdfe6; background: #fff; color: #606266; cursor: pointer; }
+  .btn-primary { background: #409eff; border-color: #409eff; color: #fff; }
+  .btn-primary.disabled { background: #a0cfff; border-color: #a0cfff; cursor: not-allowed; }
+  .alert { border-radius: 4px; padding: 8px 16px; font-size: 13px; margin-bottom: 12px; line-height: 1.8; }
+  .alert-success { background: #f0f9eb; color: #67c23a; border: 1px solid #e1f3d8; }
+  .alert-info { background: #f4f4f5; color: #909399; border: 1px solid #e9e9eb; }
+  .badge { display: inline-block; font-size: 12px; padding: 0 8px; border-radius: 3px; line-height: 20px; margin: 0 4px 4px 0; }
+  .badge-patched { background: #f0f9eb; color: #67c23a; border: 1px solid #c2e7b0; }
+  .badge-skipped { background: #f4f4f5; color: #909399; border: 1px solid #d3d4d6; }
+  .lint-card table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .lint-card th, .lint-card td { border: 1px solid #ebeef5; padding: 8px 10px; text-align: left; }
+  .lint-card th { background: #fafafa; color: #909399; font-weight: 500; }
+  .lint-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .lint-head .title { font-size: 14px; font-weight: 600; }
+  .hint { color: #909399; font-size: 12px; }
+  code { background: #f4f4f5; border-radius: 3px; padding: 1px 5px; font-size: 12px; color: #476582; }
+  .divider { border-top: 1px dashed #dcdfe6; margin: 16px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="mock-note">V5.1 效果图（静态示意）：审计列「有则跳过、没有自动补齐」——两处 UI 变化：① 建库结果补齐徽标；② 构建前「审计列检查」卡片 + 一键补齐。</div>
+
+  <!-- 变化①：手动 DDL 建库成功后的补齐徽标 -->
+  <div class="card">
+    <h3>变化① 建库结果区：补齐徽标（手动 DDL 模式，粘贴老库导出后点「建库建表」成功）</h3>
+    <div class="alert alert-success">
+      <b>建库成功</b>：库 <code>wms_legacy</code>，共 3 张表，已导入表配置。
+      审计列补齐：<span class="badge badge-patched">biz_order 补 create_time/update_time/create_by/update_by/deleted</span><span class="badge badge-patched">biz_order_item 补 5 列</span><span class="badge badge-skipped">biz_warehouse 六列全齐，跳过</span>
+    </div>
+    <div class="hint">原文报错「DDL 缺少审计列：… 补齐后重试」不再出现；改写规则只增不改（业务列、类型、注释原样保留）。</div>
+  </div>
+
+  <!-- 变化②：第③步 lint 卡片 + 一键补齐 -->
+  <div class="card">
+    <div class="progress-head">
+      <div>
+        <span class="sys-name">仓库管理系统</span>
+        <span class="tag tag-warning">待构建</span>
+        <span class="meta">PPL20261024153000 · 库 wms_new · 后端 :8210 · 前端 :9610</span>
+      </div>
+      <div>
+        <span class="btn btn-primary">开始构建</span>
+        <span class="btn">刷新</span>
+      </div>
+    </div>
+
+    <!-- 新增：审计列检查卡片 -->
+    <div class="card lint-card" style="box-shadow:none;border:1px solid #ebeef5;margin-bottom:12px;">
+      <div class="lint-head">
+        <span class="title">审计列检查（目标库 wms_new）</span>
+        <div>
+          <span class="btn">重新检查</span>
+          <span class="btn btn-primary">一键补齐</span>
+          <span class="btn btn-primary disabled" title="全部合规时禁用">一键补齐（已合规）</span>
+        </div>
+      </div>
+      <table>
+        <tr><th style="width:180px;">表名</th><th>缺失列</th><th style="width:120px;">补齐结果</th></tr>
+        <tr>
+          <td>stock_record</td>
+          <td><code>create_by</code> <code>update_by</code> <code>deleted</code></td>
+          <td><span class="tag tag-success">已补 3 列</span></td>
+        </tr>
+        <tr>
+          <td>stock_snapshot</td>
+          <td><code>deleted</code></td>
+          <td><span class="tag tag-info">已存在（并发跳过）</span></td>
+        </tr>
+        <tr>
+          <td>stock_lock</td>
+          <td>—</td>
+          <td><span class="tag tag-success">合规</span></td>
+        </tr>
+      </table>
+      <div class="hint" style="margin-top:8px;">
+        补齐 = 逐表执行 ALTER TABLE（只加缺列，不动已有列）；执行前逐列查 information_schema 保证幂等；单表失败列出原因并继续其余表；补齐后自动复检，全部合规即可「开始构建」。
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="hint">原三轨步骤条（主流程 / 后端轨 / 前端轨）不变，此处省略。</div>
+  </div>
+</div>
+</body>
+</html>

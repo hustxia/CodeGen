@@ -1,0 +1,57 @@
+# V7.4 P0-2：CI 门禁示例
+#
+# 说明：本文件是 GitHub Actions 的参考实现，唯一真源是 scripts/verify.sh ——
+# 本地与 CI 跑同一份命令，避免「本地绿、CI 红」的两套事实。
+# 若仓库托管在 Gitee：Gitee Go 的流水线直接调用 `bash scripts/verify.sh --with-db` 即可，
+# 不要照抄本文件里的 action 语法。
+name: verify
+
+on:
+  push:
+    branches: [master, dev, xyh_dev]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 空库冒烟要连本机 MySQL：127.0.0.1:3306 / root / root
+      - name: 门禁（含空库冒烟）
+        env:
+          CG_DB_PASSWORD: root
+          CG_DB_HOST: 127.0.0.1
+        run: bash scripts/verify.sh --with-db
+
+      - name: 归档失败日志与矩阵产物
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-logs
+          path: |
+            /tmp/verify-*.log
+            target/surefire-reports/
+            target/gen-matrix/manifest.json
+          retention-days: 7

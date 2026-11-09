@@ -1,0 +1,590 @@
+<template>
+  <div class="app-container">
+    <!-- <gen:begin key="vue-template"> -->
+    <!-- 页头：一眼看清「我在哪个页面、这页能干什么」 -->
+    <div class="page-head">
+      <div class="page-head__main">
+        <h2 class="page-title">商品</h2>
+        <p class="page-desc">维护商品数据，可按条件筛选、编辑与导出</p>
+      </div>
+      <div class="page-head__meta">
+        <span class="meta-pill">{{ total }} 条记录</span>
+      </div>
+    </div>
+    <!-- 筛选区 -->
+    <el-card shadow="never" class="filter-card">
+      <el-form :inline="true" :model="query" @submit.native.prevent>
+        <el-form-item label="商品名称">
+          <el-input v-model="query.goodsName" placeholder="商品名称" clearable @keyup.enter.native="handleSearch" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="query.status" placeholder="请选择状态" clearable style="width: 160px">
+            <el-option v-for="d in dicts.sys_status || []" :key="d.value" :label="d.label" :value="d.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="所属部门">
+          <el-select v-model="query.deptId" placeholder="请选择所属部门" clearable style="width: 160px">
+            <el-option v-for="d in []" :key="d.value" :label="d.label" :value="d.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="价格">
+          <el-input-number v-model="query.price" controls-position="right" style="width: 160px" />
+        </el-form-item>
+        <el-form-item>
+          <el-button v-hasPermi="['demo_goods:query']" type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
+          <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 列表 -->
+    <el-card shadow="never" class="table-card">
+      <div slot="header" class="card-header">
+        <div class="card-title">
+          <span class="title">商品</span>
+          <span class="subtitle">共 {{ total }} 条</span>
+        </div>
+        <div class="card-actions">
+          <el-button v-hasPermi="['demo_goods:add']" type="primary" icon="el-icon-plus" size="small" @click="openDialog()">新增商品</el-button>
+          <el-button icon="el-icon-download" size="small" @click="handleExport">导出</el-button>
+        </div>
+      </div>
+
+      <el-table
+        v-loading="loading"
+        :data="list"
+        class="data-table"
+        stripe
+        header-cell-class-name="table-head-cell"
+        empty-text="暂无数据"
+      >
+        <el-table-column prop="id" label="ID" width="180" />
+        <el-table-column prop="goodsName" label="商品名称" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="status" label="状态" min-width="130" show-overflow-tooltip
+          :formatter="(row) => dictText('sys_status', row.status)" />
+        <el-table-column prop="deptId" label="所属部门" min-width="130" show-overflow-tooltip
+          :formatter="(row) => refText('deptId', row.deptId)" />
+        <el-table-column prop="price" label="价格" width="110" align="right" show-overflow-tooltip />
+        <el-table-column prop="updateTime" label="更新时间" width="170" align="center" />
+        <el-table-column label="操作" width="278" fixed="right" align="center">
+          <template slot-scope="{ row }">
+            <el-button type="text" @click="openDetail(row)">详情</el-button>
+            <el-button type="text" @click="handlePrintRow(row)">打印</el-button>
+            <el-button v-hasPermi="['demo_goods:edit']" type="text" @click="openDialog(row)">编辑</el-button>
+            <el-button v-hasPermi="['demo_goods:remove']" type="text" class="danger-btn" @click="handleDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-pagination
+        class="pagination"
+        background
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        :page-size="query.size"
+        :current-page.sync="query.page"
+        @size-change="handleSizeChange"
+        @current-change="fetchList"
+      />
+    </el-card>
+
+    <!-- 新增/编辑弹窗 -->
+    <el-dialog :title="form.id ? '编辑商品' : '新增商品'" :visible.sync="dialogVisible" width="560px" top="6vh" class="form-dialog">
+      <el-form ref="form" :model="form" :rules="rules" label-width="110px">
+        <el-form-item label="商品名称" prop="goodsName">
+          <el-input v-model="form.goodsName" placeholder="请输入商品名称" />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-radio-group v-model="form.status">
+            <el-radio v-for="d in dicts.sys_status || []" :key="d.value" :label="d.value">{{ d.label }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="所属部门" prop="deptId">
+          <el-select v-model="form.deptId" filterable remote clearable placeholder="输入关键字搜索所属部门"
+            :remote-method="kw => searchRef('deptId', 'sys_dept', 'dept_name', kw)"
+            :loading="refLoading['deptId']" style="width: 100%">
+            <el-option v-for="o in refOptions['deptId'] || []" :key="o.id" :label="o.label" :value="o.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="价格" prop="price">
+          <el-input-number v-model="form.price" controls-position="right" style="width: 100%" />
+        </el-form-item>
+      </el-form>
+
+
+      <div slot="footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 详情抽屉（只读）。主子表：宽抽屉 + el-tabs，tab1 主表字段，tab2..N 每张明细一张只读表；
+         数据复用 /with-children 一次拉全，不逐 tab 发请求 -->
+    <el-drawer title="商品详情" :visible.sync="detailVisible" size="420px">
+      <div class="detail-body">
+        <div class="detail-row">
+          <span class="detail-label">ID</span>
+          <span class="detail-value">{{ detail.id }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">商品名称</span>
+          <span class="detail-value">{{ detail.goodsName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">状态</span>
+          <span class="detail-value">{{ dictText('sys_status', detail.status) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">所属部门</span>
+          <span class="detail-value">{{ refText('deptId', detail.deptId) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">价格</span>
+          <span class="detail-value">{{ detail.price }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">创建时间</span>
+          <span class="detail-value">{{ detail.createTime }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">更新时间</span>
+          <span class="detail-value">{{ detail.updateTime }}</span>
+        </div>
+      </div>
+    </el-drawer>
+
+    <!-- <gen:end key="vue-template"> -->
+  </div>
+</template>
+
+<script>
+import {
+  getDemoGoodsList,
+  getDemoGoodsOptions,
+  exportDemoGoods,
+  createDemoGoods,
+  updateDemoGoods,
+  deleteDemoGoods
+} from '@/api/goods'
+// 字典兜底、唯一性查重、导入失败明细下载都直接用通用 request，不依赖宿主是否提供专用 api 模块
+import request from '@/utils/request'
+
+const defaultForm = () => ({
+  id: undefined,
+  goodsName: '',
+  status: '',
+  deptId: '',
+  price: undefined,
+})
+
+export default {
+  name: 'DemoGoods',
+  data() {
+    return {
+      // <gen:begin key="vue-data">
+      loading: false,
+      list: [],
+      total: 0,
+      query: { page: 1, size: 10, goodsName: '', status: undefined, deptId: undefined, price: undefined },
+      dialogVisible: false,
+      submitting: false,
+      detailVisible: false,
+      detail: {},
+      refOptions: {},
+      refLoading: {},
+      // 列表/详情里把 xxxId 显示成名称用的字典：{ 字段名: { id: label } }
+      refLabels: {},
+      dicts: { sys_status: [] },
+      rules: {
+      },
+      form: defaultForm()
+      // <gen:end key="vue-data">
+    }
+  },
+  created() {
+    this.loadDicts()
+    this.loadRefLabels()
+    this.fetchList()
+  },
+  methods: {
+    // <gen:begin key="vue-methods">
+    async loadDicts() {
+      const codes = ['sys_status']
+      await Promise.all(codes.map(async code => {
+        try {
+          // 直接走通用 request，不依赖宿主工程是否提供 @/api/dict；
+          // 宿主没有字典接口时这里会抛错，下面 catch 把选项降级为空数组，页面照常可用
+          const res = await request({ url: '/api/demo/system/dict/data/type/' + code, method: 'get' })
+          this.$set(this.dicts, code, (res && res.data) || [])
+        } catch (e) {
+          this.$set(this.dicts, code, [])
+        }
+      }))
+    },
+    dictText(code, value) {
+      const hit = (this.dicts[code] || []).find(d => String(d.value) === String(value))
+      return hit ? hit.label : (value === undefined || value === null ? '' : value)
+    },
+    async fetchList() {
+      this.loading = true
+      try {
+        const res = await getDemoGoodsList(this.query)
+        this.list = res.data.list || []
+        this.total = res.data.total || 0
+      } catch (e) {
+        this.list = []
+        this.total = 0
+      } finally {
+        this.loading = false
+      }
+    },
+    handleSearch() {
+      this.query.page = 1
+      this.fetchList()
+    },
+    handleReset() {
+      this.query = { page: 1, size: this.query.size, goodsName: '', status: '', deptId: '', price: undefined }
+      this.fetchList()
+    },
+    handleSizeChange(size) {
+      this.query.size = size
+      this.query.page = 1
+      this.fetchList()
+    },
+    async searchRef(field, refTable, label, keyword) {
+      this.$set(this.refLoading, field, true)
+      try {
+        const res = await getDemoGoodsOptions(refTable, label, keyword)
+        this.$set(this.refOptions, field, res.data || [])
+      } catch (e) {
+        this.$set(this.refOptions, field, [])
+      } finally {
+        this.$set(this.refLoading, field, false)
+      }
+    },
+    initRefs() {
+      this.searchRef('deptId', 'sys_dept', 'dept_name', '')
+    },
+    /**
+     * 列表里的 xxxId 显示成名称。
+     * 关联表通常是字典/客户/产品这类小表，一次性拉成 { id: 名称 } 比逐行查省得多；
+     * 拉不到就退回显示原始 ID，页面不会因为关联表没权限/没数据而白屏。
+     */
+    loadRefLabels() {
+      this.fetchRefLabels('deptId', 'sys_dept', 'dept_name')
+    },
+    async fetchRefLabels(field, refTable, label) {
+      try {
+        const res = await getDemoGoodsOptions(refTable, label, '')
+        const map = {}
+        ;(res.data || []).forEach(o => { map[String(o.id)] = o.label })
+        this.$set(this.refLabels, field, map)
+      } catch (e) {
+        this.$set(this.refLabels, field, {})
+      }
+    },
+    /**
+     * 把 xxxId 显示成名称：主表列与子表明细列都会用到，定义跟随 hasRefHelper
+     * （主表无引用列但子表外键有引用时也必须存在，否则明细行渲染崩溃）。
+     */
+    refText(field, id) {
+      if (id === null || id === undefined || id === '') {
+        return ''
+      }
+      const map = this.refLabels[field]
+      return (map && map[String(id)]) || id
+    },
+    openDetail(row) {
+      this.detail = row || {}
+      this.detailVisible = true
+    },
+    openDialog(row) {
+      this.form = row ? { ...defaultForm(), ...row } : defaultForm()
+      this.dialogVisible = true
+      this.initRefs()
+      this.$nextTick(() => {
+        if (this.$refs.form) this.$refs.form.clearValidate()
+      })
+    },
+    /**
+     * 打印单据：跳转独立打印页（无后台导航壳，window.print 直出 A4）
+     */
+    handlePrintRow(row) {
+      this.$router.push('/print/goods/' + row.id)
+    },
+    async submitForm() {
+      const valid = await this.$refs.form.validate().catch(() => false)
+      if (!valid) return
+      this.submitting = true
+      try {
+        if (this.form.id) {
+          await updateDemoGoods(this.form.id, this.form)
+        } else {
+          await createDemoGoods(this.form)
+        }
+        this.$message.success(this.form.id ? '更新成功' : '创建成功')
+        this.dialogVisible = false
+        this.fetchList()
+      } catch (e) { /* 拦截器已提示 */ } finally {
+        this.submitting = false
+      }
+    },
+    handleDelete(row) {
+      this.$confirm(`确定删除该商品吗？`, '提示', { type: 'warning' })
+        .then(async () => {
+          await deleteDemoGoods(row.id)
+          this.$message.success('删除成功')
+          if (this.list.length === 1 && this.query.page > 1) this.query.page--
+          this.fetchList()
+        })
+        .catch(() => {})
+    },
+    async handleExport() {
+      try {
+        const res = await exportDemoGoods(this.query)
+        const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = '商品.xlsx'
+        a.click()
+        window.URL.revokeObjectURL(url)
+      } catch (e) { /* 拦截器已提示 */ }
+    }
+    // <gen:end key="vue-methods">
+    // ===== 以下为手写区：自定义方法写在这里，重新生成不会被覆盖 =====
+  }
+}
+</script>
+
+<style scoped>
+/* <gen:begin key="vue-style"> */
+.app-container {
+  padding: 0;
+  background: transparent;
+}
+
+/* ===== 页头 ===== */
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  letter-spacing: 0.2px;
+}
+
+.page-desc {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #8a94a6;
+}
+
+.page-head__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.meta-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: #eef2ff;
+  color: #4d7cfe;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ===== 卡片 ===== */
+.filter-card,
+.table-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 20px rgba(16, 24, 40, 0.05);
+}
+
+.filter-card {
+  margin-bottom: 16px;
+}
+
+.filter-card >>> .el-card__body {
+  padding: 18px 18px 4px;
+}
+
+.filter-card >>> .el-form-item {
+  margin-right: 16px;
+  margin-bottom: 14px;
+}
+
+.filter-card >>> .el-form-item__label {
+  color: #5a6478;
+  font-size: 13px;
+}
+
+.table-card >>> .el-card__header {
+  padding: 16px 18px;
+  border-bottom: 1px solid #eef1f7;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  display: flex;
+  align-items: baseline;
+}
+
+.card-title .title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.card-title .subtitle {
+  margin-left: 10px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.card-actions >>> .el-button + .el-button {
+  margin-left: 8px;
+}
+
+/* ===== 表格 ===== */
+.data-table >>> .table-head-cell {
+  background: #f7f9fc !important;
+  color: #5c6270;
+  font-weight: 600;
+}
+
+.data-table >>> td {
+  padding: 11px 0;
+}
+
+.data-table >>> .el-table__row:hover > td {
+  background: #f5f9ff;
+}
+
+.data-table >>> .el-button--text {
+  padding: 4px 6px;
+}
+
+/* ===== 分页 ===== */
+.pagination {
+  margin-top: 18px;
+  text-align: right;
+}
+
+.danger-btn {
+  color: #f56c6c;
+}
+
+.child-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.child-tip {
+  color: #909399;
+  font-size: 12px;
+}
+
+.import-summary {
+  margin-bottom: 8px;
+}
+
+.import-tpl-tip {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #606266;
+}
+
+.import-summary .ok {
+  color: #67c23a;
+}
+
+.import-summary .bad {
+  color: #f56c6c;
+}
+
+.import-fail-box {
+  max-height: 200px;
+  overflow: auto;
+  padding: 8px;
+  background: #fdf6ec;
+  border-radius: 4px;
+}
+
+.import-fail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.import-fail {
+  color: #f56c6c;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.import-fail-more {
+  color: #909399;
+  font-size: 12px;
+}
+
+.child-table {
+  margin-bottom: 8px;
+}
+
+.detail-body {
+  padding: 0 20px;
+}
+
+.detail-row {
+  display: flex;
+  padding: 8px 0;
+  border-bottom: 1px solid #ebeef5;
+  font-size: 13px;
+}
+
+.detail-label {
+  width: 110px;
+  color: #909399;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  color: #303133;
+  word-break: break-all;
+}
+
+.import-result {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.import-fail {
+  color: #f56c6c;
+}
+</style>
+/* <gen:end key="vue-style"> */

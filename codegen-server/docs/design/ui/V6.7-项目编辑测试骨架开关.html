@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V6.7 测试骨架开关 —— 项目编辑弹窗效果图</title>
+<style>
+  body { font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif; background:#f0f2f5; margin:0; padding:32px; color:#303133; }
+  .dialog { width:640px; background:#fff; border-radius:8px; box-shadow:0 4px 24px rgba(0,0,0,.12); margin:0 auto; overflow:hidden; }
+  .dlg-header { padding:16px 24px; border-bottom:1px solid #ebeef5; font-size:16px; font-weight:600; display:flex; justify-content:space-between; }
+  .dlg-header .close { color:#909399; font-weight:400; cursor:pointer; }
+  .dlg-body { padding:20px 24px; }
+  .form-item { display:flex; margin-bottom:18px; }
+  .label { width:130px; text-align:right; padding-right:12px; line-height:32px; font-size:14px; color:#606266; flex:none; }
+  .label .req { color:#f56c6c; margin-right:4px; }
+  .control { flex:1; line-height:32px; font-size:14px; }
+  .mock-input { border:1px solid #dcdfe6; border-radius:4px; height:32px; line-height:30px; padding:0 12px; color:#909399; background:#f5f7fa; }
+  .tri-row { display:flex; align-items:center; flex-wrap:wrap; row-gap:6px; }
+  .tri-opt { display:flex; align-items:center; margin-right:22px; cursor:pointer; }
+  .radio-dot { width:14px; height:14px; border:1px solid #dcdfe6; border-radius:50%; margin-right:6px; background:#fff; flex:none; }
+  .radio-dot.on { border:5px solid #409eff; }
+  .tri-tip { width:100%; font-size:12px; color:#909399; line-height:1.6; margin:2px 0 0 20px; background:#f4f4f5; border-radius:4px; padding:6px 10px; }
+  .cap { margin-top:20px; border-top:1px dashed #ebeef5; padding-top:14px; font-size:13px; color:#606266; line-height:1.9; }
+  .cap b { color:#303133; }
+  .tag-new { display:inline-block; background:#409eff; color:#fff; font-size:11px; border-radius:3px; padding:1px 6px; margin-left:6px; vertical-align:middle; }
+</style>
+</head>
+<body>
+<div class="dialog">
+  <div class="dlg-header"><span>编辑系统</span><span class="close">✕</span></div>
+  <div class="dlg-body">
+    <div class="form-item">
+      <div class="label"><span class="req">*</span>系统编码</div>
+      <div class="control"><div class="mock-input">mall</div></div>
+    </div>
+    <div class="form-item">
+      <div class="label"><span class="req">*</span>系统名称</div>
+      <div class="control"><div class="mock-input">商城后台</div></div>
+    </div>
+    <div class="form-item">
+      <div class="label">支付能力包</div>
+      <div class="control tri-row">
+        <div class="tri-opt"><span class="radio-dot"></span>未配置(关)</div>
+        <div class="tri-opt"><span class="radio-dot"></span>开启</div>
+        <div class="tri-opt"><span class="radio-dot on"></span>关闭</div>
+      </div>
+    </div>
+    <div class="form-item">
+      <div class="label">文件能力包</div>
+      <div class="control tri-row">
+        <div class="tri-opt"><span class="radio-dot"></span>未配置(关)</div>
+        <div class="tri-opt"><span class="radio-dot on"></span>开启</div>
+        <div class="tri-opt"><span class="radio-dot"></span>关闭</div>
+      </div>
+    </div>
+    <div class="form-item">
+      <div class="label">测试骨架<span class="tag-new">V6.7 新增</span></div>
+      <div class="control tri-row">
+        <div class="tri-opt"><span class="radio-dot on"></span>未配置(开)</div>
+        <div class="tri-opt"><span class="radio-dot"></span>生成</div>
+        <div class="tri-opt"><span class="radio-dot"></span>不生成</div>
+        <div class="tri-tip">开=生成的工程自带集成测试（每业务表一份 CRUD 测试，H2 内存库，打开即可 mvn test 全绿）；不生成=产物无 src/test 目录；未配置=开（默认）</div>
+      </div>
+    </div>
+    <div class="cap">
+      <b>设计说明</b><br>
+      1. 与 V6.3 支付 / V6.5 移动端 / V6.6 文件能力包同一组三态控件（triStateDefs 驱动），仅新增一行，无新页面；<br>
+      2. 本开关默认值与其它能力包相反：未配置=<b>开</b>（测试只加 src/test 目录，零运行时侵入）；<br>
+      3. 选项文案为「未配置(开) / 生成 / 不生成」，与 fileEnabled 的「未配置(关) / 开启 / 关闭」区分默认方向。
+    </div>
+  </div>
+</div>
+</body>
+</html>

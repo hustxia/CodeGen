@@ -1,0 +1,66 @@
+import request, { toPageData } from '@/utils/request'
+
+// 订单接口：demo_order（经网关 /api/demo）
+// <gen:begin key="api-fns">
+function toPageQuery(params) {
+  const { page, size, ...query } = params || {}
+  return { pageNum: page || 1, pageSize: size || 10, ...query }
+}
+export function getDemoOrderList(params) {
+  return request({
+    url: '/api/demo/order/page',
+    method: 'post',
+    data: toPageQuery(params)
+  }).then(toPageData)
+}
+export function getDemoOrderWithChildren(id) {
+  return request({
+    url: `/api/demo/order/${id}/with-children`,
+    method: 'get'
+  })
+}
+
+// payload = { master, ...各子表 {childVar}Rows }；子表字段 null=不动，[]=清空
+export function saveDemoOrderWithChildren(payload) {
+  return request({
+    url: '/api/demo/order/save-with-children',
+    method: 'post',
+    data: payload
+  })
+}
+export function exportDemoOrder(params) {
+  return request({
+    url: '/api/demo/order/export',
+    method: 'post',
+    data: params || {},
+    responseType: 'blob'
+  })
+}
+export function getDemoOrderDetail(id) {
+  return request({
+    url: `/api/demo/order/${id}`,
+    method: 'get'
+  })
+}
+export function createDemoOrder(data) {
+  return request({
+    url: '/api/demo/order',
+    method: 'post',
+    data
+  })
+}
+export function updateDemoOrder(id, data) {
+  return request({
+    url: '/api/demo/order',
+    method: 'put',
+    data: { ...data, id }
+  })
+}
+export function deleteDemoOrder(id) {
+  return request({
+    url: `/api/demo/order/${id}`,
+    method: 'delete'
+  })
+}
+// <gen:end key="api-fns">
+// ===== 以下为手写区：自定义请求写在这里，重新生成不会被覆盖 =====

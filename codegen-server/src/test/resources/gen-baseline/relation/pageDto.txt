@@ -1,0 +1,23 @@
+package com.demo.dto;
+
+import java.math.BigDecimal;
+
+import com.codegen.common.page.PageQuery;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * 商品分页查询 DTO
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class DemoGoodsPageDTO extends PageQuery {
+
+    // <gen:begin key="dto-fields">
+    private String goodsName;
+    private Integer status;
+    private Long deptId;
+    private BigDecimal price;
+    // <gen:end key="dto-fields">
+    // ===== 以下为手写区：写在 gen:end 之后的内容，重新生成不会被覆盖 =====
+}

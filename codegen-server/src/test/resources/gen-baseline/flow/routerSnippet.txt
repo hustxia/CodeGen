@@ -1,0 +1,13 @@
+{
+  path: 'leave',
+  name: 'DemoLeave',
+  component: () => import('@/views/leave/index.vue'),
+  meta: { title: '请假单' }
+},
+{
+  // V4.5 打印单据：无 layout 顶层路由，打印页必须脱离后台导航壳，否则打出来带侧边栏
+  path: '/print/leave/:id',
+  name: 'PrintDemoLeave',
+  component: () => import('@/views/leave/print.vue'),
+  meta: { title: '请假单打印' }
+},

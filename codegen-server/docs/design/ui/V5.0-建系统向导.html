@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V5.0 建系统向导 — UI 效果图</title>
+<style>
+  /* 对齐 codegen-web：Element UI 风格 + --cg-* 语义 token（效果图以默认主色示意） */
+  :root{
+    --cg-primary:#409EFF; --cg-primary-light:#ecf5ff; --cg-success:#67C23A; --cg-warning:#E6A23C;
+    --cg-danger:#F56C6C; --cg-info:#909399;
+    --cg-text:#303133; --cg-text-regular:#606266; --cg-text-secondary:#909399;
+    --cg-bg-page:#f2f3f5; --cg-bg-card:#fff; --cg-border:#e4e7ed; --cg-border-light:#ebeef5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--cg-bg-page);color:var(--cg-text);font-size:14px;padding:20px}
+  .page-title{font-size:18px;font-weight:600;margin-bottom:6px}
+  .page-sub{color:var(--cg-text-secondary);margin-bottom:16px}
+  .card{background:var(--cg-bg-card);border:1px solid var(--cg-border-light);border-radius:4px;padding:20px;margin-bottom:16px}
+  h3{font-size:15px;margin-bottom:12px}
+  h3 .tag{font-size:12px;font-weight:400;color:var(--cg-text-secondary);margin-left:8px}
+
+  /* 步骤条 */
+  .steps{display:flex;justify-content:center;margin:8px 0 24px}
+  .step{display:flex;align-items:center;color:var(--cg-text-secondary);font-size:13px}
+  .step .dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--cg-border);display:flex;align-items:center;justify-content:center;margin-right:6px;font-size:12px;background:#fff}
+  .step.active .dot{border-color:var(--cg-primary);color:var(--cg-primary)}
+  .step.active{color:var(--cg-primary);font-weight:600}
+  .step.done .dot{border-color:var(--cg-success);background:var(--cg-success);color:#fff}
+  .step-line{width:90px;height:2px;background:var(--cg-border);margin:0 10px}
+  .step-line.done{background:var(--cg-success)}
+
+  /* 表单 */
+  .form-row{display:flex;gap:16px;margin-bottom:14px}
+  .field{flex:1}
+  label{display:block;color:var(--cg-text-regular);margin-bottom:6px}
+  label .req{color:var(--cg-danger)}
+  input[type=text],textarea,select{width:100%;border:1px solid var(--cg-border);border-radius:4px;padding:8px 10px;font-size:13px;color:var(--cg-text);background:#fff}
+  input:focus,textarea:focus{outline:none;border-color:var(--cg-primary)}
+  textarea{min-height:64px;resize:vertical}
+  .hint{color:var(--cg-text-secondary);font-size:12px;margin-top:4px}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--cg-border);background:#fff;border-radius:4px;padding:9px 18px;font-size:13px;cursor:pointer;color:var(--cg-text-regular)}
+  .btn.primary{background:var(--cg-primary);border-color:var(--cg-primary);color:#fff}
+  .btn.success{background:var(--cg-success);border-color:var(--cg-success);color:#fff}
+  .btn.danger-plain{color:var(--cg-danger);border-color:#fbc4c4}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn+.btn{margin-left:10px}
+
+  /* 表结构确认表格 */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border-bottom:1px solid var(--cg-border-light);padding:9px 10px;text-align:left}
+  th{background:#f5f7fa;color:var(--cg-text-regular);font-weight:600;white-space:nowrap}
+  .tbl-card{border:1px solid var(--cg-border);border-radius:4px;margin-bottom:14px;overflow:hidden}
+  .tbl-head{display:flex;justify-content:space-between;align-items:center;background:#f5f7fa;padding:9px 12px}
+  .tbl-head b{font-size:13px}
+  .pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px}
+  .pill.blue{background:var(--cg-primary-light);color:var(--cg-primary)}
+  .pill.green{background:#f0f9eb;color:var(--cg-success)}
+  .pill.orange{background:#fdf6ec;color:var(--cg-warning)}
+  .pill.gray{background:#f4f4f5;color:var(--cg-info)}
+  .pill.red{background:#fef0f0;color:var(--cg-danger)}
+  .link{color:var(--cg-primary);cursor:pointer;font-size:13px}
+
+  /* 进度区 */
+  .lane{display:flex;gap:16px}
+  .lane-col{flex:1;border:1px solid var(--cg-border-light);border-radius:4px;padding:14px}
+  .lane-col h4{font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .prog{height:8px;background:var(--cg-border-light);border-radius:4px;overflow:hidden;margin:6px 0 4px}
+  .prog i{display:block;height:100%;background:var(--cg-primary);border-radius:4px}
+  .prog.green i{background:var(--cg-success)}
+  .pct{font-size:12px;color:var(--cg-text-secondary)}
+  .step-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dashed var(--cg-border-light);font-size:13px}
+  .step-row:last-child{border-bottom:none}
+  .step-row .t{flex:1}
+  .step-row .ms{color:var(--cg-text-secondary);font-size:12px}
+  .dot-s{width:8px;height:8px;border-radius:50%;flex:none}
+  .dot-s.ok{background:var(--cg-success)} .dot-s.run{background:var(--cg-primary);animation:blink 1.2s infinite}
+  .dot-s.wait{background:var(--cg-border)} .dot-s.fail{background:var(--cg-danger)}
+  @keyframes blink{50%{opacity:.35}}
+  .logbox{margin-top:10px;background:#1e1e28;color:#cdd3e0;font-family:Consolas,monospace;font-size:12px;border-radius:4px;padding:10px 12px;line-height:1.7}
+  .logbox .ok{color:#8ee08e} .logbox .hl{color:#7fb8ff}
+
+  /* 完成卡片 */
+  .done-card{border:1px solid #c2e7b0;background:#f0f9eb;border-radius:4px;padding:18px;display:flex;align-items:center;gap:18px}
+  .done-icon{width:44px;height:44px;border-radius:50%;background:var(--cg-success);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+  .done-card .u{font-size:16px;font-weight:600;margin-bottom:4px}
+  .done-card .d{color:var(--cg-text-regular);font-size:13px}
+  .done-card .d code{background:#fff;border:1px solid var(--cg-border);border-radius:3px;padding:1px 6px;margin:0 2px}
+  .footer-actions{margin-top:16px;text-align:right}
+  .note{font-size:12px;color:var(--cg-text-secondary);margin-top:14px;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="page-title">建系统向导 <span class="pill blue">V5.0 效果图</span></div>
+<div class="page-sub">代码生成 → 建系统向导 ｜ 三个关键状态：录入 → 表结构确认 → 构建进度/完成</div>
+
+<!-- ===== 状态①：录入 ===== -->
+<div class="card">
+  <h3>① 录入系统信息 <span class="tag">状态：建模中</span></h3>
+  <div class="steps">
+    <div class="step active"><span class="dot">1</span>录入 / AI 建模</div><div class="step-line"></div>
+    <div class="step"><span class="dot">2</span>确认表结构</div><div class="step-line"></div>
+    <div class="step"><span class="dot">3</span>一键构建</div>
+  </div>
+  <div class="form-row">
+    <div class="field">
+      <label>系统名称 <span class="req">*</span></label>
+      <input type="text" value="仓库管理系统" placeholder="如：仓库管理系统">
+    </div>
+    <div class="field">
+      <label>目标数据库 <span class="req">*</span></label>
+      <input type="text" value="wms_new" placeholder="自动按系统名推导，可改">
+      <div class="hint">建库属破坏性操作，执行前会二次确认</div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="field">
+      <label>一句话业务描述 <span class="req">*</span>（AI 建模依据）</label>
+      <textarea placeholder="例：管理入库、出库、库存台账和车辆调度，货品有分类和供应商">管理入库、出库、库存台账和车辆调度，货品有分类和供应商</textarea>
+    </div>
+  </div>
+  <div class="form-row" style="justify-content:flex-end">
+    <button class="btn primary">✦ AI 生成表结构</button>
+    <button class="btn">改为手动粘贴 DDL</button>
+  </div>
+</div>
+
+<!-- ===== 状态②：表结构确认 ===== -->
+<div class="card">
+  <h3>② 确认表结构 <span class="tag">AI 建模结果 · 可编辑 · 确认后建库建表</span></h3>
+  <div class="steps">
+    <div class="step done"><span class="dot">✓</span>录入 / AI 建模</div><div class="step-line done"></div>
+    <div class="step active"><span class="dot">2</span>确认表结构</div><div class="step-line"></div>
+    <div class="step"><span class="dot">3</span>一键构建</div>
+  </div>
+  <div style="margin-bottom:10px">
+    <span class="pill orange">AI 建议以人工确认为准</span>
+    <span class="pill gray">审计列（create_time/update_time/create_by/update_by/deleted）已自动附加</span>
+    <span class="link" style="margin-left:8px">+ 添加表</span>
+  </div>
+
+  <div class="tbl-card">
+    <div class="tbl-head"><b>wms_goods <span style="font-weight:400;color:var(--cg-text-secondary)">｜货品</span></b><span><span class="pill green">6 业务列</span>&nbsp;<span class="link">编辑列</span> · <span class="link" style="color:var(--cg-danger)">删表</span></span></div>
+    <table>
+      <tr><th>列名</th><th>类型</th><th>注释</th><th>主键</th></tr>
+      <tr><td>id</td><td>bigint</td><td>主键</td><td><span class="pill blue">PK</span></td></tr>
+      <tr><td>goods_name</td><td>varchar(64)</td><td>货品名称</td><td></td></tr>
+      <tr><td>category_id</td><td>bigint</td><td>分类（→wms_category）</td><td></td></tr>
+      <tr><td>supplier_id</td><td>bigint</td><td>供应商（→wms_supplier）</td><td></td></tr>
+      <tr><td>price</td><td>decimal(12,2)</td><td>参考单价</td><td></td></tr>
+      <tr><td style="color:var(--cg-text-secondary);font-style:italic" colspan="4">… create_time / update_time / create_by / update_by / deleted（审计列自动附加）</td></tr>
+    </table>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-head"><b>wms_stock_in <span style="font-weight:400;color:var(--cg-text-secondary)">｜入库单</span></b><span><span class="pill green">7 业务列</span>&nbsp;<span class="link">编辑列</span> · <span class="link" style="color:var(--cg-danger)">删表</span></span></div>
+    <table>
+      <tr><th>列名</th><th>类型</th><th>注释</th><th>主键</th></tr>
+      <tr><td>id</td><td>bigint</td><td>主键</td><td><span class="pill blue">PK</span></td></tr>
+      <tr><td>in_no</td><td>varchar(32)</td><td>入库单号</td><td></td></tr>
+      <tr><td>goods_id</td><td>bigint</td><td>货品（→wms_goods）</td><td></td></tr>
+      <tr><td>quantity</td><td>int</td><td>数量</td><td></td></tr>
+      <tr><td>in_time</td><td>datetime</td><td>入库时间</td><td></td></tr>
+    </table>
+  </div>
+  <div class="hint">共 5 张表：wms_category / wms_supplier / wms_goods / wms_stock_in / wms_stock_out</div>
+  <div class="footer-actions">
+    <button class="btn">← 上一步</button>
+    <button class="btn primary">确认并建库建表（5 张表 → wms_new）</button>
+  </div>
+</div>
+
+<!-- ===== 状态③：构建进度（运行中） ===== -->
+<div class="card">
+  <h3>③ 一键构建 <span class="tag">PPL20261024093000 · 运行中</span></h3>
+  <div class="steps">
+    <div class="step done"><span class="dot">✓</span>录入 / AI 建模</div><div class="step-line done"></div>
+    <div class="step done"><span class="dot">✓</span>确认表结构</div><div class="step-line done"></div>
+    <div class="step active"><span class="dot">3</span>一键构建</div>
+  </div>
+  <div class="lane">
+    <div class="lane-col">
+      <h4>主流程</h4>
+      <div class="step-row"><span class="dot-s ok"></span><span class="t">AI 领域建模</span><span class="ms">8s</span></div>
+      <div class="step-row"><span class="dot-s ok"></span><span class="t">建库建表 + 导表（5 张）</span><span class="ms">4s</span></div>
+      <div class="step-row"><span class="dot-s ok"></span><span class="t">前后端骨架（52 文件）</span><span class="ms">9s</span></div>
+      <div class="step-row"><span class="dot-s ok"></span><span class="t">代码生成 + 编译自检</span><span class="ms">23s</span></div>
+      <div class="step-row"><span class="dot-s run"></span><span class="t">健康检查</span><span class="ms">进行中…</span></div>
+    </div>
+    <div class="lane-col">
+      <h4><span class="pill blue">后端</span> ecomFinance-server</h4>
+      <div class="prog green"><i style="width:100%"></i></div><div class="pct">打包+启动 100% · 47s</div>
+      <div class="step-row"><span class="dot-s ok"></span><span class="t">mvn package</span><span class="ms">35s</span></div>
+      <div class="step-row"><span class="dot-s ok"></span><span class="t">java -jar 启动 :8140</span><span class="ms">12s</span></div>
+      <h4 style="margin-top:14px"><span class="pill green">前端</span> ecomFinance-web</h4>
+      <div class="prog"><i style="width:62%"></i></div><div class="pct">依赖安装 62% · npm install…</div>
+      <div class="step-row"><span class="dot-s run"></span><span class="t">npm install</span><span class="ms">2m10s…</span></div>
+      <div class="step-row"><span class="dot-s wait"></span><span class="t">npm run serve :9040</span><span class="ms">等待</span></div>
+    </div>
+  </div>
+  <div class="logbox">
+    <span class="ok">[09:31:42] ✓ CHECK PASS — 86 文件 / 71 Java，0 错误 0 告警</span><br>
+    [09:32:01] mvn -q -DskipTests package …<br>
+    <span class="ok">[09:32:36] ✓ BUILD SUCCESS</span><br>
+    [09:32:37] java -jar ecomFinance-server.jar <span class="hl">--server.port=8140</span>（已隔离 SERVER__PORT 环境变量）<br>
+    [09:32:49] GET /health → <span class="ok">200</span>　后端就绪
+  </div>
+  <div class="footer-actions">
+    <button class="btn danger-plain">■ 停止</button>
+  </div>
+  <div class="note">完成后此区域切换为完成卡片 ↓</div>
+</div>
+
+<!-- ===== 状态③b：完成卡片 ===== -->
+<div class="card">
+  <h3>③b 构建完成 <span class="tag">总耗时 7m12s</span></h3>
+  <div class="done-card">
+    <div class="done-icon">✓</div>
+    <div style="flex:1">
+      <div class="u">仓库管理系统已就绪</div>
+      <div class="d">后端 <code>http://localhost:8140</code>（pid 21840）　前端 <code>http://localhost:9040</code>（pid 21842）　数据库 <code>wms_new</code>（5 张表）</div>
+    </div>
+    <button class="btn primary" style="font-size:14px;padding:11px 22px">打开系统 ↗</button>
+    <button class="btn">停止</button>
+  </div>
+  <div class="note">默认账号 admin / admin123（脚手架种子用户）。历史流水线在下方列表可重进查看。</div>
+</div>
+
+<div class="note" style="margin-top:4px">
+  说明：本图为静态效果图，配色对齐 codegen-web 主题 token（--cg-primary 实际值随运行时主题注入）。双进度条中「后端轨 / 前端轨」在打包阶段并行、健康检查收敛；每步支持失败重试（scaffold / 生成均幂等）。
+</div>
+
+</body>
+</html>

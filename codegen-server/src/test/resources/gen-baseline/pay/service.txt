@@ -1,0 +1,14 @@
+package com.demo.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.demo.entity.DemoFee;
+
+/**
+ * 缴费单 Service
+ */
+public interface DemoFeeService extends IService<DemoFee> {
+
+    // <gen:begin key="service-body">
+    // <gen:end key="service-body">
+    // ===== 以下为手写区：自定义方法写在这里，重新生成不会被覆盖 =====
+}

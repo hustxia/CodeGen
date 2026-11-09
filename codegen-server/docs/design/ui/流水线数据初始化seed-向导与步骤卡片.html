@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V5.2 数据初始化 UI 效果图</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif; }
+  body { background:#f0f2f5; padding:24px; color:#303133; }
+  .page { max-width:860px; margin:0 auto; }
+  h3 { font-size:16px; margin:18px 0 10px; color:#303133; }
+  .card { background:#fff; border-radius:4px; box-shadow:0 1px 4px rgba(0,21,41,.08); padding:20px 24px; margin-bottom:20px; }
+  .card-title { font-size:15px; font-weight:600; border-left:3px solid #409eff; padding-left:10px; margin-bottom:16px; }
+  .form-item { margin-bottom:14px; }
+  .form-item label.k { display:inline-block; width:110px; text-align:right; padding-right:12px; color:#606266; font-size:14px; }
+  .el-radio { display:inline-flex; align-items:center; margin-right:18px; font-size:14px; cursor:pointer; }
+  .el-radio input { display:none; }
+  .el-radio .dot { width:14px; height:14px; border:1px solid #dcdfe6; border-radius:50%; margin-right:6px; position:relative; background:#fff; }
+  .el-radio.checked .dot { border-color:#409eff; }
+  .el-radio.checked .dot::after { content:""; position:absolute; inset:3px; background:#409eff; border-radius:50%; }
+  .tip { font-size:12px; color:#909399; margin-left:110px; margin-top:4px; }
+  .btn { display:inline-block; background:#409eff; color:#fff; border:none; border-radius:4px; padding:9px 20px; font-size:14px; cursor:pointer; }
+  .btn.plain { background:#fff; color:#606266; border:1px solid #dcdfe6; }
+  /* 步骤条 */
+  .steps { display:flex; flex-wrap:wrap; gap:8px; }
+  .step { flex:1 1 100px; min-width:96px; border-radius:4px; padding:10px; font-size:12px; border:1px solid #e4e7ed; background:#fafafa; }
+  .step .name { font-weight:600; font-size:13px; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+  .step .msg { color:#909399; line-height:1.5; }
+  .step.success { border-color:#e1f3d8; background:#f0f9eb; } .step.success .name { color:#67c23a; }
+  .step.running { border-color:#d9ecff; background:#ecf5ff; } .step.running .name { color:#409eff; }
+  .step.pending .name { color:#909399; }
+  .badge { width:8px; height:8px; border-radius:50%; background:currentColor; }
+  .seed-card { outline:2px dashed #409eff; outline-offset:2px; }
+  .legend { font-size:12px; color:#909399; margin-top:10px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h3>① 建系统向导 · 第②步（建库建表确认）新增「数据初始化」选项</h3>
+  <div class="card">
+    <div class="card-title">建库建表</div>
+    <div class="form-item"><label class="k">数据库名</label><span style="color:#909399">his</span></div>
+    <div class="form-item"><label class="k">表清单</label><span style="color:#909399">共 56 张表（AI 确认过）</span></div>
+    <div class="form-item">
+      <label class="k">数据初始化</label>
+      <label class="el-radio checked"><span class="dot"></span>规则生成（推荐）</label>
+      <label class="el-radio"><span class="dot"></span>跳过</label>
+    </div>
+    <div class="tip">规则生成：建表后按外键依赖自动灌入中文示例数据（主数据 12 行、单据 8 行、明细跟随主表），枚举/唯一/必填约束全部满足，单次上限 2000 行。</div>
+    <div style="margin-top:16px;margin-left:110px">
+      <button class="btn plain">上一步</button>&nbsp;&nbsp;
+      <button class="btn">建库建表</button>
+    </div>
+  </div>
+
+  <h3>② 流水线进度 · 步骤卡片新增「数据初始化」</h3>
+  <div class="card">
+    <div class="card-title">PPL20261025150000 · 医院信息管理系统</div>
+    <div class="steps">
+      <div class="step success"><div class="name"><span class="badge"></span>AI 领域建模</div><div class="msg">AI 建模（已在前端确认）</div></div>
+      <div class="step success"><div class="name"><span class="badge"></span>建库建表+导表</div><div class="msg">his 共 56 张业务表已导入台账</div></div>
+      <div class="step success seed-card"><div class="name"><span class="badge"></span>数据初始化</div><div class="msg">共 54 表 612 行；跳过 2（已有数据 1、超限待补数 1）</div></div>
+      <div class="step running"><div class="name"><span class="badge"></span>前后端骨架</div><div class="msg">写入 42 个文件…</div></div>
+      <div class="step pending"><div class="name">代码生成+自检</div><div class="msg">待执行</div></div>
+      <div class="step pending"><div class="name">后端打包</div><div class="msg">待执行</div></div>
+      <div class="step pending"><div class="name">健康检查</div><div class="msg">待执行</div></div>
+    </div>
+    <div class="legend">蓝框虚线 = 本期新增节点；规则生成结果同时落盘 logs/pipeline/{单号}/seed.sql 可人工重放。选「跳过」时该节点显示"已跳过（未启用数据初始化）"直接成功。</div>
+  </div>
+</div>
+</body>
+</html>

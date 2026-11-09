@@ -1,0 +1,40 @@
+# 依赖与构建产物
+node_modules/
+target/
+build/
+out/
+dist/
+dist-*/
+logs/
+*.log
+derby.log
+*.jar
+*.war
+*.class
+
+# 运行时目录与本机私有配置
+uploads/
+application-local.yml
+.env.local
+.env.*.local
+
+# 本机工具配置与诊断产物
+.trae/
+.claude/
+.workflow/
+diag-ai/
+diag-ai-rec.js
+shot-manual.js
+shot-demo.js
+.gen-artifacts/
+.gen-backup/
+.gen-verify/
+
+# 编辑器与系统文件
+.idea/
+.vscode/
+*.iml
+*.suo
+*.sw?
+.DS_Store
+Thumbs.db

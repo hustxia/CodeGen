@@ -1,0 +1,153 @@
+server:
+  port: 8120
+
+spring:
+  application:
+    name: codegen-server
+  profiles:
+    # 默认叠加 local 配置（application-local.yml，不入库）。
+    # 文件不存在时静默跳过，不影响其他人直接跑起来。
+    include: local
+  datasource:
+    url: jdbc:mysql://localhost:3306/gen_platform?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    # 默认值是本机开发用的，生产必须用环境变量或 application-local.yml 覆盖：
+    # 仓库里的口令等于没有口令
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+  # V6.9 文档中心：multipart 两层都要配（只配 max-file-size 时，请求体超限仍会被拒且报错难懂）
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 35MB
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.codegen.entity
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+springdoc:
+  api-docs:
+    # 生产部署设 SPRINGDOC_API_DOCS_ENABLED=false / SPRINGDOC_UI_ENABLED=false 即可关闭接口清单；
+    # 默认 true 保持既有行为不变，仅提供 opt-out 能力；端点关掉后不再返回接口清单，
+    # 但旧路径目前会被全局异常兜底成 HTTP 200 + code 500（见台账 W-08），不是干净的 404。
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: ${SPRINGDOC_UI_ENABLED:true}
+    path: /swagger-ui.html
+
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    com.codegen: info
+
+# 生产部署必须用环境变量 JWT_SECRET 覆盖：拿到这个串就能伪造任意用户的 token。
+# 默认值只为「克隆下来直接能跑」，启动时会打 WARN 提醒。
+jwt:
+  secret: ${JWT_SECRET:codegen-platform-jwt-secret-key-2026-very-long}
+  expire-hours: ${JWT_EXPIRE_HOURS:24}
+
+# ============================================================
+# 代码生成器输出配置（全局默认）
+#
+# 与旧工程的区别：不再假定生成器住在目标工程里，
+# backend-root / frontend-root 指向「任意目标工程」，
+# root-package 用于生成物里对基座类（Result/BaseEntity/PageQuery）的 import。
+# 表级 gen_table.backend_root / frontend_root / backend_path 留空时回落到这里。
+# ============================================================
+gen:
+  output:
+    # 目标工程根目录（生成物写盘基准）。换成你本机的实际路径。
+    # 也可以放在 application-local.yml 里覆盖，避免把本机路径提交到仓库。
+    backend-root: ${GEN_OUTPUT_BACKEND_ROOT:../codegen-demo-target}
+    frontend-root: ${GEN_OUTPUT_FRONTEND_ROOT:../codegen-demo-target}
+    # 目标前端工程相对 frontend-root 的子目录（monorepo 场景必配；
+    # 前端就是 frontend-root 本身时留空）
+    frontend-path: demo-web
+    backend-path: demo-server/src/main/java/com/demo
+    package-name: com.demo
+    root-package: com.demo
+    gateway-prefix: demo
+    # 目标模块映射：一张表可通过 target_module 指定落到哪个模块/包
+    modules:
+      demo:
+        backend-path: demo-server/src/main/java/com/demo
+        package-name: com.demo
+        root-package: com.demo
+        gateway-prefix: demo
+        frontend-path: demo-web
+  # 生成自检：内存编译生成产物的 classpath
+  # 开发态留空即可（取 java.class.path）；打成肥 jar 部署时必须显式配置
+  selfcheck:
+    # 自检内存编译要用的依赖 classpath。留空会取 java.class.path，而本服务以肥 jar 启动时
+    # 它只是 app.jar 本身，javac 解析不到嵌套依赖 -> 满屏 cannot find symbol（假报错）。
+    # 指向目标工程的依赖目录即可（支持 dir/* 通配符）：
+    #   cd demo-server && mvn dependency:copy-dependencies -DoutputDirectory=../demo-lib
+    # 留空则取 java.class.path；本机路径建议放 application-local.yml 覆盖。
+    classpath: ${GEN_SELFCHECK_CLASSPATH:}
+    compile-enabled: true
+  # 菜单出口：artifact = 只产出 SQL + 路由片段（不写平台自身菜单表）
+  #          internal = 同时写入本平台 sys_menu（仅当生成目标就是本平台时使用）
+  menu:
+    outlet: artifact
+
+  # ============================================================
+  # V5.0「一句话建系统」流水线
+  # AI 的 base-url/api-key/model 放 application-local.yml（不入库）；
+  # enabled=false 时前端自动降级「手动粘贴 DDL」，不影响其余步骤。
+  # ============================================================
+  pipeline:
+    ai:
+      enabled: false
+      # base-url: https://api.xxx.com/v1
+      # api-key: sk-xxx
+      # model: gpt-4o-mini
+      timeout-seconds: 30
+    # java-home: ~/.jdks/temurin-21   # 打包后端用，留空用当前进程
+    # maven: C:/dev/maven/bin/mvn.cmd                  # 留空回落 gen.output.maven
+    npm: npm
+    backend-port-base: 8140
+    frontend-port-base: 9040
+    deploy-timeout-seconds: 120
+    log-dir: logs/pipeline
+
+# 操作日志的 IP 归属地：先查 classpath:/ip/ip2region.db 离线库，查不到才走在线接口
+# 内网/本机不发请求；结果缓存 24h，失败负缓存 5min
+# 换成自建或商用服务时保持 {ip} 占位即可，返回体认 province/regionName/pro 与 city
+app:
+  ip-region:
+    enabled: true
+    offline: true
+    api: http://ip-api.com/json/{ip}?lang=zh-CN
+    timeout-ms: 3000
+    # proxy: http://127.0.0.1:7890   # 需要走代理才配，不配则强制直连（绕开 HTTP_PROXY）
+
+# ============================================================
+# V6.9 平台文档中心
+#
+# 白名单刻意不含 svg/html/md：平台不开放免鉴权直链，但也不接受脚本载体。
+# 预览引擎：auto = 探测到 soffice 走高保真，否则走浏览器简易渲染；
+#           browser = 强制前端渲染；libreoffice = 强制转换（探测不到会 WARN 且接口报错）
+# ============================================================
+doc:
+  upload-dir: ${DOC_UPLOAD_DIR:./uploads/doc}
+  max-size-mb: ${DOC_MAX_SIZE_MB:30}
+  allowed-exts: ${DOC_ALLOWED_EXTS:pdf,doc,docx,xls,xlsx,ppt,pptx}
+  preview:
+    enabled: ${DOC_PREVIEW_ENABLED:true}
+    engine: ${DOC_PREVIEW_ENGINE:auto}
+    soffice-path: ${DOC_SOFFICE_PATH:}
+    cache-dir: ${DOC_PREVIEW_CACHE_DIR:}
+    timeout-seconds: ${DOC_PREVIEW_TIMEOUT_SECONDS:60}
+    max-concurrency: ${DOC_PREVIEW_MAX_CONCURRENCY:2}

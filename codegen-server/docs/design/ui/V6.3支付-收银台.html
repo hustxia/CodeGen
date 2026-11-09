@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>V6.3 收银台 UI 效果</title>
+<style>
+  body{font-family:"Microsoft YaHei",sans-serif;background:#f5f6f8;margin:0;padding:24px;color:#303133}
+  .wrap{max-width:760px;margin:0 auto}
+  h3{margin:24px 0 8px}
+  .card{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:20px;margin-bottom:16px}
+  .amount{font-size:30px;color:#e6a23c;font-weight:700}
+  .amount small{font-size:14px;color:#909399;font-weight:400}
+  .ch{display:flex;gap:12px;margin:14px 0}
+  .ch label{flex:1;border:1px solid #dcdfe6;border-radius:8px;padding:12px;cursor:pointer;text-align:center}
+  .ch label.on{border-color:#409eff;background:#ecf5ff;color:#409eff;font-weight:700}
+  .btn{display:inline-block;background:#409eff;color:#fff;border:none;border-radius:6px;padding:10px 28px;cursor:pointer;font-size:15px}
+  .btn.mock{background:#67c23a}
+  .qr{width:180px;height:180px;border:1px solid #ebeef5;display:inline-block;vertical-align:middle;background:
+    repeating-conic-gradient(#303133 0 25%,#fff 0 50%) 0 0/20px 20px;border-radius:4px}
+  .step{color:#909399;font-size:13px;margin-top:8px}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{border:1px solid #ebeef5;padding:8px 10px;text-align:left}
+  th{background:#f5f7fa;color:#606266}
+  .tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px}
+  .t0{background:#fdf6ec;color:#e6a23c}.t1{background:#f0f9eb;color:#67c23a}
+  .t2{background:#f4f4f5;color:#909399}.t3{background:#fef0f0;color:#f56c6c}
+  .row{display:flex;gap:20px;align-items:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h3>1. 收银台 /pay/cashier/:outTradeNo（业务详情「去支付」跳入）</h3>
+  <div class="card">
+    <div>培训缴费 · Python 进阶班</div>
+    <div class="amount">¥ 1280.00 <small>（128000 分）</small></div>
+    <div class="ch">
+      <label class="on">模拟支付<br><span class="step">mock · 本地演示</span></label>
+      <label>微信扫码<br><span class="step">Native · code_url 出码</span></label>
+      <label>支付宝<br><span class="step">电脑网站支付</span></label>
+    </div>
+    <div class="row">
+      <button class="btn mock">模拟支付（立即成功）</button>
+      <div>
+        <div class="qr" title="qrcode 前端出码：wxpay code_url / alipay payUrl"></div>
+        <div class="step">真渠道：扫码后本页每 2 秒轮询查单，成功自动跳转 redirect</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>2. 支付记录 /pay/order（管理页，复用 vuePage 样式）</h3>
+  <div class="card">
+    <table>
+      <tr><th>商户单号</th><th>标题</th><th>金额（元）</th><th>渠道</th><th>状态</th><th>业务</th><th>操作</th></tr>
+      <tr><td>P2026102589…</td><td>培训缴费 · Python 进阶班</td><td>1280.00</td><td>mock</td><td><span class="tag t1">成功</span></td><td>demo_fee #1024</td><td>查单 · 详情</td></tr>
+      <tr><td>P2026102590…</td><td>押金 · 场地预约</td><td>500.00</td><td>wxpay</td><td><span class="tag t0">待支付</span></td><td>demo_deposit #88</td><td>查单 · 关单 · 去支付</td></tr>
+      <tr><td>P2026102591…</td><td>报名费 · 认证考试</td><td>300.00</td><td>alipay</td><td><span class="tag t2">已关闭</span></td><td>—</td><td>查单</td></tr>
+      <tr><td>P2026102592…</td><td>续费 · VIP 会员</td><td>199.00</td><td>mock</td><td><span class="tag t3">已退款</span></td><td>demo_fee #1025</td><td>查单</td></tr>
+    </table>
+  </div>
+
+  <h3>3. 业务表接入约定（含 pay_status 字段的详情页）</h3>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1">学员缴费单详情：状态字段行内出现 <span class="tag t0">待支付</span>，右上角操作区新增
+        <button class="btn" style="padding:6px 18px;font-size:13px">去支付</button>（跳收银台并携带 business_type/business_id）</div>
+    </div>
+    <div class="step">模板条件块生成：业务表无 pay_status 列时零痕迹（无侵入）</div>
+  </div>
+</div>
+</body>
+</html>

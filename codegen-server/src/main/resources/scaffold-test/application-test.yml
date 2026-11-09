@@ -1,0 +1,17 @@
+# V6.7 产物测试出厂：集成测试专用配置（只在本 profile 生效，不污染主 yml）
+# H2 内存库 MySQL 兼容模式；schema 由 sql.init 装载（基座 + 每业务表 table-*.sql）
+spring:
+  datasource:
+    url: jdbc:h2:mem:gentest;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      # base.sql 是基座；schema/table-*.sql 由代码生成时按表逐张落盘（通配装载，新增表零配置）
+      schema-locations: classpath:schema/base.sql, classpath*:schema/table-*.sql
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB

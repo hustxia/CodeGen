@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V5.5 多模块工程生成 - UI 效果图</title>
+<style>
+  :root {
+    --cg-primary: #3d6df5;
+    --cg-primary-text: #ffffff;
+    --cg-text: #303133;
+    --cg-text-2: #606266;
+    --cg-text-3: #909399;
+    --cg-border: #dcdfe6;
+    --cg-bg: #f5f7fa;
+    --cg-card: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+         background: var(--cg-bg); color: var(--cg-text); padding: 24px; font-size: 14px; }
+  .section { max-width: 860px; margin: 0 auto 28px; }
+  .section > h2 { font-size: 16px; margin-bottom: 12px; color: var(--cg-text); }
+  .section > .desc { color: var(--cg-text-3); font-size: 12px; margin-bottom: 12px; }
+
+  /* ---------- 弹窗 ---------- */
+  .dialog-mask { background: rgba(0,0,0,.35); border-radius: 6px; padding: 32px; }
+  .dialog { background: var(--cg-card); border-radius: 6px; box-shadow: 0 8px 30px rgba(0,0,0,.12); max-width: 640px; margin: 0 auto; }
+  .dialog-header { padding: 16px 20px; border-bottom: 1px solid var(--cg-border); font-weight: 600; }
+  .dialog-body { padding: 20px; }
+  .form-item { display: flex; align-items: flex-start; margin-bottom: 18px; }
+  .form-item label { width: 110px; text-align: right; padding-right: 12px; padding-top: 8px; color: var(--cg-text-2); flex-shrink: 0; }
+  .form-main { flex: 1; }
+  .select { width: 260px; height: 32px; border: 1px solid var(--cg-border); border-radius: 4px;
+            padding: 0 28px 0 10px; line-height: 30px; position: relative; background: #fff; cursor: pointer; }
+  .select::after { content: ""; position: absolute; right: 10px; top: 13px; border: 5px solid transparent;
+                   border-top-color: #a8abb2; }
+  .select .placeholder { color: var(--cg-text-3); }
+  .select .value { color: var(--cg-text); }
+  .select.multi .value { color: var(--cg-primary); font-weight: 600; }
+  .form-tip { color: var(--cg-text-3); font-size: 12px; line-height: 1.6; margin-top: 6px; max-width: 480px; }
+  .dialog-footer { padding: 12px 20px; border-top: 1px solid var(--cg-border); text-align: right; }
+  .btn { display: inline-block; padding: 8px 16px; border-radius: 4px; font-size: 13px; cursor: pointer; border: 1px solid var(--cg-border); background: #fff; color: var(--cg-text-2); }
+  .btn-primary { background: var(--cg-primary); border-color: var(--cg-primary); color: var(--cg-primary-text); }
+
+  /* ---------- 三态对比 ---------- */
+  .states { display: flex; gap: 14px; }
+  .state-card { flex: 1; background: var(--cg-card); border: 1px solid var(--cg-border); border-radius: 6px; padding: 14px; }
+  .state-card h3 { font-size: 13px; margin-bottom: 8px; }
+  .state-card .tag { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-left: 6px; vertical-align: 1px; }
+  .tag-null { background: #f4f4f5; color: #909399; }
+  .tag-mono { background: #f0f9eb; color: #67c23a; }
+  .tag-multi { background: #ecf5ff; color: var(--cg-primary); }
+  .state-card p { color: var(--cg-text-2); font-size: 12px; line-height: 1.7; }
+
+  /* ---------- 目录树 ---------- */
+  .tree-card { background: var(--cg-card); border: 1px solid var(--cg-border); border-radius: 6px; padding: 18px 22px; font-family: Consolas, "Courier New", monospace; font-size: 12.5px; line-height: 1.9; }
+  .tree { white-space: pre; overflow-x: auto; }
+  .d { color: #2f6fe4; font-weight: 600; }          /* 目录 */
+  .f { color: var(--cg-text); }                      /* 文件 */
+  .c { color: var(--cg-text-3); }                    /* 注释 */
+  .hl { background: #ecf5ff; border-radius: 3px; padding: 0 3px; }
+  .legend { margin-top: 12px; font-size: 12px; color: var(--cg-text-2); font-family: inherit; }
+  .legend b { color: var(--cg-primary); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="section">
+  <h2>① 系统管理 · 编辑弹窗 —— 「工程结构」配置（F-01）</h2>
+  <div class="desc">位置：系统管理 → 编辑 → 生成开关默认区下方；三态可空，空 = 单模块（存量系统零影响）</div>
+  <div class="dialog-mask">
+    <div class="dialog">
+      <div class="dialog-header">编辑系统 · 仓库管理系统（wms）</div>
+      <div class="dialog-body">
+        <div class="form-item">
+          <label>系统编码</label>
+          <div class="form-main"><div class="select"><span class="value">wms</span></div></div>
+        </div>
+        <div class="form-item">
+          <label>网关前缀</label>
+          <div class="form-main"><div class="select"><span class="value">wms</span></div></div>
+        </div>
+        <div class="form-item">
+          <label>删除级联默认</label>
+          <div class="form-main"><div class="select"><span class="value">级联</span></div></div>
+        </div>
+        <div class="form-item">
+          <label>打印单据默认</label>
+          <div class="form-main"><div class="select"><span class="value">关闭</span></div></div>
+        </div>
+        <div class="form-item">
+          <label>工程结构</label>
+          <div class="form-main">
+            <div class="select multi"><span class="value">多模块（微服务就绪）</span></div>
+            <div class="form-tip">
+              多模块生成 parent + common / domain / service / bootstrap 四个子模块：模块边界即未来微服务拆分线，
+              升级微服务时按模块整体搬走。保存后<b>下次生成生效</b>；切换结构不自动迁移旧产物，重新生成时按备份批次兜底。
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <span class="btn">取 消</span>
+        <span class="btn btn-primary">确 定</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>② 三态语义对照</h2>
+  <div class="states">
+    <div class="state-card">
+      <h3>未配置<span class="tag tag-null">NULL</span></h3>
+      <p>单模块（现状不变）。生成 <code>&lt;module&gt;-server</code> 单 Maven 模块，产物路径与 V5.4 前逐字节一致。</p>
+    </div>
+    <div class="state-card">
+      <h3>单模块<span class="tag tag-mono">mono</span></h3>
+      <p>显式声明单模块，行为同 NULL。为将来把「系统默认结构」上系统级下拉预留显式值。</p>
+    </div>
+    <div class="state-card">
+      <h3>多模块<span class="tag tag-multi">multi</span></h3>
+      <p>Maven 多模块单体：parent + 4 子模块，单 Spring Boot 应用可运行可验证，微服务就绪。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>③ multi 系统 scaffold + apply 后的产物目录树（F-02/F-03）</h2>
+  <div class="desc">示例：仓库管理系统 wms，rootPackage = com.wms。业务产物按模板归属落模块，前端工程不拆。</div>
+  <div class="tree-card">
+    <div class="tree"><span class="c">./demo-target/</span>
+├── <span class="d hl">wms-parent/</span>                          <span class="c">← backendRoot（聚合 pom 根）</span>
+│   ├── <span class="f">pom.xml</span>                          <span class="c">parent：modules 聚合 + 依赖版本管理</span>
+│   ├── <span class="d hl">wms-common/</span>                      <span class="c">基座：exception/config/util/log/auth</span>
+│   │   ├── <span class="f">pom.xml</span>
+│   │   └── src/main/java/com/wms/common/… <span class="c">Result / BaseEntity / LogAspect / MaskUtils…</span>
+│   ├── <span class="d hl">wms-domain/</span>                      <span class="c">entity + mapper(+xml)　依赖 → common</span>
+│   │   ├── <span class="f">pom.xml</span>
+│   │   └── src/main/java/com/wms/domain/{entity,mapper}/
+│   ├── <span class="d hl">wms-service/</span>                      <span class="c">controller + service + dto/vo　依赖 → domain</span>
+│   │   ├── <span class="f">pom.xml</span>
+│   │   └── src/main/java/com/wms/service/{controller,service,dto,vo}/
+│   └── <span class="d hl">wms-bootstrap/</span>                   <span class="c">启动壳　依赖 → service</span>
+│       ├── <span class="f">pom.xml</span>                       <span class="c">spring-boot-maven-plugin 在这层</span>
+│       ├── src/main/java/com/wms/WmsApplication.java   <span class="c">@MapperScan → com.wms.domain.mapper</span>
+│       └── src/main/resources/application.yml
+└── <span class="d">wms-web/</span>                             <span class="c">前端工程不拆，仍单工程</span>
+    └── src/views/{module}/…              <span class="c">index.vue / print.vue 等，路径不变</span></div>
+    <div class="legend">生成产物落位：<b>entity/mapper → domain</b>，<b>controller/service/serviceImpl*/dto/vo → service</b>，基座 → common，pom/启动类/yml → bootstrap；模块前缀在模板渲染源头插入一次，<b>预览 / 写盘 / ZIP 三通道同一路径</b>。</div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+package com.demo.entity;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.codegen.common.entity.BaseEntity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * 缴费单
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("demo_fee")
+public class DemoFee extends BaseEntity {
+
+    // <gen:begin key="entity-fields">
+    /**
+     * 缴费项目
+     */
+    private String feeItem;
+
+    /**
+     * 金额
+     */
+    private Long amount;
+
+    /**
+     * 支付状态
+     */
+    private Integer payStatus;
+
+    // <gen:end key="entity-fields">
+    // ===== 以下为手写区：写在 gen:end 之后的内容，重新生成不会被覆盖 =====
+}

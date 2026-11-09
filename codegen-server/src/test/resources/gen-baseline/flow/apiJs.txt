@@ -1,0 +1,83 @@
+import request, { toPageData } from '@/utils/request'
+
+// 请假单接口：demo_leave（经网关 /api/demo）
+// <gen:begin key="api-fns">
+function toPageQuery(params) {
+  const { page, size, ...query } = params || {}
+  return { pageNum: page || 1, pageSize: size || 10, ...query }
+}
+export function getDemoLeaveList(params) {
+  return request({
+    url: '/api/demo/leave/page',
+    method: 'post',
+    data: toPageQuery(params)
+  }).then(toPageData)
+}
+export function exportDemoLeave(params) {
+  return request({
+    url: '/api/demo/leave/export',
+    method: 'post',
+    data: params || {},
+    responseType: 'blob'
+  })
+}
+export function getDemoLeaveDetail(id) {
+  return request({
+    url: `/api/demo/leave/${id}`,
+    method: 'get'
+  })
+}
+export function createDemoLeave(data) {
+  return request({
+    url: '/api/demo/leave',
+    method: 'post',
+    data
+  })
+}
+export function updateDemoLeave(id, data) {
+  return request({
+    url: '/api/demo/leave',
+    method: 'put',
+    data: { ...data, id }
+  })
+}
+export function deleteDemoLeave(id) {
+  return request({
+    url: `/api/demo/leave/${id}`,
+    method: 'delete'
+  })
+}
+// P3-3 审批流：四个动作走宿主统一的 /flow 接口，业务表只负责把 id 传过去
+export function flowSubmitDemoLeave(id, comment) {
+  return request({
+    url: '/flow/submit',
+    method: 'post',
+    data: { flowCode: 'hr_leave_flow', bizId: id, comment }
+  })
+}
+
+export function flowApproveDemoLeave(id, comment) {
+  return request({
+    url: '/flow/approve',
+    method: 'post',
+    data: { flowCode: 'hr_leave_flow', bizId: id, comment }
+  })
+}
+
+export function flowRejectDemoLeave(id, comment) {
+  return request({
+    url: '/flow/reject',
+    method: 'post',
+    data: { flowCode: 'hr_leave_flow', bizId: id, comment }
+  })
+}
+
+export function getDemoLeaveFlowRecords(id) {
+  return request({
+    url: '/flow/records',
+    method: 'get',
+    params: { flowCode: 'hr_leave_flow', bizId: id }
+  })
+}
+// <gen:end key="api-fns">
+// ===== 以下为手写区：自定义请求写在这里，重新生成不会被覆盖 =====

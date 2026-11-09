@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V6.9 平台文档中心 — 列表页效果图</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+  body { background:#f3f5fa; color:#1f2d50; display:flex; min-height:100vh; }
+
+  /* 侧边栏（对齐 codegen-web 暗色 aside） */
+  .aside { width:210px; flex:0 0 210px; background:linear-gradient(180deg,#152346,#0a1226); color:#a7b1c8; padding:18px 0; }
+  .brand { display:flex; align-items:center; gap:8px; padding:0 18px 18px; color:#fff; font-size:14px; font-weight:700; }
+  .brand i { width:26px; height:26px; border-radius:7px; background:linear-gradient(135deg,#3d6df5,#5c84f7); display:flex; align-items:center; justify-content:center; font-style:normal; font-size:12px; }
+  .nav-item { padding:10px 18px 10px 22px; font-size:13px; cursor:pointer; display:flex; gap:8px; align-items:center; }
+  .nav-item:hover { background:rgba(255,255,255,.08); }
+  .nav-item.active { background:rgba(61,109,245,.18); color:#fff; border-left:3px solid #3d6df5; padding-left:19px; }
+
+  /* 主区 */
+  .main { flex:1; min-width:0; }
+  .header { height:56px; background:#fff; border-bottom:1px solid #e9eef8; display:flex; align-items:center; padding:0 24px; gap:12px; }
+  .crumb { font-size:13px; color:#7c87a3; }
+  .crumb b { color:#1f2d50; font-weight:600; }
+  .header .right { margin-left:auto; display:flex; align-items:center; gap:14px; font-size:13px; color:#7c87a3; }
+  .stage { padding:20px 24px; }
+
+  .card { background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(15,23,42,.06); padding:18px 20px; margin-bottom:16px; }
+  .toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+  .inp { height:32px; border:1px solid #dde5f2; border-radius:4px; padding:0 10px; font-size:13px; width:220px; outline:none; }
+  .inp:focus { border-color:#3d6df5; box-shadow:0 0 0 2px rgba(61,109,245,.15); }
+  .sel { height:32px; border:1px solid #dde5f2; border-radius:4px; padding:0 8px; font-size:13px; background:#fff; color:#3b4867; }
+  .btn { height:32px; padding:0 14px; border-radius:4px; border:1px solid #dde5f2; background:#fff; font-size:13px; color:#3b4867; cursor:pointer; }
+  .btn:hover { border-color:#3d6df5; color:#3d6df5; }
+  .btn-primary { background:#3d6df5; border-color:#3d6df5; color:#fff; font-weight:500; }
+  .btn-primary:hover { background:#5c84f7; border-color:#5c84f7; color:#fff; }
+  .spacer { flex:1; }
+
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; background:#f7f9fc; color:#5a6478; font-weight:600; padding:10px 12px; border-bottom:1px solid #eef1f7; white-space:nowrap; }
+  td { padding:11px 12px; border-bottom:1px solid #f2f4f9; vertical-align:middle; }
+  tr:hover td { background:#f5f8fe; }
+  .fname { display:flex; align-items:center; gap:10px; }
+  .ficon { width:34px; height:34px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex:0 0 34px; }
+  .ficon.pdf { background:#fdecec; color:#e5484d; }
+  .ficon.doc { background:#e8effd; color:#3d6df5; }
+  .ficon.xls { background:#e8f7ef; color:#0f9d58; }
+  .ficon.ppt { background:#fff4e6; color:#d97706; }
+  .fmain { line-height:1.35; }
+  .fmain .n { color:#1f2d50; font-weight:500; }
+  .fmain .m { color:#9fa8bd; font-size:11px; margin-top:2px; }
+  .tag { display:inline-block; padding:1px 9px; border-radius:10px; font-size:12px; white-space:nowrap; }
+  .tag-pdf { background:#e8effd; color:#3d6df5; }
+  .tag-hi { background:#e8f7ef; color:#0f9d58; }
+  .tag-simple { background:#fff4e6; color:#d97706; }
+  .tag-dl { background:#f2f4f9; color:#7c87a3; }
+  .link { color:#3d6df5; cursor:pointer; }
+  .link.danger { color:#e5484d; }
+  .link.disabled { color:#c0c6d4; cursor:not-allowed; }
+  .pager { display:flex; align-items:center; gap:8px; justify-content:flex-end; margin-top:14px; font-size:13px; color:#7c87a3; }
+  .pg { min-width:30px; height:30px; border:1px solid #dde5f2; border-radius:4px; display:flex; align-items:center; justify-content:center; cursor:pointer; background:#fff; }
+  .pg.active { background:#3d6df5; border-color:#3d6df5; color:#fff; }
+
+  .note { background:#ecf0fe; border:1px solid #c9d7fd; border-radius:8px; padding:12px 16px; font-size:12.5px; color:#2b4a9e; line-height:1.75; margin-bottom:16px; }
+  .note b { color:#1f3a86; }
+  .legend { display:flex; gap:16px; font-size:12px; color:#7c87a3; margin-top:10px; flex-wrap:wrap; }
+  .legend span { display:flex; align-items:center; gap:5px; }
+  .dot { width:7px; height:7px; border-radius:50%; }
+</style>
+</head>
+<body>
+
+<div class="aside">
+  <div class="brand"><i>码</i>码匠 · CodeGen</div>
+  <div class="nav-item">▦ 代码生成</div>
+  <div class="nav-item">◈ 表格配置</div>
+  <div class="nav-item">⚙ 系统管理</div>
+  <div class="nav-item active">📄 文档中心</div>
+</div>
+
+<div class="main">
+  <div class="header">
+    <div class="crumb">首页 / <b>文档中心</b></div>
+    <div class="right"><span>admin</span><span style="width:26px;height:26px;border-radius:50%;background:#ecf0fe;color:#3d6df5;display:flex;align-items:center;justify-content:center;font-size:12px;">A</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="note">
+      <b>V6.9 新增</b>：平台自己的文档库。上传 Word/PDF 后可直接在页面上看，不用下载再打开。
+      PDF 走浏览器原生渲染；Word 默认用浏览器引擎（<b>简易渲染</b>），配置了 LibreOffice 后自动切<b>高保真（转 PDF）</b>。「预览方式」列会如实告诉你当前是哪一种。
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <input class="inp" placeholder="文档名称，支持模糊搜索">
+        <select class="sel">
+          <option>全部类型</option><option>PDF</option><option>Word</option><option>Excel</option><option>PPT</option>
+        </select>
+        <button class="btn btn-primary">查询</button>
+        <button class="btn">重置</button>
+        <span class="spacer"></span>
+        <button class="btn btn-primary">＋ 上传文档</button>
+      </div>
+
+      <table>
+        <tr>
+          <th style="width:38%">文档名称</th>
+          <th style="width:90px">类型</th>
+          <th style="width:100px">大小</th>
+          <th style="width:150px">预览方式</th>
+          <th style="width:110px">上传人</th>
+          <th style="width:150px">上传时间</th>
+          <th style="width:170px">操作</th>
+        </tr>
+        <tr>
+          <td>
+            <div class="fname">
+              <div class="ficon pdf">PDF</div>
+              <div class="fmain"><div class="n">星辰X7Pro-产品需求说明书-v2.pdf</div><div class="m">202610/8f3a…c2.pdf</div></div>
+            </div>
+          </td>
+          <td>PDF</td><td>4.8 MB</td>
+          <td><span class="tag tag-pdf">PDF 原生</span></td>
+          <td>admin</td><td>2026-10-30 10:24</td>
+          <td><span class="link">预览</span>　<span class="link">下载</span>　<span class="link danger">删除</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="fname">
+              <div class="ficon doc">DOC</div>
+              <div class="fmain"><div class="n">客户验收单-2026Q3.docx</div><div class="m">202610/2b7e…9f.docx</div></div>
+            </div>
+          </td>
+          <td>Word</td><td>286 KB</td>
+          <td><span class="tag tag-hi">高保真 · LibreOffice</span></td>
+          <td>zhangsan</td><td>2026-10-29 16:05</td>
+          <td><span class="link">预览</span>　<span class="link">下载</span>　<span class="link danger">删除</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="fname">
+              <div class="ficon doc">DOC</div>
+              <div class="fmain"><div class="n">技术方案评审记录.docx</div><div class="m">202610/7c1d…44.docx</div></div>
+            </div>
+          </td>
+          <td>Word</td><td>1.2 MB</td>
+          <td><span class="tag tag-simple">简易渲染 · 浏览器</span></td>
+          <td>lisi</td><td>2026-10-29 11:42</td>
+          <td><span class="link">预览</span>　<span class="link">下载</span>　<span class="link danger">删除</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="fname">
+              <div class="ficon doc">DOC</div>
+              <div class="fmain"><div class="n">旧版合同模板（97-2003）.doc</div><div class="m">202610/9a44…01.doc</div></div>
+            </div>
+          </td>
+          <td>Word</td><td>512 KB</td>
+          <td><span class="tag tag-dl">仅支持下载</span></td>
+          <td>admin</td><td>2026-10-28 17:20</td>
+          <td><span class="link disabled">预览</span>　<span class="link">下载</span>　<span class="link danger">删除</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="fname">
+              <div class="ficon xls">XLS</div>
+              <div class="fmain"><div class="n">接口清单-交付版.xlsx</div><div class="m">202610/5d02…ab.xlsx</div></div>
+            </div>
+          </td>
+          <td>Excel</td><td>88 KB</td>
+          <td><span class="tag tag-hi">高保真 · LibreOffice</span></td>
+          <td>wangwu</td><td>2026-10-28 09:10</td>
+          <td><span class="link">预览</span>　<span class="link">下载</span>　<span class="link danger">删除</span></td>
+        </tr>
+      </table>
+
+      <div class="pager">
+        <span style="margin-right:auto;color:#9fa8bd">共 27 条</span>
+        <div class="pg">‹</div><div class="pg active">1</div><div class="pg">2</div><div class="pg">3</div><div class="pg">›</div>
+        <select class="sel" style="height:30px"><option>10 条/页</option><option>20 条/页</option></select>
+      </div>
+
+      <div class="legend">
+        <span><i class="dot" style="background:#3d6df5"></i>PDF 原生：pdf.js 渲染，翻页/缩放</span>
+        <span><i class="dot" style="background:#0f9d58"></i>高保真：服务端转 PDF，版式一致</span>
+        <span><i class="dot" style="background:#d97706"></i>简易渲染：浏览器渲染，复杂排版可能失真</span>
+        <span><i class="dot" style="background:#9fa8bd"></i>仅下载：当前引擎不支持该格式</span>
+      </div>
+    </div>
+
+    <div class="card" style="font-size:12.5px;color:#7c87a3;line-height:1.9;">
+      <div style="color:#1f2d50;font-weight:600;margin-bottom:8px;font-size:13px;">上传规则（写死在前端提示，后端同样校验）</div>
+      支持 pdf / doc / docx / xls / xlsx / ppt / pptx；单文件 ≤ 30MB；同名文件不覆盖，每次上传生成新记录（uuid 落盘）。<br>
+      出于安全考虑<b>不接受 svg / html / md</b>——平台不做富文本渲染，避免同源脚本注入。
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

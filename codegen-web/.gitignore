@@ -1,0 +1,35 @@
+# 依赖
+node_modules/
+# 构建产物。带后缀的目录（dist-v3、dist-bak 等）多为绕过本机删除失败
+# 而临时指定的输出目录，同样不该进仓库
+dist/
+dist-*/
+
+# 本地环境
+.env.local
+.env.*.local
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# 编辑器
+.idea
+.vscode
+*.suo
+*.sw?
+.DS_Store
+
+# 文件级备份目录（本地工具产物）
+.gen-backup/
+
+# 生成器运行期产物
+.gen-artifacts/
+.gen-verify/
+
+# Trae skills 已统一到 ./skills 真源（目录联接），不纳入仓库
+.trae/skills/

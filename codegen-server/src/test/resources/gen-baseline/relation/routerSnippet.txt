@@ -1,0 +1,13 @@
+{
+  path: 'goods',
+  name: 'DemoGoods',
+  component: () => import('@/views/goods/index.vue'),
+  meta: { title: '商品' }
+},
+{
+  // V4.5 打印单据：无 layout 顶层路由，打印页必须脱离后台导航壳，否则打出来带侧边栏
+  path: '/print/goods/:id',
+  name: 'PrintDemoGoods',
+  component: () => import('@/views/goods/print.vue'),
+  meta: { title: '商品打印' }
+},

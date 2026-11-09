@@ -1,0 +1,34 @@
+package com.demo.entity;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.codegen.common.entity.BaseEntity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * 商品资料
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("demo_goods_file")
+public class DemoGoodsFile extends BaseEntity {
+
+    // <gen:begin key="entity-fields">
+    /**
+     * 商品名称
+     */
+    private String goodsName;
+
+    /**
+     * 商品图
+     */
+    private String coverImage;
+
+    /**
+     * 说明书
+     */
+    private String manualFile;
+
+    // <gen:end key="entity-fields">
+    // ===== 以下为手写区：写在 gen:end 之后的内容，重新生成不会被覆盖 =====
+}

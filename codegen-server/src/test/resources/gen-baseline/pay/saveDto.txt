@@ -1,0 +1,28 @@
+package com.demo.dto;
+
+import lombok.Data;
+
+import java.io.Serial;
+import java.io.Serializable;
+
+/**
+ * 缴费单保存 DTO（新增/修改）
+ */
+@Data
+public class DemoFeeSaveDTO implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    // <gen:begin key="dto-fields">
+    /**
+     * 主键，新增时为空
+     */
+    private Long id;
+
+    private String feeItem;
+    private Long amount;
+    private Integer payStatus;
+    // <gen:end key="dto-fields">
+    // ===== 以下为手写区：写在 gen:end 之后的内容，重新生成不会被覆盖 =====
+}

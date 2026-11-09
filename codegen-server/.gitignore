@@ -1,0 +1,51 @@
+# 构建产物
+target/
+build/
+*.jar
+*.war
+*.class
+
+# 日志
+logs/
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 本地环境覆盖（含数据库密码等，不入库）
+src/main/resources/application-local.yml
+src/main/resources/application-local.yaml
+src/main/resources/application-local.properties
+
+# 生成器运行期产物
+.gen-artifacts/
+.gen-backup/
+.gen-verify/
+
+# V6.9 文档中心：上传原件与预览缓存（运行期数据，不入库）
+uploads/
+
+# 临时
+*.tmp
+*.bak
+
+# 模板渲染自检脚本（本地回归用，路径与环境强相关，不入库）
+TplRenderCheck.java
+# mvn dependency:build-classpath 导出的本机依赖清单
+cp.txt
+target/cp.txt
+
+# Trae skills 已统一到 ./skills 真源（目录联接），不纳入仓库
+.trae/skills/
+
+# 走查产物（台账与扫描报告，本地留档不入库）
+audit/

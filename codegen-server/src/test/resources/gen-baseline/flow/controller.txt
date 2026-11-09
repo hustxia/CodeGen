@@ -1,0 +1,216 @@
+package com.demo.controller;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.codegen.common.flow.FlowService;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.demo.dto.DemoLeavePageDTO;
+import com.demo.dto.DemoLeaveSaveDTO;
+import com.demo.service.DemoLeaveService;
+import com.demo.entity.DemoLeave;
+import com.demo.vo.DemoLeaveVO;
+import com.codegen.common.result.Result;
+import com.codegen.common.log.Log;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+/**
+ * 请假单 Controller
+ */
+@Tag(name = "请假单管理", description = "请假单管理")
+@RestController
+@RequestMapping("/leave")
+public class DemoLeaveController {
+
+    // Service 注入无条件保留（理由见 import 区注释）
+    @Autowired
+    private DemoLeaveService demoLeaveService;
+    @Autowired
+    private FlowService flowService;
+    // <gen:begin key="controller-body">
+
+@Operation(summary = "分页查询请假单")
+@PostMapping("/page")
+public Result<Page<DemoLeaveVO>> page(@RequestBody DemoLeavePageDTO dto) {
+    Page<DemoLeave> page = new Page<>(dto.getPageNum(), dto.getPageSize());
+    LambdaQueryWrapper<DemoLeave> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(StringUtils.hasText(dto.getReason()), DemoLeave::getReason, dto.getReason());
+        wrapper.orderByDesc(DemoLeave::getId);
+    demoLeaveService.page(page, wrapper);
+    Page<DemoLeaveVO> voPage = new Page<>();
+    BeanUtils.copyProperties(page, voPage);
+    List<DemoLeaveVO> records = page.getRecords().stream()
+            .map(e -> {
+                DemoLeaveVO vo = new DemoLeaveVO();
+                BeanUtils.copyProperties(e, vo);
+                return vo;
+            })
+            .toList();
+    voPage.setRecords(records);
+    return Result.ok(voPage);
+}
+
+@Operation(summary = "导出请假单 Excel（按查询条件过滤；不传条件导出全部）")
+@PostMapping("/export")
+public ResponseEntity<byte[]> export(@RequestBody(required = false) DemoLeavePageDTO query) throws IOException {
+    // 复用列表页的筛选口径：导出的行必须和用户在页面上看到的一致，
+    // 否则「筛出 20 条、导出 2000 条」会被当成 bug。
+    LambdaQueryWrapper<DemoLeave> wrapper = new LambdaQueryWrapper<>();
+    if (query != null) {
+        wrapper.like(StringUtils.hasText(query.getReason()), DemoLeave::getReason, query.getReason());
+    }
+    wrapper.orderByDesc(DemoLeave::getId);
+    List<DemoLeave> rows = demoLeaveService.list(wrapper);
+    try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+        Sheet sheet = wb.createSheet("请假单");
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("请假事由");
+        header.createCell(1).setCellValue("状态");
+        int rowIndex = 1;
+        for (DemoLeave e : rows) {
+            Row row = sheet.createRow(rowIndex++);
+            row.createCell(0).setCellValue(cellText(e.getReason()));
+            row.createCell(1).setCellValue(cellText(e.getStatus()));
+        }
+        wb.write(bos);
+        String fileName = URLEncoder.encode("请假单.xlsx", StandardCharsets.UTF_8).replace("+", "%20");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + fileName)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(bos.toByteArray());
+    }
+}
+
+@Operation(summary = "根据ID查询请假单")
+@GetMapping("/{id}")
+public Result<DemoLeaveVO> getById(@PathVariable("id") Long id) {
+    DemoLeave entity = demoLeaveService.getById(id);
+    if (entity == null) {
+        return Result.ok(null);
+    }
+    DemoLeaveVO vo = new DemoLeaveVO();
+    BeanUtils.copyProperties(entity, vo);
+    return Result.ok(vo);
+}
+
+@Operation(summary = "新增请假单")
+@Log(title = "请假单", type = "INSERT")
+@PostMapping
+public Result<Void> add(@RequestBody DemoLeaveSaveDTO dto) {
+    DemoLeave entity = new DemoLeave();
+    BeanUtils.copyProperties(dto, entity);
+    demoLeaveService.save(entity);
+    return Result.ok();
+}
+
+@Operation(summary = "修改请假单")
+@Log(title = "请假单", type = "UPDATE")
+@PutMapping
+public Result<Void> update(@RequestBody DemoLeaveSaveDTO dto) {
+    DemoLeave entity = new DemoLeave();
+    BeanUtils.copyProperties(dto, entity);
+    demoLeaveService.updateById(entity);
+    return Result.ok();
+}
+
+@Operation(summary = "删除请假单")
+@Log(title = "请假单", type = "DELETE")
+@DeleteMapping("/{id}")
+public Result<Void> delete(@PathVariable("id") Long id) {
+    demoLeaveService.removeById(id);
+    return Result.ok();
+}
+    // <gen:end key="controller-body">
+
+    // ==================== P3-3 审批流（流程：hr_leave_flow） ====================
+
+    @Operation(summary = "提交请假单审批")
+    @Log(title = "请假单", type = "SUBMIT")
+    @PostMapping("/flow/submit/{id}")
+    public Result<Void> flowSubmit(@PathVariable("id") Long id) {
+        flowService.submit("hr_leave_flow", id, null);
+        return Result.ok();
+    }
+
+    @Operation(summary = "审批通过请假单")
+    @PostMapping("/flow/approve/{id}")
+    public Result<Void> flowApprove(@PathVariable("id") Long id,
+                                    @RequestParam(value = "comment", required = false) String comment) {
+        flowService.approve("hr_leave_flow", id, comment);
+        return Result.ok();
+    }
+
+    @Operation(summary = "驳回请假单")
+    @PostMapping("/flow/reject/{id}")
+    public Result<Void> flowReject(@PathVariable("id") Long id,
+                                   @RequestParam(value = "comment", required = false) String comment) {
+        flowService.reject("hr_leave_flow", id, comment);
+        return Result.ok();
+    }
+
+    @Operation(summary = "请假单审批记录")
+    @GetMapping("/flow/records/{id}")
+    public Result<List<Map<String, Object>>> flowRecords(@PathVariable("id") Long id) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (com.codegen.common.flow.FlowRecord r : flowService.records("hr_leave_flow", id)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("action", r.getAction());
+            m.put("fromStatus", r.getFromStatus());
+            m.put("toStatus", r.getToStatus());
+            m.put("comment", r.getComment());
+            m.put("operName", r.getOperName());
+            m.put("operTime", r.getOperTime());
+            list.add(m);
+        }
+        return Result.ok(list);
+    }
+
+    private static String cellText(Object value) {
+        return value == null ? "" : String.valueOf(value);
+    }
+
+    private static double cellNum(Object value) {
+        return value instanceof Number number ? number.doubleValue() : 0D;
+    }
+
+    private static String text(Row row, Integer col) {
+        if (col == null || row == null) {
+            return null;
+        }
+        String value = cellText(row.getCell(col)).trim();
+        return value.isEmpty() ? null : value;
+    }
+    // ===== 以下为手写区：自定义接口写在这里，重新生成不会被覆盖 =====
+}

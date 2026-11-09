@@ -1,0 +1,15 @@
+# 统一换行符，避免 Windows/Linux 协作时整文件 diff
+* text=auto eol=lf
+
+# Windows 脚本保持 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制文件不做换行处理
+*.jar binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
