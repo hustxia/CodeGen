@@ -18,6 +18,16 @@ spring:
   jackson:
     time-zone: Asia/Shanghai
     date-format: yyyy-MM-dd HH:mm:ss
+  # V6.9 文档中心：multipart 两层都要配（只配 max-file-size 时，请求体超限仍会被拒且报错难懂）
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 35MB
+  # V6.10 平台首次引入调度（MonitorSampler）。默认单线程，将来再加定时任务会互相阻塞
+  task:
+    scheduling:
+      pool:
+        size: 2
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
@@ -36,6 +46,37 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# ============================================================
+# V6.10 平台可观测性
+#
+# 端点只枚举放行 health/info/metrics：env/beans/heapdump/threaddump/loggers 永不暴露。
+# health.show-details=never：外部只看得到 {"status":"UP"}，不吐数据库地址。
+# 带点的 key 必须写 "[http.server.requests]"，否则 yml 会按点拆层级。
+# ============================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    tags:
+      application: codegen-server
+    web:
+      server:
+        max-uri-tags: 100
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+
+# 采样窗口：5s 一采、360 点 = 30 分钟；仅进程内，重启归零，多实例不共享
+monitor:
+  sample:
+    interval-ms: ${MONITOR_SAMPLE_INTERVAL_MS:5000}
+    buffer-size: ${MONITOR_SAMPLE_BUFFER_SIZE:360}
 
 logging:
   config: classpath:logback-spring.xml
@@ -122,3 +163,22 @@ app:
     api: http://ip-api.com/json/{ip}?lang=zh-CN
     timeout-ms: 3000
     # proxy: http://127.0.0.1:7890   # 需要走代理才配，不配则强制直连（绕开 HTTP_PROXY）
+
+# ============================================================
+# V6.9 平台文档中心
+#
+# 白名单刻意不含 svg/html/md：平台不开放免鉴权直链，但也不接受脚本载体。
+# 预览引擎：auto = 探测到 soffice 走高保真，否则走浏览器简易渲染；
+#           browser = 强制前端渲染；libreoffice = 强制转换（探测不到会 WARN 且接口报错）
+# ============================================================
+doc:
+  upload-dir: ${DOC_UPLOAD_DIR:./uploads/doc}
+  max-size-mb: ${DOC_MAX_SIZE_MB:30}
+  allowed-exts: ${DOC_ALLOWED_EXTS:pdf,doc,docx,xls,xlsx,ppt,pptx}
+  preview:
+    enabled: ${DOC_PREVIEW_ENABLED:true}
+    engine: ${DOC_PREVIEW_ENGINE:auto}
+    soffice-path: ${DOC_SOFFICE_PATH:}
+    cache-dir: ${DOC_PREVIEW_CACHE_DIR:}
+    timeout-seconds: ${DOC_PREVIEW_TIMEOUT_SECONDS:60}
+    max-concurrency: ${DOC_PREVIEW_MAX_CONCURRENCY:2}

@@ -27,6 +27,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.codegen.monitor.MonitorMetrics;
+import io.micrometer.core.instrument.Timer;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -87,6 +90,7 @@ public class PipelineExecutor {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final com.codegen.support.GenBpmnBuilder bpmnBuilder;
     private final com.codegen.service.FlowDefBpmnService flowDefBpmnService;
+    private final MonitorMetrics monitorMetrics;
 
     public PipelineExecutor(GenPipelineMapper pipelineMapper,
                             GenPipelineStepMapper stepMapper,
@@ -103,7 +107,8 @@ public class PipelineExecutor {
                             com.codegen.support.GenSeedGenerator seedGenerator,
                             JdbcTemplate jdbcTemplate,
                             com.codegen.support.GenBpmnBuilder bpmnBuilder,
-                            com.codegen.service.FlowDefBpmnService flowDefBpmnService) {
+                            com.codegen.service.FlowDefBpmnService flowDefBpmnService,
+                            MonitorMetrics monitorMetrics) {
         this.pipelineMapper = pipelineMapper;
         this.stepMapper = stepMapper;
         this.scaffoldService = scaffoldService;
@@ -120,6 +125,7 @@ public class PipelineExecutor {
         this.jdbcTemplate = jdbcTemplate;
         this.bpmnBuilder = bpmnBuilder;
         this.flowDefBpmnService = flowDefBpmnService;
+        this.monitorMetrics = monitorMetrics;
     }
 
     /**
@@ -151,6 +157,8 @@ public class PipelineExecutor {
         pipelineMapper.updateById(pipeline);
         push(pipeline);
 
+        // 同一次执行只记一次 pipeline.run，避免「步骤失败后 catch 再兜底」双计
+        boolean runRecorded = false;
         try {
             for (GenPipelineStep step : stepsOf(pipelineId)) {
                 pipeline = pipelineMapper.selectById(pipelineId);
@@ -159,6 +167,7 @@ public class PipelineExecutor {
 
                 mark(step, "running", null, null);
                 push(pipeline);
+                Timer.Sample stepSample = monitorMetrics.start();
                 try {
                     String message = switch (step.getStepKey()) {
                         case "model" -> stepModel(pipeline);
@@ -175,7 +184,11 @@ public class PipelineExecutor {
                         default -> "未知步骤，跳过";
                     };
                     mark(step, "success", message, null);
+                    monitorMetrics.stop(stepSample, "pipeline.step",
+                            "step", step.getStepKey(), "state", "success");
                 } catch (Exception e) {
+                    monitorMetrics.stop(stepSample, "pipeline.step",
+                            "step", step.getStepKey(), "state", "failed");
                     log.error("流水线步骤失败 {}#{}: {}", pipeline.getPipelineNo(), step.getStepKey(), e.getMessage(), e);
                     mark(step, "failed", e.getMessage(), tailOf(logFile(pipeline, step.getStepKey()), 40));
                     GenPipeline failed = pipelineMapper.selectById(pipelineId);
@@ -183,6 +196,8 @@ public class PipelineExecutor {
                     failed.setFailReason(step.getStepName() + "：" + abbreviate(e.getMessage(), 900));
                     pipelineMapper.updateById(failed);
                     push(failed);
+                    monitorMetrics.count("pipeline.run", 1, "state", "failed");
+                    runRecorded = true;
                     return;
                 }
                 push(pipelineMapper.selectById(pipelineId));
@@ -193,6 +208,8 @@ public class PipelineExecutor {
             done.setFrontendUrl("http://localhost:" + done.getFrontendPort());
             pipelineMapper.updateById(done);
             push(done);
+            monitorMetrics.count("pipeline.run", 1, "state", "success");
+            runRecorded = true;
         } catch (Exception e) {
             log.error("流水线执行器异常 {}: {}", pipeline.getPipelineNo(), e.getMessage(), e);
             GenPipeline failed = pipelineMapper.selectById(pipelineId);
@@ -201,6 +218,9 @@ public class PipelineExecutor {
                 failed.setFailReason(abbreviate(e.getMessage(), 900));
                 pipelineMapper.updateById(failed);
                 push(failed);
+            }
+            if (!runRecorded) {
+                monitorMetrics.count("pipeline.run", 1, "state", "failed");
             }
         }
     }

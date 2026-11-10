@@ -13,7 +13,11 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
 
@@ -106,6 +110,30 @@ public class GlobalExceptionHandler {
     public Result<Void> handleMethodOrMedia(Exception ex) {
         log.warn("请求方式或 Content-Type 不支持: {}", ex.getMessage());
         return Result.fail(ResultCode.PARAM_ERROR.getCode(), ex.getMessage());
+    }
+
+    /**
+     * 上传体积超限：Spring 在进入 controller 之前就抛了，
+     * 不单独映射会落到最后的 Exception 分支变成 500「服务异常」。
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public Result<Void> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        log.warn("上传文件超过限制: {}", ex.getMessage());
+        return Result.fail(ResultCode.PARAM_ERROR.getCode(), "上传文件超过大小限制（单文件 30MB / 请求 35MB）");
+    }
+
+    /**
+     * 路径不存在（Spring Boot 3 对未映射路径抛 NoResourceFoundException）。
+     *
+     * <p>不单独映射会落到最后的 Exception 分支：HTTP 200 + code 500「服务异常」，
+     * 且每次探测未暴露的 actuator 端点都刷一整页 ERROR 堆栈。
+     * V6.10 要求 {@code /actuator/env} 这类未暴露端点返回 404。
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result<Void> handleNoResource(NoResourceFoundException ex) {
+        log.warn("资源不存在: {}", ex.getResourcePath());
+        return Result.fail(ResultCode.NOT_FOUND.getCode(), "资源不存在");
     }
 
     @ExceptionHandler(Exception.class)

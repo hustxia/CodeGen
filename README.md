@@ -95,3 +95,12 @@ resources/gen-templates/   12 个 FreeMarker 模板
 | `gen.output.*` | 生成物写盘路径、包名、模块映射 |
 | `gen.selfcheck.classpath` | 自检内存编译的依赖 classpath，支持 `dir/*` |
 | `gen.menu.outlet` | `artifact` 只产出菜单 SQL 与路由片段；`internal` 同时写入平台自身 `sys_menu` |
+
+## 版本
+
+当前版本 **V6.10（平台可观测性）**：接入 Actuator + Micrometer，5 秒采样写入内存环形缓冲（保留 30 分钟窗口），并新增内嵌「系统监控」页——后端 `/monitor/*` 聚合接口 + 前端 ECharts 面板。端点仅白名单放行 `health/info/metrics`，`/actuator/health` 免 token，`metrics` 等需鉴权；`env/beans/heapdump/threaddump/loggers` 永不暴露。采样窗口仅进程内、重启即丢、多实例不共享。详见 `docs/可观测性说明.md`。
+
+| 版本 | 主题 |
+|---|---|
+| V6.9 | 平台文档中心（后端基座，前端收尾同批推进） |
+| V6.10 | 平台可观测性：Actuator + 内存指标窗口 + 内嵌监控页 |
