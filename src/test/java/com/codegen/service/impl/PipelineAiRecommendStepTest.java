@@ -47,7 +47,7 @@ class PipelineAiRecommendStepTest {
     private PipelineExecutor executor(GenPipelineProperties props, AiRecommendService svc) {
         // 步骤只依赖 props 与 aiRecommendService，其余协作者本用例不触达（第 17 位 aiRecommendService，第 18 位 aiModelService）
         return new PipelineExecutor(null, null, null, null, null, null, null, props,
-                null, null, null, null, null, null, null, null, svc, null, null);
+                null, null, null, null, null, null, null, null, svc, null, null, null);
     }
 
     /**

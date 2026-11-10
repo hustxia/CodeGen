@@ -238,12 +238,16 @@ npm run serve
 | V6.6 | 文件能力包 | 98f3c09 |
 | V6.7 | 产物测试出厂（test_enabled 三态 + H2 骨架） | V6.7（134 行），4e7d318 |
 | V6.8 | 生成物可维护性（dryRun / 受保护跳过 / 品牌参数化） | V6.8（141 行），be6f858 |
+| V6.9 | 平台文档中心（后端基座，前端收尾同批推进） | — |
+| V6.10 | 平台可观测性：Actuator + 内存指标窗口 + 内嵌监控页 | — |
 | V7.0 | AI 页面与菜单推荐（preview / apply） | V7.0（94 行），45f2670 |
 | V7.1 | 种子数据 AI 增强（AI 管语义、规则管结构） | V7.1（42 行），5ca6e72 |
 | V7.2 | 流水线成功后 SQL 交付物落盘 `db/` | eebff88 |
 | **V7.3** | **交付可信度：自检编译产物测试 / 统一 SQL 交付出口 / 表级 AI 推荐** | **V7.3（138 行），当前版本** |
 
 ---
+
+> **V6.10 平台可观测性**：接入 Actuator + Micrometer，5 秒采样写入内存环形缓冲（保留 30 分钟窗口），新增内嵌「系统监控」页——后端 `/monitor/*` 聚合接口 + 前端 ECharts 面板。端点仅白名单放行 `health/info/metrics`，`/actuator/health` 免 token，`metrics` 等需鉴权；`env/beans/heapdump/threaddump/loggers` 永不暴露。采样窗口仅进程内、重启即丢、多实例不共享。详见 `docs/可观测性说明.md`。
 
 ## 十二、项目状态
 
