@@ -9,8 +9,8 @@
       <div class="brand">
         <span class="brand-badge"><i class="el-icon-cpu"></i></span>
       </div>
-      <h3 class="title">码匠 · CodeGen</h3>
-      <p class="subtitle">带质量护栏的小型低代码平台</p>
+      <h3 class="title">CodeGen 代码生成平台</h3>
+      <p class="subtitle">多项目代码生成 · 模板管理 · 生成台账</p>
 
       <el-form
         ref="loginForm"

@@ -4,7 +4,7 @@
     <el-aside :width="sidebar.opened ? '210px' : '64px'" class="layout-aside">
       <div class="logo" @click="$router.push('/')">
         <span class="logo-badge"><i class="el-icon-shopping-bag-1"></i></span>
-        <span v-show="sidebar.opened" class="logo-text">码匠 · CodeGen</span>
+        <span v-show="sidebar.opened" class="logo-text">CodeGen 平台</span>
       </div>
 
       <!-- 自定义导航：一级点击后二级菜单从右侧滑出 -->

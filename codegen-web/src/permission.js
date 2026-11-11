@@ -7,7 +7,7 @@ import { getToken } from '@/utils/auth'
 const whiteList = ['/login', '/404', '/403']
 
 router.beforeEach(async (to, from, next) => {
-  document.title = to.meta.title ? `${to.meta.title} - 码匠 · CodeGen` : '码匠 · CodeGen'
+  document.title = to.meta.title ? `${to.meta.title} - CodeGen 平台` : 'CodeGen 平台'
 
   const hasToken = getToken()
 
