@@ -12,6 +12,7 @@ import com.codegen.entity.SysProject;
 import com.codegen.mapper.GenOutputMapper;
 import com.codegen.mapper.GenTableMapper;
 import com.codegen.mapper.SysProjectMapper;
+import com.codegen.monitor.MonitorMetrics;
 import com.codegen.service.GenCodeService;
 import com.codegen.service.GenDriftService;
 import com.codegen.service.GenSqlDeliverService;
@@ -33,6 +34,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import io.micrometer.core.instrument.Timer;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -106,6 +109,10 @@ public class GenCodeServiceImpl implements GenCodeService {
 
     @Autowired
     private GenDriftService genDriftService;
+
+    /** V6.10：可观测性指标采集器（写盘耗时 / 各状态文件数 / 管线步骤耗时）。 */
+    @Autowired
+    private MonitorMetrics monitorMetrics;
 
     /**
      * 单次生成内的系统配置缓存（projectId -> 系统）。
@@ -199,47 +206,62 @@ public class GenCodeServiceImpl implements GenCodeService {
 
     @Override
     public List<GenWriteVO> writeToDisk(GenWriteDTO dto, String batchNo) {
-        LEDGER_ERRORS.set(0);
-        SQL_DELIVERIES.set(new ArrayList<>());
-        // 与 renderTables 同口径：写盘前清一次系统配置缓存，
-        // 否则管理页改完 sys_project（root/path 语义修正）后直调写盘仍用旧配置（坑 51）
-        clearProjectCache();
-        List<Long> ids = dto == null ? null : dto.getIds();
-        if (ids == null || ids.isEmpty()) {
-            throw new BusinessException(400, "请先勾选要生成的表");
-        }
-        boolean overwrite = Boolean.TRUE.equals(dto.getOverwrite());
-        boolean skipDrifted = Boolean.TRUE.equals(dto.getSkipDrifted());
-        // V6.8：受保护文件（既有 + 无台账快照）默认跳过，只有显式 force 才覆盖
-        boolean force = Boolean.TRUE.equals(dto.getForce());
-        // 台账只取一次：逐文件查库会把「一个批次几十个文件」放大成几十次往返，
-        // 而且同一批次内台账不会变，缓存一份没有一致性风险
-        Map<String, GenDriftService.LedgerSnapshot> ledger = genDriftService.latestByPath();
+        // V6.10：写盘是「最会被追问」的慢点，记录耗时 + 各状态文件数
+        Timer.Sample sample = monitorMetrics.start();
+        boolean success = false;
         List<GenWriteVO> results = new ArrayList<>();
-        Map<Long, List<Long>> idsByProject = new LinkedHashMap<>();
-        for (GenTable table : loadTablesInOrder(ids)) {
-            if (table.getProjectId() != null) {
-                idsByProject.computeIfAbsent(table.getProjectId(), k -> new ArrayList<>()).add(table.getId());
+        try {
+            LEDGER_ERRORS.set(0);
+            SQL_DELIVERIES.set(new ArrayList<>());
+            // 与 renderTables 同口径：写盘前清一次系统配置缓存，
+            // 否则管理页改完 sys_project（root/path 语义修正）后直调写盘仍用旧配置（坑 51）
+            clearProjectCache();
+            List<Long> ids = dto == null ? null : dto.getIds();
+            if (ids == null || ids.isEmpty()) {
+                throw new BusinessException(400, "请先勾选要生成的表");
             }
-            int before = results.size();
-            results.addAll(writeTable(table, overwrite, skipDrifted, force, batchNo, ledger));
-            // 只看本表新增的结果：用累计 results 判断会让「第一张表写过」之后
-            // 每张表都被打上生成时间，last_gen_time 直接失去意义
-            boolean wrote = results.subList(before, results.size()).stream()
-                    .anyMatch(r -> "WRITTEN".equals(r.getStatus()) || "MERGED".equals(r.getStatus()));
-            if (wrote) {
-                jdbcTemplate.update("UPDATE gen_table SET last_gen_time = NOW(), last_gen_by = ? WHERE id = ?",
-                        UserContext.getUserId(), table.getId());
+            boolean overwrite = Boolean.TRUE.equals(dto.getOverwrite());
+            boolean skipDrifted = Boolean.TRUE.equals(dto.getSkipDrifted());
+            // V6.8：受保护文件（既有 + 无台账快照）默认跳过，只有显式 force 才覆盖
+            boolean force = Boolean.TRUE.equals(dto.getForce());
+            // 台账只取一次：逐文件查库会把「一个批次几十个文件」放大成几十次往返，
+            // 而且同一批次内台账不会变，缓存一份没有一致性风险
+            Map<String, GenDriftService.LedgerSnapshot> ledger = genDriftService.latestByPath();
+            Map<Long, List<Long>> idsByProject = new LinkedHashMap<>();
+            for (GenTable table : loadTablesInOrder(ids)) {
+                if (table.getProjectId() != null) {
+                    idsByProject.computeIfAbsent(table.getProjectId(), k -> new ArrayList<>()).add(table.getId());
+                }
+                int before = results.size();
+                results.addAll(writeTable(table, overwrite, skipDrifted, force, batchNo, ledger));
+                // 只看本表新增的结果：用累计 results 判断会让「第一张表写过」之后
+                // 每张表都被打上生成时间，last_gen_time 直接失去意义
+                boolean wrote = results.subList(before, results.size()).stream()
+                        .anyMatch(r -> "WRITTEN".equals(r.getStatus()) || "MERGED".equals(r.getStatus()));
+                if (wrote) {
+                    jdbcTemplate.update("UPDATE gen_table SET last_gen_time = NOW(), last_gen_by = ? WHERE id = ?",
+                            UserContext.getUserId(), table.getId());
+                }
             }
+            if (results.isEmpty()) {
+                throw new BusinessException(404, "表配置不存在，无法写盘");
+            }
+            results.forEach(r -> r.setBatchNo(batchNo));
+            // V7.3 P0-2：写盘出口同步交付 SQL（db/init_tables.sql、init_seed.sql、init_menu.sql），
+            // 失败只记录不抛出——代码已经写好了，交付物失败不应该让整个写盘回滚。
+            deliverSqlForProjects(idsByProject, batchNo);
+            success = true;
+            return results;
+        } finally {
+            // 文件数从结果集统计，不额外遍历磁盘；异常的批次也会留下 fail 样本
+            Map<String, Integer> statusCounts = new HashMap<>();
+            for (GenWriteVO r : results) {
+                if (r.getStatus() != null) {
+                    statusCounts.merge(r.getStatus(), 1, Integer::sum);
+                }
+            }
+            monitorMetrics.finishWrite(sample, success, statusCounts);
         }
-        if (results.isEmpty()) {
-            throw new BusinessException(404, "表配置不存在，无法写盘");
-        }
-        results.forEach(r -> r.setBatchNo(batchNo));
-        // V7.3 P0-2：写盘出口同步交付 SQL（db/init_tables.sql、init_seed.sql、init_menu.sql），
-        // 失败只记录不抛出——代码已经写好了，交付物失败不应该让整个写盘回滚。
-        deliverSqlForProjects(idsByProject, batchNo);
-        return results;
     }
 
     @Override
@@ -668,7 +690,7 @@ public class GenCodeServiceImpl implements GenCodeService {
                 project.getRootPackage(), project.getProjectCode(),
                 project.getDefaultDeleteCascadeMode(), project.getDefaultGenPrint(),
                 project.getProjectStructure(), project.getPayEnabled(), project.getMobileEnabled(),
-                project.getFileEnabled(), project.getTestEnabled());
+                project.getFileEnabled(), project.getTestEnabled(), project.getDefaultLanguage());
     }
 
     /**

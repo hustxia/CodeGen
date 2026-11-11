@@ -115,29 +115,29 @@ public final class GenTemplateModel {
     public record ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                                 String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                                 String projectStructure, Integer payEnabled, Integer mobileEnabled,
-                                Integer fileEnabled, Integer testEnabled) {
+                                Integer fileEnabled, Integer testEnabled, String defaultLanguage) {
 
         /** 兼容 V3.0 之前的构造：无系统编码，权限点不加前缀 */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage) {
-            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V3.0 构造：无级联默认值（V4.4 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage, String projectCode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V4.4 构造：无打印默认值（V4.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V4.5 构造：无工程结构（V5.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, null, null, null, null, null);
+                    defaultGenPrint, null, null, null, null, null, null);
         }
 
         /** 兼容 V6.2 构造：无支付开关（V6.3 前的调用方） */
@@ -145,7 +145,7 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, null, null, null, null);
+                    defaultGenPrint, projectStructure, null, null, null, null, null);
         }
 
         /** 兼容 V6.3/V6.4 构造：无移动端开关（V6.5 前的调用方） */
@@ -153,7 +153,7 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure, Integer payEnabled) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, payEnabled, null, null, null);
+                    defaultGenPrint, projectStructure, payEnabled, null, null, null, null);
         }
 
         /** 兼容 V6.5 构造：无文件能力开关（V6.6 前的调用方） */
@@ -161,7 +161,7 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure, Integer payEnabled, Integer mobileEnabled) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, null, null);
+                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, null, null, null);
         }
 
         /** 兼容 V6.6 构造：无测试骨架开关（V6.7 前的调用方） */
@@ -170,7 +170,23 @@ public final class GenTemplateModel {
                              String projectStructure, Integer payEnabled, Integer mobileEnabled,
                              Integer fileEnabled) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, fileEnabled, null);
+                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, fileEnabled, null, null);
+        }
+
+        /**
+         * 兼容 V7.4 及之前的「11 参全参构造」：无语言配置，回落 {@code zh-CN}。
+         *
+         * <p>V7.5 给 record 加了第 12 个组件 defaultLanguage，如果不留这个重载，
+         * 仓库里十几个基线/契约测试（以及未来任何旧调用）会全部编译失败。
+         * 存量系统的行为必须保持不变——所以这里显式传 null，让 LanguageConfig 走默认。
+         */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                             String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
+                             String projectStructure, Integer payEnabled, Integer mobileEnabled,
+                             Integer fileEnabled, Integer testEnabled) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
+                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, fileEnabled,
+                    testEnabled, null);
         }
     }
 
@@ -367,6 +383,12 @@ public final class GenTemplateModel {
         m.put("moduleName", module);
         m.put("gatewayPrefix", prefix);
         m.put("author", orDefault(table.getAuthor(), ""));
+        // V7.5 项目语言配置：系统级 defaultLanguage → <html lang> / dir。
+        // 回落与合法性校验只在 LanguageConfig 一处实现，模板只消费模型键（单一实现原则）。
+        String htmlLang = com.codegen.config.LanguageConfig.resolveLocale(
+                project == null ? null : project.defaultLanguage());
+        m.put("lang", htmlLang);
+        m.put("dir", com.codegen.config.LanguageConfig.resolveDir(htmlLang));
         // F-09：空前缀 → /{module}（与后端 @RequestMapping("/${moduleName}") 直连，代理只剥 /dev-api）；
         // 有前缀 → /api/{prefix}/{module}（网关段原样保留，代理剥 /dev-api/api/{prefix}）
         // V6.0 micro：产物工程自带网关，网关按 /{module}/** 路由，前端不再拼 /api/{prefix} 段；

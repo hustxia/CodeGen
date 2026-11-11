@@ -167,6 +167,22 @@ public class SysProject extends BaseEntity {
     private String appThemeColor;
 
     /**
+     * V7.5 项目语言配置：系统默认语言（BCP47 标签，如 {@code zh-CN} / {@code ar-SA}）。
+     * <p>空 = 回落 {@link com.codegen.config.LanguageConfig#DEFAULT_LANGUAGE}，
+     * 与改造前生成物里硬编码的 {@code <html lang="zh-CN">} 完全一致，存量系统零 diff。
+     * <p>唯一解析实现 {@link com.codegen.config.LanguageConfig#resolveLocale(String)}，
+     * 不要在模板或脚手架里再写一遍回落。
+     */
+    private String defaultLanguage;
+
+    /**
+     * V7.5 项目语言配置：本系统启用的语言码，逗号分隔（如 {@code zh,en,ar,ja}）。
+     * <p>空 = 全部启用。存的是语言清单里的 {@code code}，不是 BCP47 标签，
+     * 这样切换默认地区时不用改这里。
+     */
+    private String supportedLanguages;
+
+    /**
      * 备注
      */
     private String remark;

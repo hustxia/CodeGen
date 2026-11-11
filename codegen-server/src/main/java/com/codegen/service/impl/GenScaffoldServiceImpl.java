@@ -56,6 +56,9 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         String themeColor = com.codegen.util.GenTemplateModel.resolveThemeColor(dto.getAppThemeColor());
         // V6.8 Logo：空 = favicon 用自带 placeholder.svg、品牌区用文字标识（不拼不存在的 logo.png）
         String appLogo = com.codegen.util.GenTemplateModel.resolveAppLogo(dto.getAppLogo());
+        // V7.5 项目语言配置：默认 zh-CN，与改造前硬编码一致；解析只在 LanguageConfig 一处
+        String htmlLang = com.codegen.config.LanguageConfig.resolveLocale(dto.getDefaultLanguage());
+        String htmlDir = com.codegen.config.LanguageConfig.resolveDir(htmlLang);
 
         Path backendRoot = resolveRoot(dto.getBackendRoot(), outputProperties.getBackendRoot(), backendModule);
         Path frontendRoot = resolveRoot(dto.getFrontendRoot(), outputProperties.getFrontendRoot(), frontendModule);
@@ -377,7 +380,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             write(frontendRoot, ".env.development",
                     frontendEnvDev(proxyPort), "frontend", force, vo, counter);
             write(frontendRoot, ".env.production", frontendEnvProd(), "frontend", force, vo, counter);
-            write(frontendRoot, "public/index.html", frontendIndexHtml(appName, appLogo, themeColor),
+            write(frontendRoot, "public/index.html", frontendIndexHtml(appName, appLogo, themeColor, htmlLang, htmlDir),
                     "frontend", force, vo, counter);
             // V6.8 素材链路：产物自带占位图，图片列 onerror / el-image error 槽统一指向它，
             // 种子数据里指向不存在文件的 URL 不再显示浏览器破图
@@ -425,7 +428,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             int apiTarget = micro ? serverPort + 1 : serverPort;
             String gwPrefix = StringUtils.hasText(dto.getGatewayPrefix())
                     ? dto.getGatewayPrefix().trim() : "demo";
-            for (Map.Entry<String, String> e : mobileResources(project, apiTarget, gwPrefix).entrySet()) {
+            for (Map.Entry<String, String> e : mobileResources(project, apiTarget, gwPrefix, htmlLang, htmlDir).entrySet()) {
                 write(mobileRoot, e.getKey(), e.getValue(), "mobile", force, vo, counter);
             }
             vo.getNextSteps().add("移动端工程：cd " + mobileRoot + " && npm install && npm run dev:h5（H5 实机调试）；"
@@ -1586,10 +1589,21 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             "src/pages/dynamic/list.vue", "src/pages/dynamic/detail.vue", "src/pages/dynamic/form.vue",
             "src/pages/todo/todo.vue", "src/pages/mine/mine.vue");
 
+    /**
+     * 兼容 V7.4 及之前的三参签名（含通过反射调用该方法的基线测试）。
+     * <p>V7.5 增加了语言参数，但旧入口必须保留：无语言配置时回落 {@code zh-CN/ltr}，
+     * 保证存量移动端产物与改造前逐字节一致。
+     */
     private Map<String, String> mobileResources(String project, int apiPort, String gwPrefix) {
+        return mobileResources(project, apiPort, gwPrefix,
+                com.codegen.config.LanguageConfig.DEFAULT_LANGUAGE, "ltr");
+    }
+
+    private Map<String, String> mobileResources(String project, int apiPort, String gwPrefix,
+                                                String htmlLang, String htmlDir) {
         Map<String, String> out = new java.util.LinkedHashMap<>();
         for (String f : MOBILE_FILES) {
-            out.put(f, mobileResource(f, project, apiPort, gwPrefix));
+            out.put(f, mobileResource(f, project, apiPort, gwPrefix, htmlLang, htmlDir));
         }
         out.put(".gitignore", mobileGitignore());
         return out;
@@ -1600,14 +1614,17 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     /** 读 classpath scaffold-mobile/&lt;file&gt;，__PROJECT__/__API_PORT__/__GW__ 占位替换 */
-    private String mobileResource(String file, String project, int apiPort, String gwPrefix) {
+    private String mobileResource(String file, String project, int apiPort, String gwPrefix,
+                                  String htmlLang, String htmlDir) {
         try {
             org.springframework.core.io.ClassPathResource resource =
                     new org.springframework.core.io.ClassPathResource("scaffold-mobile/" + file);
             String content = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             return content.replace("__PROJECT__", project)
                     .replace("__API_PORT__", String.valueOf(apiPort))
-                    .replace("__GW__", gwPrefix == null ? "" : gwPrefix);
+                    .replace("__GW__", gwPrefix == null ? "" : gwPrefix)
+                    .replace("__HTML_LANG__", htmlLang)
+                    .replace("__HTML_DIR_ATTR__", "rtl".equals(htmlDir) ? " dir=\"rtl\"" : "");
         } catch (java.io.IOException e) {
             throw new com.codegen.common.exception.BusinessException(500, "移动端工程资源缺失：scaffold-mobile/" + file);
         }
@@ -4439,13 +4456,14 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "VUE_APP_BASE_API = '/prod-api'\n";
     }
 
-    private String frontendIndexHtml(String appName, String appLogo, String themeColor) {
+    private String frontendIndexHtml(String appName, String appLogo, String themeColor,
+                                     String htmlLang, String htmlDir) {
         // favicon 必须指向真的存在的文件：空 Logo 回落 placeholder.svg（脚手架必写），
         // 历史上写死的 logo.png 从来没有被生成过，等于每个新工程都挂一个 404
         String favicon = appLogo == null || appLogo.isBlank()
                 ? com.codegen.util.GenTemplateModel.FALLBACK_APP_LOGO : appLogo;
         return "<!DOCTYPE html>\n"
-                + "<html lang=\"zh-CN\">\n"
+                + "<html lang=\"" + htmlLang + "\"" + ("rtl".equals(htmlDir) ? " dir=\"rtl\"" : "") + ">\n"
                 + "<head>\n"
                 + "  <meta charset=\"utf-8\">\n"
                 + "  <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n"
