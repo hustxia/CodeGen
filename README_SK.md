@@ -23,7 +23,18 @@ Prijem tabuliek (DB import / DDL)
 
 ---
 
-## 2. Aké problémy rieši
+## 2. Kto sú používatelia a ako ich používajú
+
+| Používateľ | Typická potreba | Cesta, ktorú platforma ponúka |
+| --- | --- | --- |
+| Back-end vývojár | Má skupinu tabuliek (alebo DDL) a chce rýchlo rozbehnúť CRUD | Stránka konfigurácie tabuliek: import → konfigurácia polí → generovanie jedným kliknutím |
+| Full-stack / nezávislý vývojár | Chce od nuly postaviť kompletný systém (vrátane prihlásenia, oprávnení, slovníka) | Stránka Pipeline: postavte systém jednou vetou |
+| Vedúci tímu | Chce zjednotiť kódový štýl, konvencie kódu a adresárovú štruktúru | Správa systému: jeden systém = jedna výstupná konfigurácia, platí dávkovo |
+| Správca platformy | Chce meniť šablóny bez zmeny kódu | Správa šablón: online úprava, uloženie okamžite platí, podporuje vrátenie verzií |
+
+
+
+## 3. Aké problémy rieši
 
 | Bolestivý bod | Čo robí CodeGen |
 | --- | --- |
@@ -36,7 +47,7 @@ Prijem tabuliek (DB import / DDL)
 
 ---
 
-## 3. Prehľad kapacít
+## 4. Prehľad kapacít
 
 - **Prijem tabuliek**: parsovanie DDL, priamy import z databázy, dávkový sprievodca prijmom, automaticky odvodená konfigurácia stĺpcov (ovládacie prvky / validácia / slovníky / relácie).
 - **Tvary tabuliek**: jednoduchá tabulka, stromová tabulka (tree API + stromový grid), master-detail (uloženie v tej istej transakcii + záložky detailov), spojovacie tabulky many-to-many.
@@ -49,7 +60,7 @@ Prijem tabuliek (DB import / DDL)
 
 ---
 
-## 4. Typické scénáre
+## 5. Typické scénáre
 
 | Scenár | Popis |
 | --- | --- |
@@ -64,7 +75,7 @@ Prijem tabuliek (DB import / DDL)
 
 ---
 
-## 5. Základný pracovný tok
+## 6. Základný pracovný tok
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +91,7 @@ Prijem tabuliek (DB import / DDL)
 
 ---
 
-## 6. Zostav systém jednou vetou (Pipeline)
+## 7. Zostav systém jednou vetou (Pipeline)
 
 Vysokoúrovňová kapacita zameraná na "zostavenie backendu od nuly". Potom čo popíšete obchodnú doménu, pipeline automaticky postupuje 5 fázami:
 
@@ -96,7 +107,7 @@ Akékoľvek zlyhanie fázy okamžite preruší s čitateľnou chybou pre jednodu
 
 ---
 
-## 7. Architektúra systému
+## 8. Architektúra systému
 
 Front-end a back-end oddelené, dva repozitáre spolupracujú:
 
@@ -125,7 +136,7 @@ resources/gen-templates/   22 FreeMarker šablón (backend / frontend / shared /
 
 ---
 
-## 8. Prehľad technologického stacku
+## 9. Prehľad technologického stacku
 
 | Dimenzia | Voľba |
 | --- | --- |
@@ -140,7 +151,7 @@ resources/gen-templates/   22 FreeMarker šablón (backend / frontend / shared /
 
 ---
 
-## 9. Rýchly štart
+## 10. Rýchly štart
 
 ### 1. Vytvorte databázu (13 platformných tabuliek + predvolený účet admin/admin123)
 
@@ -208,7 +219,7 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 
 ---
 
-## 10. Mapa dokumentácie
+## 11. Mapa dokumentácie
 
 | Dokument | Obsah |
 | --- | --- |
@@ -220,7 +231,7 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 
 ---
 
-## 11. História verzií
+## 12. História verzií
 
 | Verzia | Téma / plánový dokument | Commit nasadenia |
 | --- | --- | --- |
@@ -256,7 +267,7 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 
 > **V6.10 Platformná pozorovateľnosť**: integruje Actuator + Micrometer, vzorkuje každých 5 sekúnd do kruhového bufferu v pamäti (30-minútové okno), plus nová vstavaná stránka "Systémový monitor" — backend `/monitor/*` agregácie API + frontend ECharts panely. Iba `health/info/metrics` endpointy sú whitelisted; `/actuator/health` je bez tokenu, zatiaľ čo `metrics` atď. vyžadujú auth; `env/beans/heapdump/threaddump/loggers` nie sú nikdy vystavené. Vzorkovacie okno je iba per-proces, stráca sa pri reštarte a nie je zdieľané medzi inštanciami. Pozri `docs/可观测性说明.md` (čínština) pre podrobnosti.
 
-## 12. Stav projektu
+## 13. Stav projektu
 
 - Aktuálna plánovaná verzná línia dosiahla **V7.3** (kapacity sa neustále iterujú: AI modelovanie, vylepšenie seed dát, systém balíčkov schopností atď.).
 - Doprovodný demo projekt `demo_admin` (backend 8140 / frontend 9040) pokrýva scenáre strom / CRUD / master-detail / len na čítanie / tlač a beží samostatne pre overenie.
@@ -264,7 +275,7 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 
 ---
 
-## 13. Autor & podpora
+## 14. Autor & podpora
 
 - **Autor**: čínsky programátor (nezávislý vývojár)
 - **E-mail**: `hustxiayuhong@126.com`

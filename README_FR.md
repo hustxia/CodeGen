@@ -25,7 +25,16 @@ Prise en charge de la table (import BD / DDL)
 
 ---
 
-## 2. Quels problèmes cela résout
+## 2. Qui sont les utilisateurs et comment ils l’utilisent
+
+| Utilisateur | Besoin type | Le chemin offert par la plateforme |
+| --- | --- | --- |
+| Développeur back-end | Dispose d’un lot de tables (ou de DDL) et veut rapidement lancer du CRUD | Page de configuration des tables : importer → configurer les champs → Génération en un clic |
+| Développeur full-stack / indépendant | Veut partir de zéro pour un système complet (connexion, permissions, dictionnaires) | Page Pipeline : construire un système en une phrase |
+| Responsable d’équipe | Veut unifier le style de code, les conventions et la structure de répertoires | Administration système : un système = une configuration de sortie, appliquée en lot |
+| Mainteneur de la plateforme | Veut modifier les templates sans modifier le code | Gestion des templates : édition en ligne, effet immédiat à l’enregistrement, avec retour arrière de version |
+
+## 3. Quels problèmes cela résout
 
 | Point de douleur | Ce que fait CodeGen |
 | --- | --- |
@@ -38,7 +47,7 @@ Prise en charge de la table (import BD / DDL)
 
 ---
 
-## 3. Panorama des capacités cœur
+## 4. Panorama des capacités cœur
 
 - **Prise en charge des tables** : analyse de DDL, import direct des tables de la base, assistant de reprise en lot, déduction automatique de la configuration des colonnes (contrôle / validation / dictionnaire / relation).
 - **Formes de tables** : table simple, table arborescente (API tree + grille arborescente), maître-détail (enregistrement dans la même transaction + onglets de détail), tables de jonction plusieurs-à-plusieurs.
@@ -51,7 +60,7 @@ Prise en charge de la table (import BD / DDL)
 
 ---
 
-## 4. Scénarios typiques
+## 5. Scénarios typiques
 
 | Scénario | Description |
 | --- | --- |
@@ -66,7 +75,7 @@ Prise en charge de la table (import BD / DDL)
 
 ---
 
-## 5. Workflow cœur
+## 6. Workflow cœur
 
 ```
 ┌─────────────────┐ → ┌─────────────────────┐ → ┌───────────────────────────────────────────────────────┐ → ┌──────────────────────┐
@@ -82,7 +91,7 @@ Prise en charge de la table (import BD / DDL)
 
 ---
 
-## 6. Un système en une phrase (Pipeline)
+## 7. Un système en une phrase (Pipeline)
 
 Capacité avancée destinée à « monter un back-office à partir de zéro ». Après la description du domaine métier, le pipeline progresse automatiquement en 5 étapes :
 
@@ -98,7 +107,7 @@ L'échec d'une étape interrompt immédiatement le processus et renvoie une erre
 
 ---
 
-## 7. Architecture du système
+## 8. Architecture du système
 
 Front-end et back-end séparés, deux dépôts qui collaborent :
 
@@ -127,7 +136,7 @@ resources/gen-templates/   22 templates FreeMarker (groupes backend / frontend /
 
 ---
 
-## 8. Stack technique en un coup d'œil
+## 9. Stack technique en un coup d'œil
 
 | Dimension | Choix |
 | --- | --- |
@@ -142,7 +151,7 @@ resources/gen-templates/   22 templates FreeMarker (groupes backend / frontend /
 
 ---
 
-## 9. Démarrage rapide
+## 10. Démarrage rapide
 
 ### 1. Créer la base (13 tables de plateforme + compte par défaut admin/admin123)
 
@@ -210,7 +219,7 @@ Le front-end écoute par défaut sur le port **9530**, avec `/dev-api` proxifié
 
 ---
 
-## 10. Navigation dans la documentation
+## 11. Navigation dans la documentation
 
 | Document | Contenu |
 | --- | --- |
@@ -222,7 +231,7 @@ Le front-end écoute par défaut sur le port **9530**, avec `/dev-api` proxifié
 
 ---
 
-## 11. Évolution des versions
+## 12. Évolution des versions
 
 | Version | Thème / document de planification | Commit de livraison |
 | --- | --- | --- |
@@ -258,7 +267,7 @@ Le front-end écoute par défaut sur le port **9530**, avec `/dev-api` proxifié
 
 > **V6.10 Observabilité de la plateforme** : intégration d'Actuator + Micrometer, échantillonnage toutes les 5 secondes dans un tampon circulaire en mémoire (fenêtre de 30 minutes), et ajout d'une page embarquée « Supervision système » — API d'agrégation back-end `/monitor/*` + panneaux ECharts côté front-end. Seuls les endpoints `health/info/metrics` sont autorisés par liste blanche ; `/actuator/health` est accessible sans token, tandis que `metrics` et d'autres exigent une authentification ; `env/beans/heapdump/threaddump/loggers` ne sont jamais exposés. La fenêtre d'échantillonnage est strictement interne au processus : perdue au redémarrage, non partagée entre plusieurs instances. Voir `docs/可观测性说明.md` (chinois) pour les détails.
 
-## 12. État du projet
+## 13. État du projet
 
 - La ligne de versions planifiée atteint aujourd'hui **V7.3** ; les capacités continuent d'évoluer (modélisation IA, enrichissement des données de seed, système de packs de capacités, etc.).
 - Un projet de démonstration d'accompagnement `demo_admin` (back-end 8140 / front-end 9040) est disponible : il couvre les scénarios arborescent / CRUD / maître-détail / lecture seule / impression et peut être lancé indépendamment pour vérification.
@@ -266,7 +275,7 @@ Le front-end écoute par défaut sur le port **9530**, avec `/dev-api` proxifié
 
 ---
 
-## 13. Auteur et Support Technique
+## 14. Auteur et Support Technique
 
 - **Auteur** : programmeur chinois (développeur indépendant)
 - **E-mail** : `hustxiayuhong@126.com`

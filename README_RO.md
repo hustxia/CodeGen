@@ -23,7 +23,15 @@ Table intake (DB import / DDL)
 
 ---
 
-## 2. Ce probleme rezolvă
+## 2. Cine sunt utilizatorii și cum folosesc platforma
+| Utilizator | Nevoie tipică | Calea oferită de platformă |
+| --- | --- | --- |
+| Dezvoltator backend | Are un set de tabele (sau DDL) și vrea să ridice rapid un CRUD | Pagina de configurare a tabelelor: import → configurarea câmpurilor → generare cu un singur clic |
+| Dezvoltator full-stack / independent | Vrea să construiască de la zero un sistem complet (cu login, permisiuni, dicționare) | Pagina conductei: construiți un sistem cu o propoziție |
+| Lider de echipă | Vrea să unifice stilul de cod, standardele și structura de directoare | Management sistem: un sistem = o configurare de ieșire, aplicare în lot |
+| Întreținătorul platformei | Vrea să schimbe șabloanele fără a atinge codul | Managementul șabloanelor: editare online, salvarea intră în vigoare imediat, este suportat rollback de versiune |
+
+## 3. Ce probleme rezolvă
 
 | Punct dureros (Pain point) | Ce face CodeGen |
 | --- | --- |
@@ -36,7 +44,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 3. Peisajul capabilităților
+## 4. Peisajul capabilităților
 
 - **Preluare tabele (Table intake)**: parsare DDL, import direct din baza de date, expert de preluare în lot, configurare automată a coloanelor (controale / validare / dicționare / relații).
 - **Forme de tabel**: tabel simplu, tabel arbore (API arbore + grilă arbore), stăpân-detail (salvare în aceeași tranzacție + tab-uri de detail), tabele de joncțiune many-to-many.
@@ -49,7 +57,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 4. Scenarii tipice
+## 5. Scenarii tipice
 
 | Scenariu | Descriere |
 | --- | --- |
@@ -64,7 +72,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 5. Fluxul de lucru principal
+## 6. Fluxul de lucru principal
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +88,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 6. Construiți un sistem cu o propoziție (Pipeline)
+## 7. Construiți un sistem cu o propoziție (Pipeline)
 
 O capacitate de nivel înalt destinată „creării unui backend de la zero”. După ce descrieți domeniul de business, conducta avansează automat prin 5 etape:
 
@@ -96,7 +104,7 @@ Orice eșec al unei etape se oprește imediat cu o eroare lizibilă, ușor de lo
 
 ---
 
-## 7. Arhitectura sistemului
+## 8. Arhitectura sistemului
 
 Front-end și back-end separate, două depozite care lucrează împreună:
 
@@ -125,7 +133,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 8. Tehnologiile dintr-o privire
+## 9. Tehnologiile dintr-o privire
 
 | Dimensiune | Alegere |
 | --- | --- |
@@ -140,7 +148,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 9. Începere rapidă
+## 10. Începere rapidă
 
 ### 1. Creați baza de date (13 tabele de platformă + cont implicit admin/admin123)
 
@@ -208,7 +216,7 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 
 ---
 
-## 10. Harta documentației
+## 11. Harta documentației
 
 | Document | Conținut |
 | --- | --- |
@@ -220,7 +228,7 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 
 ---
 
-## 11. Istoricul versiunilor
+## 12. Istoricul versiunilor
 
 | Versiune | Temă / document de plan | Commit de livrare |
 | --- | --- | --- |
@@ -256,7 +264,7 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 
 > **V6.10 Observabilitate platformă**: integrează Actuator + Micrometer, eșantionând la fiecare 5 secunde într-un buffer inelar în memorie (fereastră de 30 de minute), plus o nouă pagină înglobată „System Monitor” — API-uri de agregare backend `/monitor/*` + panouri ECharts frontend. Doar endpoint-urile `health/info/metrics` sunt pe listă albă; `/actuator/health` este fără token în timp ce `metrics` etc. necesită autentificare; `env/beans/heapdump/threaddump/loggers` nu sunt niciodată expuse. Fereastra de eșantionare este doar per-proces, pierdută la restart și nu este partajată între instanțe. Consultați `docs/可观测性说明.md` (chineză) pentru detalii.
 
-## 12. Starea proiectului
+## 13. Starea proiectului
 
 - Linia de versiune planificată curentă a ajuns la **V7.3** (capacitățile continuă să evolueze: modelare AI, îmbunătățire seed-data, sistem de pachete de capacități etc.).
 - Un proiect demo însoțitor `demo_admin` (backend 8140 / frontend 9040) acoperă scenariile arbore / CRUD / stăpân-detail / doar-citire / tipărire și rulează independent pentru verificare.
@@ -264,7 +272,7 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 
 ---
 
-## 13. Autor și suport
+## 14. Autor și suport
 
 - **Autor**: un programator chinez (dezvoltator independent)
 - **Email**: `hustxiayuhong@126.com`

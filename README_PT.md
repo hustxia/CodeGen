@@ -25,7 +25,16 @@ Entrada de tabelas (importação do BD / DDL)
 
 ---
 
-## 2. Que Problemas Ele Resolve
+## 2. Quem São os Utilizadores e Como o Usam
+
+| Utilizador | Necessidade típica | O caminho que a plataforma oferece |
+| --- | --- | --- |
+| Programador back-end | Tem um conjunto de tabelas (ou DDL) e quer levantar CRUD rapidamente | Página de config. de tabelas: importar → configurar campos → Geração com um clique |
+| Programador full-stack / independente | Quer criar do zero um sistema completo (com login, permissões, dicionários) | Página Pipeline: construa um sistema com uma frase |
+| Líder de equipa | Quer unificar o estilo de código, as convenções e a estrutura de diretórios | Administração do sistema: um sistema = uma configuração de saída, aplicada em lote |
+| Mantenedor da plataforma | Quer alterar os templates sem alterar o código | Gestão de templates: edição online, efeito imediato ao guardar, com rollback de versões |
+
+## 3. Que Problemas Ele Resolve
 
 | Dor | O que o CodeGen faz |
 | --- | --- |
@@ -38,7 +47,7 @@ Entrada de tabelas (importação do BD / DDL)
 
 ---
 
-## 3. Panorama de Capacidades
+## 4. Panorama de Capacidades
 
 - **Entrada de tabelas**: análise de DDL, importação direta do banco, assistente de entrada em lote, configuração de colunas derivada automaticamente (controles / validações / dicionários / relacionamentos).
 - **Formas de tabela**: tabela simples, tabela em árvore (API tree + grade em árvore), mestre-detalhe (salvamento na mesma transação + abas de detalhe), tabelas intermediárias muitos-para-muitos.
@@ -51,7 +60,7 @@ Entrada de tabelas (importação do BD / DDL)
 
 ---
 
-## 4. Cenários Típicos
+## 5. Cenários Típicos
 
 | Cenário | Descrição |
 | --- | --- |
@@ -66,7 +75,7 @@ Entrada de tabelas (importação do BD / DDL)
 
 ---
 
-## 5. Fluxo de Trabalho Principal
+## 6. Fluxo de Trabalho Principal
 
 ```
 ┌─────────────────┐   ┌─────────────────────┐   ┌───────────────────────────────────────────────────────┐
@@ -82,7 +91,7 @@ Entrada de tabelas (importação do BD / DDL)
 
 ---
 
-## 6. Construa um Sistema com Uma Frase (Pipeline)
+## 7. Construa um Sistema com Uma Frase (Pipeline)
 
 Capacidade avançada para "montar um back-end do zero". Depois de descrever o domínio de negócio, o pipeline avança automaticamente por 5 etapas:
 
@@ -98,7 +107,7 @@ Qualquer falha de etapa interrompe imediatamente com um erro legível para fáci
 
 ---
 
-## 7. Arquitetura do Sistema
+## 8. Arquitetura do Sistema
 
 Front-end e back-end separados, com dois repositórios cooperando:
 
@@ -127,7 +136,7 @@ resources/gen-templates/   22 templates FreeMarker (grupos backend / frontend / 
 
 ---
 
-## 8. Stack Tecnológica em Resumo
+## 9. Stack Tecnológica em Resumo
 
 | Dimensão | Escolha |
 | --- | --- |
@@ -142,7 +151,7 @@ resources/gen-templates/   22 templates FreeMarker (grupos backend / frontend / 
 
 ---
 
-## 9. Início Rápido
+## 10. Início Rápido
 
 ### 1. Criar o banco (13 tabelas da plataforma + conta padrão admin/admin123)
 
@@ -210,7 +219,7 @@ O front-end usa por padrão a porta **9530**, com proxy `/dev-api` para a porta 
 
 ---
 
-## 10. Mapa da Documentação
+## 11. Mapa da Documentação
 
 | Documento | Conteúdo |
 | --- | --- |
@@ -222,7 +231,7 @@ O front-end usa por padrão a porta **9530**, com proxy `/dev-api` para a porta 
 
 ---
 
-## 11. Histórico de Versões
+## 12. Histórico de Versões
 
 | Versão | Tema / documento de planejamento | Commit de implantação |
 | --- | --- | --- |
@@ -258,7 +267,7 @@ O front-end usa por padrão a porta **9530**, com proxy `/dev-api` para a porta 
 
 > **V6.10 Observabilidade da plataforma**: integra Actuator + Micrometer, amostrando a cada 5 segundos em um buffer circular em memória (janela de 30 minutos), além de uma nova página embutida "Monitor do Sistema" — APIs de agregação `/monitor/*` no back-end + painéis ECharts no front-end. Apenas os endpoints `health/info/metrics` estão na lista branca; `/actuator/health` dispensa token, enquanto `metrics` etc. exigem autenticação; `env/beans/heapdump/threaddump/loggers` nunca são expostos. A janela de amostragem é por processo, perdida no reinício e não compartilhada entre instâncias. Consulte `docs/可观测性说明.md` (chinês) para detalhes.
 
-## 12. Estado do Projeto
+## 13. Estado do Projeto
 
 - A linha de versões planejadas atual chegou a **V7.3**, com evolução contínua de capacidades (modelagem por IA, aprimoramento de dados-semente, sistema de pacotes de capacidade etc.).
 - Há um projeto de demonstração `demo_admin` (back-end 8140 / front-end 9040) cobrindo os cenários de árvore / CRUD / mestre-detalhe / somente leitura / impressão, executável de forma independente para verificação.
@@ -266,7 +275,7 @@ O front-end usa por padrão a porta **9530**, com proxy `/dev-api` para a porta 
 
 ---
 
-## 13. Autor e Suporte Técnico
+## 14. Autor e Suporte Técnico
 
 - **Autor**: programador chinês (desenvolvedor independente)
 - **E-mail**: `hustxiayuhong@126.com`

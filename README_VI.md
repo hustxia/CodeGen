@@ -23,7 +23,15 @@ Table intake (DB import / DDL)
 
 ---
 
-## 2. Những vấn đề nó giải quyết
+## 2. Người dùng là ai, và họ dùng thế nào
+
+| Người dùng | Nhu cầu điển hình | Đường dẫn nền tảng cung cấp |
+| --- | --- | --- |
+| Lập trình viên back-end | Có một loạt bảng (hoặc DDL) và muốn nhanh chóng dựng CRUD | Trang cấu hình bảng: nhập → cấu hình trường → sinh một cú nhấp |
+| Lập trình viên full-stack / độc lập | Muốn xây dựng trọn vẹn một hệ thống từ con số 0 (gồm đăng nhập, quyền, từ điển) | Trang pipeline: dựng hệ thống bằng một câu |
+| Trưởng nhóm | Muốn thống nhất phong cách mã, quy tắc viết mã, cấu trúc thư mục | Quản lý hệ thống: một hệ thống = một cấu hình đầu ra, áp dụng hàng loạt |
+| Người bảo trì nền tảng | Muốn đổi template mà không đổi mã | Quản lý template: chỉnh sửa trực tuyến, lưu là có hiệu lực, hỗ trợ rollback lịch sử |
+## 3. Những vấn đề nó giải quyết
 
 | Điểm đau | CodeGen làm gì |
 | --- | --- |
@@ -36,7 +44,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 3. Bản đồ năng lực
+## 4. Bản đồ năng lực
 
 - **Nạp bảng**: phân tích DDL, nhập trực tiếp từ CSDL, trình hướng dẫn nhập hàng loạt, tự suy cấu hình cột (điều khiển / xác thực / từ điển / quan hệ).
 - **Hình dạng bảng**: bảng đơn, bảng cây (API cây + lưới cây), bảng cha-con (lưu cùng giao dịch + tab chi tiết), bảng trung gian nhiều-nhiều.
@@ -49,7 +57,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 4. Kịch bản điển hình
+## 5. Kịch bản điển hình
 
 | Kịch bản | Mô tả |
 | --- | --- |
@@ -64,7 +72,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 5. Quy trình cốt lõi
+## 6. Quy trình cốt lõi
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +88,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 6. Dựng hệ thống bằng một câu (Pipeline)
+## 7. Dựng hệ thống bằng một câu (Pipeline)
 
 Một năng lực cao cấp nhắm đến "dựng back-end từ đầu". Sau khi bạn mô tả miền nghiệp vụ, pipeline tự động tiến qua 5 giai đoạn:
 
@@ -96,7 +104,7 @@ Bất kỳ giai đoạn nào thất bại sẽ dừng ngay lập tức với l�
 
 ---
 
-## 7. Kiến trúc hệ thống
+## 8. Kiến trúc hệ thống
 
 Tách biệt front-end và back-end, hai kho lưu trữ phối hợp:
 
@@ -125,7 +133,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 8. Tổng quan công nghệ
+## 9. Tổng quan công nghệ
 
 | Khía cạnh | Lựa chọn |
 | --- | --- |
@@ -140,7 +148,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 9. Bắt đầu nhanh
+## 10. Bắt đầu nhanh
 
 ### 1. Tạo cơ sở dữ liệu (13 bảng nền tảng + tài khoản mặc định admin/admin123)
 
@@ -208,7 +216,7 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 
 ---
 
-## 10. Bản đồ tài liệu
+## 11. Bản đồ tài liệu
 
 | Tài liệu | Nội dung |
 | --- | --- |
@@ -220,7 +228,7 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 
 ---
 
-## 11. Lịch sử phiên bản
+## 12. Lịch sử phiên bản
 
 | Phiên bản | Chủ đề / tài liệu kế hoạch | Commit triển khai |
 | --- | --- | --- |
@@ -256,7 +264,7 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 
 > **V6.10 Khả năng quan sát nền tảng**: tích hợp Actuator + Micrometer, lấy mẫu mỗi 5 giây vào bộ đệm vòng trong bộ nhớ (cửa sổ 30 phút), cộng thêm trang "System Monitor" nhúng mới — API tổng hợp back-end `/monitor/*` + panel ECharts front-end. Chỉ các endpoint `health/info/metrics` được whitelist; `/actuator/health` không cần token trong khi `metrics` v.v. yêu cầu xác thực; `env/beans/heapdump/threaddump/loggers` không bao giờ được phơi bày. Cửa sổ lấy mẫu chỉ trong một tiến trình, mất khi khởi động lại, và không chia sẻ giữa các instance. Xem `docs/可观测性说明.md` (tiếng Trung) để biết chi tiết.
 
-## 12. Trạng thái dự án
+## 13. Trạng thái dự án
 
 - Dòng phiên bản đã lên kế hoạch hiện tại đã đạt **V7.3** (năng lực tiếp tục lặp: mô hình hóa AI, tăng cường dữ liệu hạt giống, hệ thống gói năng lực,...).
 - Dự án demo đi kèm `demo_admin` (back-end 8140 / front-end 9040) bao phủ các kịch bản cây / CRUD / cha-con / chỉ đọc / in, chạy độc lập để xác minh.
@@ -264,7 +272,7 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 
 ---
 
-## 13. Tác giả & Hỗ trợ
+## 14. Tác giả & Hỗ trợ
 
 - **Tác giả**: một lập trình viên người Trung Quốc (nhà phát triển độc lập)
 - **Email**: `hustxiayuhong@126.com`

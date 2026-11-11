@@ -25,7 +25,16 @@ Tabellenaufnahme (DB-Import / DDL)
 
 ---
 
-## 2. Welche Probleme er löst
+## 2. Wer sind die Nutzer und wie sie es nutzen
+
+| Nutzer | Typisches Anliegen | Der Weg über die Plattform |
+| --- | --- | --- |
+| Backend-Entwickler | Hat eine Reihe von Tabellen (oder DDL) und möchte schnell CRUD aufsetzen | Tabellenkonfiguration: Importieren → Felder konfigurieren → Ein-Klick-Generierung |
+| Full-Stack-/Solo-Entwickler | Möchte ein komplettes System von null aufbauen (mit Login, Berechtigungen, Wörterbüchern) | Pipeline-Seite: System mit einem Satz bauen |
+| Teamleiter | Möchte Code-Stil, Code-Konventionen und Verzeichnisstruktur vereinheitlichen | Systemverwaltung: Ein System = eine Ausgabekonfiguration, batchweise wirksam |
+| Plattform-Betreuer | Möchte Templates ändern, ohne Code zu ändern | Template-Verwaltung: Online-Bearbeitung, sofort wirksam nach dem Speichern, mit Versions-Rollback |
+
+## 3. Welche Probleme er löst
 
 | Problem | Was CodeGen dagegen tut |
 | --- | --- |
@@ -38,7 +47,7 @@ Tabellenaufnahme (DB-Import / DDL)
 
 ---
 
-## 3. Fähigkeiten im Überblick
+## 4. Fähigkeiten im Überblick
 
 - **Tabellenaufnahme**: DDL-Parsing, direkter Datenbank-Import, Batch-Aufnahme-Assistent, automatisch abgeleitete Spaltenkonfiguration (Steuerelemente / Validierung / Wörterbücher / Relationen).
 - **Tabellenformen**: Einzeltabelle, Baumtabelle (Tree-API + Tree-Grid), Master-Detail (Speicherung in derselben Transaktion + Detail-Tabs), Many-to-Many-Junction-Tabellen.
@@ -51,7 +60,7 @@ Tabellenaufnahme (DB-Import / DDL)
 
 ---
 
-## 4. Typische Szenarien
+## 5. Typische Szenarien
 
 | Szenario | Beschreibung |
 | --- | --- |
@@ -66,7 +75,7 @@ Tabellenaufnahme (DB-Import / DDL)
 
 ---
 
-## 5. Kern-Workflow
+## 6. Kern-Workflow
 
 ```
 ┌─────────────────┐   ┌───────────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -82,7 +91,7 @@ Tabellenaufnahme (DB-Import / DDL)
 
 ---
 
-## 6. Ein System mit einem Satz bauen (Pipeline)
+## 7. Ein System mit einem Satz bauen (Pipeline)
 
 Eine High-Level-Fähigkeit, die auf „Aufsetzen eines Backends von Grund auf“ abzielt. Nachdem Sie die Business-Domäne beschrieben haben, schreitet die Pipeline automatisch durch 5 Phasen voran:
 
@@ -98,7 +107,7 @@ Jeder Phasenfehler bricht sofort mit einer lesbaren Fehlermeldung ab, um die Feh
 
 ---
 
-## 7. Systemarchitektur
+## 8. Systemarchitektur
 
 Getrenntes Front- und Backend, zwei Repositories, die zusammenarbeiten:
 
@@ -127,7 +136,7 @@ resources/gen-templates/   22 FreeMarker-Templates (Gruppen: backend / frontend 
 
 ---
 
-## 8. Tech-Stack auf einen Blick
+## 9. Tech-Stack auf einen Blick
 
 | Dimension | Wahl |
 | --- | --- |
@@ -142,7 +151,7 @@ resources/gen-templates/   22 FreeMarker-Templates (Gruppen: backend / frontend 
 
 ---
 
-## 9. Schnellstart
+## 10. Schnellstart
 
 ### 1. Datenbank anlegen (13 Plattform-Tabellen + Standardkonto admin/admin123)
 
@@ -210,7 +219,7 @@ Das Frontend läuft standardmäßig auf Port **9530** und proxyt `/dev-api` an d
 
 ---
 
-## 10. Dokumentations-Navigation
+## 11. Dokumentations-Navigation
 
 | Dokument | Inhalt |
 | --- | --- |
@@ -222,7 +231,7 @@ Das Frontend läuft standardmäßig auf Port **9530** und proxyt `/dev-api` an d
 
 ---
 
-## 11. Versionshistorie
+## 12. Versionshistorie
 
 | Version | Thema / Planungsdokument | Umsetzungs-Commit |
 | --- | --- | --- |
@@ -258,7 +267,7 @@ Das Frontend läuft standardmäßig auf Port **9530** und proxyt `/dev-api` an d
 
 > **V6.10 Plattform-Observability**: integriert Actuator + Micrometer, Sampling alle 5 Sekunden in einen In-Memory-Ringpuffer (30-Minuten-Fenster), plus eine neue eingebettete „System-Monitoring“-Seite — Backend-`/monitor/*`-Aggregations-APIs + Frontend-ECharts-Panels. Nur die Endpunkte `health/info/metrics` sind auf der Whitelist; `/actuator/health` ist tokenfrei, während `metrics` usw. Authentifizierung benötigen; `env/beans/heapdump/threaddump/loggers` werden niemals freigegeben. Das Sampling-Fenster ist rein prozessintern, geht beim Neustart verloren und wird nicht über Instanzen hinweg geteilt. Details siehe `docs/可观测性说明.md` (Chinesisch).
 
-## 12. Projektstatus
+## 13. Projektstatus
 
 - Die aktuelle geplante Versionslinie hat **V7.3** erreicht (Fähigkeiten werden kontinuierlich weiterentwickelt: KI-Modellierung, Seed-Daten-Verbesserung, Fähigkeitspaket-System usw.).
 - Ein begleitendes Demo-Projekt `demo_admin` (Backend 8140 / Frontend 9040) deckt die Szenarien Baum / CRUD / Master-Detail / Nur-Lesen / Drucken ab und läuft eigenständig zur Verifikation.
@@ -266,7 +275,7 @@ Das Frontend läuft standardmäßig auf Port **9530** und proxyt `/dev-api` an d
 
 ---
 
-## 13. Autor & Support
+## 14. Autor & Support
 
 - **Autor**: chinesischer Programmierer (unabhängiger Entwickler)
 - **E-Mail**: `hustxiayuhong@126.com`

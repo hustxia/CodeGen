@@ -23,7 +23,16 @@ Tabelindtag (DB-import / DDL)
 
 ---
 
-## 2. Hvilke problemer det løser
+## 2. Hvem er brugerne og hvordan bruger de det
+
+| Bruger | Typisk behov | Stien platformen tilbyder |
+| --- | --- | --- |
+| Back-end-udvikler | Har et sæt tabeller (eller DDL) og vil hurtigt sætte CRUD op | Tabelkonfigurationsside: importer → konfigurer felter → generer med ét klik |
+| Full-stack / selvstændig udvikler | Vil bygge et komplet system fra bunden (inkl. login, rettigheder, ordbog) | Pipelineside: byg et system med én sætning |
+| Teamleder | Vil forene kodestil, kodestandarder og mappestruktur | Systemhåndtering: ét system = én output-konfiguration, gælder i batch |
+| Platformadministrator | Vil ændre skabeloner uden at ændre kode | Skabelonhåndtering: rediger online, træder i kraft med det samme ved gem, med versionsrulletilbage |
+
+## 3. Hvilke problemer det løser
 
 | Smertepunkt | Hvad CodeGen gør |
 | --- | --- |
@@ -36,7 +45,7 @@ Tabelindtag (DB-import / DDL)
 
 ---
 
-## 3. Kapacitetsoversigt
+## 4. Kapacitetsoversigt
 
 - **Tabelindtag**: DDL-parsning, direkte databaseimport, batch-indtag-guid, automatisk afledt kolonnekonfiguration (kontroller / validering / ordbøger / relationer).
 - **Tabelformer**: enkelt tabel, trætabel (tree API + trægrid), master-detail (lagring i samme transaktion + detaljefaner), mange-til-mange koblingstabeller.
@@ -49,7 +58,7 @@ Tabelindtag (DB-import / DDL)
 
 ---
 
-## 4. Typiske scenarier
+## 5. Typiske scenarier
 
 | Scenario | Beskrivelse |
 | --- | --- |
@@ -64,7 +73,7 @@ Tabelindtag (DB-import / DDL)
 
 ---
 
-## 5. Grundlæggende arbejdsgang
+## 6. Grundlæggende arbejdsgang
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +89,7 @@ Tabelindtag (DB-import / DDL)
 
 ---
 
-## 6. Byg et system med en sætning (Pipeline)
+## 7. Byg et system med en sætning (Pipeline)
 
 En høj kapacitet rettet mod "at opsætte en backend fra bunden". Efter at du har beskrevet forretningsdomen, avancerer pipelinen automatisk gennem 5 faser:
 
@@ -96,7 +105,7 @@ Enhver fasefejl afbryder straks med en læsbar fejl for nem lokalisering.
 
 ---
 
-## 7. Systemarkitektur
+## 8. Systemarkitektur
 
 Frontend og backend adskilt, to repositorier arbejder sammen:
 
@@ -125,7 +134,7 @@ resources/gen-templates/   22 FreeMarker-skabeloner (backend / frontend / shared
 
 ---
 
-## 8. Teknikstack i overblik
+## 9. Teknikstack i overblik
 
 | Dimension | Valg |
 | --- | --- |
@@ -140,7 +149,7 @@ resources/gen-templates/   22 FreeMarker-skabeloner (backend / frontend / shared
 
 ---
 
-## 9. Hurtig start
+## 10. Hurtig start
 
 ### 1. Opret databasen (13 platformstabeller + standardkonto admin/admin123)
 
@@ -208,7 +217,7 @@ Frontenden kører som standard på port **9530**, proxyer `/dev-api` til backend
 
 ---
 
-## 10. Dokumentationskort
+## 11. Dokumentationskort
 
 | Dokument | Indhold |
 | --- | --- |
@@ -220,7 +229,7 @@ Frontenden kører som standard på port **9530**, proxyer `/dev-api` til backend
 
 ---
 
-## 11. Versionshistorik
+## 12. Versionshistorik
 
 | Version | Tema / plandokument | Landningscommit |
 | --- | --- | --- |
@@ -256,7 +265,7 @@ Frontenden kører som standard på port **9530**, proxyer `/dev-api` til backend
 
 > **V6.10 Platform observerbarhed**: integrerer Actuator + Micrometer, sampler hvert 5. sekund til en in-memory ringbuffer (30-minutter vindue), plus en ny indlejret "System Monitor" side — backend `/monitor/*` aggregerings-API'er + frontend ECharts paneler. Kun `health/info/metrics` endpoints er whitelisted; `/actuator/health` er tokenfri mens `metrics` osv. kræver auth; `env/beans/heapdump/threaddump/loggers` eksponeres aldrig. Samplingsvinduet er kun per proces, mistes ved genstart, og deles ikke på tværs af instanser. Se `docs/可观测性说明.md` (kinesisk) for detaljer.
 
-## 12. Projektstatus
+## 13. Projektstatus
 
 - Den nuværende planerede versionlinje har nået **V7.3** (kapaciteter fortsætter iterere: AI-modellering, seed-data forbedring, kapacitetspakkessystem osv.).
 - Et ledsagende demo-projekt `demo_admin` (backend 8140 / frontend 9040) dækker træ / CRUD / master-detail / skrivebeskyttet / udskrivningsscenarier og kører standalone til verifikation.
@@ -264,7 +273,7 @@ Frontenden kører som standard på port **9530**, proxyer `/dev-api` til backend
 
 ---
 
-## 13. Forfatter & Support
+## 14. Forfatter & Support
 
 - **Forfatter**: en kinesisk programmør (uafhængig udvikler)
 - **E-mail**: `hustxiayuhong@126.com`

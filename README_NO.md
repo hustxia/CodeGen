@@ -23,7 +23,16 @@ Tabellinntak (DB-import / DDL)
 
 ---
 
-## 2. Hvilke problemer den løser
+## 2. Hvem er brukerne og hvordan bruker de det
+
+| Bruker | Typisk behov | Banen plattformen tilbyr |
+| --- | --- | --- |
+| Back-end-utvikler | Har et sett med tabeller (eller DDL) og vil raskt sette opp CRUD | Tabellkonfigurasjonsside: importer → konfigurer felt → generer med ett klikk |
+| Full-stack / uavhengig utvikler | Vil bygge et komplett system fra bunnen (inkl. innlogging, rettigheter, ordbok) | Pipelineside: bygg et system med én setning |
+| Teamleder | Vil forene kodestil, kodestandarder og katalogstruktur | Systemhåndtering: ett system = én utdata-konfigurasjon, gjelder i batch |
+| Plattformadministrator | Vil endre maler uten å endre kode | Malhåndtering: rediger online, trer i kraft umiddelbart ved lagring, med versjonstilbakestilling |
+
+## 3. Hvilke problemer den løser
 
 | Smertepunkt | Hva CodeGen gjør |
 | --- | --- |
@@ -36,7 +45,7 @@ Tabellinntak (DB-import / DDL)
 
 ---
 
-## 3. Oversikt over kapasiteter
+## 4. Oversikt over kapasiteter
 
 - **Tabellinntak**: DDL-parsing, direkte databaseimport, batch-inntaksveiviser, automatisk utledet kolonnekonfigurasjon (kontroller / validering / ordbøker / relasjoner).
 - **Tabellformer**: enkel tabell, tre tabell (tree API + tredel), master-detail (lagring i samme transaksjon + detaljfaner), mange-til-mange koblingstabeller.
@@ -49,7 +58,7 @@ Tabellinntak (DB-import / DDL)
 
 ---
 
-## 4. Typiske scenarier
+## 5. Typiske scenarier
 
 | Scenario | Beskrivelse |
 | --- | --- |
@@ -64,7 +73,7 @@ Tabellinntak (DB-import / DDL)
 
 ---
 
-## 5. Grunnleggende arbeidsflyt
+## 6. Grunnleggende arbeidsflyt
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +89,7 @@ Tabellinntak (DB-import / DDL)
 
 ---
 
-## 6. Bygg et system med én setning (Pipeline)
+## 7. Bygg et system med én setning (Pipeline)
 
 En høy nivå kapasitet rettet mot "å sette opp en backend fra bunnen av". Etter at du beskriver forretningsdomenet, avanserer pipelinen automatisk gjennom 5 faser:
 
@@ -96,7 +105,7 @@ Enhver fasefeil avbryter umiddelbart med en lesbar feil for enkel lokalisering.
 
 ---
 
-## 7. Systemarkitektur
+## 8. Systemarkitektur
 
 Forreste og bakre del adskilt, to repositorier som samarbeider:
 
@@ -125,7 +134,7 @@ resources/gen-templates/   22 FreeMarker-maler (backend / frontend / shared / te
 
 ---
 
-## 8. Teknisk stabel i oversikt
+## 9. Teknisk stabel i oversikt
 
 | Dimensjon | Valg |
 | --- | --- |
@@ -140,7 +149,7 @@ resources/gen-templates/   22 FreeMarker-maler (backend / frontend / shared / te
 
 ---
 
-## 9. Rask start
+## 10. Rask start
 
 ### 1. Opprett databasen (13 plattformtabeller + standardkonto admin/admin123)
 
@@ -208,7 +217,7 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 
 ---
 
-## 10. Dokumentasjonskart
+## 11. Dokumentasjonskart
 
 | Dokument | Innhold |
 | --- | --- |
@@ -220,7 +229,7 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 
 ---
 
-## 11. Versjonshistorikk
+## 12. Versjonshistorikk
 
 | Versjon | Tema / plandokument | Landningscommit |
 | --- | --- | --- |
@@ -256,7 +265,7 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 
 > **V6.10 Plattform observerbarhet**: integrerer Actuator + Micrometer, prøver hvert 5. sekund til en minnet ringbuffer (30-minutter vindu), pluss en ny innebygd "System Monitor" side — bakre del `/monitor/*` aggregerings API-er + forreste del ECharts paneler. Bare `health/info/metrics` endepunkter er hvitlistet; `/actuator/health` er tokenfri mens `metrics` osv. krever auth; `env/beans/heapdump/threaddump/loggers` eksponeres aldri. Prøvevinduet er bare per prosess, mistes ved omstart, og deles ikke på tvers av instanser. Se `docs/可观测性说明.md` (kinesisk) for detaljer.
 
-## 12. Prosjektstatus
+## 13. Prosjektstatus
 
 - Den nåværende planlagte versjonslinjen har nådd **V7.3** (kapasiteter fortsetter å iterere: AI-modellering, seed-data forbedring, kapasitetspakke system osv.).
 - Et følgedemo-prosjekt `demo_admin` (bakre del 8140 / forreste del 9040) dekker tre / CRUD / master-detail / skrivebeskyttet / utskrift scenarier og kjører uavhengig for verifisering.
@@ -264,7 +273,7 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 
 ---
 
-## 13. Forfatter & Støtte
+## 14. Forfatter & Støtte
 
 - **Forfatter**: en kinesisk programmerer (uavhengig utvikler)
 - **E-post**: `hustxiayuhong@126.com`

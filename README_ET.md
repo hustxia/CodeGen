@@ -14,9 +14,21 @@ CodeGen on "tabelipõhine" kooditehas. Tooge oma äritabelid sisse (andmebaasi i
 
 See ei ole lihtsalt "koodi pritsimine" — see on **tarnevõrk kvaliteediväravate ja tagasiminkvõimega**.
 
-## 2. Milliseid probleeme see lahendab
+## 2. Kes on kasutajad ja kuidas nad seda kasutavad
+
+| Kasutaja | Tüüpiline vajadus | Tee, mille platvorm pakub |
+| --- | --- | --- |
+| Back-end arendaja | Käes on hulk tabeleid (või DDL) ja tahab kiiresti üles seada CRUD-i | Tabeli konfiguratsiooni leht: import → väljade konfigureerimine → ühe klõpsuga genereerimine |
+| Full-stack / sõltumatu arendaja | Tahab nullist ehitada täieliku süsteemi (sisaldades sisselogimist, õigusi, sõnastikku) | Toru leht: ehitage süsteem ühe lausega |
+| Meeskonna juht | Tahab ühtlustada koodistiili, koodi konventsioone ja kataloogistruktuuri | Süsteemi haldamine: üks süsteem = üks väljundkonfiguratsioon, kehtib partii haaval |
+| Platvormi hooldaja | Tahab muuta malle ilma koodi muutmata | Mallide haldamine: võrgus redigeerimine, salvestamine jõustub kohe, toetab versioonitagasiminekut |
+
+
+
+## 3. Milliseid probleeme see lahendab
 
 | Valupunkt | Mida CodeGen teeb |
+
 | --- | --- |
 | Korduv CRUD põrgu — hunnik boilerplate'i iga tabeli jaoks | Tabelitasemelised lülitid toodavad ühe klõpsuga täieliku esi- ja tagakülje, sealhulgas CRUD, leheküljendus, valideerimine, import/eksport |
 | Esikülje ja tagakülje väljade ning API-vahelised lahknevused | Sama tabeli metaandmed juhivad nii tagakülje API-sid kui ka esikülje lehti — null semantilist kõrvalekallet |
@@ -25,7 +37,7 @@ See ei ole lihtsalt "koodi pritsimine" — see on **tarnevõrk kvaliteedivärava
 | Genereeritud kood on enne kompileerimise aega ebausaldusväärne | Mälu sees kompileerimise enesekontroll (tõeline `javac`), struktuuride lepingu kontrollid, diff-eelvaate ketas — midagi ei jõua kettale välja, kui see ei kompileeri |
 | Uue süsteemi ehitamine nullist on aeganõudev | Toru "ehita süsteem ühe lausega": loo DB → raamistik → genereeri → paki → registreeri menüüd, täiesti automatiseeritud |
 
-## 3. Võimaluste ülevaade
+## 4. Võimaluste ülevaade
 
 - **Tabeli vastuvõtt**: DDL-i parsimine, otsene andmebaasi importimine, partii vastuvõtt veebimeister, automaatselt tuletatud veeru konfiguratsioon (kontrollid / valideerimine / sõnastikud / seosed).
 - **Tabeli kujud**: lihtne tabel, puutabel (tree API + puugrid), master-detail (salvestamine samas tehingus + detailide vahelehed), mitme-mitme seostabelid.
@@ -36,7 +48,7 @@ See ei ole lihtsalt "koodi pritsimine" — see on **tarnevõrk kvaliteedivärava
 - **Mitme süsteemi eraldamine**: iga sihtprojekt on "süsteemi konfiguratsioon" (esi/tagakülje teed, paketinimed, gateway eesliide, sõltuvuse classpath, generatsioonilülitite vaikeväärtused).
 - **AI täiendused**: ehita süsteem ühe lausega (AI modelleerimine), seemne andmete AI täiendamine, tabelitasemelised AI soovitatud konfiguratsioonid.
 
-## 4. Tüüpilised stsenaariumid
+## 5. Tüüpilised stsenaariumid
 
 | Stsenaarium | Kirjeldus |
 | --- | --- |
@@ -49,7 +61,7 @@ See ei ole lihtsalt "koodi pritsimine" — see on **tarnevõrk kvaliteedivärava
 
 ---
 
-## 5. Põhiline töövoog
+## 6. Põhiline töövoog
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -62,7 +74,7 @@ See ei ole lihtsalt "koodi pritsimine" — see on **tarnevõrk kvaliteedivärava
 
 ---
 
-## 6. Ehita süsteem ühe lausega (Toru)
+## 7. Ehita süsteem ühe lausega (Toru)
 
 | Etapp | Tähendus |
 | --- | --- |
@@ -74,14 +86,14 @@ See ei ole lihtsalt "koodi pritsimine" — see on **tarnevõrk kvaliteedivärava
 
 ---
 
-## 7. Süsteemi arhitektuur
+## 8. Süsteemi arhitektuur
 
 | Repositoorium | Roll | Stakk |
 | --- | --- | --- |
 | `codegen-server` | Tagakülg: generatsioonimootor, mallid, valideerimine, pearaamat, toru | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
 | `codegen-web` | Esikülg: konsool (tabeli konf. / mallid / pearaamat / süsteemi haldamine) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
 
-## 8. Tehnoloogiline stakk
+## 9. Tehnoloogiline stakk
 
 | Mõõde | Valik |
 | --- | --- |
@@ -94,7 +106,7 @@ See ei ole lihtsalt "koodi pritsimine" — see on **tarnevõrk kvaliteedivärava
 | Kohalik AI | qwen2.5-coder:7b |
 | API dokumentatsioon | springdoc-openapi (Swagger UI) |
 
-## 9. Kiire algus
+## 10. Kiire algus
 
 ```bash
 mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
@@ -112,12 +124,12 @@ npm run serve
 
 Tagakülg vaikimisi pordile **8120**, esikülg pordile **9530**. Vaikimisi konto `admin / admin123`.
 
-## 10. Projekti olek
+## 11. Projekti olek
 
 - Praegune planeeritud versioonirida on jõudnud **V7.3**-ni.
 - Mõlemad repositooriumid hostitakse Gitees: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
-## 11. Autor
+## 12. Autor
 
 - **Autor**: hiina programmeerija (sõltumatu arendaja)
 - **E-post**: `hustxiayuhong@126.com`

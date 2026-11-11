@@ -23,7 +23,18 @@ Prijem tablica (DB import / DDL)
 
 ---
 
-## 2. Koje probleme rješava
+## 2. Tko su korisnici i kako ga koriste
+
+| Korisnik | Tipična potreba | Put koji platforma pruža |
+| --- | --- | --- |
+| Back-end programer | Ima niz tablica (ili DDL) i želi brzo postaviti CRUD | Stranica konfiguracije tablica: uvoz → konfiguracija polja → generiranje jednim klikom |
+| Full-stack / neovisni programer | Želi izgraditi potpun sustav od nule (uključujući prijavu, ovlasti, rječnik) | Stranica Procesa: izgradi sustav jednom rečenicom |
+| Voditelj tima | Želi ujediniti stil koda, konvencije koda i strukturu direktorija | Upravljanje sustavom: jedan sustav = jedna izlazna konfiguracija, primjenjuje se serijski |
+| Održavatelj platforme | Želi mijenjati predloške bez mijenjanja koda | Upravljanje predlošcima: online uređivanje, spremanje stupa na snagu, podržava povrat verzija |
+
+
+
+## 3. Koje probleme rješava
 
 | Bolna točka | Što radi CodeGen |
 | --- | --- |
@@ -36,7 +47,7 @@ Prijem tablica (DB import / DDL)
 
 ---
 
-## 3. Pregled mogućnosti
+## 4. Pregled mogućnosti
 
 - **Prijem tablica**: DDL parsiranje, izravni uvoz iz baze podataka, vodič za prijem u serijama, automatski izvedena konfiguracija stupaca (kontrole / validacija / rječnici / odnosi).
 - **Oblici tablica**: jednostavna tablica, stabla tablica (tree API + stablo rešetke), master-detail (spremanje u istoj transakciji + kartice detalja), tablice za povezivanje više prema više.
@@ -49,7 +60,7 @@ Prijem tablica (DB import / DDL)
 
 ---
 
-## 4. Tipični scenariji
+## 5. Tipični scenariji
 
 | Scenarij | Opis |
 | --- | --- |
@@ -64,7 +75,7 @@ Prijem tablica (DB import / DDL)
 
 ---
 
-## 5. Osnovni tijek rada
+## 6. Osnovni tijek rada
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +91,7 @@ Prijem tablica (DB import / DDL)
 
 ---
 
-## 6. Izgradi sustav jednom rečenicom (Proces)
+## 7. Izgradi sustav jednom rečenicom (Proces)
 
 Mogućnost visoke razine usmjerena na "postavljanje back-end-a od nule". Nakon što opišete poslovnu domenu, proces automatski napreduje kroz 5 faza:
 
@@ -96,7 +107,7 @@ Svaka pogreška u fazi odmah prekida s čitljivom pogreškom za jednostavno loci
 
 ---
 
-## 7. Arhitektura sustava
+## 8. Arhitektura sustava
 
 Front-end i back-end odvojeni, dva repozitorija rade zajedno:
 
@@ -125,7 +136,7 @@ resources/gen-templates/   22 FreeMarker predloška (backend / frontend / shared
 
 ---
 
-## 8. Pregled tehnološkog stoga
+## 9. Pregled tehnološkog stoga
 
 | Dimenzija | Odabir |
 | --- | --- |
@@ -140,7 +151,7 @@ resources/gen-templates/   22 FreeMarker predloška (backend / frontend / shared
 
 ---
 
-## 9. Brzi početak
+## 10. Brzi početak
 
 ### 1. Stvorite bazu podataka (13 platformskih tablica + zadani račun admin/admin123)
 
@@ -208,7 +219,7 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 
 ---
 
-## 10. Karta dokumentacije
+## 11. Karta dokumentacije
 
 | Dokument | Sadržaj |
 | --- | --- |
@@ -220,7 +231,7 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 
 ---
 
-## 11. Povijest verzija
+## 12. Povijest verzija
 
 | Verzija | Tema / plan dokument | Commit postavljanja |
 | --- | --- | --- |
@@ -256,7 +267,7 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 
 > **V6.10 Promatranje platforme**: integrira Actuator + Micrometer, uzorkuje svakih 5 sekundi u memorijski kružni međuspremnik (30-minutni prozor), plus nova ugrađena stranica "Monitor sustava" — back-end `/monitor/*` agregacijski API-ji + front-end ECharts ploče. Samo `health/info/metrics` krajnje točke su whitelisted; `/actuator/health` je bez tokena dok `metrics` itd. zahtijevaju auth; `env/beans/heapdump/threaddump/loggers` nikada nisu izloženi. Prozor uzorkovanja je samo po procesu, gubi se prilikom ponovnog pokretanja, i nije dijeljen između instanci. Pogledajte `docs/可观测性说明.md` (kineski) za detalje.
 
-## 12. Status projekta
+## 13. Status projekta
 
 > Trenutna planirana linija verzija dosegla je **V7.3** (mogućnosti se nastavljaju iterirati: AI modeliranje, poboljšanje seed podataka, sustav paketa mogućnosti itd.).
 > Pripadni demo projekt `demo_admin` (back-end 8140 / front-end 9040) pokriva scenarije stabla / CRUD / master-detail / samo za čitanje / ispis i radi samostalno za provjeru.
@@ -264,7 +275,7 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 
 ---
 
-## 13. Autor & podrška
+## 14. Autor & podrška
 
 > **Autor**: kineski programer (neovisni razvojni inženjer)
 > **E-pošta**: `hustxiayuhong@126.com`

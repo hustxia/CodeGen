@@ -23,7 +23,15 @@ Table intake (DB import / DDL)
 
 ---
 
-## 2. What Problems It Solves
+## 2. Who Are the Users, and How They Use It
+
+| Users | Typical Needs | Path the Platform Provides |
+| --- | --- | --- |
+| Backend developer | Has a batch of tables (or DDL) and wants to quickly spin up CRUD | Table config page: import → configure fields → one-click generation |
+| Full-stack / solo developer | Wants to build a complete system from scratch (with login, permissions, dictionaries) | Pipeline page: build a system with one sentence |
+| Team lead | Wants to unify code style, coding standards, directory structure | System management: one system = one output config, applied in batch |
+| Platform maintainer | Wants to change templates without changing code | Template management: online editing, takes effect on save, supports history rollback |
+## 3. What Problems It Solves
 
 | Pain point | What CodeGen does |
 | --- | --- |
@@ -36,7 +44,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 3. Capability Landscape
+## 4. Capability Landscape
 
 - **Table intake**: DDL parsing, direct database import, batch intake wizard, auto-derived column configuration (controls / validation / dictionaries / relations).
 - **Table shapes**: single table, tree table (tree API + tree grid), master-detail (same-transaction save + detail tabs), many-to-many junction tables.
@@ -49,7 +57,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 4. Typical Scenarios
+## 5. Typical Scenarios
 
 | Scenario | Description |
 | --- | --- |
@@ -64,7 +72,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 5. Core Workflow
+## 6. Core Workflow
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +88,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 6. Build a System with One Sentence (Pipeline)
+## 7. Build a System with One Sentence (Pipeline)
 
 A high-level capability aimed at "scaffolding a backend from scratch". After you describe the business domain, the pipeline advances automatically through 5 stages:
 
@@ -96,7 +104,7 @@ Any stage failure aborts immediately with a readable error for easy locating.
 
 ---
 
-## 7. System Architecture
+## 8. System Architecture
 
 Front-end and back-end separated, two repositories working together:
 
@@ -125,7 +133,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 8. Tech Stack at a Glance
+## 9. Tech Stack at a Glance
 
 | Dimension | Choice |
 | --- | --- |
@@ -140,7 +148,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 9. Quick Start
+## 10. Quick Start
 
 ### 1. Create the database (13 platform tables + default account admin/admin123)
 
@@ -208,7 +216,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ---
 
-## 10. Documentation Map
+## 11. Documentation Map
 
 | Document | Content |
 | --- | --- |
@@ -220,7 +228,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ---
 
-## 11. Version History
+## 12. Version History
 
 | Version | Theme / plan document | Landing commit |
 | --- | --- | --- |
@@ -256,7 +264,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 > **V6.10 Platform observability**: integrates Actuator + Micrometer, sampling every 5 seconds into an in-memory ring buffer (30-minute window), plus a new embedded "System Monitor" page — backend `/monitor/*` aggregation APIs + frontend ECharts panels. Only `health/info/metrics` endpoints are whitelisted; `/actuator/health` is token-free while `metrics` etc. require auth; `env/beans/heapdump/threaddump/loggers` are never exposed. The sampling window is per-process only, lost on restart, and not shared across instances. See `docs/可观测性说明.md` (Chinese) for details.
 
-## 12. Project Status
+## 13. Project Status
 
 - The current planned version line has reached **V7.3** (capabilities keep iterating: AI modeling, seed-data enhancement, capability-pack system, etc.).
 - A companion demo project `demo_admin` (backend 8140 / frontend 9040) covers tree / CRUD / master-detail / read-only / print scenarios and runs standalone for verification.
@@ -264,7 +272,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ---
 
-## 13. Author & Support
+## 14. Author & Support
 
 - **Author**: a Chinese programmer (independent developer)
 - **Email**: `hustxiayuhong@126.com`
