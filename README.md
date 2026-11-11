@@ -1,8 +1,12 @@
 # 码匠 · 代码生成器（CodeGen）项目介绍
 
+> 语言 / Language: **中文** · [English](README_EN.md) · [日本語](README_JA.md) · [Português](README_PT.md)
+
 > 面向 **Spring Boot + Vue** 的多工程代码生成器：从数据库表结构出发，产出**可编译、可运行、带菜单权限**的前后端业务代码，并负责写盘、备份、记账、回滚的完整交付闭环。
 
 ---
+github 地址：https://github.com/hustxia/CodeGen
+
 
 ## 一、这是什么
 
@@ -238,6 +242,8 @@ npm run serve
 | V6.6 | 文件能力包 | 98f3c09 |
 | V6.7 | 产物测试出厂（test_enabled 三态 + H2 骨架） | V6.7（134 行），4e7d318 |
 | V6.8 | 生成物可维护性（dryRun / 受保护跳过 / 品牌参数化） | V6.8（141 行），be6f858 |
+| V6.9 | 平台文档中心（后端基座，前端收尾同批推进） | — |
+| V6.10 | 平台可观测性：Actuator + 内存指标窗口 + 内嵌监控页 | — |
 | V7.0 | AI 页面与菜单推荐（preview / apply） | V7.0（94 行），45f2670 |
 | V7.1 | 种子数据 AI 增强（AI 管语义、规则管结构） | V7.1（42 行），5ca6e72 |
 | V7.2 | 流水线成功后 SQL 交付物落盘 `db/` | eebff88 |
@@ -245,6 +251,8 @@ npm run serve
 |**V7.4**|   可重复交付：空库能部署、每次提交都保证能跑  ** | ** ，当前版本** |
 
 ---
+
+> **V6.10 平台可观测性**：接入 Actuator + Micrometer，5 秒采样写入内存环形缓冲（保留 30 分钟窗口），新增内嵌「系统监控」页——后端 `/monitor/*` 聚合接口 + 前端 ECharts 面板。端点仅白名单放行 `health/info/metrics`，`/actuator/health` 免 token，`metrics` 等需鉴权；`env/beans/heapdump/threaddump/loggers` 永不暴露。采样窗口仅进程内、重启即丢、多实例不共享。详见 `docs/可观测性说明.md`。
 
 ## 十二、项目状态
 
