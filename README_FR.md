@@ -1,6 +1,6 @@
 # Majiang · Générateur de code (CodeGen) — Présentation du projet
 
-> Langues: [中文](README_ZH.md) · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · [Español](README_ES.md) · [한국어](README_KO.md) · **Français** · [Deutsch](README_DE.md)
+> Langues: [中文](README_ZH.md) · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · [Español](README_ES.md) · [한국어](README_KO.md) · **Français** · [Deutsch](README_DE.md) · [हिन्दी](README_HI.md) · [العربية](README_AR.md) · [বাংলা](README_BN.md) · [Русский](README_RU.md) · [اردو](README_UR.md)
 
 > Un générateur de code multi-projets pour **Spring Boot + Vue** : à partir de la structure des tables de la base de données, il produit du code métier front-end et back-end **compilable, exécutable et doté des menus et des permissions**, et assure la boucle de livraison complète — écriture sur disque, sauvegarde, tenue du registre et retour arrière.
 

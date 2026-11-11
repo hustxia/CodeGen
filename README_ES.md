@@ -1,6 +1,6 @@
 # Majiang · Generador de Código (CodeGen) — Presentación del Proyecto
 
-> Idiomas: [中文](README_ZH.md) · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · **Español** · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
+> Idiomas: [中文](README_ZH.md) · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · **Español** · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [हिन्दी](README_HI.md) · [العربية](README_AR.md) · [বাংলা](README_BN.md) · [Русский](README_RU.md) · [اردو](README_UR.md)
 
 ---
 

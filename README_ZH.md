@@ -1,6 +1,6 @@
 # 码匠 · 代码生成器（CodeGen）项目介绍
 
-> 语言 / Language: **中文** · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · [Español](README_ES.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
+> 语言 / Language: **中文** · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · [Español](README_ES.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [हिन्दी](README_HI.md) · [العربية](README_AR.md) · [বাংলা](README_BN.md) · [Русский](README_RU.md) · [اردو](README_UR.md)
 
 > 面向 **Spring Boot + Vue** 的多工程代码生成器：从数据库表结构出发，产出**可编译、可运行、带菜单权限**的前后端业务代码，并负责写盘、备份、记账、回滚的完整交付闭环。
 
