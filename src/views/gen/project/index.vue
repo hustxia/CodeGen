@@ -359,7 +359,9 @@ const defaultForm = () => ({
   flowEngine: '',
   // V7.5 项目语言配置：空=回落 zh-CN；supportedLanguages 用数组承载，提交时转逗号串
   defaultLanguage: '',
-  supportedLanguages: []
+  supportedLanguages: [],
+  // V8.0 产物国际化：null=未配置（关），1=开，0=关
+  i18nEnabled: null
 })
 
 // 与后端 GenSwitchDefaults.KEYS 一一对应，顺序也一致
@@ -415,6 +417,11 @@ const triStateDefs = [
     label: '测试骨架',
     placeholder: '未配置（生成）',
     tip: '生成=产物自带集成测试（每业务表一份 CRUD 测试，H2 内存库，打开即可 mvn test 全绿）；不生成=产物无 src/test 目录；未配置=生成（默认，与其他开关方向相反）。multi/micro 工程暂不支持'
+  },
+  {
+    key: 'i18nEnabled',
+    label: '产物国际化',
+    tip: '开=生成 src/locales/ 语言包 + 零依赖 $t 运行时 + 页面右上角语言切换器（按默认语言/启用语言）；关=产物与旧版逐字节一致；未配置=关。译文在「系统管理→文案翻译」逐语言补'
   }
 ]
 
