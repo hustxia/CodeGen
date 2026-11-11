@@ -1,6 +1,6 @@
 # 碼匠（マージャン）· コードジェネレーター（CodeGen）— プロジェクト紹介
 
-> 言語: [中文](README_ZH.md) · [English](README.md) · **日本語** · [Português](README_PT.md)
+> 言語: [中文](README_ZH.md) · [English](README.md) · **日本語** · [Português](README_PT.md) · [Español](README_ES.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
 
 ---
 
