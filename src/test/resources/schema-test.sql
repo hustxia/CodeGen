@@ -213,6 +213,8 @@ CREATE TABLE `sys_project` (
   `app_name` varchar(64) DEFAULT NULL COMMENT '应用显示名(空=项目名)',
   `app_logo` varchar(255) DEFAULT NULL COMMENT 'Logo图片URL(空=内置logo)',
   `app_theme_color` varchar(16) DEFAULT NULL COMMENT '主题主色(空=#e1251b)',
+  `default_language` varchar(32) DEFAULT NULL COMMENT '默认语言BCP47标签(空=zh-CN)',
+  `supported_languages` text DEFAULT NULL COMMENT '启用语言码,逗号分隔(空=全部启用)',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_project_code` (`project_code`,`deleted`),
   KEY `idx_default` (`is_default`)
@@ -303,4 +305,28 @@ CREATE TABLE `gen_pipeline_step` (
   UNIQUE KEY `uk_pipe_step` (`pipeline_id`, `step_key`),
   KEY `idx_pipeline` (`pipeline_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='V5.0 流水线步骤明细'
+;
+
+-- V7.5 项目语言配置：测试库镜像表（运行时不查此表，但保证空库按序执行全量脚本后结构一致）
+DROP TABLE IF EXISTS `sys_language`;
+CREATE TABLE `sys_language` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `lang_code` varchar(32) NOT NULL COMMENT '语言码(ISO 639-1 或 BCP47 变体)',
+  `iso639_2` varchar(8) DEFAULT NULL COMMENT 'ISO 639-2 三字母码',
+  `locale_tag` varchar(32) NOT NULL COMMENT '默认 BCP47 标签',
+  `name_en` varchar(128) NOT NULL COMMENT '英文名',
+  `name_zh` varchar(128) NOT NULL COMMENT '简体中文名',
+  `name_native` varchar(128) NOT NULL COMMENT '本地语言自称',
+  `region` varchar(16) DEFAULT NULL COMMENT '默认地区码',
+  `script` varchar(16) NOT NULL DEFAULT 'Latn' COMMENT '文字体系(ISO 15924)',
+  `dir` varchar(8) NOT NULL DEFAULT 'ltr' COMMENT '书写方向 ltr/rtl',
+  `readme_file` varchar(64) DEFAULT NULL COMMENT '对应 README 语言版文件名',
+  `enabled` tinyint NOT NULL DEFAULT '1' COMMENT '是否启用',
+  `sort_no` int NOT NULL DEFAULT '0' COMMENT '显示顺序',
+  `deleted` tinyint NOT NULL DEFAULT '0',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_lang_code` (`lang_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目语言配置表'
 ;
