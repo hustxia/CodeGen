@@ -1,0 +1,115 @@
+# Majiang · Jenereta ya Kanuni (CodeGen) — Utangulizi wa Mradi
+
+> Lugha: [简体中文](README_ZH.md) · [繁體中文](README_ZH_TW.md) · [English](README.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · **Kiswahili** · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
+
+---
+
+> Jenereta ya kanuni ya miradi mingi kwa **Spring Boot + Vue**: ikianza na muundo wa meza za hifadhidata, inazalisha kanuni ya biashara ya **inayoweza kukusanywa, inayoweza kuendeshwa** kwa mbele na nyuma na menyu na ruhusa, na inasimamia mzunguko kamili wa utoaji: kuandika kwenye diski, nakala za chelezo, leja, na kurudisha nyuma.
+
+GitHub: https://github.com/hustxia/CodeGen
+
+## 1. Ni Nini Hii
+
+CodeGen ni "kiwanda cha kanuni kinachoendeshwa na meza". Lete meza zako za biashara (kwa kuagiza kutoka hifadhidata au kwa kubandika DDL), sanidi nyanja na swichi za kuzalisha, kisha bonyeza "Zalisha" — basi inazalisha Entity/Mapper/Service/Controller/DTO/VO za nyuma, `api.js` na kurasa za Vue za mbele, menyu na njia, hata kurasa za uchapishaji A4 na mifupa ya jaribio la ujumuishaji, na kuandika kila kitu kwa usalama kwenye mradi wako wa lengo.
+
+Sio tu "inayoondoa kanuni" — ni **bomba la utoaji na milango ya ubora na uwezo wa kurudisha nyuma**.
+
+## 2. Inatatua Matatizo Gani
+
+| Jambo la Maumivu | Nini CodeGen Inafanya |
+| --- | --- |
+| Kuzimu kwa CRUD inayorudiwa — rundo la boilerplate kwa kila meza | Swichi za kiwango cha meza zinazalisha mbele na nyuma kamili kwa bonyeza moja, ikiwa ni pamoja na CRUD, ukurasa, uthibitishaji, kuagiza/kuuza nje |
+| Kutoendana kwa nyanja na API kati ya mbele na nyuma | Metadata ya meza moja inaelekeza API za nyuma na kurasa za mbele — zero kutofautiana kwa maana |
+| Kanuni za timu ngumu kuunganisha; kila mtu anaandika kwa mtindo wake | Mifano ni kanuni: mifano 22 ya FreeMarker inayosimamiwa kati, inayoweza kuhaririwa mtandaoni na kurudisha nyuma kwa matoleo |
+| Jenereta "zinazibonyeza na kupoteza" mantiki iliyoandikwa kwa mkono | Mfumo wa kuunganisha vizuizi vya alama: kanuni iliyoandikwa kwa mkono imehifadhiwa, tu maeneo yaliyozalishwa ndiyo yanabadilishwa |
+| Kanuni iliyozalishwa haiaminika mpaka wakati wa kukusanya | Kujikagua kwa kukusanya katika kumbukumbu (`javac` halisi), ukaguzi wa mikataba ya muundo, hakiki ya diff kwenye diski — hakuna chochote kinachoanguka kwenye diski isipokuwa kikikusanyika |
+| Kuanzisha mfumo mpya kutoka mwanzo kunahitaji wakati | Bomba "unda mfumo kwa sentensi moja": unda DB → kiunzi → zalisha → pakiti → sajili menyu, otomatiki kabisa |
+
+## 3. Muhtasari wa Uwezo
+
+- **Kuingiza meza**: uchambuzi wa DDL, kuagiza moja kwa moja kutoka hifadhidata, mshauri wa kuingiza kwa kundi, usanidi wa safu unaopatikana moja kwa moja (vidhibiti / uthibitishaji / kamusi / uhusiano).
+- **Miundo ya meza**: meza moja, meza ya mti (API ya mti + gridi ya mti), bwana-undani (kuhifadhiwa kwa shughuli moja + vichupo vya undani), meza za kuunganisha za nyingi-kwa-nyingi.
+- **Vitu vilivyozalishwa**: Entity / Mapper / Service / Controller / DTO / VO + `api.js` + kurasa za Vue + kurasa za uchapishaji A4 + mifupa ya jaribio la ujumuishaji.
+- **Maboresho ya biashara**: menyu za kushuka za uhusiano, tafsiri ya kamusi, kuficha data, ukaguzi wa kipekee, kuunganisha fomu, ruhusa za eneo la data, Excel kuagiza/kuuza nje, mtiririko wa kuthibitisha, vifurushi vya uwezo wa malipo / faili / simu.
+- **Milango ya ubora**: kujikagua kwa kukusanya katika kumbukumbu (`javac` halisi), ukaguzi wa mikataba ya muundo, ukaguzi wa uthabiti wa ruhusa, hakiki ya diff kwenye diski, uthibitishaji halisi wa vitu vya mbele.
+- **Kulandi salama**: kuandika kwenye diski + nakala za chelezo za kundi `.gen-backup`, kuunganisha vizuizi vya alama kuhifadhi kanuni iliyoandikwa kwa mkono, leja ya hali nne `gen_output` (iliyoundwa / imeunganishwa / imepitiwa / imeshindwa), kurudisha nyuma kwa historia.
+- **Kutenga mifumo mingi**: kila mradi wa lengo ni "usanidi wa mfumo" (njia za mbele/nyuma, majina ya pakiti, kiambishi cha lango, classpath ya tegemezi, thamani za kiwango cha chini za swichi za kuzalisha).
+- **Maboresho ya AI**: unda mfumo kwa sentensi moja (muundo wa AI), maboresho ya AI ya data ya mbegu, usanidi uliopendekezwa na AI kwa kiwango cha meza.
+
+## 4. Mifano ya Kawaida
+
+| Mfano | Maelezo |
+| --- | --- |
+| Meza ya mti | Data ya daraja kama vile kategoria za bidhaa — inazalisha moja kwa moja API ya mti, gridi ya mti na menyu ya kushuka ya uchaguzi wa mzazi |
+| CRUD ya meza moja | Wateja, bidhaa, n.k. — menyu za kushuka FK + tafsiri ya kamusi + kuagiza/kuuza nje tayari kutumika |
+| Bwana-undani | Oda za mauzo + vitu vya oda — kuhifadhiwa kwa shughuli moja, droo ya undani na vichupo viwili |
+| Kusoma tu / takwimu | Mtiririko wa bidhaa zilizopo, n.k. — swichi za kuandika zimezimwa, swali tu na kuuza nje |
+| Hati za uchapishaji | Chagua swichi ya "chapisha" kuzalisha kurasa ya uchapishaji A4 na njia |
+| Kujenga mfumo kwa sentensi moja | Eleza eneo la biashara — AI inazalisha DB & meza + kiunzi + kuzalisha kamili + usajili wa menyu kwa hatua moja |
+
+## 5. Mtiririko wa Kazi wa Msingi
+
+```
+Kuingiza meza → Usanidi wa nyanja/swichi → Zalisha kwa bonyeza moja → Leja · Rudisha nyuma
+Kuingiza DB/DDL  Vidhibiti/uthibitishaji   Hualandisha kwenye diski tu baada ya milango yote ya ubora;
+                 /kamusi                    kanuni iliyoandikwa kwa mkono imehifadhiwa
+```
+
+## 6. Unda Mfumo kwa Sentensi Moja (Bomba)
+
+| Hatua | Maana |
+| --- | --- |
+| `CHECK` | Inathibitisha usanidi wa mradi wa lengo na classpath ya tegemezi |
+| `WRITE` | Inaunda hifadhidata & meza, kuandika kiunzi na vitu vilivyozalishwa |
+| `COMPILE` | Nyuma `mvn package` / mbele jenga, kujikagua kwa kukusanya katika kumbukumbu |
+| `MENU` | Inazalisha na kusajili ruhusa za menyu (vituo viwili: SQL ya vitu / kuandika moja kwa moja ndani) |
+| `ROUTE` | Inaunda upya vipande vya njia za mbele |
+
+## 7. Usanifu wa Mfumo
+
+| Hifadhi | Jukumu | Mfuriko |
+| --- | --- | --- |
+| `codegen-server` | Nyuma: injini ya kuzalisha, mifano, uthibitishaji, leja, bomba | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
+| `codegen-web` | Mbele: konsole (usanidi wa meza / mifano / leja / usimamizi wa mfumo) | Vue 2.7 · Element UI · axios · Vue Router (historia) |
+
+## 8. Mfuriko wa Teknolojia
+
+| Upande | Chaguo |
+| --- | --- |
+| Lugha/mfumo wa nyuma | Java 21 / Spring Boot 3.2.5 |
+| Kudumu | MyBatis-Plus 3.5.5 |
+| Injini ya mifano | FreeMarker (mifano 22 ya mbegu, uhariri mtandaoni + kurudisha nyuma matoleo) |
+| Usalama | Uthibitishaji wa JWT |
+| Hifadhidata | MySQL 8 |
+| Mbele | Vue 2.7 + Element UI |
+| AI ya ndani | qwen2.5-coder:7b |
+| Nyaraka za API | springdoc-openapi (Swagger UI) |
+
+## 9. Anza Haraka
+
+```bash
+mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
+mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
+
+cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
+
+mvn package -DskipTests
+java -jar target/codegen-server.jar
+
+cd ../codegen-web
+npm install
+npm run serve
+```
+
+Nyuma default kwenye bandari **8120**, mbele kwenye bandari **9530**. Akaunti ya default `admin / admin123`.
+
+## 10. Hali ya Mradi
+
+- Mstari wa matoleo uliopangwa sasa umefikia **V7.3**.
+- Hifadhi zote mbili zinapatikana kwenye Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
+
+## 11. Mwandishi
+
+- **Mwandishi**: mpangaji wa programu wa Kichina (msanidi huru)
+- **Barua pepe**: `hustxiayuhong@126.com`
+- **Msaada wa teknolojia**: tafadhali andika barua pepe yako kwa **Kichina**, pamoja na maelezo ya tatizo, mazingira ya runtime (JDK / MySQL / toleo), na hatua za kuzalisha tena.
