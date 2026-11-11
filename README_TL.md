@@ -14,7 +14,16 @@ Ang CodeGen ay isang "talahanayan-driven" na pabrika ng code. Dalhin ang iyong m
 
 Hindi lang ito "naglalabas ng code" — ito ay isang **pipeline ng paghahatid na may mga pintuan ng kalidad at kakayahang rollback**.
 
-## 2. Anong mga Problema ang Nalulutas Nito
+## 2. Sino ang mga User, at Paano Kagamitin
+
+| User | Karaniwang Pangangailangan | Landas na Ibinibigay ng Platform |
+| --- | --- | --- |
+| Developer ng back-end | May isang set ng mga talahanayan (o DDL), gustong mabilis na buuin ang CRUD | Pahina ng configuration ng talahanayan: i-import → i-configure ang mga field → Generate sa isang pag-click |
+| Full-stack / independiyenteng developer | Gustong bumuo ng kumpletong sistema mula sa simula (login, pahintulot, diksyunaryo) | Pahina ng pipeline: bumuo ng sistema sa isang pangungusap |
+| Pinuno ng koponan | Gustong pag-isahin ang style ng code, pamantayan ng code, istruktura ng direktoryo | Pamamahala ng sistema: isang sistema = isang configuration ng output, epektibo sa batch |
+| Tagapangalaga ng platform | Gustong baguhin ang mga template nang hindi binabago ang code | Pamamahala ng template: maaaring i-edit online, agad na epektibo pagkatapos i-save, sumusuporta sa rollback ng bersyon |
+
+## 3. Anong mga Problema ang Nalulutas Nito
 
 | Sakit | Ginagawa ng CodeGen |
 | --- | --- |
@@ -25,7 +34,7 @@ Hindi lang ito "naglalabas ng code" — ito ay isang **pipeline ng paghahatid na
 | Ang nabuong code ay hindi mapagkakatiwalaan hanggang sa oras ng pagbuo | Self-check sa compilation sa memory (tunay na `javac`), mga pagsusuri sa kontraktong istruktural, preview ng diff sa disk — walang anumang bagay na lulusot sa disk maliban kung ito ay bumubuo |
 | Ang pag-set up ng bagong sistema mula sa simula ay nangangailangan ng oras | Pipeline "bumuo ng sistema sa isang pangungusap": lumikha ng DB → scaffold → gumawa → i-package → magrehistro ng mga menu, ganap na awtomatiko |
 
-## 3. Pangkalahatang Tanawin ng mga Kakayahan
+## 4. Pangkalahatang Tanawin ng mga Kakayahan
 
 - **Pagkuha ng talahanayan**: pag-parse ng DDL, direktang pag-import mula sa database, wizard ng batch intake, awtomatikong hinangong configuration ng column (mga kontrol / validation / diksyunaryo / relasyon).
 - **Mga anyo ng talahanayan**: simpleng talahanayan, punong talahanayan (tree API + tree grid), master-detail (pag-save sa parehong transaksyon + mga tab ng detalye), marami-sa-maraming junction na talahanayan.
@@ -36,7 +45,7 @@ Hindi lang ito "naglalabas ng code" — ito ay isang **pipeline ng paghahatid na
 - **Paghihiwalay ng maraming sistema**: ang bawat target na proyekto ay isang "configuration ng sistema" (mga landas sa front/back, pangalan ng package, prefix ng gateway, classpath ng dependency, mga default na halaga ng generation switch).
 - **Pagpapahusay ng AI**: bumuo ng sistema sa isang pangungusap (pagmomodelo ng AI), pagpapahusay ng AI sa seed data, AI na inirerekomendang configuration sa antas ng talahanayan.
 
-## 4. Mga Tipikal na Scenario
+## 5. Mga Tipikal na Scenario
 
 | Scenario | Paglalarawan |
 | --- | --- |
@@ -47,7 +56,7 @@ Hindi lang ito "naglalabas ng code" — ito ay isang **pipeline ng paghahatid na
 | Mga dokumento ng pag-print | Markahan ang switch na "print" upang makabuo ng pahina ng pag-print na A4 at ruta |
 | Paggawa ng sistema sa isang pangungusap | Ilarawan ang domain ng negosyo — lumilikha ang AI ng DB at mga talahanayan + scaffold + buong pagbuo + pagrehistro ng menu sa isang hakbang |
 
-## 5. Pangunahing Workflow
+## 6. Pangunahing Workflow
 
 ```
 Pagkuha ng talahanayan → Config ng field/switch → Generate sa isang pag-click → Ledger · Rollback
@@ -55,7 +64,7 @@ DB import/DDL              Mga kontrol/validation   Lumapag sa disk lamang pagka
                          /diksyunaryo              ang code na isinulat ng kamay ay pinangangalagaan
 ```
 
-## 6. Bumuo ng Sistema sa Isang Pangungusap (Pipeline)
+## 7. Bumuo ng Sistema sa Isang Pangungusap (Pipeline)
 
 | Yugto | Kahulugan |
 | --- | --- |
@@ -65,14 +74,14 @@ DB import/DDL              Mga kontrol/validation   Lumapag sa disk lamang pagka
 | `MENU` | Gumagawa at nagrerehistro ng mga pahintulot sa menu (dalawang outlet: artefaktong SQL / direktang panloob na pagsusulat) |
 | `ROUTE` | Muling bumubuo ng mga fragment ng ruta sa front-end |
 
-## 7. Arkitektura ng Sistema
+## 8. Arkitektura ng Sistema
 
 | Repository | Tungkulin | Stack |
 | --- | --- | --- |
 | `codegen-server` | Back-end: engine ng pagbuo, mga template, validation, ledger, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
 | `codegen-web` | Front-end: console (config ng talahanayan / mga template / ledger / pamamahala ng sistema) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
 
-## 8. Teknikal na Stack
+## 9. Teknikal na Stack
 
 | Dimensyon | Pagpipilian |
 | --- | --- |
@@ -85,7 +94,7 @@ DB import/DDL              Mga kontrol/validation   Lumapag sa disk lamang pagka
 | Lokal na AI | qwen2.5-coder:7b |
 | Dokumentasyon ng API | springdoc-openapi (Swagger UI) |
 
-## 9. Mabilis na Simula
+## 10. Mabilis na Simula
 
 ```bash
 mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
@@ -103,12 +112,12 @@ npm run serve
 
 Ang back-end ay naka-port na default na **8120**, ang front-end ay naka-port na **9530**. Default na account `admin / admin123`.
 
-## 10. Kalagayan ng Proyekto
+## 11. Kalagayan ng Proyekto
 
 - Ang kasalukuyang pinaplanong linya ng bersyon ay umabot na sa **V7.3**.
 - Ang dalawang repository ay naka-host sa Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
-## 11. May-akda
+## 12. May-akda
 
 - **May-akda**: isang Chinese programmer (independiyenteng developer)
 - **Email**: `hustxiayuhong@126.com`

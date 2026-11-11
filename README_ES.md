@@ -25,7 +25,16 @@ Toma de tablas (importación de BD / DDL)
 
 ---
 
-## 2. ¿Qué problemas resuelve?
+## 2. Quiénes son los usuarios y cómo lo usan
+
+| Usuario | Necesidad típica | El camino que ofrece la plataforma |
+| --- | --- | --- |
+| Desarrollador back-end | Tiene un lote de tablas (o DDL) y quiere levantar CRUD rápidamente | Página de configuración de tablas: importar → configurar campos → Generación con un clic |
+| Desarrollador full-stack / independiente | Quiere crear desde cero un sistema completo (con inicio de sesión, permisos, diccionarios) | Página Pipeline: crear un sistema con una frase |
+| Líder de equipo | Quiere unificar el estilo de código, las convenciones y la estructura de directorios | Administración del sistema: un sistema = una configuración de salida, aplicada en lote |
+| Mantenedor de la plataforma | Quiere modificar las plantillas sin tocar el código | Gestión de plantillas: edición en línea, efecto inmediato al guardar, con reversión de versiones |
+
+## 3. ¿Qué problemas resuelve?
 
 | Punto de dolor | Qué hace CodeGen |
 | --- | --- |
@@ -38,7 +47,7 @@ Toma de tablas (importación de BD / DDL)
 
 ---
 
-## 3. Panorama de capacidades
+## 4. Panorama de capacidades
 
 - **Toma de tablas**: análisis de DDL, importación directa desde la base de datos, asistente de incorporación por lotes, deducción automática de la configuración de columnas (control / validación / diccionario / relación).
 - **Formas de tabla**: tabla simple, tabla en árbol (API `tree` + tabla en árbol), maestro-detalle (guardado en la misma transacción + pestañas de detalle), tablas intermedias de muchos a muchos.
@@ -51,7 +60,7 @@ Toma de tablas (importación de BD / DDL)
 
 ---
 
-## 4. Escenarios típicos
+## 5. Escenarios típicos
 
 | Escenario | Descripción |
 | --- | --- |
@@ -66,7 +75,7 @@ Toma de tablas (importación de BD / DDL)
 
 ---
 
-## 5. Flujo de trabajo principal
+## 6. Flujo de trabajo principal
 
 ```
 ┌────────────────┐   ┌────────────────────────┐   ┌──────────────────────────────────────────────┐   ┌──────────────────────┐
@@ -81,7 +90,7 @@ Toma de tablas (importación de BD / DDL)
 
 ---
 
-## 6. Crear un sistema con una frase (Pipeline)
+## 7. Crear un sistema con una frase (Pipeline)
 
 Capacidad avanzada orientada a "montar un back-office desde cero". Tras describir el dominio de negocio, la línea de producción avanza automáticamente por 5 etapas:
 
@@ -97,7 +106,7 @@ Cualquier fallo en una etapa interrumpe el proceso de inmediato y devuelve un er
 
 ---
 
-## 7. Arquitectura del sistema
+## 8. Arquitectura del sistema
 
 Front-end y back-end separados, con dos repositorios que trabajan conjuntamente:
 
@@ -126,7 +135,7 @@ resources/gen-templates/   22 plantillas FreeMarker (grupos backend / frontend /
 
 ---
 
-## 8. Stack tecnológico de un vistazo
+## 9. Stack tecnológico de un vistazo
 
 | Dimensión | Elección |
 | --- | --- |
@@ -141,7 +150,7 @@ resources/gen-templates/   22 plantillas FreeMarker (grupos backend / frontend /
 
 ---
 
-## 9. Inicio rápido
+## 10. Inicio rápido
 
 ### 1. Crear la base de datos (13 tablas de plataforma + cuenta por defecto admin/admin123)
 
@@ -209,7 +218,7 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 
 ---
 
-## 10. Mapa de documentación
+## 11. Mapa de documentación
 
 | Documento | Contenido |
 | --- | --- |
@@ -221,7 +230,7 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 
 ---
 
-## 11. Historial de versiones
+## 12. Historial de versiones
 
 | Versión | Tema / documento de planificación | Commit de implementación |
 | --- | --- | --- |
@@ -257,7 +266,7 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 
 > **V6.10 Observabilidad de la plataforma**: se integran Actuator + Micrometer, con muestreo cada 5 segundos hacia un búfer circular en memoria (ventana de 30 minutos), y se añade una nueva página integrada de "Monitorización del sistema": APIs de agregación `/monitor/*` en el backend + paneles ECharts en el frontend. Solo se permiten por lista blanca los endpoints `health/info/metrics`; `/actuator/health` no requiere token, mientras que `metrics` y otros sí exigen autenticación; `env/beans/heapdump/threaddump/loggers` nunca se exponen. La ventana de muestreo es solo dentro del proceso, se pierde al reiniciar y no se comparte entre instancias. Consulta `docs/可观测性说明.md` (Chino) para más detalles.
 
-## 12. Estado del proyecto
+## 13. Estado del proyecto
 
 - La línea de versiones planificada ha alcanzado la **V7.3**, con capacidades en iteración continua (modelado por IA, enriquecimiento de datos semilla, sistema de paquetes de capacidades, etc.).
 - Se ha consolidado el proyecto de demostración complementario `demo_admin` (backend 8140 / frontend 9040), que cubre los escenarios de árbol / CRUD / maestro-detalle / solo lectura / impresión y puede ejecutarse de forma independiente para su verificación.
@@ -265,7 +274,7 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 
 ---
 
-## 13. Autor y Soporte Técnico
+## 14. Autor y Soporte Técnico
 
 - **Autor**: programador chino (desarrollador independiente)
 - **Correo**: `hustxiayuhong@126.com`

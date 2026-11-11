@@ -23,7 +23,16 @@ Table intake (DB import / DDL)
 
 ---
 
-## 2. Is se hal hone wale masail
+## 2. Users kaun hain aur kaise istemal karenge
+
+| User | Typical zaroorat | Platform ka rasta |
+| --- | --- | --- |
+| Backend developer | Paas kuch tables (ya DDL) hain aur jaldi CRUD khara karna chahta hai | Table config page: import → fields configure → one-click generation |
+| Full-stack / independent developer | Zero se ek mukammal system (login, permissions, dictionaries ke sath) banana chahta hai | Pipeline page: ek jumle se system banayein |
+| Team lead | Code style, code conventions aur directory structure ek karna chahta hai | System management: ek system = ek output configuration, batch mein lagu |
+| Platform maintainer | Code badle baghair templates edit karna chahta hai | Template management: online editing, save karte hi lagu, version rollback support |
+
+## 3. Is se hal hone wale masail
 
 | Problem (Pain point) | CodeGen kya karta hai |
 | --- | --- |
@@ -36,7 +45,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 3. Capability Landscape
+## 4. Capability Landscape
 
 - **Table intake**: DDL parsing, direct database import, batch intake wizard, aur auto-derived column configuration (controls / validation / dictionaries / relations).
 - **Table shapes**: single table, tree table (tree API + tree grid), master-detail (same-transaction save + detail tabs), aur many-to-many junction tables.
@@ -49,7 +58,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 4. Typical Scenarios
+## 5. Typical Scenarios
 
 | Scenario | Tafseel (Description) |
 | --- | --- |
@@ -64,7 +73,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 5. Core Workflow
+## 6. Core Workflow
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +89,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 6. Ek jumle se system banayein (Pipeline)
+## 7. Ek jumle se system banayein (Pipeline)
 
 Ek high-level capability jo "scratch se backend scaffold" karne ke liye hai. Jab aap business domain describe karte hain, pipeline automatik 5 stages se aage badhta hai:
 
@@ -96,7 +105,7 @@ Kisi bhi stage ki failure turant readable error ke sath abort ho jati hai, jisse
 
 ---
 
-## 7. System ki Architecture
+## 8. System ki Architecture
 
 Front-end aur back-end alag hain, do repositories milkar kaam karte hain:
 
@@ -125,7 +134,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 8. Tech Stack ek nazar mein
+## 9. Tech Stack ek nazar mein
 
 | Dimension | Choice |
 | --- | --- |
@@ -140,7 +149,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 9. Quick Start
+## 10. Quick Start
 
 ### 1. Database banayein (13 platform tables + default account admin/admin123)
 
@@ -208,7 +217,7 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 
 ---
 
-## 10. Documentation Map
+## 11. Documentation Map
 
 | Document | Content |
 | --- | --- |
@@ -220,7 +229,7 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 
 ---
 
-## 11. Version History
+## 12. Version History
 
 | Version | Theme / plan document | Landing commit |
 | --- | --- | --- |
@@ -256,7 +265,7 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 
 > **V6.10 Platform observability**: integrates Actuator + Micrometer, sampling every 5 seconds into an in-memory ring buffer (30-minute window), plus a new embedded "System Monitor" page — backend `/monitor/*` aggregation APIs + frontend ECharts panels. Only `health/info/metrics` endpoints are whitelisted; `/actuator/health` is token-free while `metrics` etc. require auth; `env/beans/heapdump/threaddump/loggers` are never exposed. The sampling window is per-process only, lost on restart, and not shared across instances. See `docs/可观测性说明.md` (Chinese) for details.
 
-## 12. Project Status
+## 13. Project Status
 
 - Mazkoor planned version line **V7.3** tak pahunch chuki hai (capabilities iterate hoti rahtin hain: AI modeling, seed-data enhancement, capability-pack system, waghaira).
 - Ek companion demo project `demo_admin` (backend 8140 / frontend 9040) tree / CRUD / master-detail / read-only / print scenarios cover karta hai aur verification ke liye standalone run hota hai.
@@ -264,10 +273,11 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 
 ---
 
-## 13. Author & Support
+## 14. Author & Support
 
 - **Author**: ek Chinese programmer (independent developer)
 - **Email**: `hustxiayuhong@126.com`
 - **Technical support**: apna email **Chinese mein** likhein, jisme problem description, runtime environment (JDK / MySQL / version) aur reproduction steps shamil hon
 
 > Main har email padhta aur jawab deta hoon. Bug reports, feature requests aur collaboration inquiries sabhi ka swagat hai.
+

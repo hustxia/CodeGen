@@ -23,7 +23,16 @@ Taulukontuloa (DB-tuonti / DDL)
 
 ---
 
-## 2. Mitä ongelmia se ratkaisee
+## 2. Ketkä ovat käyttäjiä ja miten he käyttävät sitä
+
+| Käyttäjä | Tyypillinen tarve | Polku jonka alusta tarjoaa |
+| --- | --- | --- |
+| Back-end-kehittäjä | Sillä on joukko tauluja (tai DDL) ja se haluaa nopeasti pystyttää CRUD:n | Taulukon konfigurointisivu: tuo → määritä kentät → generoi yhdellä klikkauksella |
+| Full-stack / itsenäinen kehittäjä | Haluaa rakentaa täydellisen järjestelmän tyhjästä (ml. kirjautuminen, oikeudet, sanakirja) | Putkisivu: rakenna järjestelmä yhdellä lauseella |
+| Tiiminjohtaja | Haluaa yhtenäistää koodaustyylin, koodausstandardit ja hakemistorakenteen | Järjestelmähallinta: yksi järjestelmä = yksi tulostuskonfiguraatio, eräkäsittelyssä voimaan |
+| Alustan ylläpitäjä | Haluaa muuttaa malleja muuttamatta koodia | Mallinhallinta: muokkaa verkossa, tallennus tulee voimaan välittömästi, versionpalautus tuettuna |
+
+## 3. Mitä ongelmia se ratkaisee
 
 | Kipukohta | Mitä CodeGen tekee |
 | --- | --- |
@@ -36,7 +45,7 @@ Taulukontuloa (DB-tuonti / DDL)
 
 ---
 
-## 3. Ominaisuudet yleiskatsaus
+## 4. Ominaisuudet yleiskatsaus
 
 - **Taulukontuloa**: DDL-parsinta, suora tietokannan tuonti, erätulonti-ohjattu toiminto, automaattisesti johdettu sarakekonfiguraatio (ohjaukset / validointi / sanakirjat / suhteet).
 - **Taulukkomuodot**: yksittäinen taulu, puutaulu (tree API + puuruudukko), master-detail (tallentaminen samassa tapahtumassa + yksityiskohtavälilehdet), moni-moneen yhdistystaulut.
@@ -49,7 +58,7 @@ Taulukontuloa (DB-tuonti / DDL)
 
 ---
 
-## 4. Tyypilliset skenaariot
+## 5. Tyypilliset skenaariot
 
 | Skenaario | Kuvaus |
 | --- | --- |
@@ -64,7 +73,7 @@ Taulukontuloa (DB-tuonti / DDL)
 
 ---
 
-## 5. Perustyönkulku
+## 6. Perustyönkulku
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +89,7 @@ Taulukontuloa (DB-tuonti / DDL)
 
 ---
 
-## 6. Rakenna järjestelmä yhdellä lauseella (Putki)
+## 7. Rakenna järjestelmä yhdellä lauseella (Putki)
 
 Korkean tason ominaisuus, joka kohdistuu "takapään rakentamiseen tyhjästä". Kun kuvaat liiketoiminta-alueen, putki etenee automaattisesti 5 vaiheessa:
 
@@ -96,7 +105,7 @@ Mikä tahansa vaiheen virhe keskeyttää välittömästi luettavan virheen avull
 
 ---
 
-## 7. Järjestelmäarkkitehtuuri
+## 8. Järjestelmäarkkitehtuuri
 
 Etu- ja takapää eristetty, kaksi säilöä toimii yhdessä:
 
@@ -125,7 +134,7 @@ resources/gen-templates/   22 FreeMarker-mallia (backend / frontend / shared / t
 
 ---
 
-## 8. Teknologiapino yleiskatsaus
+## 9. Teknologiapino yleiskatsaus
 
 | Ulottuvuus | Valinta |
 | --- | --- |
@@ -140,7 +149,7 @@ resources/gen-templates/   22 FreeMarker-mallia (backend / frontend / shared / t
 
 ---
 
-## 9. Nopea alku
+## 10. Nopea alku
 
 ### 1. Luo tietokanta (13 alustataulua + oletustili admin/admin123)
 
@@ -208,7 +217,7 @@ Etupää käyttää oletusarvoisesti porttia **9530**, välittää `/dev-api` ta
 
 ---
 
-## 10. Dokumentaatiokartta
+## 11. Dokumentaatiokartta
 
 | Asiakirja | Sisältö |
 | --- | --- |
@@ -220,7 +229,7 @@ Etupää käyttää oletusarvoisesti porttia **9530**, välittää `/dev-api` ta
 
 ---
 
-## 11. Versiohistoria
+## 12. Versiohistoria
 
 | Versio | Teema / suunnitteludokumentti | Laskeutumiscommit |
 | --- | --- | --- |
@@ -256,7 +265,7 @@ Etupää käyttää oletusarvoisesti porttia **9530**, välittää `/dev-api` ta
 
 > **V6.10 Alustan havaittavuus**: integroi Actuator + Micrometer, näyttelee joka 5. sekunti muistin sisäiseen rengaspuskuriin (30 minuutin ikkuna), sekä uusi upotettu "Järjestelmävalvonta"-sivu — takapään `/monitor/*` aggregointi API-rajapinnat + etupään ECharts-paneelit. Vain `health/info/metrics` päätepisteet ovat sallittujen listalla; `/actuator/health` on vapaa tokeneista kun taas `metrics` jne. vaativat todennuksen; `env/beans/heapdump/threaddump/loggers` ei koskaan paljasteta. Näyteikkuna on vain prosessikohtainen, menetetään uudelleenkäynnistyksessä, eikä sitä jaeta instanssien välillä. Katso `docs/可观测性说明.md` (kiina) lisätietoja varten.
 
-## 12. Projektin tila
+## 13. Projektin tila
 
 - Nykyinen suunniteltu versiolinja on saavuttanut **V7.3** (ominaisuudet jatkavat iterointia: AI-mallinnus, siemendatan parannus, ominaisuuspakettijärjestelmä jne.).
 - Mukana oleva demo-projekti `demo_admin` (takapää 8140 / etupää 9040) kattaa puun / CRUD:n / master-detail:n / vain luku / tulostus skenaariot ja toimii itsenäisesti verifiointia varten.
@@ -264,7 +273,7 @@ Etupää käyttää oletusarvoisesti porttia **9530**, välittää `/dev-api` ta
 
 ---
 
-## 13. Tekijä & tuki
+## 14. Tekijä & tuki
 
 - **Tekijä**: kiinalainen ohjelmoija (itsenäinen kehittäjä)
 - **Sähköposti**: `hustxiayuhong@126.com`

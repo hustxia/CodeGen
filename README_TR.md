@@ -23,7 +23,15 @@ Table intake (DB import / DDL)
 
 ---
 
-## 2. Hangi Sorunları Çözer
+## 2. Kullanıcılar kimler ve platformayı nasıl kullanıyor
+| Kullanıcı | Tipik ihtiyaç | Platformanın sunduğu yol |
+| --- | --- | --- |
+| Arka uç geliştirici | Elinde bir dizi tablo (veya DDL) var ve hızlıca CRUD çıkarmak istiyor | Tablo yapılandırma sayfası: içe aktarma → alan yapılandırması → tek tıklamayla üretim |
+| Full-stack / bağımsız geliştirici | Sıfırdan, tam bir sistem (giriş, yetki, sözlükler dahil) kurmak istiyor | Hat sayfası: tek cümleyle sistem kurma |
+| Takım lideri | Kod tarzını, standartları ve dizin yapısını birleştirmek istiyor | Sistem yönetimi: bir sistem = bir çıkış yapılandırması, toplu uygulama |
+| Platform bakımcısı | Kodu değiştirmeden şablonları değiştirmek istiyor | Şablon yönetimi: çevrimiçi düzenleme, kaydetme anında geçerli olur, sürüm geri alma desteklenir |
+
+## 3. Hangi Sorunları Çözer
 
 | Sorun | CodeGen'in Yaptığı |
 | --- | --- |
@@ -36,7 +44,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 3. Yetenek Haritası
+## 4. Yetenek Haritası
 
 - **Tablo alımı**: DDL ayrıştırma, doğrudan veritabanı içe aktarımı, toplu alım sihirbazı, otomatik türetilen sütun yapılandırması (denetimler / doğrulama / sözlükler / ilişkiler).
 - **Tablo şekilleri**: tek tablo, ağaç tablo (ağaç API + ağaç ızgara), ana-ayrıntı (aynı işlemde kaydetme + ayrıntı sekmeleri), çoka-çok bağlantı tabloları.
@@ -49,7 +57,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 4. Tipik Senaryolar
+## 5. Tipik Senaryolar
 
 | Senaryo | Açıklama |
 | --- | --- |
@@ -64,7 +72,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 5. Temel İş Akışı
+## 6. Temel İş Akışı
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +88,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 6. Tek Cümleyle Sistem Kurma (Hat)
+## 7. Tek Cümleyle Sistem Kurma (Hat)
 
 "Sıfırdan arka uç iskeleti çıkarmaya" yönelik üst düzey bir yetenektir. İş alanını tarif ettikten sonra hat, otomatik olarak 5 aşamadan ilerler:
 
@@ -96,7 +104,7 @@ Herhangi bir aşama başarısızlığı, kolayca konumlandırılabilmesi için o
 
 ---
 
-## 7. Sistem Mimarisi
+## 8. Sistem Mimarisi
 
 Ön yüz ve arka uç ayrılmış, birlikte çalışan iki depo:
 
@@ -125,7 +133,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 8. Teknik Yığına Bakış
+## 9. Teknik Yığına Bakış
 
 | Boyut | Seçim |
 | --- | --- |
@@ -140,7 +148,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 9. Hızlı Başlangıç
+## 10. Hızlı Başlangıç
 
 ### 1. Veritabanını oluşturun (13 platform tablosu + varsayılan hesap admin/admin123)
 
@@ -208,7 +216,7 @@ npm run serve
 
 ---
 
-## 10. Belgelendirme Haritası
+## 11. Belgelendirme Haritası
 
 | Belge | İçerik |
 | --- | --- |
@@ -220,7 +228,7 @@ npm run serve
 
 ---
 
-## 11. Sürüm Geçmişi
+## 12. Sürüm Geçmişi
 
 | Sürüm | Tema / plan belgesi | İniş commit'i |
 | --- | --- | --- |
@@ -256,7 +264,7 @@ npm run serve
 
 > **V6.10 Platform gözlemlenebilirliği**: Actuator + Micrometer'i entegre eder, her 5 saniyede bir bellekteki halka tampona (30 dakikalık pencere) örnekler, ayrıca yeni bir gömülü "Sistem İzleyici" sayfası — arka uç `/monitor/*` toplama API'leri + ön yüz ECharts panelleri. Yalnızca `health/info/metrics` uç noktaları beyaz listeye alınır; `/actuator/health` tokensizken `metrics` vb. kimlik doğrulama gerektirir; `env/beans/heapdump/threaddump/loggers` asla açığa çıkmaz. Örnekleme penceresi yalnızca süreç başına olup yeniden başlatmada kaybolur ve örnekler arasında paylaşılmaz. Ayrıntılar için bkz. `docs/可观测性说明.md` (Çince).
 
-## 12. Proje Durumu
+## 13. Proje Durumu
 
 - Mevcut planlanan sürüm hattı **V7.3** seviyesine ulaştı (yetenekler sürekli yinelemede: yapay zeka modelleme, tohum-veri geliştirmesi, yetenek-paketi sistemi vb.).
 - Eşlik eden demo projesi `demo_admin` (arka uç 8140 / ön uç 9040), ağaç / CRUD / ana-ayrıntı / salt okunur / yazdırma senaryolarını kapsar ve doğrulama için bağımsız çalışır.
@@ -264,7 +272,7 @@ npm run serve
 
 ---
 
-## 13. Yazar & Destek
+## 14. Yazar & Destek
 
 - **Yazar**: bir Çinli programcı (bağımsız geliştirici)
 - **E-posta**: `hustxiayuhong@126.com`

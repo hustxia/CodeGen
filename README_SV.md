@@ -23,7 +23,16 @@ Tabellinmatning (DB-import / DDL)
 
 ---
 
-## 2. Vilka problem den löser
+## 2. Vilka är användarna och hur använder de det
+
+| Användare | Typiskt behov | Vägen plattformen erbjuder |
+| --- | --- | --- |
+| Back-end-utvecklare | Har en uppsättning tabeller (eller DDL) och vill snabbt sätta upp CRUD | Tabellkonfigurationssida: importera → konfigurera fält → generera med ett klick |
+| Full-stack / fristående utvecklare | Vill bygga ett komplett system från grunden (inkl. inloggning, behörigheter, ordbok) | Pipelinsida: bygg ett system med en mening |
+| Teamledare | Vill enhetliga kodstil, kodstandarder och katalogstruktur | Systemhantering: ett system = en utdatakonfiguration, gäller i batch |
+| Plattformsadministratör | Vill ändra mallar utan att ändra kod | Mallhantering: redigera online, träder i kraft direkt vid sparning, med versionsåterställning |
+
+## 3. Vilka problem den löser
 
 | Smärtpunkt | Vad CodeGen gör |
 | --- | --- |
@@ -36,7 +45,7 @@ Tabellinmatning (DB-import / DDL)
 
 ---
 
-## 3. Kapacitetsöversikt
+## 4. Kapacitetsöversikt
 
 - **Tabellinmatning**: DDL-parsning, direkt databasimport, satsvis inmatningsguide, automatiskt härledd kolumnkonfiguration (kontroller / validering / ordböcker / relationer).
 - **Tabellformer**: enkel tabell, träd-tabell (tree API + trädrutnät), master-detail (lagras i samma transaktion + detaljflikar), många-till-många kopplingstabeller.
@@ -49,7 +58,7 @@ Tabellinmatning (DB-import / DDL)
 
 ---
 
-## 4. Typiska scenarier
+## 5. Typiska scenarier
 
 | Scenario | Beskrivning |
 | --- | --- |
@@ -64,7 +73,7 @@ Tabellinmatning (DB-import / DDL)
 
 ---
 
-## 5. Grundläggande arbetsflöde
+## 6. Grundläggande arbetsflöde
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +89,7 @@ Tabellinmatning (DB-import / DDL)
 
 ---
 
-## 6. Bygg ett system med en mening (Pipeline)
+## 7. Bygg ett system med en mening (Pipeline)
 
 En högnivåkapacitet inriktad på "att bygga en backend från grunden". Efter att du beskrivit affärsdomen avancerar pipelinen automatiskt genom 5 faser:
 
@@ -96,7 +105,7 @@ Varje fasfel avbryter omedelbart med ett läsbart fel för enkel lokalisering.
 
 ---
 
-## 7. Systemarkitektur
+## 8. Systemarkitektur
 
 Front- och back-end separerade, två repositorier som arbetar tillsammans:
 
@@ -125,7 +134,7 @@ resources/gen-templates/   22 FreeMarker-mallar (backend / frontend / shared / t
 
 ---
 
-## 8. Teknikstack i översikt
+## 9. Teknikstack i översikt
 
 | Dimension | Val |
 | --- | --- |
@@ -140,7 +149,7 @@ resources/gen-templates/   22 FreeMarker-mallar (backend / frontend / shared / t
 
 ---
 
-## 9. Snabbstart
+## 10. Snabbstart
 
 ### 1. Skapa databasen (13 plattformstabeller + standardkonto admin/admin123)
 
@@ -208,7 +217,7 @@ Frontenden körs som standard på port **9530**, proxyrar `/dev-api` till backen
 
 ---
 
-## 10. Dokumentationskarta
+## 11. Dokumentationskarta
 
 | Dokument | Innehåll |
 | --- | --- |
@@ -220,7 +229,7 @@ Frontenden körs som standard på port **9530**, proxyrar `/dev-api` till backen
 
 ---
 
-## 11. Versionshistorik
+## 12. Versionshistorik
 
 | Version | Tema / plandokument | Landningscommit |
 | --- | --- | --- |
@@ -256,7 +265,7 @@ Frontenden körs som standard på port **9530**, proxyrar `/dev-api` till backen
 
 > **V6.10 Plattformsobserverbarhet**: integrerar Actuator + Micrometer, provtar var 5:e sekund till en in-memory ringbuffert (30-minutersfönster), plus en ny inbäddad "Systemmonitor"-sida — backend `/monitor/*` aggregerings-API:er + frontend ECharts paneler. Endast `health/info/metrics` endpoints är vitlistade; `/actuator/health` är tokenfri medan `metrics` etc. kräver auth; `env/beans/heapdump/threaddump/loggers` exponeras aldrig. Provtagningsfönstret är endast per process, förloras vid omstart, och delas inte mellan instanser. Se `docs/可观测性说明.md` (kinesiska) för detaljer.
 
-## 12. Projektstatus
+## 13. Projektstatus
 
 - Den nuvarande planerade versionslinjen har nått **V7.3** (kapaciteter fortsätter iterera: AI-modellering, frödataförbättring, kapacitetspaketsystem, etc.).
 - Ett medföljande demo-projekt `demo_admin` (backend 8140 / frontend 9040) täcker träd / CRUD / master-detail / skrivskyddad / utskriftsscenarier och kör fristående för verifiering.
@@ -264,7 +273,7 @@ Frontenden körs som standard på port **9530**, proxyrar `/dev-api` till backen
 
 ---
 
-## 13. Författare & Support
+## 14. Författare & Support
 
 - **Författare**: en kinesisk programmerare (oberoende utvecklare)
 - **E-post**: `hustxiayuhong@126.com`

@@ -23,7 +23,18 @@ Tábla bevitel (DB import / DDL)
 
 ---
 
-## 2. Milyen problémákat old meg
+## 2. Kik a felhasználók, és hogyan használják
+
+| Felhasználó | Tipikus igény | Az út, amelyet a platform kínál |
+| --- | --- | --- |
+| Back-end fejlesztő | Van egy csomó táblája (vagy DDL), és gyorsan fel akar állítani egy CRUD-ot | Táblakonfigurációs oldal: importálás → mezők konfigurálása → egykattintásos generálás |
+| Full-stack / független fejlesztő | Nulláról szeretne egy teljes rendszert építeni (bejelentkezéssel, jogosulttságokkal, szótárral) | Folyamat oldal: építsen rendszert egy mondattal |
+| Csapatvezető | Szeretné egységesíteni a kódstílust, a kódolási konvenciókat és a könyvtárszerkezetet | Rendszerkezelés: egy rendszer = egy kimeneti konfiguráció, kötegelten lép érvénybe |
+| Platform karbantartója | Sablonokat akar módosítani a kód megváltoztatása nélkül | Sablonkezelés: online szerkesztés, mentés után azonnal érvényes, támogatja a verzióvisszaállítást |
+
+
+
+## 3. Milyen problémákat old meg
 
 | Fájdalmas pont | Mit tesz a CodeGen |
 | --- | --- |
@@ -36,7 +47,7 @@ Tábla bevitel (DB import / DDL)
 
 ---
 
-## 3. Képességek áttekintése
+## 4. Képességek áttekintése
 
 - **Tábla bevitel**: DDL parse-olás, közvetlen adatbázis-importálás, köteges bevitel varázsló, automatikusan levezetett oszlopkonfiguráció (vezérlők / validáció / szótárak / relációk).
 - **Táblaformák**: egyszerű tábla, fatábla (tree API + farács), master-detail (azonos tranzakcióban történő mentés + részletek fülek), sok-több kapcsolatú összekötő táblák.
@@ -49,7 +60,7 @@ Tábla bevitel (DB import / DDL)
 
 ---
 
-## 4. Tipikus forgatókönyvek
+## 5. Tipikus forgatókönyvek
 
 | Forgatókönyv | Leírás |
 | --- | --- |
@@ -64,7 +75,7 @@ Tábla bevitel (DB import / DDL)
 
 ---
 
-## 5. Alapvető munkafolyamat
+## 6. Alapvető munkafolyamat
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +91,7 @@ Tábla bevitel (DB import / DDL)
 
 ---
 
-## 6. Rendszer létrehozása egy mondattal (Folyamat)
+## 7. Rendszer létrehozása egy mondattal (Folyamat)
 
 Egy magas szintű képesség, amelynek célja "backend létrehozása nulláról". Miután leírja az üzleti tartományt, a folyamat automatikusan halad 5 szakaszon keresztül:
 
@@ -96,7 +107,7 @@ Bármelyik szakasz hibája azonnal leáll egy olvasható hibával a könnyű lok
 
 ---
 
-## 7. Rendszerarchitektúra
+## 8. Rendszerarchitektúra
 
 Front-end és back-end elkülönítve, két repozitório együttműködik:
 
@@ -125,7 +136,7 @@ resources/gen-templates/   22 FreeMarker sablon (backend / frontend / shared / t
 
 ---
 
-## 8. Technikai verem áttekintése
+## 9. Technikai verem áttekintése
 
 | Dimenzió | Választás |
 | --- | --- |
@@ -140,7 +151,7 @@ resources/gen-templates/   22 FreeMarker sablon (backend / frontend / shared / t
 
 ---
 
-## 9. Gyors kezdés
+## 10. Gyors kezdés
 
 ### 1. Hozza létre az adatbázist (13 platformtábla + alapértelmezett fiók admin/admin123)
 
@@ -208,7 +219,7 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 
 ---
 
-## 10. Dokumentációs térkép
+## 11. Dokumentációs térkép
 
 | Dokumentum | Tartalom |
 | --- | --- |
@@ -220,7 +231,7 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 
 ---
 
-## 11. Verziótörténet
+## 12. Verziótörténet
 
 | Verzió | Téma / tervdokumentum | Telepítési commit |
 | --- | --- | --- |
@@ -256,7 +267,7 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 
 > **V6.10 Platform megfigyelhetőség**: integrálja az Actuator + Micrometer rendszert, 5 másodpercenként mintát vesz egy memóriabeli körbufferbe (30 perces ablak), plusz egy új beágyazott "Rendszerfigyelő" oldal — backend `/monitor/*` aggregációs API-k + front-end ECharts panelek. Csak `health/info/metrics` végpontok vannak engedélyezve a whitelist-en; `/actuator/health` token nélküli, míg a `metrics` stb. hitelesítést igényel; `env/beans/heapdump/threaddump/loggers` soha nem kerül közzétételre. A mintavételi ablak csak folyamatonkénti, újraindítás esetén elveszik, és nincs megosztva a példányok között. Lásd a `docs/可观测性说明.md` fájlt (kínai) részletekért.
 
-## 12. Projekt állapot
+## 13. Projekt állapot
 
 - A jelenlegi tervezett verzióvonal elérte a **V7.3**-at (képességek folyamatosan iterálódnak: AI modellezés, seed adat fejlesztés, képességcsomag rendszer stb.).
 - Egy kísérő demo projekt `demo_admin` (backend 8140 / front-end 9040) lefedi a fa / CRUD / master-detail / csak olvasható / nyomtatási forgatókönyveket és önállóan futtatható ellenőrzés céljából.
@@ -264,7 +275,7 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 
 ---
 
-## 13. Szerző & támogatás
+## 14. Szerző & támogatás
 
 - **Szerző**: egy kínai programozó (független fejlesztő)
 - **E-mail**: `hustxiayuhong@126.com`

@@ -14,7 +14,16 @@ CodeGen ni "kiwanda cha kanuni kinachoendeshwa na meza". Lete meza zako za biash
 
 Sio tu "inayoondoa kanuni" — ni **bomba la utoaji na milango ya ubora na uwezo wa kurudisha nyuma**.
 
-## 2. Inatatua Matatizo Gani
+## 2. Ni Nani Watumiaji, na Jinsi Watakavyoitumia
+
+| Mtumiaji | Hitaji Maalum | Njia Inayotolewa na Jukwaa |
+| --- | --- | --- |
+| Msanidi wa nyuma | Ana meza kadhaa (au DDL), anataka kuanzisha CRUD haraka | Ukurasa wa usanidi wa meza: kuagiza → usanidi wa nyanja → zalisha kwa bonyeza moja |
+| Full-stack / msanidi huru | Anataka kujenga mfumo kamili kutoka mwanzo (ingia, ruhusa, kamusi) | Ukurasa wa bomba: unda mfumo kwa sentensi moja |
+| Kiongozi wa timu | Anataka kuunganisha mtindo wa kanuni, viwango vya kanuni, muundo wa saraka | Usimamizi wa mfumo: mfumo mmoja = usanidi mmoja wa pato, unaotumika kwa kundi |
+| Mtunzaji wa jukwaa | Anataka kubadilisha mifano bila kubadilisha kanuni | Usimamizi wa mifano: inayoweza kuhaririwa mtandaoni, inayotumika mara moja baada ya kuhifadhi, inaauni kurudisha nyuma kwa matoleo |
+
+## 3. Inatatua Matatizo Gani
 
 | Jambo la Maumivu | Nini CodeGen Inafanya |
 | --- | --- |
@@ -25,7 +34,7 @@ Sio tu "inayoondoa kanuni" — ni **bomba la utoaji na milango ya ubora na uwezo
 | Kanuni iliyozalishwa haiaminika mpaka wakati wa kukusanya | Kujikagua kwa kukusanya katika kumbukumbu (`javac` halisi), ukaguzi wa mikataba ya muundo, hakiki ya diff kwenye diski — hakuna chochote kinachoanguka kwenye diski isipokuwa kikikusanyika |
 | Kuanzisha mfumo mpya kutoka mwanzo kunahitaji wakati | Bomba "unda mfumo kwa sentensi moja": unda DB → kiunzi → zalisha → pakiti → sajili menyu, otomatiki kabisa |
 
-## 3. Muhtasari wa Uwezo
+## 4. Muhtasari wa Uwezo
 
 - **Kuingiza meza**: uchambuzi wa DDL, kuagiza moja kwa moja kutoka hifadhidata, mshauri wa kuingiza kwa kundi, usanidi wa safu unaopatikana moja kwa moja (vidhibiti / uthibitishaji / kamusi / uhusiano).
 - **Miundo ya meza**: meza moja, meza ya mti (API ya mti + gridi ya mti), bwana-undani (kuhifadhiwa kwa shughuli moja + vichupo vya undani), meza za kuunganisha za nyingi-kwa-nyingi.
@@ -36,7 +45,7 @@ Sio tu "inayoondoa kanuni" — ni **bomba la utoaji na milango ya ubora na uwezo
 - **Kutenga mifumo mingi**: kila mradi wa lengo ni "usanidi wa mfumo" (njia za mbele/nyuma, majina ya pakiti, kiambishi cha lango, classpath ya tegemezi, thamani za kiwango cha chini za swichi za kuzalisha).
 - **Maboresho ya AI**: unda mfumo kwa sentensi moja (muundo wa AI), maboresho ya AI ya data ya mbegu, usanidi uliopendekezwa na AI kwa kiwango cha meza.
 
-## 4. Mifano ya Kawaida
+## 5. Mifano ya Kawaida
 
 | Mfano | Maelezo |
 | --- | --- |
@@ -47,7 +56,7 @@ Sio tu "inayoondoa kanuni" — ni **bomba la utoaji na milango ya ubora na uwezo
 | Hati za uchapishaji | Chagua swichi ya "chapisha" kuzalisha kurasa ya uchapishaji A4 na njia |
 | Kujenga mfumo kwa sentensi moja | Eleza eneo la biashara — AI inazalisha DB & meza + kiunzi + kuzalisha kamili + usajili wa menyu kwa hatua moja |
 
-## 5. Mtiririko wa Kazi wa Msingi
+## 6. Mtiririko wa Kazi wa Msingi
 
 ```
 Kuingiza meza → Usanidi wa nyanja/swichi → Zalisha kwa bonyeza moja → Leja · Rudisha nyuma
@@ -55,7 +64,7 @@ Kuingiza DB/DDL  Vidhibiti/uthibitishaji   Hualandisha kwenye diski tu baada ya 
                  /kamusi                    kanuni iliyoandikwa kwa mkono imehifadhiwa
 ```
 
-## 6. Unda Mfumo kwa Sentensi Moja (Bomba)
+## 7. Unda Mfumo kwa Sentensi Moja (Bomba)
 
 | Hatua | Maana |
 | --- | --- |
@@ -65,14 +74,14 @@ Kuingiza DB/DDL  Vidhibiti/uthibitishaji   Hualandisha kwenye diski tu baada ya 
 | `MENU` | Inazalisha na kusajili ruhusa za menyu (vituo viwili: SQL ya vitu / kuandika moja kwa moja ndani) |
 | `ROUTE` | Inaunda upya vipande vya njia za mbele |
 
-## 7. Usanifu wa Mfumo
+## 8. Usanifu wa Mfumo
 
 | Hifadhi | Jukumu | Mfuriko |
 | --- | --- | --- |
 | `codegen-server` | Nyuma: injini ya kuzalisha, mifano, uthibitishaji, leja, bomba | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
 | `codegen-web` | Mbele: konsole (usanidi wa meza / mifano / leja / usimamizi wa mfumo) | Vue 2.7 · Element UI · axios · Vue Router (historia) |
 
-## 8. Mfuriko wa Teknolojia
+## 9. Mfuriko wa Teknolojia
 
 | Upande | Chaguo |
 | --- | --- |
@@ -85,7 +94,7 @@ Kuingiza DB/DDL  Vidhibiti/uthibitishaji   Hualandisha kwenye diski tu baada ya 
 | AI ya ndani | qwen2.5-coder:7b |
 | Nyaraka za API | springdoc-openapi (Swagger UI) |
 
-## 9. Anza Haraka
+## 10. Anza Haraka
 
 ```bash
 mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
@@ -103,12 +112,12 @@ npm run serve
 
 Nyuma default kwenye bandari **8120**, mbele kwenye bandari **9530**. Akaunti ya default `admin / admin123`.
 
-## 10. Hali ya Mradi
+## 11. Hali ya Mradi
 
 - Mstari wa matoleo uliopangwa sasa umefikia **V7.3**.
 - Hifadhi zote mbili zinapatikana kwenye Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
-## 11. Mwandishi
+## 12. Mwandishi
 
 - **Mwandishi**: mpangaji wa programu wa Kichina (msanidi huru)
 - **Barua pepe**: `hustxiayuhong@126.com`

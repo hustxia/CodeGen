@@ -23,7 +23,18 @@ Převod tabulek (DB import / DDL)
 
 ---
 
-## 2. Jaké problémy řeší
+## 2. Kdo jsou uživatelé a jak je používají
+
+| Použivatel | Typická potřeba | Cesta, kterou platforma nabízí |
+| --- | --- | --- |
+| Backendový vývojář | Má sadu tabulek (nebo DDL) a chce rychle rozjet CRUD | Stránka konfigurace tabulek: import → konfigurace polí → generování jedním kliknutím |
+| Full-stack / nezávislý vývojář | Chce od nuly postavit kompletní systém (včetně přihlášení, oprávnění, slovníku) | Stránka Pipeline: postavte systém jednou větou |
+| Vedoucí týmu | Chce sjednotit kódový styl, konvence kódu a adresářovou strukturu | Správa systému: jeden systém = jedna výstupní konfigurace, platí dávkově |
+| Správce platformy | Chce měnit šablony, aniž by měnil kód | Správa šablon: online úprava, uložení okamžitě platí, podporuje historické vrácení zpět |
+
+
+
+## 3. Jaké problémy řeší
 
 | Bolestný bod | Co dělá CodeGen |
 | --- | --- |
@@ -36,7 +47,7 @@ Převod tabulek (DB import / DDL)
 
 ---
 
-## 3. Přehled kapacit
+## 4. Přehled kapacit
 
 - **Převod tabulek**: parsování DDL, přímý import z databáze, dávkový průvodce převodem, automaticky odvozená konfigurace sloupců (ovládací prvky / validace / slovníky / relace).
 - **Tvary tabulek**: jednoduchá tabulka, stromová tabulka (tree API + stromový grid), master-detail (uložení ve stejné transakci + záložky detailů), spojovací tabulky many-to-many.
@@ -49,7 +60,7 @@ Převod tabulek (DB import / DDL)
 
 ---
 
-## 4. Typické scénáře
+## 5. Typické scénáře
 
 | Scénář | Popis |
 | --- | --- |
@@ -64,7 +75,7 @@ Převod tabulek (DB import / DDL)
 
 ---
 
-## 5. Základní pracovní tok
+## 6. Základní pracovní tok
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +91,7 @@ Převod tabulek (DB import / DDL)
 
 ---
 
-## 6. Sestav systém jednou větou (Pipeline)
+## 7. Sestav systém jednou větou (Pipeline)
 
 Vysokoúrovňová kapacita zaměřená na "sestavení backendu od nuly". Poté, co popíšete obchodní doménu, pipeline automaticky postupuje 5 fázemi:
 
@@ -96,7 +107,7 @@ Selhání kterékoli fáze okamžitě přeruší s čitelnou chybou pro snadnou 
 
 ---
 
-## 7. Architektura systému
+## 8. Architektura systému
 
 Front-end a back-end oddělené, dvě repozitáře spolupracují:
 
@@ -125,7 +136,7 @@ resources/gen-templates/   22 FreeMarker šablon (backend / frontend / shared / 
 
 ---
 
-## 8. Přehled technologického stacku
+## 9. Přehled technologického stacku
 
 | Dimenz | Volba |
 | --- | --- |
@@ -140,7 +151,7 @@ resources/gen-templates/   22 FreeMarker šablon (backend / frontend / shared / 
 
 ---
 
-## 9. Rychlý start
+## 10. Rychlý start
 
 ### 1. Vytvořte databázi (13 platformních tabulek + výchozí účet admin/admin123)
 
@@ -208,7 +219,7 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 
 ---
 
-## 10. Mapa dokumentace
+## 11. Mapa dokumentace
 
 | Dokument | Obsah |
 | --- | --- |
@@ -220,7 +231,7 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 
 ---
 
-## 11. Historie verzí
+## 12. Historie verzí
 
 | Verze | Téma / plánový dokument | Commit nasazení |
 | --- | --- | --- |
@@ -256,7 +267,7 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 
 > **V6.10 Platformní pozorovatelnost**: integruje Actuator + Micrometer, vzorkuje každých 5 sekund do kruhového bufferu v paměti (30minutové okno), plus nová vestavěná stránka "Systémový monitor" — backend `/monitor/*` agregace API + frontend ECharts panely. Pouze `health/info/metrics` endpointy jsou whitelisted; `/actuator/health` je bez tokenu, zatímco `metrics` atd. vyžadují auth; `env/beans/heapdump/threaddump/loggers` nejsou nikdy vystaveny. Vzorkovací okno je pouze per-proces, ztrácí se při restartu a není sdíleno mezi instancemi. Viz `docs/可观测性说明.md` (čínština) pro podrobnosti.
 
-## 12. Stav projektu
+## 13. Stav projektu
 
 - Aktuální plánovaná verzní řada dosáhla **V7.3** (kapacity se neustále iterují: AI modelování, vylepšení seed dat, systém balíčků schopností atd.).
 - Doprovodný demo projekt `demo_admin` (backend 8140 / frontend 9040) pokrývá scénáře strom / CRUD / master-detail / jen pro čtení / tisk a běží samostatně pro ověření.
@@ -264,7 +275,7 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 
 ---
 
-## 13. Autor & podpora
+## 14. Autor & podpora
 
 - **Autor**: čínský programátor (nezávislý vývojář)
 - **E-mail**: `hustxiayuhong@126.com`

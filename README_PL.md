@@ -23,7 +23,15 @@ Table intake (DB import / DDL)
 
 ---
 
-## 2. Jakie problemy rozwiązuje
+## 2. Kto są użytkownikami i jak korzystają z platformy
+| Użytkownik | Typowa potrzeba | Ścieżka, którą daje platforma |
+| --- | --- | --- |
+| Deweloper backendowy | Ma zestaw tabel (lub DDL) i chce szybko podnieść CRUD | Strona konfiguracji tabel: import → konfiguracja pól → generowanie jednym kliknięciem |
+| Deweloper full-stack / niezależny | Chce od zera postawić cały system (z logowaniem, uprawnieniami, słownikami) | Strona potoku: zbuduj system jednym zdaniem |
+| Kierownik zespołu | Chce ujednolicić styl kodu, standardy i strukturę katalogów | Zarządzanie systemem: jeden system = jedna konfiguracja wyjścia, zastosowanie wsadowe |
+| Opiekun platformy | Chce zmieniać szablony, nie ruszając kodu | Zarządzanie szablonami: edycja online, zapis wchodzi w życie natychmiast, obsługiwane jest wycofywanie wersji |
+
+## 3. Jakie problemy rozwiązuje
 
 | Problem | Co robi CodeGen |
 | --- | --- |
@@ -36,7 +44,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 3. Krajobraz możliwości
+## 4. Krajobraz możliwości
 
 - **Pobieranie tabel**: parsowanie DDL, bezpośredni import bazy danych, kreator wsadowego pobierania, automatycznie wyprowadzona konfiguracja kolumn (kontrolki / walidacja / słowniki / relacje).
 - **Kształty tabel**: pojedyncza tabela, tabela drzewiasta (API drzewa + siatka drzewa), główna-szczegóły (zapis w tej samej transakcji + karty szczegółów), tabele łączące wiele-do-wielu.
@@ -49,7 +57,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 4. Typowe scenariusze
+## 5. Typowe scenariusze
 
 | Scenariusz | Opis |
 | --- | --- |
@@ -64,7 +72,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 5. Główny przepływ pracy
+## 6. Główny przepływ pracy
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +88,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 6. Zbuduj system jednym zdaniem (Potok)
+## 7. Zbuduj system jednym zdaniem (Potok)
 
 Możliwość wysokiego poziomu ukierunkowana na „tworzenie backendu od zera”. Po opisaniu domeny biznesowej potok automatycznie przechodzi przez 5 etapów:
 
@@ -96,7 +104,7 @@ Awaria jakiegokolwiek etapu natychmiast przerywa z czytelnym błędem ułatwiaj�
 
 ---
 
-## 7. Architektura systemu
+## 8. Architektura systemu
 
 Front-end i back-end rozdzielone, dwa repozytoria współpracujące:
 
@@ -125,7 +133,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 8. Przegląd stosu technologicznego
+## 9. Przegląd stosu technologicznego
 
 | Wymiar | Wybór |
 | --- | --- |
@@ -140,7 +148,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 9. Szybki start
+## 10. Szybki start
 
 ### 1. Utwórz bazę danych (13 tabel platformy + domyślne konto admin/admin123)
 
@@ -208,7 +216,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 
 ---
 
-## 10. Mapa dokumentacji
+## 11. Mapa dokumentacji
 
 | Dokument | Zawartość |
 | --- | --- |
@@ -220,7 +228,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 
 ---
 
-## 11. Historia wersji
+## 12. Historia wersji
 
 | Wersja | Temat / dokument planu | Commit wdrożenia |
 | --- | --- | --- |
@@ -256,7 +264,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 
 > **V6.10 Obserwowalność platformy**: integruje Actuator + Micrometer, próbkując co 5 sekund do bufora pierścieniowego w pamięci (okno 30 minut), plus nowa wbudowana strona „Monitor systemu” — API agregacji backendu `/monitor/*` + panele ECharts frontendu. Na białej liście są tylko punkty końcowe `health/info/metrics`; `/actuator/health` jest bez tokena, podczas gdy `metrics` itp. wymagają uwierzytelnienia; `env/beans/heapdump/threaddump/loggers` nigdy nie są eksponowane. Okno próbkowania jest tylko na poziomie procesu, tracone po restarcie i nie współdzielone między instancjami. Szczegóły zob. `docs/可观测性说明.md` (chiński).
 
-## 12. Status projektu
+## 13. Status projektu
 
 - Obecna planowana linia wersji osiągnęła **V7.3** (możliwości stale iterują: modelowanie AI, wzbogacanie danych nasiennych, system pakietów możliwości itp.).
 - Towarzyszący projekt demo `demo_admin` (backend 8140 / frontend 9040) obejmuje scenariusze drzewo / CRUD / główna-szczegóły / tylko-do-odczytu / druk i działa samodzielnie do weryfikacji.
@@ -264,7 +272,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 
 ---
 
-## 13. Autor i wsparcie
+## 14. Autor i wsparcie
 
 - **Autor**: chiński programista (niezależny deweloper)
 - **E-mail**: `hustxiayuhong@126.com`

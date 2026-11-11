@@ -23,7 +23,17 @@ Table intake (DB import / DDL)
 
 ---
 
-## 2. Masalah Apa yang Diselesaikannya
+## 2. Siapa Penggunanya, dan Bagaimana Mereka Menggunakannya
+
+| Pengguna | Kebutuhan khas | Jalur yang diberikan platform |
+| --- | --- | --- |
+| Pengembang back-end | Memiliki sekumpulan tabel (atau DDL) dan ingin segera menjalankan CRUD | Halaman konfigurasi tabel: impor → konfigurasi bidang → hasilkan satu klik |
+| Pengembang full-stack / independen | Ingin membangun sistem lengkap dari nol (termasuk login, izin, kamus) | Halaman pipeline: bangun sistem dengan satu kalimat |
+| Ketua tim | Ingin menyatukan gaya kode, konvensi kode, dan struktur direktori | Manajemen sistem: satu sistem = satu konfigurasi keluaran, berlaku secara batch |
+| Pengelola platform | Ingin mengubah template tanpa mengubah kode | Manajemen template: edit daring, berlaku saat disimpan, mendukung rollback riwayat |
+---
+
+## 3. Masalah Apa yang Diselesaikannya
 
 | Titik masalah | Apa yang dilakukan CodeGen |
 | --- | --- |
@@ -36,7 +46,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 3. Lanskap Kemampuan
+## 4. Lanskap Kemampuan
 
 - **Masukan tabel**: penguraian DDL, impor basis data langsung, panduan masukan batch, konfigurasi kolom turunan otomatis (kontrol / validasi / kamus / relasi).
 - **Bentuk tabel**: tabel tunggal, tabel pohon (API pohon + grid pohon), master-detail (simpan transaksi-sama + tab detail), tabel penghubung banyak-ke-banyak.
@@ -49,7 +59,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 4. Skenario Tipikal
+## 5. Skenario Tipikal
 
 | Skenario | Deskripsi |
 | --- | --- |
@@ -64,7 +74,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 5. Alur Kerja Inti
+## 6. Alur Kerja Inti
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +90,7 @@ Table intake (DB import / DDL)
 
 ---
 
-## 6. Bangun Sistem dengan Satu Kalimat (Pipeline)
+## 7. Bangun Sistem dengan Satu Kalimat (Pipeline)
 
 Sebuah kemampuan tingkat tinggi yang ditujukan untuk "membuat back-end dari awal". Setelah Anda menjelaskan domain bisnis, pipeline maju secara otomatis melalui 5 tahap:
 
@@ -96,7 +106,7 @@ Kegagalan pada tahap apa pun menghentikan seketika dengan kesalahan yang dapat d
 
 ---
 
-## 7. Arsitektur Sistem
+## 8. Arsitektur Sistem
 
 Front-end dan back-end terpisah, dua repositori bekerja bersama:
 
@@ -125,7 +135,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 8. Tumpukan Teknologi Sekilas
+## 9. Tumpukan Teknologi Sekilas
 
 | Dimensi | Pilihan |
 | --- | --- |
@@ -140,7 +150,7 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 
 ---
 
-## 9. Mulai Cepat
+## 10. Mulai Cepat
 
 ### 1. Buat basis data (13 tabel platform + akun default admin/admin123)
 
@@ -208,7 +218,7 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 
 ---
 
-## 10. Peta Dokumentasi
+## 11. Peta Dokumentasi
 
 | Dokumen | Konten |
 | --- | --- |
@@ -220,7 +230,7 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 
 ---
 
-## 11. Riwayat Versi
+## 12. Riwayat Versi
 
 | Versi | Tema / dokumen rencana | Commit pendaratan |
 | --- | --- | --- |
@@ -256,7 +266,7 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 
 > **V6.10 Observabilitas platform**: mengintegrasikan Actuator + Micrometer, pengambilan sampel setiap 5 detik ke buffer cincin di memori (jendela 30 menit), plus halaman "System Monitor" tertanam baru — API agregasi `/monitor/*` back-end + panel ECharts front-end. Hanya titik akhir `health/info/metrics` yang masuk daftar putih; `/actuator/health` bebas token sementara `metrics` dll. memerlukan autentikasi; `env/beans/heapdump/threaddump/loggers` tidak pernah diekspos. Jendela pengambilan sampel hanya per-proses, hilang saat restart, dan tidak dibagikan antar instance. Lihat `docs/可观测性说明.md` (dalam bahasa Mandarin) untuk detail.
 
-## 12. Status Proyek
+## 13. Status Proyek
 
 - Garis versi yang direncanakan saat ini telah mencapai **V7.3** (kapabilitas terus beriterasi: pemodelan AI, peningkatan data-bibit, sistem paket-kapabilitas, dll.).
 - Proyek demo pendamping `demo_admin` (back-end 8140 / front-end 9040) mencakup skenario pohon / CRUD / master-detail / hanya-baca / cetak dan berjalan mandiri untuk verifikasi.
@@ -264,7 +274,7 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 
 ---
 
-## 13. Penulis & Dukungan
+## 14. Penulis & Dukungan
 
 - **Penulis**: seorang programmer Tiongkok (pengembang independen)
 - **Email**: `hustxiayuhong@126.com`

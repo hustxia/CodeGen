@@ -23,7 +23,16 @@ Tabellenopname (DB-import / DDL)
 
 ---
 
-## 2. Welke problemen het oplost
+## 2. Wie zijn de gebruikers en hoe gebruiken zij het
+
+| Gebruiker | Typisch verzoek | Pad dat het platform biedt |
+| --- | --- | --- |
+| Backend-ontwikkelaar | Heeft een set tabellen (of DDL) en wil snel CRUD opzetten | Tabellconfiguratiepagina: importeren → velden configureren → met één klik genereren |
+| Full-stack / zelfstandig ontwikkelaar | Wil een compleet systeem vanaf nul opbouwen (incl. login, rechten, woordenboek) | Pijplijnpagina: bouw een systeem met één zin |
+| Teamleider | Wil codeerstijl, coderingsnormen en directorystructuur uniformeren | Systeembeheer: één systeem = één uitvoerconfiguratie, in batch van kracht |
+| Platformbeheerder | Wil sjablonen wijzigen zonder code aan te passen | Templatebeheer: online bewerken, na opslaan direct van kracht, met versierollback |
+
+## 3. Welke problemen het oplost
 
 | Pijnpunt | Wat CodeGen doet |
 | --- | --- |
@@ -36,7 +45,7 @@ Tabellenopname (DB-import / DDL)
 
 ---
 
-## 3. Capaciteitenoverzicht
+## 4. Capaciteitenoverzicht
 
 - **Tabellenopname**: DDL-parsing, directe database-import, batch-opname-wizard, automatisch afgeleide kolomconfiguratie (controls / validatie / woordenboeken / relaties).
 - **Tabellenvormen**: enkele tabel, boomtabel (tree API + boomgrid), master-detail (opslag in dezelfde transactie + detail-tabs), many-to-many koppeltabellen.
@@ -49,7 +58,7 @@ Tabellenopname (DB-import / DDL)
 
 ---
 
-## 4. Typische scenario's
+## 5. Typische scenario's
 
 | Scenario | Beschrijving |
 | --- | --- |
@@ -64,7 +73,7 @@ Tabellenopname (DB-import / DDL)
 
 ---
 
-## 5. Kernworkflow
+## 6. Kernworkflow
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -80,7 +89,7 @@ Tabellenopname (DB-import / DDL)
 
 ---
 
-## 6. Een systeem met één zin bouwen (Pijplijn)
+## 7. Een systeem met één zin bouwen (Pijplijn)
 
 Een capaciteit gericht op "een backend vanaf zero opzetten". Nadat je het bedrijfsdomein beschrijft, vordert de pijplijn automatisch door 5 fasen:
 
@@ -96,7 +105,7 @@ Elke fasefalen breekt onmiddellijk af met een leesbare fout voor eenvoudige loka
 
 ---
 
-## 7. Systeemarchitectuur
+## 8. Systeemarchitectuur
 
 Front-end en back-end gescheiden, twee repositories werken samen:
 
@@ -125,7 +134,7 @@ resources/gen-templates/   22 FreeMarker-templates (backend / frontend / shared 
 
 ---
 
-## 8. Technisch overzicht
+## 9. Technisch overzicht
 
 | Dimensie | Keuze |
 | --- | --- |
@@ -140,7 +149,7 @@ resources/gen-templates/   22 FreeMarker-templates (backend / frontend / shared 
 
 ---
 
-## 9. Snelle start
+## 10. Snelle start
 
 ### 1. Maak de database aan (13 platformtabellen + standaardaccount admin/admin123)
 
@@ -208,7 +217,7 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 
 ---
 
-## 10. Documentatiekaart
+## 11. Documentatiekaart
 
 | Document | Inhoud |
 | --- | --- |
@@ -220,7 +229,7 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 
 ---
 
-## 11. Versiegeschiedenis
+## 12. Versiegeschiedenis
 
 | Versie | Thema / plandocument | Landingscommit |
 | --- | --- | --- |
@@ -256,7 +265,7 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 
 > **V6.10 Platformobserveerbaarheid**: integreert Actuator + Micrometer, bemonstert elke 5 seconden naar een in-memory ringbuffer (30-minuten venster), plus een nieuwe ingebedde "Systeemmonitor" pagina — backend `/monitor/*` aggregatie API's + frontend ECharts panelen. Alleen `health/info/metrics` endpoints zijn whitelisted; `/actuator/health` is token-vrij terwijl `metrics` enz. auth vereisen; `env/beans/heapdump/threaddump/loggers` worden nooit blootgesteld. Het bemonsteringsvenster is alleen per proces, verloren bij herstart, en niet gedeeld over instanties. Zie `docs/可观测性说明.md` (Chinees) voor details.
 
-## 12. Projectstatus
+## 13. Projectstatus
 
 - De huidige geplande versielijn heeft **V7.3** bereikt (capaciteiten blijven itereren: AI-modellering, seed-data verbetering, capaciteitspakket-systeem, enz.).
 - Een begeleidend demo-project `demo_admin` (backend 8140 / frontend 9040) dekt boom / CRUD / master-detail / alleen-lezen / afdruk scenario's en draait standalone voor verificatie.
@@ -264,7 +273,7 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 
 ---
 
-## 13. Auteur & Ondersteuning
+## 14. Auteur & Ondersteuning
 
 - **Auteur**: een Chinese programmeur (onafhankelijke ontwikkelaar)
 - **E-mail**: `hustxiayuhong@126.com`

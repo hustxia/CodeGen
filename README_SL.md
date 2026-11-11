@@ -23,7 +23,18 @@ Prijem tabel (DB uvoz / DDL)
 
 ---
 
-## 2. Katere probleme rešuje
+## 2. Kdo so uporabniki in kako jih uporabljajo
+
+| Uporabnik | Tipična potreba | Pot, ki jo ponuja platforma |
+| --- | --- | --- |
+| Back-end razvijalec | Ima vrsto tabel (ali DDL) in želi hitro vzpostaviti CRUD | Stran konfiguracije tabel: uvoz → konfiguracija polj → generiranje enim klikom |
+| Full-stack / neodvisni razvijalec | Želi od nič zgraditi popoln sistem (vključno s prijavo, pravicami, slovarjem) | Stran Cevovoda: zgradi sistem z enim stavkom |
+| Vodja ekipe | Želi poenotiti slog kode, konvencije kode in strukturo imenikov | Upravljanje sistema: en sistem = ena izhodna konfiguracija, velja paketno |
+| Vzdrževalec platforme | Želi spremeniti predloge, ne da bi spremenil kodo | Upravljanje predlog: spletno urejanje, shranjevanje začne veljati takoj, podpira vračanje različic |
+
+
+
+## 3. Katere probleme rešuje
 
 | Bolečina | Kaj počne CodeGen |
 | --- | --- |
@@ -36,7 +47,7 @@ Prijem tabel (DB uvoz / DDL)
 
 ---
 
-## 3. Pregled zmogljivosti
+## 4. Pregled zmogljivosti
 
 - **Prijem tabel**: DDL parsiranje, neposredni uvoz iz baze podatkov, čarovnik za serijski prijem, samodejno izvedena konfiguracija stolpcev (kontrole / validacija / slovarji / odnosi).
 - **Oblike tabel**: enostavna tabela, drevesna tabela (tree API + drevesni grid), master-detail (hramba v isti transakciji + zavihki za podrobnosti), povezovalne tabele mnogo proti mnogo.
@@ -49,7 +60,7 @@ Prijem tabel (DB uvoz / DDL)
 
 ---
 
-## 4. Tipični scenariji
+## 5. Tipični scenariji
 
 | Scenarij | Opis |
 | --- | --- |
@@ -62,7 +73,7 @@ Prijem tabel (DB uvoz / DDL)
 
 ---
 
-## 5. Osnovni delovni tok
+## 6. Osnovni delovni tok
 
 ```
 ┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
@@ -75,7 +86,7 @@ Prijem tabel (DB uvoz / DDL)
 
 ---
 
-## 6. Zgradi sistem z enim stavkom (Cevovod)
+## 7. Zgradi sistem z enim stavkom (Cevovod)
 
 Visoka zmogljivost, usmerjena v "postavitev backenda iz nič". Ko opišete poslovno domeno, cevovod samodejno napreduje skozi 5 faz:
 
@@ -89,14 +100,14 @@ Visoka zmogljivost, usmerjena v "postavitev backenda iz nič". Ko opišete poslo
 
 ---
 
-## 7. Arhitektura sistema
+## 8. Arhitektura sistema
 
 | Repozitorij | Vloga | Zlaganje |
 | --- | --- | --- |
 | `codegen-server` | Backend: generacijski motor, predloge, validacija, knjigovodstvo, cevovod | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
 | `codegen-web` | Frontend: konzola (konf. tabel / predloge / knjigovodstvo / upravljanje sistema) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
 
-## 8. Tehnološko zlaganje
+## 9. Tehnološko zlaganje
 
 | Dimenzija | Izbira |
 | --- | --- |
@@ -109,7 +120,7 @@ Visoka zmogljivost, usmerjena v "postavitev backenda iz nič". Ko opišete poslo
 | Lokalni AI | qwen2.5-coder:7b |
 | API dokumentacija | springdoc-openapi (Swagger UI) |
 
-## 9. Hitri začetek
+## 10. Hitri začetek
 
 ```bash
 mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
@@ -130,12 +141,12 @@ npm run serve
 
 Backend privzeto zažene vrata **8120**; frontend **9530**. Privzeti račun `admin / admin123`.
 
-## 10. Stanje projekta
+## 11. Stanje projekta
 
 - Trenutno načrtovana različica dosega **V7.3**.
 - Oba repozitorija gostujeta na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
-## 11. Avtor
+## 12. Avtor
 
 - **Avtor**: kitajski programer (neodvisni razvijalec)
 - **E-pošta**: `hustxiayuhong@126.com`
