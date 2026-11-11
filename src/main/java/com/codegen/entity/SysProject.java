@@ -183,6 +183,13 @@ public class SysProject extends BaseEntity {
     private String supportedLanguages;
 
     /**
+     * V8.0 产物国际化开关：NULL / 0 = 关（存量系统产物零 diff），1 = 开。
+     * <p>唯一解析实现 {@link com.codegen.util.GenTemplateModel#resolveI18n(Integer)}，
+     * 与 pay/file/mobile 三态同款；不要在模板或脚手架里再判一次 null。
+     */
+    private Integer i18nEnabled;
+
+    /**
      * 备注
      */
     private String remark;

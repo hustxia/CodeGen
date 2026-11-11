@@ -22,6 +22,13 @@ public class GenScaffoldVO {
     @Schema(description = "V6.5 移动端工程绝对路径（mobile_enabled 关闭时为 null）")
     private String mobilePath;
 
+    /**
+     * V8.0：本次生成是否启用产物国际化。放在 VO 上而不是实例字段，
+     * 因为 service 是单例， scaffolding 可并发；VO 每次新建天然隔离。
+     * write() 读它决定要不要对前端文件做文案重写。
+     */
+    private boolean i18nEnabled;
+
     @Schema(description = "本次实际写入文件数")
     private int written;
 

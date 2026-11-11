@@ -215,6 +215,7 @@ CREATE TABLE `sys_project` (
   `app_theme_color` varchar(16) DEFAULT NULL COMMENT '主题主色(空=#e1251b)',
   `default_language` varchar(32) DEFAULT NULL COMMENT '默认语言BCP47标签(空=zh-CN)',
   `supported_languages` text DEFAULT NULL COMMENT '启用语言码,逗号分隔(空=全部启用)',
+  `i18n_enabled` tinyint DEFAULT NULL COMMENT 'V8.0 产物国际化开关:NULL/0=关 1=开',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_project_code` (`project_code`,`deleted`),
   KEY `idx_default` (`is_default`)
@@ -329,4 +330,23 @@ CREATE TABLE `sys_language` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_lang_code` (`lang_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目语言配置表'
+;
+
+-- V8.0 产物国际化：测试库镜像表（与 docs/sql/V8.0__i18n.sql 三处对齐，坑库 V6.5）
+DROP TABLE IF EXISTS `sys_i18n_message`;
+CREATE TABLE `sys_i18n_message` (
+  `id` bigint NOT NULL COMMENT '主键',
+  `project_id` bigint NOT NULL COMMENT '所属系统',
+  `locale` varchar(32) NOT NULL COMMENT 'BCP47 语言标签',
+  `msg_key` varchar(128) NOT NULL COMMENT '文案键',
+  `msg_value` text DEFAULT NULL COMMENT '用户译文;NULL/空串=回落',
+  `create_by` bigint DEFAULT NULL,
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_by` bigint DEFAULT NULL,
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_i18n_msg` (`project_id`, `locale`, `msg_key`),
+  KEY `idx_i18n_project_locale` (`project_id`, `locale`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='V8.0 用户译文覆盖表'
 ;

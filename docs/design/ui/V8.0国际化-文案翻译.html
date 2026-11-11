@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>V8.0 文案翻译页 效果图</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; background:#f5f7fa; color:#303133; font:14px/1.5 "Helvetica Neue",Arial,"Microsoft YaHei",sans-serif; }
+  .wrap { max-width:1180px; margin:24px auto; padding:0 18px; }
+  .head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+  .head h1 { margin:0 0 6px; font-size:22px; }
+  .head p { margin:0; color:#8492a6; font-size:13px; }
+  .tag { background:#ecf5ff; border:1px solid #d9ecff; color:#409EFF; padding:6px 12px; border-radius:4px; font-size:12px; }
+  .card { background:#fff; border:1px solid #ebeef5; border-radius:4px; margin-bottom:14px; }
+  .card-hd { padding:12px 16px; border-bottom:1px solid #ebeef5; display:flex; justify-content:space-between; align-items:center; font-weight:600; }
+  .btn { display:inline-block; border:1px solid #dcdfe6; background:#fff; color:#606266; padding:6px 12px; border-radius:3px; font-size:12px; margin-left:6px; }
+  .btn.primary { background:#409EFF; border-color:#409EFF; color:#fff; }
+  .filters { padding:16px; display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+  .field { display:flex; align-items:center; gap:8px; }
+  .field label { color:#606266; font-size:13px; }
+  .control { border:1px solid #dcdfe6; border-radius:3px; padding:6px 10px; width:190px; background:#fff; color:#606266; font-size:13px; }
+  .control.wide { width:230px; }
+  .coverage { padding:0 16px 16px; display:flex; align-items:center; gap:12px; font-size:13px; }
+  .bar { width:260px; height:10px; background:#ebeef5; border-radius:5px; overflow:hidden; }
+  .bar i { display:block; height:100%; width:100%; background:#67C23A; border-radius:5px; }
+  .cov-text { color:#409EFF; font-weight:600; }
+  .hint { color:#a0a6b0; font-size:12px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { border-bottom:1px solid #ebeef5; padding:9px 12px; text-align:left; vertical-align:middle; }
+  th { background:#fafafa; color:#909399; font-weight:500; }
+  td.k { font-family:Consolas,monospace; color:#409EFF; }
+  td.src { color:#606266; }
+  .edit { border:1px solid #dcdfe6; border-radius:3px; padding:5px 8px; width:100%; color:#303133; font-size:13px; }
+  .pill { display:inline-block; padding:1px 7px; border-radius:3px; font-size:11px; }
+  .pill.ok { background:#f0f9eb; color:#67C23A; border:1px solid #e1f3d8; }
+  .pill.info { background:#f4f4f5; color:#909399; border:1px solid #e9e9eb; }
+  .pill.warn { background:#fdf6ec; color:#E6A23C; border:1px solid #faecd8; }
+  .muted { color:#c0c4cc; }
+  .pager { padding:12px 16px; text-align:right; color:#909399; font-size:12px; }
+  .foot { color:#909399; font-size:12px; margin-top:8px; line-height:1.8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>文案翻译</h1>
+      <p>为生成的前端工程逐语言补译文。留空即回落默认语言，保存后重新生成工程生效。</p>
+    </div>
+    <div class="tag">V8.0 · 产物国际化</div>
+  </div>
+
+  <div class="card">
+    <div class="filters">
+      <div class="field"><label>所属系统</label><div class="control">订单中心 / order-center</div></div>
+      <div class="field"><label>语言</label><div class="control wide">英语 · en-US</div></div>
+      <div class="field"><label>关键词</label><div class="control wide">键名 / 中文原文 / 分类</div></div>
+      <span class="btn primary">查询</span><span class="btn">重置</span>
+    </div>
+    <div class="coverage">
+      <span>译文覆盖率</span>
+      <div class="bar"><i></i></div>
+      <span class="cov-text">60 / 60</span>
+      <span class="hint">内置精译 8 种 · 词库 60 键 · 其余语言为占位包</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <span>英语 · en-US 文案（60）</span>
+      <div>
+        <span class="btn">导出 JSON</span><span class="btn">导入 JSON</span>
+        <span class="btn">恢复内置</span><span class="btn primary">保存（2）</span>
+      </div>
+    </div>
+    <table>
+      <thead><tr>
+        <th style="width:36px"></th><th style="width:190px">文案键</th><th style="width:70px">分类</th>
+        <th style="width:180px">中文原文</th><th style="width:170px">内置译文</th>
+        <th style="width:230px">当前译文</th><th style="width:90px">状态</th>
+      </tr></thead>
+      <tbody>
+        <tr><td></td><td class="k">common.query</td><td>按钮</td><td class="src">查询</td><td>Search</td><td><input class="edit" value="Search"></td><td><span class="pill info">内置</span></td></tr>
+        <tr><td></td><td class="k">common.add</td><td>按钮</td><td class="src">新增</td><td>Add</td><td><input class="edit" value="Create"></td><td><span class="pill ok">已覆盖</span></td></tr>
+        <tr><td></td><td class="k">common.saveSuccess</td><td>提示</td><td class="src">保存成功</td><td>Saved successfully</td><td><input class="edit" value="Saved!"></td><td><span class="pill ok">已覆盖</span></td></tr>
+        <tr><td></td><td class="k">common.totalRecords</td><td>统计</td><td class="src">共 {count} 条记录</td><td>{count} records</td><td><input class="edit" value="{count} records"></td><td><span class="pill info">内置</span></td></tr>
+        <tr><td></td><td class="k">common.deleteConfirm</td><td>提示</td><td class="src">确定删除该记录吗？</td><td>Delete this record?</td><td><input class="edit" value="Delete this record?"></td><td><span class="pill info">内置</span></td></tr>
+        <tr><td></td><td class="k">common.loginExpired</td><td>提示</td><td class="src">登录已过期，请重新登录</td><td>Session expired, please sign in again</td><td><input class="edit" value="Session expired, please sign in again"></td><td><span class="pill info">内置</span></td></tr>
+        <tr><td></td><td class="k">common.language</td><td>导航</td><td class="src">语言</td><td>Language</td><td><input class="edit" value="Language"></td><td><span class="pill info">内置</span></td></tr>
+        <tr><td></td><td class="k">common.pageDesc</td><td>标题</td><td class="src">维护{name}数据，可按条件筛选、编辑与导出</td><td>Manage {name} records: filter, edit and export</td><td><input class="edit" value="Manage {name} records: filter, edit and export"></td><td><span class="pill info">内置</span></td></tr>
+      </tbody>
+    </table>
+    <div class="pager">共 60 条　20 条/页　‹ 1 2 3 ›</div>
+  </div>
+
+  <div class="foot">
+    效果图数据取自 <code>i18n/keys.json</code> 与 <code>i18n/messages/en-US.json</code> 真实词库。<br>
+    占位语言（如 ru-RU）时「内置译文」列显示「—（占位）」、状态为「待补译」，覆盖率按已保存译文数计算。
+  </div>
+</div>
+</body>
+</html>

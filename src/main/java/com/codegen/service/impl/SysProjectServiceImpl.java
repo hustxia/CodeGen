@@ -249,6 +249,10 @@ public class SysProjectServiceImpl implements SysProjectService {
                 .set(SysProject::getAppName, project.getAppName())
                 .set(SysProject::getAppLogo, project.getAppLogo())
                 .set(SysProject::getAppThemeColor, project.getAppThemeColor()));
+        // V8.0 同款修复：i18n_enabled 三态（NULL/0=关、1=开），null 必须能存回
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getI18nEnabled, project.getI18nEnabled()));
     }
 
     @Override

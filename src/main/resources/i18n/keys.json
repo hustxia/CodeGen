@@ -1,0 +1,625 @@
+{
+  "version": "8.0",
+  "sourceLocale": "zh-CN",
+  "builtinLocales": [
+    "zh-CN",
+    "en-US",
+    "ja-JP",
+    "ko-KR",
+    "fr-FR",
+    "de-DE",
+    "es-ES",
+    "ar-SA"
+  ],
+  "totalKeys": 60,
+  "keys": [
+    {
+      "key": "common.query",
+      "category": "按钮",
+      "sourceText": "查询"
+    },
+    {
+      "key": "common.reset",
+      "category": "按钮",
+      "sourceText": "重置"
+    },
+    {
+      "key": "common.add",
+      "category": "按钮",
+      "sourceText": "新增"
+    },
+    {
+      "key": "common.edit",
+      "category": "按钮",
+      "sourceText": "编辑"
+    },
+    {
+      "key": "common.delete",
+      "category": "按钮",
+      "sourceText": "删除"
+    },
+    {
+      "key": "common.detail",
+      "category": "按钮",
+      "sourceText": "详情"
+    },
+    {
+      "key": "common.save",
+      "category": "按钮",
+      "sourceText": "保存"
+    },
+    {
+      "key": "common.confirm",
+      "category": "按钮",
+      "sourceText": "确定"
+    },
+    {
+      "key": "common.cancel",
+      "category": "按钮",
+      "sourceText": "取消"
+    },
+    {
+      "key": "common.close",
+      "category": "按钮",
+      "sourceText": "关闭"
+    },
+    {
+      "key": "common.export",
+      "category": "按钮",
+      "sourceText": "导出"
+    },
+    {
+      "key": "common.import",
+      "category": "按钮",
+      "sourceText": "导入"
+    },
+    {
+      "key": "common.print",
+      "category": "按钮",
+      "sourceText": "打印"
+    },
+    {
+      "key": "common.submit",
+      "category": "按钮",
+      "sourceText": "提交"
+    },
+    {
+      "key": "common.approve",
+      "category": "按钮",
+      "sourceText": "审批"
+    },
+    {
+      "key": "common.reject",
+      "category": "按钮",
+      "sourceText": "驳回"
+    },
+    {
+      "key": "common.flow",
+      "category": "按钮",
+      "sourceText": "流程"
+    },
+    {
+      "key": "common.pay",
+      "category": "按钮",
+      "sourceText": "去支付"
+    },
+    {
+      "key": "common.addChild",
+      "category": "按钮",
+      "sourceText": "添加明细"
+    },
+    {
+      "key": "common.startImport",
+      "category": "按钮",
+      "sourceText": "开始导入"
+    },
+    {
+      "key": "common.downloadTemplate",
+      "category": "按钮",
+      "sourceText": "下载模板"
+    },
+    {
+      "key": "common.downloadFailed",
+      "category": "按钮",
+      "sourceText": "下载全部明细"
+    },
+    {
+      "key": "common.operation",
+      "category": "表头",
+      "sourceText": "操作"
+    },
+    {
+      "key": "common.status",
+      "category": "表头",
+      "sourceText": "状态"
+    },
+    {
+      "key": "common.enabled",
+      "category": "状态",
+      "sourceText": "启用"
+    },
+    {
+      "key": "common.disabled",
+      "category": "状态",
+      "sourceText": "停用"
+    },
+    {
+      "key": "common.createTime",
+      "category": "表头",
+      "sourceText": "创建时间"
+    },
+    {
+      "key": "common.updateTime",
+      "category": "表头",
+      "sourceText": "更新时间"
+    },
+    {
+      "key": "common.parent",
+      "category": "表单",
+      "sourceText": "上级节点"
+    },
+    {
+      "key": "common.mainInfo",
+      "category": "表单",
+      "sourceText": "主表信息"
+    },
+    {
+      "key": "common.noData",
+      "category": "提示",
+      "sourceText": "暂无数据"
+    },
+    {
+      "key": "common.totalRecords",
+      "category": "统计",
+      "sourceText": "共 {count} 条记录"
+    },
+    {
+      "key": "common.total",
+      "category": "统计",
+      "sourceText": "共 {count} 条"
+    },
+    {
+      "key": "common.businessModules",
+      "category": "统计",
+      "sourceText": "{count} 个业务模块"
+    },
+    {
+      "key": "common.home",
+      "category": "导航",
+      "sourceText": "首页"
+    },
+    {
+      "key": "common.logout",
+      "category": "导航",
+      "sourceText": "退出登录"
+    },
+    {
+      "key": "common.language",
+      "category": "导航",
+      "sourceText": "语言"
+    },
+    {
+      "key": "common.login",
+      "category": "登录",
+      "sourceText": "登录"
+    },
+    {
+      "key": "common.username",
+      "category": "登录",
+      "sourceText": "用户名"
+    },
+    {
+      "key": "common.password",
+      "category": "登录",
+      "sourceText": "密码"
+    },
+    {
+      "key": "common.confirmTitle",
+      "category": "提示",
+      "sourceText": "提示"
+    },
+    {
+      "key": "common.deleteConfirm",
+      "category": "提示",
+      "sourceText": "确定删除该记录吗？"
+    },
+    {
+      "key": "common.saveSuccess",
+      "category": "提示",
+      "sourceText": "保存成功"
+    },
+    {
+      "key": "common.updateSuccess",
+      "category": "提示",
+      "sourceText": "更新成功"
+    },
+    {
+      "key": "common.createSuccess",
+      "category": "提示",
+      "sourceText": "创建成功"
+    },
+    {
+      "key": "common.deleteSuccess",
+      "category": "提示",
+      "sourceText": "删除成功"
+    },
+    {
+      "key": "common.pleaseSelectFile",
+      "category": "提示",
+      "sourceText": "请先选择文件"
+    },
+    {
+      "key": "common.requestFailed",
+      "category": "提示",
+      "sourceText": "请求失败"
+    },
+    {
+      "key": "common.networkError",
+      "category": "提示",
+      "sourceText": "网络异常，请稍后重试"
+    },
+    {
+      "key": "common.loginExpired",
+      "category": "提示",
+      "sourceText": "登录已过期，请重新登录"
+    },
+    {
+      "key": "common.rootNode",
+      "category": "表单",
+      "sourceText": "不选则为根节点"
+    },
+    {
+      "key": "common.childTip",
+      "category": "表单",
+      "sourceText": "主表与子表在同一事务中保存（先清后插）"
+    },
+    {
+      "key": "common.grandTip",
+      "category": "表单",
+      "sourceText": "下级明细在点「确定」时与本级明细一起全量替换"
+    },
+    {
+      "key": "common.detailTitle",
+      "category": "标题",
+      "sourceText": "{name}详情"
+    },
+    {
+      "key": "common.addTitle",
+      "category": "标题",
+      "sourceText": "新增{name}"
+    },
+    {
+      "key": "common.editTitle",
+      "category": "标题",
+      "sourceText": "编辑{name}"
+    },
+    {
+      "key": "common.pageDesc",
+      "category": "标题",
+      "sourceText": "维护{name}数据，可按条件筛选、编辑与导出"
+    },
+    {
+      "key": "common.noFlowRecords",
+      "category": "流程",
+      "sourceText": "还没有流转记录"
+    },
+    {
+      "key": "common.system",
+      "category": "流程",
+      "sourceText": "系统"
+    },
+    {
+      "key": "common.grandChild",
+      "category": "表单",
+      "sourceText": "下级明细"
+    }
+  ],
+  "rewrite": [
+    {
+      "key": "common.query",
+      "from": ">查询</el-button>",
+      "to": ">{{ @@T@@('common.query') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.reset",
+      "from": ">重置</el-button>",
+      "to": ">{{ @@T@@('common.reset') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.export",
+      "from": ">导出</el-button>",
+      "to": ">{{ @@T@@('common.export') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.import",
+      "from": ">导入</el-button>",
+      "to": ">{{ @@T@@('common.import') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.detail",
+      "from": ">详情</el-button>",
+      "to": ">{{ @@T@@('common.detail') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.print",
+      "from": ">打印</el-button>",
+      "to": ">{{ @@T@@('common.print') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.submit",
+      "from": ">提交</el-button>",
+      "to": ">{{ @@T@@('common.submit') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.approve",
+      "from": ">审批</el-button>",
+      "to": ">{{ @@T@@('common.approve') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.reject",
+      "from": ">驳回</el-button>",
+      "to": ">{{ @@T@@('common.reject') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.flow",
+      "from": ">流程</el-button>",
+      "to": ">{{ @@T@@('common.flow') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.pay",
+      "from": ">去支付</el-button>",
+      "to": ">{{ @@T@@('common.pay') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.edit",
+      "from": ">编辑</el-button>",
+      "to": ">{{ @@T@@('common.edit') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.delete",
+      "from": ">删除</el-button>",
+      "to": ">{{ @@T@@('common.delete') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.cancel",
+      "from": ">取消</el-button>",
+      "to": ">{{ @@T@@('common.cancel') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.confirm",
+      "from": ">确定</el-button>",
+      "to": ">{{ @@T@@('common.confirm') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.close",
+      "from": ">关闭</el-button>",
+      "to": ">{{ @@T@@('common.close') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.addChild",
+      "from": ">添加明细</el-button>",
+      "to": ">{{ @@T@@('common.addChild') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.startImport",
+      "from": ">开始导入</el-button>",
+      "to": ">{{ @@T@@('common.startImport') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.downloadTemplate",
+      "from": ">下载模板</el-button>",
+      "to": ">{{ @@T@@('common.downloadTemplate') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.downloadFailed",
+      "from": ">下载全部明细</el-button>",
+      "to": ">{{ @@T@@('common.downloadFailed') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.add",
+      "from": ">新增([^<]*)</el-button>",
+      "to": ">{{ @@T@@('common.add') }}$1</el-button>",
+      "regex": true
+    },
+    {
+      "key": "common.grandChild",
+      "from": ">添加\\{\\{ grandTitle \\}\\}</el-button>",
+      "to": ">{{ @@T@@('common.add') }} {{ grandTitle }}</el-button>",
+      "regex": true
+    },
+    {
+      "key": "common.operation",
+      "from": "<el-table-column label=\"操作\"",
+      "to": "<el-table-column :label=\"@@T@@('common.operation')\"",
+      "regex": false
+    },
+    {
+      "key": "common.enabled",
+      "from": "<el-option label=\"启用\" :value=\"1\"",
+      "to": "<el-option :label=\"@@T@@('common.enabled')\" :value=\"1\"",
+      "regex": false
+    },
+    {
+      "key": "common.disabled",
+      "from": "<el-option label=\"停用\" :value=\"0\"",
+      "to": "<el-option :label=\"@@T@@('common.disabled')\" :value=\"0\"",
+      "regex": false
+    },
+    {
+      "key": "common.enabled",
+      "from": "? '启用' : '停用'",
+      "to": "? @@T@@('common.enabled') : @@T@@('common.disabled')",
+      "regex": false
+    },
+    {
+      "key": "common.updateTime",
+      "from": "<el-table-column prop=\"updateTime\" label=\"更新时间\"",
+      "to": "<el-table-column prop=\"updateTime\" :label=\"@@T@@('common.updateTime')\"",
+      "regex": false
+    },
+    {
+      "key": "common.createTime",
+      "from": "<span class=\"detail-label\">创建时间</span>",
+      "to": "<span class=\"detail-label\">{{ @@T@@('common.createTime') }}</span>",
+      "regex": false
+    },
+    {
+      "key": "common.updateTime",
+      "from": "<span class=\"detail-label\">更新时间</span>",
+      "to": "<span class=\"detail-label\">{{ @@T@@('common.updateTime') }}</span>",
+      "regex": false
+    },
+    {
+      "key": "common.parent",
+      "from": "<el-form-item label=\"上级节点\">",
+      "to": "<el-form-item :label=\"@@T@@('common.parent')\">",
+      "regex": false
+    },
+    {
+      "key": "common.mainInfo",
+      "from": "<el-tab-pane label=\"主表信息\"",
+      "to": "<el-tab-pane :label=\"@@T@@('common.mainInfo')\"",
+      "regex": false
+    },
+    {
+      "key": "common.noData",
+      "from": "empty-text=\"暂无数据\"",
+      "to": ":empty-text=\"@@T@@('common.noData')\"",
+      "regex": false
+    },
+    {
+      "key": "common.rootNode",
+      "from": "placeholder=\"不选则为根节点\"",
+      "to": ":placeholder=\"@@T@@('common.rootNode')\"",
+      "regex": false
+    },
+    {
+      "key": "common.childTip",
+      "from": "<span class=\"child-tip\">主表与子表在同一事务中保存（先清后插）</span>",
+      "to": "<span class=\"child-tip\">{{ @@T@@('common.childTip') }}</span>",
+      "regex": false
+    },
+    {
+      "key": "common.total",
+      "from": "共 {{ total }} 条",
+      "to": "{{ @@T@@('common.total', { count: total }) }}",
+      "regex": false
+    },
+    {
+      "key": "common.totalRecords",
+      "from": "{{ total }} 条记录",
+      "to": "{{ @@T@@('common.totalRecords', { count: total }) }}",
+      "regex": false
+    },
+    {
+      "key": "common.noFlowRecords",
+      "from": ">还没有流转记录</div>",
+      "to": ">{{ @@T@@('common.noFlowRecords') }}</div>",
+      "regex": false
+    },
+    {
+      "key": "common.confirmTitle",
+      "from": ", '提示', { type: 'warning' }",
+      "to": ", this.@@T@@('common.confirmTitle'), { type: 'warning' }",
+      "regex": false
+    },
+    {
+      "key": "common.updateSuccess",
+      "from": "this.$message.success(this.form.id ? '更新成功' : '创建成功')",
+      "to": "this.$message.success(this.form.id ? this.@@T@@('common.updateSuccess') : this.@@T@@('common.createSuccess'))",
+      "regex": false
+    },
+    {
+      "key": "common.deleteSuccess",
+      "from": "this.$message.success('删除成功')",
+      "to": "this.$message.success(this.@@T@@('common.deleteSuccess'))",
+      "regex": false
+    },
+    {
+      "key": "common.pleaseSelectFile",
+      "from": "this.$message.warning('请先选择文件')",
+      "to": "this.$message.warning(this.@@T@@('common.pleaseSelectFile'))",
+      "regex": false
+    },
+    {
+      "key": "common.deleteConfirm",
+      "from": "`确定删除该[^`]*吗？`",
+      "to": "this.@@T@@('common.deleteConfirm')",
+      "regex": true
+    },
+    {
+      "key": "common.home",
+      "from": ">首页</span>",
+      "to": ">{{ @@T@@('common.home') }}</span>",
+      "regex": false
+    },
+    {
+      "key": "common.logout",
+      "from": ">退出登录</span>",
+      "to": ">{{ @@T@@('common.logout') }}</span>",
+      "regex": false
+    },
+    {
+      "key": "common.businessModules",
+      "from": "{{ panelSys.children.length }} 个业务模块",
+      "to": "{{ @@T@@('common.businessModules', { count: panelSys.children.length }) }}",
+      "regex": false
+    },
+    {
+      "key": "common.login",
+      "from": ">登录</el-button>",
+      "to": ">{{ @@T@@('common.login') }}</el-button>",
+      "regex": false
+    },
+    {
+      "key": "common.username",
+      "from": "placeholder=\"用户名\"",
+      "to": ":placeholder=\"@@T@@('common.username')\"",
+      "regex": false
+    },
+    {
+      "key": "common.password",
+      "from": "placeholder=\"密码\"",
+      "to": ":placeholder=\"@@T@@('common.password')\"",
+      "regex": false
+    },
+    {
+      "key": "common.requestFailed",
+      "from": "res.msg || '请求失败'",
+      "to": "res.msg || @@T@@('common.requestFailed')",
+      "regex": false
+    },
+    {
+      "key": "common.networkError",
+      "from": "'网络异常，请稍后重试'",
+      "to": "@@T@@('common.networkError')",
+      "regex": false
+    },
+    {
+      "key": "common.loginExpired",
+      "from": "'登录状态已失效'",
+      "to": "@@T@@('common.loginExpired')",
+      "regex": false
+    }
+  ]
+}

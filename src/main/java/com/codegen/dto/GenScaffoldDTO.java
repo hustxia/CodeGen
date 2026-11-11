@@ -99,6 +99,15 @@ public class GenScaffoldDTO {
     /** V7.5 项目语言配置：默认语言 BCP47 标签（空 = zh-CN，存量零 diff） */
     private String defaultLanguage;
 
+    /** V8.0：所属系统 ID，用于读取该系统的用户译文覆盖（直接调 scaffold 时可空） */
+    private Long projectId;
+
+    /** V7.5 项目语言配置：启用语言码，逗号分隔（空 = 默认语言 + 内置精译） */
+    private String supportedLanguages;
+
+    /** V8.0：产物国际化开关（NULL/false=关，true=开） */
+    private Boolean i18nEnabled;
+
     @Schema(description = "V6.1 需下发的流程定义（平台不直连产物库，由调用方查询组装）；空=只写流程表 DDL")
     private java.util.List<FlowDef> flowDefs;
 

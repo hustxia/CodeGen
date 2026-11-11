@@ -460,6 +460,12 @@ public class PipelineExecutor {
         dto.setAppName(project.getAppName());
         dto.setAppLogo(project.getAppLogo());
         dto.setAppThemeColor(project.getAppThemeColor());
+        // V7.5：语言配置此前只在直调 /gen/scaffold 时下发，流水线路径漏传 → 生成物恒为 zh-CN。
+        // V8.0 一并补齐，保证两条生成路径产出同样的语言配置。
+        dto.setDefaultLanguage(project.getDefaultLanguage());
+        dto.setSupportedLanguages(project.getSupportedLanguages());
+        dto.setProjectId(project.getId());
+        dto.setI18nEnabled(com.codegen.util.GenTemplateModel.resolveI18n(project.getI18nEnabled()));
         // V6.7：测试骨架开关（回落唯一实现 resolveTest，缺省开——只写 src/test 零运行时侵入）
         dto.setTestEnabled(com.codegen.util.GenTemplateModel.resolveTest(project.getTestEnabled()));
         GenScaffoldVO vo = scaffoldService.scaffold(dto);

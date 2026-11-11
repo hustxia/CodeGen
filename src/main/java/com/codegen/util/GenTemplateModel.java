@@ -256,6 +256,19 @@ public final class GenTemplateModel {
     }
 
     /**
+     * V8.0 产物国际化开关的回落唯一实现：系统级 → 硬编码关。
+     * 与 {@link #resolvePay(Integer)} / {@link #resolveFile(Integer)} 同款语义
+     * （可空三态，NULL/0=关，1=开；存量系统产物逐字节零 diff）。
+     *
+     * <p>刻意<b>不</b>塞进 ProjectConfig record：模板零改动，模型里没有消费点，
+     * 新增第 13 个组件只会让十几个基线/契约测试的旧构造签名全部编译失败
+     * （V7.5 加 defaultLanguage 时踩过一次）。生成出口直接读系统配置即可。
+     */
+    public static boolean resolveI18n(Integer projectVal) {
+        return projectVal != null && projectVal == 1;
+    }
+
+    /**
      * V6.8 品牌主色的回落唯一实现：配置值 → 硬编码 {@code #e1251b}。
      * <p>只做格式宽松校验（{@code #rgb}/{@code #rrggbb}），非法值回落默认色，
      * 避免把 {@code red;} 这类串直接拼进 CSS 变量打坏整个页面。

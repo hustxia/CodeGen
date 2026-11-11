@@ -75,7 +75,7 @@
         </div>
         <div class="header-right">
           <span class="env-tag">DEV</span>
-          <span class="user">{{ userName }}</span>
+          <span class="user">{{ userName }}</span>__I18N_SWITCH__
         </div>
       </div>
       <div class="content" @click="closePanels">
