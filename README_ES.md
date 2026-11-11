@@ -260,3 +260,13 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 - La línea de versiones planificada ha alcanzado la **V7.3**, con capacidades en iteración continua (modelado por IA, enriquecimiento de datos semilla, sistema de paquetes de capacidades, etc.).
 - Se ha consolidado el proyecto de demostración complementario `demo_admin` (backend 8140 / frontend 9040), que cubre los escenarios de árbol / CRUD / maestro-detalle / solo lectura / impresión y puede ejecutarse de forma independiente para su verificación.
 - Ambos repositorios están alojados en Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
+
+---
+
+## 13. Autor y Soporte Técnico
+
+- **Autor**: programador chino (desarrollador independiente)
+- **Correo**: `hustxiayuhong@126.com`
+- **Soporte técnico**: escriba el correo **en chino**, incluyendo la descripción del problema, el entorno (JDK / MySQL / versión) y los pasos para reproducirlo
+
+> Leo y respondo todos los correos. Se agradecen los informes de errores, las sugerencias de funcionalidades y las propuestas de colaboración.
