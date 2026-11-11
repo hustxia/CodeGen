@@ -1,6 +1,6 @@
 # 마장(码匠) · 코드 생성기(CodeGen) 프로젝트 소개
 
-> 언어: [中文](README_ZH.md) · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · [Español](README_ES.md) · **한국어** · [Français](README_FR.md) · [Deutsch](README_DE.md)
+> 언어: [中文](README_ZH.md) · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · [Español](README_ES.md) · **한국어** · [Français](README_FR.md) · [Deutsch](README_DE.md) · [हिन्दी](README_HI.md) · [العربية](README_AR.md) · [বাংলা](README_BN.md) · [Русский](README_RU.md) · [اردو](README_UR.md)
 
 > **Spring Boot + Vue** 대상 멀티 프로젝트 코드 생성기: 데이터베이스 테이블 구조에서 출발하여 **컴파일 가능하고 실행 가능하며 메뉴·권한까지 갖춘** 프론트엔드/백엔드 비즈니스 코드를 생성하고, 디스크 기록, 백업, 대장(台账) 기록, 롤백까지 아우르는 완전한 전달 루프를 책임집니다.
 
