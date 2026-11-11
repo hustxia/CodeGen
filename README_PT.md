@@ -261,3 +261,13 @@ O front-end usa por padrão a porta **9530**, com proxy `/dev-api` para a porta 
 - A linha de versões planejadas atual chegou a **V7.3**, com evolução contínua de capacidades (modelagem por IA, aprimoramento de dados-semente, sistema de pacotes de capacidade etc.).
 - Há um projeto de demonstração `demo_admin` (back-end 8140 / front-end 9040) cobrindo os cenários de árvore / CRUD / mestre-detalhe / somente leitura / impressão, executável de forma independente para verificação.
 - Ambos os repositórios estão hospedados no Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
+
+---
+
+## 13. Autor e Suporte Técnico
+
+- **Autor**: programador chinês (desenvolvedor independente)
+- **E-mail**: `hustxiayuhong@126.com`
+- **Suporte técnico**: escreva o e-mail **em chinês**, incluindo a descrição do problema, o ambiente (JDK / MySQL / versão) e os passos para reproduzir
+
+> Leio e respondo todos os e-mails. Relatos de bugs, sugestões de funcionalidades e propostas de colaboração são bem-vindos.

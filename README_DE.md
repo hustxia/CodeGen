@@ -261,3 +261,13 @@ Das Frontend läuft standardmäßig auf Port **9530** und proxyt `/dev-api` an d
 - Die aktuelle geplante Versionslinie hat **V7.3** erreicht (Fähigkeiten werden kontinuierlich weiterentwickelt: KI-Modellierung, Seed-Daten-Verbesserung, Fähigkeitspaket-System usw.).
 - Ein begleitendes Demo-Projekt `demo_admin` (Backend 8140 / Frontend 9040) deckt die Szenarien Baum / CRUD / Master-Detail / Nur-Lesen / Drucken ab und läuft eigenständig zur Verifikation.
 - Beide Repositories sind auf Gitee gehostet: `https://gitee.com/hustxiayuhong/CodeGen.git`
+
+---
+
+## 13. Autor & Support
+
+- **Autor**: chinesischer Programmierer (unabhängiger Entwickler)
+- **E-Mail**: `hustxiayuhong@126.com`
+- **Technischer Support**: Bitte schreiben Sie **auf Chinesisch** und nennen Sie Problembeschreibung, Umgebung (JDK / MySQL / Version) sowie Reproduktionsschritte
+
+> Ich lese und beantworte jede E-Mail. Fehlerberichte, Funktionswünsche und Kooperationsanfragen sind willkommen.
