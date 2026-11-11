@@ -198,6 +198,53 @@
           <el-input v-model="form.appLogo" placeholder="留空用内置 logo" />
         </el-form-item>
 
+        <el-form-item label="默认语言">
+          <el-select
+            v-model="form.defaultLanguage"
+            filterable
+            clearable
+            placeholder="留空 = zh-CN（中文简体）"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="lang in languageOptions"
+              :key="lang.code"
+              :label="lang.label"
+              :value="lang.value"
+            >
+              <span>{{ lang.label }}</span>
+              <span style="float: right; color: #8492a6; font-size: 12px">{{ lang.value }}</span>
+            </el-option>
+          </el-select>
+          <div class="form-tip">
+            共 {{ languageOptions.length }} 种语言；生成物 &lt;html lang&gt; 取此值，RTL 语言自动输出 dir="rtl"。
+            留空回落 zh-CN，存量系统行为不变
+          </div>
+        </el-form-item>
+
+        <el-form-item label="启用语言">
+          <el-select
+            v-model="form.supportedLanguages"
+            multiple
+            filterable
+            collapse-tags
+            clearable
+            placeholder="留空 = 全部启用"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="lang in languageOptions"
+              :key="lang.code"
+              :label="lang.label"
+              :value="lang.code"
+            />
+          </el-select>
+          <div class="form-tip">
+            多选，最多 {{ languageOptions.length }} 项；留空表示全部启用。
+            带 RTL 标记的语言会在生成物里自动切换书写方向，代码块仍保持 LTR
+          </div>
+        </el-form-item>
+
         <el-form-item label="状态">
           <el-switch v-model="form.enabled" :active-value="1" :inactive-value="0" active-text="启用" />
         </el-form-item>
@@ -255,6 +302,7 @@ import {
   deleteProject,
   setDefaultProject
 } from '@/api/gen'
+import { listLanguageOptions } from '@/api/language'
 
 const defaultForm = () => ({
   id: undefined,
@@ -308,7 +356,10 @@ const defaultForm = () => ({
   // 工程结构：null/''=单模块，'multi'=Maven 多模块（微服务就绪单体），'micro'=微服务设施（V6.0：五模块+Nacos/Gateway/Feign）
   projectStructure: '',
   // V6.1 流程引擎：null/''=内置简易流，'activiti'=Activiti 8（BPMN 翻译+待办中心）
-  flowEngine: ''
+  flowEngine: '',
+  // V7.5 项目语言配置：空=回落 zh-CN；supportedLanguages 用数组承载，提交时转逗号串
+  defaultLanguage: '',
+  supportedLanguages: []
 })
 
 // 与后端 GenSwitchDefaults.KEYS 一一对应，顺序也一致
@@ -376,6 +427,8 @@ export default {
       list: [],
       dialogVisible: false,
       form: defaultForm(),
+      // V7.5 语言清单（平台级只读，206 项）
+      languageOptions: [],
       genSwitchDefs,
       triStateDefs,
       // 复制来源系统 id（字符串，避免 Long 精度丢失）；空表示不复制
@@ -402,12 +455,22 @@ export default {
   },
   created() {
     this.load()
+    this.loadLanguageOptions()
     // 深链：/gen/project?create=1 直接打开新增弹窗，方便从别处（如向导页）跳过来建系统
     if (this.$route.query.create === '1') {
       this.openDialog()
     }
   },
   methods: {
+    // V7.5 语言清单来自 /language/options（classpath JSON，不查库，迁移脚本未跑也能用）
+    async loadLanguageOptions() {
+      try {
+        const res = await listLanguageOptions()
+        this.languageOptions = res.data || []
+      } catch (e) {
+        /* 拦截器已提示；语言配置非必填，失败不影响系统配置页其它字段 */
+      }
+    },
     async load() {
       this.loading = true
       try {
@@ -421,6 +484,11 @@ export default {
     },
     openDialog(row) {
       this.form = row ? { ...defaultForm(), ...row, tableCount: row.tableCount || 0 } : defaultForm()
+      // 后端存的是逗号分隔字符串，多选组件要数组；空串 = 全部启用，用空数组表示
+      const langs = this.form.supportedLanguages
+      this.form.supportedLanguages = Array.isArray(langs)
+        ? langs
+        : (langs ? String(langs).split(',').map(x => x.trim()).filter(Boolean) : [])
       this.copyFromId = ''
       this.dialogVisible = true
       this.$nextTick(() => this.$refs.form && this.$refs.form.clearValidate())
@@ -447,6 +515,10 @@ export default {
         try {
           const payload = { ...this.form }
           delete payload.tableCount
+          // 多选值转回后端实体字段类型（逗号分隔字符串）；空数组 = 空串 = 全部启用
+          payload.supportedLanguages = Array.isArray(payload.supportedLanguages)
+            ? payload.supportedLanguages.join(',')
+            : (payload.supportedLanguages || '')
           if (payload.id) {
             await updateProject(payload)
           } else {
