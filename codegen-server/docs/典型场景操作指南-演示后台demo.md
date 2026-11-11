@@ -106,7 +106,7 @@
 
 ## 7. 这套 demo 是怎么生成的（复现步骤）
 
-1. **建系统**：在 codegen-web 新建系统 `demo_admin`，后端根 `./codegen-demo-target`，前端根同；
+1. **建系统**：在 codegen-web 新建系统 `demo_admin`，后端根 `D:/workspace/codegen-demo-target`，前端根同；
 2. **导入表**：执行 6 张表 DDL（`target/demo-admin/ddl.sql`）后，用「批量接管」把表接进生成器；
 3. **配字段**：
    - `demo_category` → 树形；
