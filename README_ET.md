@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Mis see on
 
 CodeGen on "tabelipõhine" kooditehas. Tooge oma äritabelid sisse (andmebaasi importimine või DDL kleepimine), konfigureerige väljad ja generatsioonilülitid ning klõpsake "Generaator" — siis toodab see tagakülje Entity/Mapper/Service/Controller/DTO/VO, esikülje `api.js` ja Vue lehed, menüüd ja marsruudid, isegi A4 trükkimislehed ja integratsioonitestide skeletid, ning kirjutab kõik ohutult teie sihtprojekti.
@@ -126,7 +135,10 @@ Tagakülg vaikimisi pordile **8120**, esikülg pordile **9530**. Vaikimisi konto
 
 ## 11. Projekti olek
 
-- Praegune planeeritud versioonirida on jõudnud **V7.3**-ni.
+> **Version History · V8.0**
+> Full i18n for generated applications (including menus), 206 languages — `7d57aea`.
+
+- Praegune planeeritud versioonirida on jõudnud **V8.0**-ni.
 - Mõlemad repositooriumid hostitakse Gitees: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Autor

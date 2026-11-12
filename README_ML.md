@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. ഇതെന്താണ്
 
 CodeGen ഒരു 'ടേബിൾ-ഡ്രൈവൻ' കോഡ് ഫാക്ടറിയാണ്. നിങ്ങളുടെ ബിസിനസ് ടേബിളുകൾ (ഡാറ്റാബേസ് ഇംപോർട്ട് വഴിയോ DDL പേസ്റ്റ് ചെയ്തോ) കൊണ്ടുവരിക, ഫീൽഡുകളും ജനറേഷൻ സ്വിച്ചുകളും ക്രമീകരിക്കുക, തുടർന്ന് 'Generate' ക്ലിക്ക് ചെയ്യുക — ഇത് ബാക്ക്-എൻഡ് Entity/Mapper/Service/Controller/DTO/VO, ഫ്രണ്ട്-എൻഡ് `api.js` എന്നിവയും Vue പേജുകൾ, മെനുകൾ, റൂട്ടുകൾ, പോലും A4 പ്രിന്റ് പേജുകളും ഇൻറിഗ്രേഷൻ-ടെസ്റ്റ് സ്കെലിറ്റണുകളും ഉത്പാദിപ്പിക്കുകയും നിങ്ങളുടെ ടാർഗെറ്റ് പ്രോജക്റ്റിലേക്ക് സുരക്ഷിതമായി എഴുതുകയും ചെയ്യുന്നു.
@@ -260,7 +269,8 @@ npm run serve
 | V7.1 | Seed-data AI വർദ്ധനവ് (AI സെമാന്റിക്സ് ഉടമസ്ഥതയെടുക്കുന്നു, റൂളുകൾ സ്ട്രക്ചർ ഉടമസ്ഥതയെടുക്കുന്നു) | V7.1 (42 ലൈനുകൾ), 5ca6e72 |
 | V7.2 | വിജയകരമായ പൈപ്പ്ലൈനിന് ശേഷം `db/`-ലേക്ക് എഴുതിയ SQL ഡെലിവറബിളുകൾ | eebff88 |
 | **V7.3** | **ഡെലിവറി വിശ്വാസ്യത: സെൽഫ്-ചെക്ക് കംപൈൽ ചെയ്ത artifact ടെസ്റ്റുകൾ / യൂണിഫൈഡ് SQL ഡെലിവറി ഔട്ട്‌ലെറ്റ് / ടേബിൾ-തിരിഞ്ഞുള്ള AI ശുപാർശകൾ** | **V7.3 (138 ലൈനുകൾ)** |
-| **V7.4** | റിപ്പീറ്റബിൾ ഡെലിവറി: ഒരു ശൂന്യ ഡാറ്റാബേസിൽ നിന്ന് ഡിപ്ലോയ് ചെയ്യാവുന്ന, ഓരോ കമ്മിറ്റും റൺ ചെയ്യാവുന്നതായി ഗ്യാരണ്ടി ചെയ്യപ്പെട്ടിട്ടുള്ളത് | **നിലവിലെ പതിപ്പ്** |
+| **V7.4** | റിപ്പീറ്റബിൾ ഡെലിവറി: ഒരു ശൂന്യ ഡാറ്റാബേസിൽ നിന്ന് ഡിപ്ലോയ് ചെയ്യാവുന്ന, ഓരോ കമ്മിറ്റും റൺ ചെയ്യാവുന്നതായി ഗ്യാരണ്ടി ചെയ്യപ്പെട്ടിട്ടുള്ളത് | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **നിലവിലെ പതിപ്പ്** |
 
 ---
 
@@ -268,7 +278,7 @@ npm run serve
 
 ## 13. പ്രോജക്റ്റ് സ്റ്റാറ്റസ്
 
-- നിലവിലെ പ്ലാൻ ചെയ്ത പതിപ്പ് ലൈൻ **V7.3** എത്തിയിരിക്കുന്നു (കഴിവുകൾ തുടർച്ചയായി ഇറ്ററേറ്റ് ചെയ്യപ്പെടുന്നു: AI മോഡലിംഗ്, seed-data വർദ്ധനവ്, കപ്പാസിറ്റി-പാക്ക് സിസ്റ്റം മുതലായവ).
+- നിലവിലെ പ്ലാൻ ചെയ്ത പതിപ്പ് ലൈൻ **V8.0** എത്തിയിരിക്കുന്നു (കഴിവുകൾ തുടർച്ചയായി ഇറ്ററേറ്റ് ചെയ്യപ്പെടുന്നു: AI മോഡലിംഗ്, seed-data വർദ്ധനവ്, കപ്പാസിറ്റി-പാക്ക് സിസ്റ്റം മുതലായവ).
 - ഒരു കൂട്ടാളി demo പ്രോജക്റ്റ് `demo_admin` (ബാക്ക്-എൻഡ് 8140 / ഫ്രണ്ട്-എൻഡ് 9040) ട്രീ / CRUD / മാസ്റ്റർ-ഡീറ്റെയിൽ / റീഡ്-ഓൺലി / പ്രിന്റ് സാഹചര്യങ്ങൾ ഉൾക്കൊള്ളുന്നു, വെരിഫിക്കേഷന് സ്വയം റൺ ചെയ്യാവുന്നതാണ്.
 - രണ്ട് റിപ്പോകളും Gitee-ൽ ഹോസ്റ്റ് ചെയ്തിരിക്കുന്നു: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

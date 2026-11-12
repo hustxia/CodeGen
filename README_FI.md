@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Mikä tämä on
 
 CodeGen on "taulukohtainen" kooditehdas. Tuo liiketoimintataulusi (tietokannan tuonti tai DDL-liittäminen), konfiguroi kentät ja generaatiokytkimet ja napsauta "Generoi" — niin se tuottaa takapään Entity/Mapper/Service/Controller/DTO/VO:n, etupään `api.js`-tiedoston ja Vue-sivut, valikot ja reitit, jopa A4-tulostussivut ja integraatiotestiluurungot, ja kirjoittaa kaiken turvallisesti kohdeprojektiisi.
@@ -259,7 +268,8 @@ Etupää käyttää oletusarvoisesti porttia **9530**, välittää `/dev-api` ta
 | V7.1 | Siemendatan AI-parannus (AI hallitsee semantiikkaa, säännöt hallitsevat rakennetta) | V7.1 (42 riviä), 5ca6e72 |
 | V7.2 | SQL-toimitusobjektit kirjoitettu kohteeseen `db/` putken onnistuneen jälkeen | eebff88 |
 | **V7.3** | **Toimitusluotettavuus: itsetarkistus käännetyt artefaktitestit / yhtenäinen SQL-toimitusulostulo / taulukohtaiset AI-suositukset** | **V7.3 (138 riviä)** |
-| **V7.4** | Toistettava toimitus: deployoitavissa tyhjästä tietokannasta, jokainen commit taattu ajettavaksi | **Nykyinen versio** |
+| **V7.4** | Toistettava toimitus: deployoitavissa tyhjästä tietokannasta, jokainen commit taattu ajettavaksi | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Nykyinen versio** |
 
 ---
 
@@ -267,7 +277,7 @@ Etupää käyttää oletusarvoisesti porttia **9530**, välittää `/dev-api` ta
 
 ## 13. Projektin tila
 
-- Nykyinen suunniteltu versiolinja on saavuttanut **V7.3** (ominaisuudet jatkavat iterointia: AI-mallinnus, siemendatan parannus, ominaisuuspakettijärjestelmä jne.).
+- Nykyinen suunniteltu versiolinja on saavuttanut **V8.0** (ominaisuudet jatkavat iterointia: AI-mallinnus, siemendatan parannus, ominaisuuspakettijärjestelmä jne.).
 - Mukana oleva demo-projekti `demo_admin` (takapää 8140 / etupää 9040) kattaa puun / CRUD:n / master-detail:n / vain luku / tulostus skenaariot ja toimii itsenäisesti verifiointia varten.
 - Molemmat säilöt isännöidään Giteessä: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

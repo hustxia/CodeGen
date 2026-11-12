@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Wat is dit
 
 CodeGen is een "tabelgestuurde" codefabriek. Breng je bedrijfstabellen binnen (via database-import of door een DDL te plakken), configureer velden en generatieschakelaars en klik op "Genereer" — dan produceert het de back-end Entity/Mapper/Service/Controller/DTO/VO, de front-end `api.js` en Vue-pagina's, menu's en routes, zelfs A4-afdrukpagina's en integratietest-skeletten, en schrijft alles veilig weg naar je doelproject.
@@ -259,7 +268,8 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 | V7.1 | Seed-data AI-verbetering (AI bezit semantiek, regels bezitten structuur) | V7.1 (42 regels), 5ca6e72 |
 | V7.2 | SQL-leverbare objecten geschreven naar `db/` na succesvolle pijplijn | eebff88 |
 | **V7.3** | **Leveringbetrouwbaarheid: zelftest gecompileerde artefacttests / uniforme SQL-leveringsuitlaat / tabelgebonden AI-aanbevelingen** | **V7.3 (138 regels)** |
-| **V7.4** | Herhaalbare levering: deployeerbaar vanuit een lege database, elke commit gegarandeerd uitvoerbaar | **Huidige versie** |
+| **V7.4** | Herhaalbare levering: deployeerbaar vanuit een lege database, elke commit gegarandeerd uitvoerbaar | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Huidige versie** |
 
 ---
 
@@ -267,7 +277,7 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 
 ## 13. Projectstatus
 
-- De huidige geplande versielijn heeft **V7.3** bereikt (capaciteiten blijven itereren: AI-modellering, seed-data verbetering, capaciteitspakket-systeem, enz.).
+- De huidige geplande versielijn heeft **V8.0** bereikt (capaciteiten blijven itereren: AI-modellering, seed-data verbetering, capaciteitspakket-systeem, enz.).
 - Een begeleidend demo-project `demo_admin` (backend 8140 / frontend 9040) dekt boom / CRUD / master-detail / alleen-lezen / afdruk scenario's en draait standalone voor verificatie.
 - Beide repositories worden gehost op Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

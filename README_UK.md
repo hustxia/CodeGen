@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Що це таке
 
 CodeGen — це «керована таблицями» фабрика коду. Принесіть свої бізнес-таблиці (через імпорт бази даних або вставивши DDL), налаштуйте поля та перемикачі генерації, потім натисніть «Згенерувати» — він продукує бекенд Entity/Mapper/Service/Controller/DTO/VO, фронтенд `api.js` і сторінки Vue, меню та маршрути, навіть сторінки друку A4 і каркаси інтеграційних тестів, і безпечно записує їх у цільовий проєкт.
@@ -258,7 +267,8 @@ npm run serve
 | V7.1 | AI-покращення початкових даних (ШІ володіє семантикою, правила — структурою) | V7.1 (42 рядки), 5ca6e72 |
 | V7.2 | SQL-деліверабли записуються до `db/` після успішного конвеєра | eebff88 |
 | **V7.3** | **Надійність доставки: тести артефактів, скомпільованих самоперевіркою / уніфікований вихід SQL-делівераблів / рекомендації ШІ на рівні таблиці** | **V7.3 (138 рядків)** |
-| **V7.4** | Повторювана доставка: розгортається з порожньої бази даних, кожен коміт гарантовано запускний | **Поточна версія** |
+| **V7.4** | Повторювана доставка: розгортається з порожньої бази даних, кожен коміт гарантовано запускний | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Поточна версія** |
 
 ---
 
@@ -266,7 +276,7 @@ npm run serve
 
 ## 13. Статус проєкту
 
-- Поточна запланована лінія версій досягла **V7.3** (можливості постійно ітераційні: AI-моделювання, покращення початкових даних, система пакетів можливостей тощо).
+- Поточна запланована лінія версій досягла **V8.0** (можливості постійно ітераційні: AI-моделювання, покращення початкових даних, система пакетів можливостей тощо).
 - Супутній демо-проєкт `demo_admin` (бекенд 8140 / фронтенд 9040) охоплює сценарії дерево / CRUD / головна-деталь / лише читання / друк і працює автономно для перевірки.
 - Обидва репозиторії розміщені на Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

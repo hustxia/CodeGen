@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Ano Ito
 
 Ang CodeGen ay isang "talahanayan-driven" na pabrika ng code. Dalhin ang iyong mga talahanayan ng negosyo (sa pamamagitan ng pag-import mula sa database o sa pamamagitan ng pag-paste ng DDL), i-configure ang mga field at generation switch, pagkatapos ay i-click ang "Generate" — pagkatapos ay gumagawa ito ng back-end Entity/Mapper/Service/Controller/DTO/VO, ang front-end `api.js` at mga pahina ng Vue, mga menu at ruta, kahit na mga pahina ng pag-print na A4 at mga skeleton ng integration test, at ligtas na isinusulat ang lahat sa iyong target na proyekto.
@@ -114,7 +123,10 @@ Ang back-end ay naka-port na default na **8120**, ang front-end ay naka-port na 
 
 ## 11. Kalagayan ng Proyekto
 
-- Ang kasalukuyang pinaplanong linya ng bersyon ay umabot na sa **V7.3**.
+> **Version History · V8.0**
+> Full i18n for generated applications (including menus), 206 languages — `7d57aea`.
+
+- Ang kasalukuyang pinaplanong linya ng bersyon ay umabot na sa **V8.0**.
 - Ang dalawang repository ay naka-host sa Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. May-akda

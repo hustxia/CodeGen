@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Što je ovo
 
 CodeGen je "tvornica kôda vođena tablicama". Uvezite svoje poslovne tablice (putem uvoza iz baze podataka ili lijepljenjem DDL-a), konfigurirajte polja i prekidače generiranja i kliknite na "Generiraj" — tada proizvodi back-end Entity/Mapper/Service/Controller/DTO/VO, front-end `api.js` i Vue stranice, izbornike i rute, čak i A4 stranice za ispis i kosture integracijskih testova, i sve sigurno upisuje u vaš ciljni projekt.
@@ -261,7 +270,8 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 | V7.1 | AI poboljšanje seed podataka (AI posjeduje semantiku, pravila posjeduju strukturu) | V7.1 (42 redaka), 5ca6e72 |
 | V7.2 | SQL isporučeni objekti upisani u `db/` nakon uspješnog procesa | eebff88 |
 | **V7.3** | **Pouzdanost isporuke: samoprovjera kompilirani testovi artefakata / jedinstveni SQL izlaz isporuke / AI preporuke na razini tablice** | **V7.3 (138 redaka)** |
-| **V7.4** | Ponovljiva isporuka: postavljiva iz prazne baze podataka, svaki commit jamčivo pokretan | **Trenutna verzija** |
+| **V7.4** | Ponovljiva isporuka: postavljiva iz prazne baze podataka, svaki commit jamčivo pokretan | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Trenutna verzija** |
 
 ---
 
@@ -269,7 +279,7 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 
 ## 13. Status projekta
 
-> Trenutna planirana linija verzija dosegla je **V7.3** (mogućnosti se nastavljaju iterirati: AI modeliranje, poboljšanje seed podataka, sustav paketa mogućnosti itd.).
+> Trenutna planirana linija verzija dosegla je **V8.0** (mogućnosti se nastavljaju iterirati: AI modeliranje, poboljšanje seed podataka, sustav paketa mogućnosti itd.).
 > Pripadni demo projekt `demo_admin` (back-end 8140 / front-end 9040) pokriva scenarije stabla / CRUD / master-detail / samo za čitanje / ispis i radi samostalno za provjeru.
 > Oba repozitorija su hostirana na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

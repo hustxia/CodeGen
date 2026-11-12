@@ -9,6 +9,15 @@
 ---
 Адрес GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 
 ## 1. Что это такое
 
@@ -262,7 +271,8 @@ npm run serve
 | V7.1 | AI-обогащение seed-данных (AI отвечает за семантику, правила — за структуру) | V7.1 (42 строки), 5ca6e72 |
 | V7.2 | Запись SQL-артефактов в `db/` после успешного конвейера | eebff88 |
 | **V7.3** | **Достоверность поставки: тесты самопроверки скомпилированных артефактов / единый выход SQL-поставки / AI-рекомендации на уровне таблицы** | **V7.3 (138 строк)** |
-| **V7.4** | **Повторяемая поставка: развёртывание на пустой базе, гарантия работоспособности при каждом коммите** | **текущая версия** |
+| **V7.4** | **Повторяемая поставка: развёртывание на пустой базе, гарантия работоспособности при каждом коммите** | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **текущая версия** |
 
 ---
 
@@ -270,7 +280,7 @@ npm run serve
 
 ## 13. Состояние проекта
 
-- Текущая плановая линейка версий достигла **V7.3**, возможности продолжают развиваться (AI-моделирование, обогащение seed-данных, система пакетов возможностей и т. д.).
+- Текущая плановая линейка версий достигла **V8.0**, возможности продолжают развиваться (AI-моделирование, обогащение seed-данных, система пакетов возможностей и т. д.).
 - Подготовлен сопровождающий демонстрационный проект `demo_admin` (бэкенд 8140 / фронтенд 9040), покрывающий все сценарии: дерево / CRUD / мастер-деталь / только чтение / печать; запускается автономно для проверки.
 - Оба репозитория размещены на Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

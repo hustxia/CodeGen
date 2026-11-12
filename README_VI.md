@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Đây là gì
 
 CodeGen là một "nhà máy mã" theo hướng dẫn bởi bảng dữ liệu. Đưa các bảng nghiệp vụ của bạn vào (qua nhập CSDL hoặc dán DDL), cấu hình trường và các công tắc sinh mã, sau đó nhấn "Generate" — nó sẽ tạo ra Entity/Mapper/Service/Controller/DTO/VO ở back-end, `api.js` và các trang Vue ở front-end, menu và route, thậm chí cả trang in A4 và khung kiểm thử tích hợp, rồi ghi an toàn vào dự án đích của bạn.
@@ -258,7 +267,8 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 | V7.1 | Tăng cường dữ liệu hạt giống bằng AI (AI nắm ngữ nghĩa, quy tắc nắm cấu trúc) | V7.1 (42 dòng), 5ca6e72 |
 | V7.2 | Sản phẩm SQL được ghi vào `db/` sau khi pipeline thành công | eebff88 |
 | **V7.3** | **Độ tin cậy giao hàng: test artifact đã biên dịch tự kiểm / đầu ra SQL thống nhất / đề xuất AI từng bảng** | **V7.3 (138 dòng)** |
-| **V7.4** | Giao hàng có thể lặp lại: triển khai từ CSDL rỗng, mọi commit đảm bảo chạy được | **Phiên bản hiện tại** |
+| **V7.4** | Giao hàng có thể lặp lại: triển khai từ CSDL rỗng, mọi commit đảm bảo chạy được | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Phiên bản hiện tại** |
 
 ---
 
@@ -266,7 +276,7 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 
 ## 13. Trạng thái dự án
 
-- Dòng phiên bản đã lên kế hoạch hiện tại đã đạt **V7.3** (năng lực tiếp tục lặp: mô hình hóa AI, tăng cường dữ liệu hạt giống, hệ thống gói năng lực,...).
+- Dòng phiên bản đã lên kế hoạch hiện tại đã đạt **V8.0** (năng lực tiếp tục lặp: mô hình hóa AI, tăng cường dữ liệu hạt giống, hệ thống gói năng lực,...).
 - Dự án demo đi kèm `demo_admin` (back-end 8140 / front-end 9040) bao phủ các kịch bản cây / CRUD / cha-con / chỉ đọc / in, chạy độc lập để xác minh.
 - Cả hai kho đều được host trên Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. ఇది ఏమిటి
 
 CodeGen అనేది "పట్టిక-ఆధారిత" కోడ్ ఫ్యాక్టరీ. మీ వ్యాపార పట్టికలను తీసుకురండి (డేటాబేస్ దిగుమతి లేదా DDL పేస్ట్ చేయడం ద్వారా), ఫీల్డ్‌లు మరియు జనరేషన్ స్విచ్‌లను కాన్ఫిగర్ చేయండి, తర్వాత "జనరేట్" క్లిక్ చేయండి — అప్పుడు అది వెనుక చివర Entity/Mapper/Service/Controller/DTO/VO, ముందు చివర `api.js` మరియు Vue పేజీలు, మెనూలు మరియు రూట్‌లు, A4 ప్రింట్ పేజీలు మరియు ఇంటిగ్రేషన్ టెస్ట్ అస్థిపంజరాలను కూడా ఉత్పత్తి చేస్తుంది, మరియు అన్నింటినీ మీ లక్ష్య ప్రాజెక్ట్‌లోకి సురక్షితంగా వ్రాస్తుంది.
@@ -121,7 +130,10 @@ npm run serve
 
 ## 11. ప్రాజెక్ట్ స్థితి
 
-- ప్రస్తుతం ప్రణాళిక చేయబడిన వెర్షన్ లైన్ **V7.3** ను చేరుకుంది.
+> **Version History · V8.0**
+> Full i18n for generated applications (including menus), 206 languages — `7d57aea`.
+
+- ప్రస్తుతం ప్రణాళిక చేయబడిన వెర్షన్ లైన్ **V8.0** ను చేరుకుంది.
 - రెండు రిపోజిటరీలు Gitee లో హోస్ట్ చేయబడ్డాయి: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. రచయిత

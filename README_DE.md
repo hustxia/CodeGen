@@ -10,6 +10,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 · Vollständige Internationalisierung generierter Anwendungen (inkl. Menüs), 206 Sprachen**
+> Nach Aktivierung von i18n in den Projekteinstellungen und Wahl der Standard- / aktiven Sprachen
+> werden alle generierten Seiten (Buttons, Tabellenköpfe, Feldbezeichnungen, Dialogtitel, Menüs)
+> über die `$t`-Laufzeit aufgelöst. 8 manuell übersetzte Sprachpakete sind enthalten
+> (zh-CN / en-US / ja-JP / ko-KR / fr-FR / de-DE / es-ES / ar-SA); alle weiteren Locales
+> fallen über « aktuelle Sprache → zh-CN → Inline-Chinesisch » zurück, nie leer.
+> Der Sprachumschalter listet 206 Sprachen, RTL-Sprachen spiegeln automatisch.
+> Bei ausgeschaltetem Switch bleibt die Ausgabe Byte für Byte unverändert.
+
 ## 1. Was ist das
 
 CodeGen ist eine „tabellengetriebene“ Code-Fabrik. Sie bringen Ihre Geschäftstabellen herein (per Datenbank-Import oder durch Einfügen eines DDL-Skripts), konfigurieren Felder und Generierungsschalter und klicken auf „Generieren“ — daraufhin erzeugt er das Backend (Entity/Mapper/Service/Controller/DTO/VO), das Frontend (`api.js` und Vue-Seiten), Menüs und Routen, sogar A4-Druckseiten und Integration-Test-Skelette, und schreibt alles sicher in Ihr Zielprojekt.
@@ -261,7 +270,8 @@ Das Frontend läuft standardmäßig auf Port **9530** und proxyt `/dev-api` an d
 | V7.1 | Seed-Daten-KI-Verbesserung (KI besitzt Semantik, Regeln besitzen Struktur) | V7.1 (42 Zeilen), 5ca6e72 |
 | V7.2 | SQL-Lieferobjekte werden nach erfolgreicher Pipeline nach `db/` geschrieben | eebff88 |
 | **V7.3** | **Liefer-Vertrauenswürdigkeit: Selbstprüfungs-kompilierte Artefakt-Tests / einheitlicher SQL-Lieferausgang / tabellenbezogene KI-Empfehlungen** | **V7.3 (138 Zeilen)** |
-| **V7.4** | Wiederholbare Lieferung: aus leerer Datenbank deploybar, jeder Commit garantiert lauffähig | **Aktuelle Version** |
+| **V7.4** | Wiederholbare Lieferung: aus leerer Datenbank deploybar, jeder Commit garantiert lauffähig | — |
+| **V8.0** | Vollständige Internationalisierung (inkl. Menüs), 206 Sprachen | **Aktuelle Version** |
 
 ---
 
@@ -269,7 +279,7 @@ Das Frontend läuft standardmäßig auf Port **9530** und proxyt `/dev-api` an d
 
 ## 13. Projektstatus
 
-- Die aktuelle geplante Versionslinie hat **V7.3** erreicht (Fähigkeiten werden kontinuierlich weiterentwickelt: KI-Modellierung, Seed-Daten-Verbesserung, Fähigkeitspaket-System usw.).
+- Die aktuelle geplante Versionslinie hat **V8.0** erreicht (Fähigkeiten werden kontinuierlich weiterentwickelt: KI-Modellierung, Seed-Daten-Verbesserung, Fähigkeitspaket-System usw.).
 - Ein begleitendes Demo-Projekt `demo_admin` (Backend 8140 / Frontend 9040) deckt die Szenarien Baum / CRUD / Master-Detail / Nur-Lesen / Drucken ab und läuft eigenständig zur Verifikation.
 - Beide Repositories sind auf Gitee gehostet: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

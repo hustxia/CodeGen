@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Bu Nedir
 
 CodeGen, "tablo güdümlü" bir kod fabrikasıdır. İş tablolarınızı getirin (veritabanı içe aktarımı veya DDL yapıştırma yoluyla), alanları ve üretim anahtarlarını yapılandırın, ardından "Üret"e tıklayın — arka uç Entity/Mapper/Service/Controller/DTO/VO, ön yüz `api.js` ve Vue sayfaları, menüler ve rotalar, hatta A4 yazdırma sayfaları ve entegrasyon testi iskeletleri üretir ve bunları hedef projenize güvenle yazar.
@@ -258,7 +267,8 @@ npm run serve
 | V7.1 | Tohum-veri yapay zeka geliştirmesi (yapay zeka semantiğe sahip, kurallar yapıya) | V7.1 (42 satır), 5ca6e72 |
 | V7.2 | Başarılı hatın ardından SQL teslimatları `db/` dizinine yazılır | eebff88 |
 | **V7.3** | **Teslimat güvenilirliği: öz denetimli derlenen artefakt testleri / birleşik SQL teslimat çıkışı / tablo başına yapay zeka önerileri** | **V7.3 (138 satır)** |
-| **V7.4** | Tekrarlanabilir teslimat: boş bir veritabanından dağıtılabilir, her commit çalıştırılabilir garanti edilir | **Mevcut sürüm** |
+| **V7.4** | Tekrarlanabilir teslimat: boş bir veritabanından dağıtılabilir, her commit çalıştırılabilir garanti edilir | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Mevcut sürüm** |
 
 ---
 
@@ -266,7 +276,7 @@ npm run serve
 
 ## 13. Proje Durumu
 
-- Mevcut planlanan sürüm hattı **V7.3** seviyesine ulaştı (yetenekler sürekli yinelemede: yapay zeka modelleme, tohum-veri geliştirmesi, yetenek-paketi sistemi vb.).
+- Mevcut planlanan sürüm hattı **V8.0** seviyesine ulaştı (yetenekler sürekli yinelemede: yapay zeka modelleme, tohum-veri geliştirmesi, yetenek-paketi sistemi vb.).
 - Eşlik eden demo projesi `demo_admin` (arka uç 8140 / ön uç 9040), ağaç / CRUD / ana-ayrıntı / salt okunur / yazdırma senaryolarını kapsar ve doğrulama için bağımsız çalışır.
 - Her iki depo da Gitee üzerinde barındırılır: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

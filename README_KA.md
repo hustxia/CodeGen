@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. რა არის ეს
 
 CodeGen არის "ცხრილებით მართული" კოდის ქარხანა. შემოიტანეთ თქვენი ბიზნეს ცხრილები (მონაცემთა ბაზიდან იმპორტით ან DDL-ის ჩასმით), დააკონფიგურირეთ ველები და გენერაციის გადამრთველები, შემდეგ დააჭირეთ "გენერირება" — მაშინ ის ქმნის back-end Entity/Mapper/Service/Controller/DTO/VO, front-end `api.js` და Vue გვერდებს, მენიუს და მარშრუტებს, თუნდაც A4 ბეჭდვის გვერდებს და ინტეგრაციის ტესტის ჩონჩხებს, და ყველაფერს უსაფრთხოდ წერს თქვენს სამიზნე პროექტში.
@@ -114,7 +123,10 @@ Back-end ნაგულისხმევი პორტი **8120**, front-en
 
 ## 11. პროექტის სტატუსი
 
-- მიმდინარე დაგეგმილი ვერსიის ხაზმა მიაღწია **V7.3**.
+> **Version History · V8.0**
+> Full i18n for generated applications (including menus), 206 languages — `7d57aea`.
+
+- მიმდინარე დაგეგმილი ვერსიის ხაზმა მიაღწია **V8.0**.
 - ორივე რეპოზიტორია განთავსებულია Gitee-ზე: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. ავტორი

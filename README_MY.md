@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## ၁။ ဤသည်မှာ ဘာလဲ
 
 CodeGen သည် "ဇယားဖြင့်မောင်းနှင်သော" ကုဒ်စက်ရုံဖြစ်သည်။ သင့်လုပ်ငန်းဇယားများကို ယူဆောင်လာပါ (ဒေတာဘေ့စ်မှတင်သွင်းခြင်း သို့မဟုတ် DDL ကိုကူးထည့်ခြင်းဖြင့်)၊ ဖယ်ဒ်များနှင့် ဂျင်နရေတာခလုတ်များကို ပြင်ဆင်ပြီး "Generate" ကိုနှိပ်ပါ — ထို့နောက် နောက်ပိုင်း Entity/Mapper/Service/Controller/DTO/VO၊ ရှေ့ပိုင်း `api.js` နှင့် Vue စာမျက်နှာများ၊ မီနူးများနှင့် ရောက်ကြောင်းများ၊ A4 ပုံနှိပ်စာမျက်နှာများနှင့် ပေါင်းစပ်စမ်းသပ်ခေါင်းရိုးများပင် ထုတ်လုပ်ပြီး အားလုံးကို သင့်ပစ်မှတ်ပရောဂျက်ထဲသို့ လုံခြုံစွာရေးသားပေးသည်။
@@ -114,7 +123,10 @@ npm run serve
 
 ## ၁၁။ ပရောဂျက် အခြေအနေ
 
-- လက်ရှိစီစဉ်ထားသော version line **V7.3** သို့ ရောက်ရှိလာပြီ.
+> **Version History · V8.0**
+> Full i18n for generated applications (including menus), 206 languages — `7d57aea`.
+
+- လက်ရှိစီစဉ်ထားသော version line **V8.0** သို့ ရောက်ရှိလာပြီ.
 - Repository နှစ်ခုလုံး Gitee တွင် host လုပ်ထားသည်: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## ၁၂။ ရေးသားသူ

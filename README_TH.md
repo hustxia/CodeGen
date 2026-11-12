@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. นี่คืออะไร
 
 CodeGen คือ "โรงงานโค้ด" ที่ขับเคลื่อนด้วยตาราง นำตารางธุรกิจของคุณเข้ามา (ผ่านการนำเข้าฐานข้อมูลหรือวาง DDL) กำหนดค่าฟิลด์และสวิตช์การสร้าง จากนั้นคลิก "Generate" — มันจะสร้าง Entity/Mapper/Service/Controller/DTO/VO ฝั่งหลัง `api.js` และหน้า Vue ฝั่งหน้า เมนูและเส้นทาง รวมถึงหน้าพิมพ์ A4 และโครงสร้างการทดสอบแบบบูรณาการ แล้วเขียนลงโปรเจกต์เป้าหมายอย่างปลอดภัย
@@ -260,7 +269,8 @@ npm run serve
 | V7.1 | เสริมข้อมูลเมล็ดพันธุ์ด้วย AI (AI ถือความหมาย กฎถือโครงสร้าง) | V7.1 (42 บรรทัด), 5ca6e72 |
 | V7.2 | ผลลัพธ์ SQL ถูกเขียนลง `db/` หลังท่อสำเร็จ | eebff88 |
 | **V7.3** | **ความน่าเชื่อถือการส่งมอบ: ทดสอบ artifact ที่คอมไพล์แล้วแบบตรวจสอบตนเอง / ทางออก SQL แบบรวม / คำแนะนำ AI รายตาราง** | **V7.3 (138 บรรทัด)** |
-| **V7.4** | ส่งมอบที่ทำซ้ำได้: deploy จากฐานข้อมูลว่างได้ ทุก commit การันตีว่ารันได้ | **เวอร์ชันปัจจุบัน** |
+| **V7.4** | ส่งมอบที่ทำซ้ำได้: deploy จากฐานข้อมูลว่างได้ ทุก commit การันตีว่ารันได้ | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **เวอร์ชันปัจจุบัน** |
 
 ---
 
@@ -268,7 +278,7 @@ npm run serve
 
 ## 13. สถานะโปรเจกต์
 
-- สายเวอร์ชันที่วางแผนปัจจุบันถึง **V7.3** แล้ว (ความสามารถยังคงiterate: สร้างโมเดล AI เสริมข้อมูลเมล็ดพันธุ์ ระบบแพ็กเกจความสามารถ ฯลฯ)
+- สายเวอร์ชันที่วางแผนปัจจุบันถึง **V8.0** แล้ว (ความสามารถยังคงiterate: สร้างโมเดล AI เสริมข้อมูลเมล็ดพันธุ์ ระบบแพ็กเกจความสามารถ ฯลฯ)
 - โปรเจกต์เดโมตัวอย่าง `demo_admin` (แบ็กเอนด์ 8140 / ฝั่งหน้า 9040) ครอบคลุมสถานการณ์ต้นไม้ / CRUD / แม่-ลูก / อ่านอย่างเดียว / พิมพ์ และรันได้เองเพื่อตรวจสอบ
 - ทั้งสองคลังโฮสต์บน Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

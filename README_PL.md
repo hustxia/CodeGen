@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Czym to jest
 
 CodeGen to „sterowana tabelami” fabryka kodu. Przynieś swoje tabele biznesowe (przez import bazy danych lub wklejając DDL), skonfiguruj pola i przełączniki generowania, a następnie kliknij „Generuj” — produkuje backendowe Entity/Mapper/Service/Controller/DTO/VO, frontendowy `api.js` i strony Vue, menu i trasy, a nawet strony druku A4 oraz szkielety testów integracyjnych, i bezpiecznie zapisuje je w projekcie docelowym.
@@ -258,7 +267,8 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 | V7.1 | Wzbogacanie danych nasiennych przez AI (AI posiada semantykę, reguły strukturę) | V7.1 (42 linie), 5ca6e72 |
 | V7.2 | Deliverable SQL zapisywane do `db/` po udanym potoku | eebff88 |
 | **V7.3** | **Wiarygodność dostarczania: testy artefaktów skompilowanych przez samokontrolę / ujednolicony wyjście deliverable SQL / rekomendacje AI na poziomie tabeli** | **V7.3 (138 linii)** |
-| **V7.4** | Powtarzalne dostarczanie: wdrażalne z pustej bazy danych, każdy commit gwarantowanie uruchamialny | **Bieżąca wersja** |
+| **V7.4** | Powtarzalne dostarczanie: wdrażalne z pustej bazy danych, każdy commit gwarantowanie uruchamialny | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Bieżąca wersja** |
 
 ---
 
@@ -266,7 +276,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 
 ## 13. Status projektu
 
-- Obecna planowana linia wersji osiągnęła **V7.3** (możliwości stale iterują: modelowanie AI, wzbogacanie danych nasiennych, system pakietów możliwości itp.).
+- Obecna planowana linia wersji osiągnęła **V8.0** (możliwości stale iterują: modelowanie AI, wzbogacanie danych nasiennych, system pakietów możliwości itp.).
 - Towarzyszący projekt demo `demo_admin` (backend 8140 / frontend 9040) obejmuje scenariusze drzewo / CRUD / główna-szczegóły / tylko-do-odczytu / druk i działa samodzielnie do weryfikacji.
 - Oba repozytoria są hostowane na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

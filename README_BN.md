@@ -10,6 +10,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## ১. এটি কী
 
 CodeGen হলো একটি "টেবিল-ভিত্তিক" কোড কারখানা। আপনার বিজনেস টেবিলগুলো আনুন (ডেটাবেস ইমপোর্ট বা DDL পেস্ট করার মাধ্যমে), ফিল্ড ও জেনারেশন সুইচ কনফিগার করুন, তারপর "Generate" ক্লিক করুন — এটি ব্যাক-এন্ড Entity/Mapper/Service/Controller/DTO/VO, ফ্রন্ট-এন্ড `api.js` ও Vue পেজ, মেনু ও রাউট, এমনকি A4 প্রিন্ট পেজ ও ইন্টিগ্রেশন-টেস্ট স্কেলিটনও তৈরি করে এবং নিরাপদে আপনার টার্গেট প্রজেক্টে লিখে দেয়।
@@ -261,7 +270,8 @@ npm run serve
 | V7.1 | সিড-ডেটা AI এনহ্যান্সমেন্ট (সিমান্টিক AI-এর, স্ট্রাকচার নিয়মের অধীন) | V7.1 (42 লাইন), 5ca6e72 |
 | V7.2 | সফল পাইপলাইনের পর SQL ডেলিভারেবল `db/`-তে লেখা | eebff88 |
 | **V7.3** | **ডেলিভারির বিশ্বাসযোগ্যতা: সেলফ-চেক কম্পাইল করা আর্টিফ্যাক্ট টেস্ট / ঐক্যবদ্ধ SQL ডেলিভারি আউটলেট / টেবিল-ভিত্তিক AI সুপারিশ** | **V7.3 (138 লাইন)** |
-| **V7.4** | পুনরাবৃত্তযোগ্য ডেলিভারি: খালি ডেটাবেস থেকে ডিপ্লয়যোগ্য, প্রতিটি কমিট চালানোর নিশ্চয়তা | **বর্তমান ভার্সন** |
+| **V7.4** | পুনরাবৃত্তযোগ্য ডেলিভারি: খালি ডেটাবেস থেকে ডিপ্লয়যোগ্য, প্রতিটি কমিট চালানোর নিশ্চয়তা | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **বর্তমান ভার্সন** |
 
 ---
 
@@ -269,7 +279,7 @@ npm run serve
 
 ## 13. প্রজেক্ট অবস্থা
 
-- বর্তমান পরিকল্পিত ভার্সন লাইন **V7.3**-এ পৌঁছেছে (সক্ষমতা ধারাবাহিকভাবে উন্নত হচ্ছে: AI মডেলিং, সিড-ডেটা এনহ্যান্সমেন্ট, ক্যাপাবিলিটি-প্যাক সিস্টেম ইত্যাদি)।
+- বর্তমান পরিকল্পিত ভার্সন লাইন **V8.0**-এ পৌঁছেছে (সক্ষমতা ধারাবাহিকভাবে উন্নত হচ্ছে: AI মডেলিং, সিড-ডেটা এনহ্যান্সমেন্ট, ক্যাপাবিলিটি-প্যাক সিস্টেম ইত্যাদি)।
 - সঙ্গী ডেমো প্রজেক্ট `demo_admin` (ব্যাক-এন্ড 8140 / ফ্রন্ট-এন্ড 9040) ট্রি / CRUD / মাস্টার-ডিটেইল / রিড-ওনলি / প্রিন্ট — সব দৃশ্যপট কভার করে এবং স্বতন্ত্রভাবে চালিয়ে যাচাই করা যায়।
 - উভয় রিপোজিটরি Gitee-তে হোস্ট করা: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
