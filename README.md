@@ -4,6 +4,8 @@
 
 ---
 
+> **Language support**: generated systems ship with full-page internationalization built in. The framework supports switching and fallback across **206 languages**; **8 are professionally translated** (zh-CN, en-US, ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA), and all others fall back to Simplified Chinese. Want to contribute a translation? See [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md).
+
 > A multi-project code generator for **Spring Boot + Vue**: starting from database table structures, it produces **compilable, runnable, menu-and-permission-ready** front-end and back-end business code, and handles the full delivery loop of writing to disk, backup, ledgering and rollback.
 
 GitHub: https://github.com/hustxia/CodeGen
@@ -258,7 +260,10 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | V7.1 | Seed-data AI enhancement (AI owns semantics, rules own structure) | V7.1 (42 lines), 5ca6e72 |
 | V7.2 | SQL deliverables written to `db/` after successful pipeline | eebff88 |
 | **V7.3** | **Delivery trustworthiness: self-check compiled artifact tests / unified SQL delivery outlet / per-table AI recommendations** | **V7.3 (138 lines)** |
-| **V7.4** | Repeatable delivery: deployable from an empty database, every commit guaranteed runnable | **Current version** |
+| **V7.4** | Repeatable delivery: deployable from an empty database, every commit guaranteed runnable | — |
+| **V8.0** | **Full-page i18n: 206-language framework (8 professionally translated), dual-track i18n with OFF zero-diff contract** | current |
+| **V8.1** | Quality hardening: `vuePage.ftl` snapshot tests + `i18n` unit tests + CI gate + honest README split | in dev |
+| **V9.0** | Frontend modernization: Vue 3 + Element Plus + Vite migration | planned |
 
 ---
 
@@ -266,7 +271,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ## 13. Project Status
 
-- The current planned version line has reached **V7.3** (capabilities keep iterating: AI modeling, seed-data enhancement, capability-pack system, etc.).
+- The current released version is **V8.0** (full-page internationalization, 206-language framework). **V8.1** (quality hardening) is in development; **V9.0** (Vue 3 + Element Plus + Vite) is planned.
 - A companion demo project `demo_admin` (backend 8140 / frontend 9040) covers tree / CRUD / master-detail / read-only / print scenarios and runs standalone for verification.
 - Both repositories are hosted on Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

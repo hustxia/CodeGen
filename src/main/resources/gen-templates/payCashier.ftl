@@ -1,10 +1,10 @@
 <template>
   <div class="cashier">
     <el-card shadow="never">
-      <div slot="header" class="hd">
+      <template #header><div class="hd">
         <span>收银台</span>
-        <el-tag size="mini" type="info">{{ channelText }}</el-tag>
-      </div>
+        <el-tag size="small" type="info">{{ channelText }}</el-tag>
+      </div></template>
 
       <el-form :model="form" label-width="90px" style="max-width:480px">
         <el-form-item label="订单标题">
@@ -26,7 +26,7 @@
 
       <div v-if="order" class="pay-area">
         <div class="line">商户单号：<b>{{ order.outTradeNo }}</b>
-          <el-tag size="mini" :type="statusTagType(order.payStatus)">{{ statusText(order.payStatus) }}</el-tag>
+          <el-tag size="small" :type="statusTagType(order.payStatus)">{{ statusText(order.payStatus) }}</el-tag>
         </div>
 
         <!-- mock 渠道：一键模拟支付（走与真渠道同构的状态流转链路） -->
@@ -48,7 +48,7 @@
         </template>
 
         <div v-if="order.payStatus === 1" class="done">
-          <i class="el-icon-success" style="color:#67c23a;font-size:42px" />
+          <el-icon style="color:#67c23a;font-size:42px"><SuccessFilled /></el-icon>
           <div>支付成功{{ redirect ? '，即将跳转…' : '' }}</div>
         </div>
       </div>

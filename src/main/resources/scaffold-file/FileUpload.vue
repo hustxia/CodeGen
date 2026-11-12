@@ -8,12 +8,12 @@
       :before-upload="beforeUpload"
       :on-success="onSuccess"
       :on-error="onError">
-      <el-button size="small" type="primary" plain icon="el-icon-upload2">上传文件</el-button>
+      <el-button size="small" type="primary" plain icon="UploadFilled">上传文件</el-button>
     </el-upload>
     <div v-if="fileName" class="file-row">
-      <i class="el-icon-document"></i>
+      <el-icon><Document /></el-icon>
       <a class="file-name" :title="fileName" @click="download">{{ fileName }}</a>
-      <i class="el-icon-close remove" title="移除" @click="remove"></i>
+      <el-icon class="remove" title="移除" @click="remove"><Close /></el-icon>
     </div>
   </div>
 </template>

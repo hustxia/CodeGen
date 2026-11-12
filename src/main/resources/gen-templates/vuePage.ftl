@@ -16,7 +16,7 @@
 <#if vueQueryColumns?size gt 0>
     <!-- 筛选区 -->
     <el-card shadow="never" class="filter-card">
-      <el-form :inline="true" :model="query" @submit.native.prevent>
+      <el-form :inline="true" :model="query" @submit.prevent>
 <#list vueQueryColumns as c>
         <el-form-item <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if>>
 <#if c.isSelect || c.isRadio>
@@ -35,13 +35,13 @@
 <#elseif c.isDatetime>
           <el-date-picker v-model="query.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '请选择${c.commentLabel}')"<#else>placeholder="请选择${c.commentLabel}"</#if> style="width: 200px" />
 <#else>
-          <el-input v-model="query.${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '${c.commentLabel}')"<#else>placeholder="${c.commentLabel}"</#if> clearable @keyup.enter.native="handleSearch" />
+          <el-input v-model="query.${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '${c.commentLabel}')"<#else>placeholder="${c.commentLabel}"</#if> clearable @keyup.enter="handleSearch" />
 </#if>
         </el-form-item>
 </#list>
         <el-form-item>
-          <el-button v-hasPermi="['${permsPrefix}:query']" type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
-          <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+          <el-button v-hasPermi="['${permsPrefix}:query']" type="primary" icon="Search" @click="handleSearch">查询</el-button>
+          <el-button icon="Refresh" @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -49,23 +49,23 @@
 </#if>
     <!-- 列表 -->
     <el-card shadow="never" class="table-card">
-      <div slot="header" class="card-header">
+      <template #header><div class="card-header">
         <div class="card-title">
           <span class="title"><#if i18nEnabled?? && i18nEnabled == 1>{{ $t('crud.${className}.title', '${comment}') }}<#else>${comment}</#if></span>
           <span class="subtitle">共 {{ total }} 条</span>
         </div>
         <div class="card-actions">
 <#if genAddBtn>
-          <el-button v-hasPermi="['${permsPrefix}:add']" type="primary" icon="el-icon-plus" size="small" @click="openDialog()">新增${comment}</el-button>
+          <el-button v-hasPermi="['${permsPrefix}:add']" type="primary" icon="Plus" size="small" @click="openDialog()">新增${comment}</el-button>
 </#if>
 <#if hasExcelExport>
-          <el-button icon="el-icon-download" size="small" @click="handleExport">导出</el-button>
+          <el-button icon="Download" size="small" @click="handleExport">导出</el-button>
 </#if>
 <#if hasExcelImport>
-          <el-button icon="el-icon-upload2" size="small" @click="importVisible = true">导入</el-button>
+          <el-button icon="UploadFilled" size="small" @click="importVisible = true">导入</el-button>
 </#if>
         </div>
-      </div>
+      </div></template>
 
       <el-table
         v-loading="loading"
@@ -83,26 +83,26 @@
 <#list listColumns as c>
 <#if c.isMultiImage && fileEnabled>
         <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> width="${c.colWidth}" align="center">
-          <template slot-scope="{ row }">
+          <template #default="{ row }">
             <el-image v-if="firstImage(row.${c.javaField})" :src="firstImage(row.${c.javaField})" :preview-src-list="imageListOf(row.${c.javaField})" fit="cover" style="width: ${imageListSize}px; height: ${imageListSize}px; border-radius: 4px">
-              <div slot="error"><img src="/placeholder.svg" alt="" style="width: 100%; height: 100%; object-fit: cover" /></div>
+              <template #error><img src="/placeholder.svg" alt="" style="width: 100%; height: 100%; object-fit: cover" /></template>
             </el-image>
             <span v-else>—</span>
           </template>
         </el-table-column>
 <#elseif c.isImage && fileEnabled>
         <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> width="${c.colWidth}" align="center">
-          <template slot-scope="{ row }">
+          <template #default="{ row }">
             <el-image v-if="row.${c.javaField}" :src="row.${c.javaField}" :preview-src-list="[row.${c.javaField}]" fit="cover" style="width: ${imageListSize}px; height: ${imageListSize}px; border-radius: 4px">
-              <div slot="error"><img src="/placeholder.svg" alt="" style="width: 100%; height: 100%; object-fit: cover" /></div>
+              <template #error><img src="/placeholder.svg" alt="" style="width: 100%; height: 100%; object-fit: cover" /></template>
             </el-image>
             <span v-else>—</span>
           </template>
         </el-table-column>
 <#elseif c.isFile && fileEnabled>
         <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="${c.colWidth}" show-overflow-tooltip>
-          <template slot-scope="{ row }">
-            <el-link v-if="row.${c.javaField}" type="primary" :href="row.${c.javaField}" target="_blank" icon="el-icon-document">{{ row.${c.javaField}.split('/').pop() }}</el-link>
+          <template #default="{ row }">
+            <el-link v-if="row.${c.javaField}" type="primary" :href="row.${c.javaField}" target="_blank" icon="Document">{{ row.${c.javaField}.split('/').pop() }}</el-link>
           </template>
         </el-table-column>
 <#elseif c.hasRef>
@@ -110,8 +110,8 @@
           :formatter="(row) => refText('${c.javaField}', row.${c.javaField})" />
 <#elseif c.isSwitch>
         <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> width="${c.colWidth}" align="center">
-          <template slot-scope="{ row }">
-            <el-tag :type="row.${c.javaField} === 1 ? 'success' : 'info'" size="mini">
+          <template #default="{ row }">
+            <el-tag :type="row.${c.javaField} === 1 ? 'success' : 'info'" size="small">
               {{ row.${c.javaField} === 1 ? '启用' : '停用' }}
             </el-tag>
           </template>
@@ -137,7 +137,7 @@
         <el-table-column prop="updateTime" label="更新时间" width="170" align="center" />
 <#if genEditBtn || genDeleteBtn || hasDetail || hasFlow || genPrint>
         <el-table-column label="操作" width="${opColWidth}" fixed="right" align="center">
-          <template slot-scope="{ row }">
+          <template #default="{ row }">
 <#if hasDetail>
             <el-button type="text" @click="openDetail(row)">详情</el-button>
 </#if>
@@ -178,7 +178,7 @@
         :total="total"
         :page-sizes="[10, 20, 50]"
         :page-size="query.size"
-        :current-page.sync="query.page"
+        v-model:current-page="query.page"
         @size-change="handleSizeChange"
         @current-change="fetchList"
       />
@@ -188,7 +188,7 @@
 <#if hasDialog>
 <#assign twoColForm = (formColumns?size gt 6)>
     <!-- 新增/编辑弹窗 -->
-    <el-dialog <#if i18nEnabled?? && i18nEnabled == 1>:title="form.id ? $t('crud.${className}.editTitle', '编辑${comment}') : $t('crud.${className}.addTitle', '新增${comment}')"<#else>:title="form.id ? '编辑${comment}' : '新增${comment}'"</#if> :visible.sync="dialogVisible" width="<#if hasChild>900px<#elseif twoColForm>760px<#else>560px</#if>" top="6vh" class="form-dialog">
+    <el-dialog <#if i18nEnabled?? && i18nEnabled == 1>:title="form.id ? $t('crud.${className}.editTitle', '编辑${comment}') : $t('crud.${className}.addTitle', '新增${comment}')"<#else>:title="form.id ? '编辑${comment}' : '新增${comment}'"</#if> v-model="dialogVisible" width="<#if hasChild>900px<#elseif twoColForm>760px<#else>560px</#if>" top="6vh" class="form-dialog">
       <el-form ref="form" :model="form" :rules="rules" label-width="<#if twoColForm>96px<#else>110px</#if>">
 <#if twoColForm>
         <el-row :gutter="20">
@@ -258,13 +258,13 @@
 <#list children as child>
         <el-tab-pane <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.child.${child.varName}', '${child.comment}')"<#else>label="${child.comment}"</#if> name="${child.varName}">
           <div class="child-bar">
-            <el-button type="primary" icon="el-icon-plus" size="mini" @click="addChildRow('${child.varName}')">添加明细</el-button>
+            <el-button type="primary" icon="Plus" size="small" @click="addChildRow('${child.varName}')">添加明细</el-button>
             <span class="child-tip">主表与子表在同一事务中保存（先清后插）</span>
           </div>
-          <el-table :data="${child.varName}Rows" border size="mini" class="child-table">
+          <el-table :data="${child.varName}Rows" border size="small" class="child-table">
 <#list child.formColumns as c>
             <el-table-column <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="130">
-              <template slot-scope="{ row }">
+              <template #default="{ row }">
 <#if c.isMultiImage && fileEnabled>
                 <multi-image-upload v-model="row.${c.javaField}" />
 <#elseif c.isImage && fileEnabled>
@@ -274,19 +274,19 @@
 <#elseif c.isSwitch>
                 <el-switch v-model="row.${c.javaField}" :active-value="1" :inactive-value="0" />
 <#elseif c.isNumberCtrl>
-                <el-input-number v-model="row.${c.javaField}" controls-position="right" size="mini" style="width: 100%" />
+                <el-input-number v-model="row.${c.javaField}" controls-position="right" size="small" style="width: 100%" />
 <#elseif c.isDate>
-                <el-date-picker v-model="row.${c.javaField}" type="date" value-format="yyyy-MM-dd" size="mini" style="width: 100%" />
+                <el-date-picker v-model="row.${c.javaField}" type="date" value-format="yyyy-MM-dd" size="small" style="width: 100%" />
 <#elseif c.isDatetime>
-                <el-date-picker v-model="row.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" size="mini" style="width: 100%" />
+                <el-date-picker v-model="row.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" size="small" style="width: 100%" />
 <#else>
-                <el-input v-model="row.${c.javaField}" size="mini" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '${c.commentLabel}')"<#else>placeholder="${c.commentLabel}"</#if> />
+                <el-input v-model="row.${c.javaField}" size="small" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '${c.commentLabel}')"<#else>placeholder="${c.commentLabel}"</#if> />
 </#if>
               </template>
             </el-table-column>
 </#list>
             <el-table-column label="操作" width="<#if child.hasGrandChild>150<#else>70</#if>" align="center">
-              <template slot-scope="{ row, $index }">
+              <template #default="{ row, $index }">
 <#list child.grandChildren as gc>
                 <el-button type="text" @click="openGrandRows('${child.varName}', '${gc.varName}', row)"><#if i18nEnabled?? && i18nEnabled == 1>{{ $t('crud.${className}.gc.${gc.varName}', '${gc.comment}') }<#else>${gc.comment}</#if></el-button>
 </#list>
@@ -304,29 +304,29 @@
       </el-tabs>
 </#if>
 
-      <div slot="footer">
+      <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
-      </div>
+      </template>
     </el-dialog>
 <#if hasGrandDialog>
 
     <!-- 三级明细编辑：直接改选中行的下级数组（引用直改），保存时随主表一起提交 -->
     <el-dialog
       :title="grandTitle"
-      :visible.sync="grandVisible"
+      v-model="grandVisible"
       width="720px"
       append-to-body
     >
       <div class="child-bar">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addGrandRow">添加{{ grandTitle }}</el-button>
+        <el-button type="primary" icon="Plus" size="small" @click="addGrandRow">添加{{ grandTitle }}</el-button>
       </div>
 <#list children as child>
 <#list child.grandChildren as gc>
-      <el-table v-show="grandDialog === '${child.varName}.${gc.varName}'" :data="grandRows" border size="mini" class="child-table">
+      <el-table v-show="grandDialog === '${child.varName}.${gc.varName}'" :data="grandRows" border size="small" class="child-table">
 <#list gc.formColumns as c>
         <el-table-column <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="130">
-          <template slot-scope="{ row }">
+          <template #default="{ row }">
 <#if c.isMultiImage && fileEnabled>
             <multi-image-upload v-model="row.${c.javaField}" />
 <#elseif c.isImage && fileEnabled>
@@ -336,28 +336,28 @@
 <#elseif c.isSwitch>
             <el-switch v-model="row.${c.javaField}" :active-value="1" :inactive-value="0" />
 <#elseif c.isNumberCtrl>
-            <el-input-number v-model="row.${c.javaField}" controls-position="right" size="mini" style="width: 100%" />
+            <el-input-number v-model="row.${c.javaField}" controls-position="right" size="small" style="width: 100%" />
 <#elseif c.isDate>
-            <el-date-picker v-model="row.${c.javaField}" type="date" value-format="yyyy-MM-dd" size="mini" style="width: 100%" />
+            <el-date-picker v-model="row.${c.javaField}" type="date" value-format="yyyy-MM-dd" size="small" style="width: 100%" />
 <#elseif c.isDatetime>
-            <el-date-picker v-model="row.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" size="mini" style="width: 100%" />
+            <el-date-picker v-model="row.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" size="small" style="width: 100%" />
 <#else>
-            <el-input v-model="row.${c.javaField}" size="mini" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '${c.commentLabel}')"<#else>placeholder="${c.commentLabel}"</#if> />
+            <el-input v-model="row.${c.javaField}" size="small" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '${c.commentLabel}')"<#else>placeholder="${c.commentLabel}"</#if> />
 </#if>
           </template>
         </el-table-column>
 </#list>
         <el-table-column label="操作" width="70" align="center">
-          <template slot-scope="{ $index }">
+          <template #default="{ $index }">
             <el-button type="text" class="danger-btn" @click="grandRows.splice($index, 1)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
 </#list>
 </#list>
-      <div slot="footer">
+      <template #footer>
         <el-button @click="grandVisible = false">关闭</el-button>
-      </div>
+      </template>
     </el-dialog>
 </#if>
 </#if>
@@ -365,7 +365,7 @@
 <#if hasDetail>
     <!-- 详情抽屉（只读）。主子表：宽抽屉 + el-tabs，tab1 主表字段，tab2..N 每张明细一张只读表；
          数据复用 /with-children 一次拉全，不逐 tab 发请求 -->
-    <el-drawer <#if i18nEnabled?? && i18nEnabled == 1>:title="$t('crud.${className}.detailTitle', '${comment}详情')"<#else>title="${comment}详情"</#if> :visible.sync="detailVisible" size="<#if hasChild>62%<#else>420px</#if>">
+    <el-drawer <#if i18nEnabled?? && i18nEnabled == 1>:title="$t('crud.${className}.detailTitle', '${comment}详情')"<#else>title="${comment}详情"</#if> v-model="detailVisible" size="<#if hasChild>62%<#else>420px</#if>">
 <#if hasChild>
       <el-tabs v-model="activeDetailTab" type="card" class="detail-tabs">
         <el-tab-pane label="主表信息" name="main">
@@ -394,12 +394,12 @@
 <#else>          <span class="detail-value"><span v-if="imageListOf(detail.${c.javaField}).length"><el-image v-for="(u, i) in imageListOf(detail.${c.javaField})" :key="i" :src="u" :preview-src-list="imageListOf(detail.${c.javaField})" fit="cover" style="width: ${imageDetailSize}px; height: ${imageDetailSize}px; border-radius: 4px; margin-right: 6px" /></span><span v-else>—</span></span>
 </#if>
 <#elseif c.isImage && fileEnabled>
-<#if hasChild>            <span class="detail-value"><el-image v-if="detail.${c.javaField}" :src="detail.${c.javaField}" :preview-src-list="[detail.${c.javaField}]" fit="cover" style="width: ${imageDetailSize}px; height: ${imageDetailSize}px; border-radius: 4px"><div slot="error"><img src="/placeholder.svg" alt="" style="width: 100%; height: 100%; object-fit: cover" /></div></el-image><span v-else>—</span></span>
-<#else>          <span class="detail-value"><el-image v-if="detail.${c.javaField}" :src="detail.${c.javaField}" :preview-src-list="[detail.${c.javaField}]" fit="cover" style="width: ${imageDetailSize}px; height: ${imageDetailSize}px; border-radius: 4px"><div slot="error"><img src="/placeholder.svg" alt="" style="width: 100%; height: 100%; object-fit: cover" /></div></el-image><span v-else>—</span></span>
+<#if hasChild>            <span class="detail-value"><el-image v-if="detail.${c.javaField}" :src="detail.${c.javaField}" :preview-src-list="[detail.${c.javaField}]" fit="cover" style="width: ${imageDetailSize}px; height: ${imageDetailSize}px; border-radius: 4px"><template #error><img src="/placeholder.svg" alt="" style="width: 100%; height: 100%; object-fit: cover" /></template></el-image><span v-else>—</span></span>
+<#else>          <span class="detail-value"><el-image v-if="detail.${c.javaField}" :src="detail.${c.javaField}" :preview-src-list="[detail.${c.javaField}]" fit="cover" style="width: ${imageDetailSize}px; height: ${imageDetailSize}px; border-radius: 4px"><template #error><img src="/placeholder.svg" alt="" style="width: 100%; height: 100%; object-fit: cover" /></template></el-image><span v-else>—</span></span>
 </#if>
 <#elseif c.isFile && fileEnabled>
-<#if hasChild>            <span class="detail-value"><el-link v-if="detail.${c.javaField}" type="primary" :href="detail.${c.javaField}" target="_blank" icon="el-icon-document">{{ detail.${c.javaField}.split('/').pop() }}</el-link></span>
-<#else>          <span class="detail-value"><el-link v-if="detail.${c.javaField}" type="primary" :href="detail.${c.javaField}" target="_blank" icon="el-icon-document">{{ detail.${c.javaField}.split('/').pop() }}</el-link></span>
+<#if hasChild>            <span class="detail-value"><el-link v-if="detail.${c.javaField}" type="primary" :href="detail.${c.javaField}" target="_blank" icon="Document">{{ detail.${c.javaField}.split('/').pop() }}</el-link></span>
+<#else>          <span class="detail-value"><el-link v-if="detail.${c.javaField}" type="primary" :href="detail.${c.javaField}" target="_blank" icon="Document">{{ detail.${c.javaField}.split('/').pop() }}</el-link></span>
 </#if>
 <#elseif c.hasRef>
 <#if hasChild>            <span class="detail-value">{{ refText('${c.javaField}', detail.${c.javaField}) }}</span>
@@ -438,10 +438,10 @@
         </el-tab-pane>
 <#list children as child>
         <el-tab-pane <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.child.${child.varName}', '${child.comment}')"<#else>label="${child.comment}"</#if> name="${child.varName}">
-          <el-table :data="detailGroupRows('${child.varName}')" border size="mini" max-height="520">
+          <el-table :data="detailGroupRows('${child.varName}')" border size="small" max-height="520">
 <#list child.listColumns as c>
             <el-table-column <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="120" prop="${c.javaField}">
-              <template slot-scope="{ row }">
+              <template #default="{ row }">
 <#if c.hasRef>
                 {{ refText('${c.javaField}', row.${c.javaField}) }}
 <#elseif c.isSwitch>
@@ -476,11 +476,11 @@
 
 <#if hasExcelImport>
     <!-- 导入对话框 -->
-    <el-dialog <#if i18nEnabled?? && i18nEnabled == 1>:title="$t('crud.${className}.importTitle', '导入${comment}')"<#else>title="导入${comment}"</#if> :visible.sync="importVisible" width="480px">
+    <el-dialog <#if i18nEnabled?? && i18nEnabled == 1>:title="$t('crud.${className}.importTitle', '导入${comment}')"<#else>title="导入${comment}"</#if> v-model="importVisible" width="480px">
       <div class="import-tpl-tip">
         表头必须与模板一致。模板第 2 行是填写说明，
         <b>填写真实数据前请先删掉说明行</b>。
-        <el-button type="text" size="mini" :loading="tplLoading" @click="downloadTemplate">下载模板</el-button>
+        <el-button type="text" size="small" :loading="tplLoading" @click="downloadTemplate">下载模板</el-button>
       </div>
       <el-upload
         drag
@@ -491,7 +491,7 @@
         :on-change="handleImportChange"
         accept=".xlsx"
       >
-        <i class="el-icon-upload" />
+        <el-icon><Upload /></el-icon>
         <div class="el-upload__text">把 xlsx 拖到这里，或<em>点击选择</em></div>
       </el-upload>
       <div v-if="importResult" class="import-result">
@@ -503,7 +503,7 @@
         <div v-if="importResult.failedCount" class="import-fail-box">
           <div class="import-fail-head">
             <span>失败明细（显示前 20 条）</span>
-            <el-button type="text" size="mini" @click="downloadFailed">下载全部明细</el-button>
+            <el-button type="text" size="small" @click="downloadFailed">下载全部明细</el-button>
           </div>
           <div v-for="(f, i) in importResult.failed.slice(0, 20)" :key="i" class="import-fail">
             第 {{ f.row }} 行：{{ f.msg }}
@@ -513,17 +513,17 @@
           </div>
         </div>
       </div>
-      <div slot="footer">
+      <template #footer>
         <el-button @click="importVisible = false">关闭</el-button>
         <el-button type="primary" :loading="importing" @click="submitImport">开始导入</el-button>
-      </div>
+      </template>
     </el-dialog>
 </#if>
 <#if hasFlow>
     <!-- 提交/审批/驳回的确认框，顺便收一句意见 -->
     <el-dialog
       :title="flowAction === 'submit' ? '提交审批' : (flowAction === 'reject' ? '驳回' : '审批通过')"
-      :visible.sync="flowDialogVisible"
+      v-model="flowDialogVisible"
       width="420px"
       append-to-body
     >
@@ -535,13 +535,13 @@
         show-word-limit
         :placeholder="flowAction === 'reject' ? '请填写驳回理由' : '审批意见（选填）'"
       />
-      <div slot="footer">
+      <template #footer>
         <el-button @click="flowDialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="flowSubmitting" @click="submitFlow">确定</el-button>
-      </div>
+      </template>
     </el-dialog>
     <!-- 审批记录抽屉：流程流水是只追加的，看的就是「谁在什么时候把单子推到了哪一步」 -->
-    <el-drawer title="${comment}审批记录" :visible.sync="flowVisible" size="480px">
+    <el-drawer title="${comment}审批记录" v-model="flowVisible" size="480px">
       <div v-loading="flowLoading" class="detail-body">
         <div v-if="!flowRecords.length" class="flow-empty">还没有流转记录</div>
         <el-timeline v-else>

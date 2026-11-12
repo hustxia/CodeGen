@@ -385,15 +385,16 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                     "frontend", force, vo, counter);
             // V6.0 micro：前端请求走网关（端口=服务端口+1），apiBase 不带 /api 前缀（网关按模块路由）
             int proxyPort = micro ? serverPort + 1 : serverPort;
-            write(frontendRoot, "vue.config.js", frontendVueConfig(webPort, proxyPort,
+            write(frontendRoot, "vite.config.js", frontendViteConfig(webPort, proxyPort,
                     StringUtils.hasText(dto.getGatewayPrefix()) ? dto.getGatewayPrefix().trim() : "demo",
                     fileEnabled),
                     "frontend", force, vo, counter);
-            write(frontendRoot, "babel.config.js", frontendBabelConfig(), "frontend", force, vo, counter);
             write(frontendRoot, ".env.development",
                     frontendEnvDev(proxyPort), "frontend", force, vo, counter);
             write(frontendRoot, ".env.production", frontendEnvProd(), "frontend", force, vo, counter);
-            write(frontendRoot, "public/index.html",
+            // V9.0：Vite 的入口 HTML 必须在工程根目录（vue-cli 时代的 public/index.html
+            // 会被 Vite 原样拷进 dist 而不当入口，直接 vite build 报 "Could not resolve entry module"）
+            write(frontendRoot, "index.html",
                     frontendIndexHtml(appName, appLogo, themeColor, htmlLang, htmlDir, i18nOn),
                     "frontend", force, vo, counter);
             // V6.8 素材链路：产物自带占位图，图片列 onerror / el-image error 槽统一指向它，
@@ -444,7 +445,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             Path mobileRoot = resolveRoot(dto.getFrontendRoot(), outputProperties.getFrontendRoot(),
                     frontendModule + "-mobile");
             vo.setMobilePath(mobileRoot.toString());
-            // micro 时 H5 代理指向网关（端口=服务端口+1），与 PC vue.config.js 同口径
+            // micro 时 H5 代理指向网关（端口=服务端口+1），与 PC vite.config.js 同口径
             int apiTarget = micro ? serverPort + 1 : serverPort;
             String gwPrefix = StringUtils.hasText(dto.getGatewayPrefix())
                     ? dto.getGatewayPrefix().trim() : "demo";
@@ -4140,7 +4141,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    <el-card class=\"login-card\">\n"
                 + logoTag
                 + "      <h2>" + appName + "</h2>\n"
-                + "      <el-form @submit.native.prevent=\"doLogin\">\n"
+                + "      <el-form @submit.prevent=\"doLogin\">\n"
                 + "        <el-form-item>\n"
                 + "          <el-input v-model=\"form.username\" placeholder=\"用户名\" />\n"
                 + "        </el-form-item>\n"
@@ -4149,7 +4150,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        </el-form-item>\n"
                 + "        <el-form-item>\n"
                 + "          <div class=\"captcha-row\">\n"
-                + "            <el-input v-model=\"form.captchaAnswer\" placeholder=\"计算结果\" @keyup.enter.native=\"doLogin\" />\n"
+                + "            <el-input v-model=\"form.captchaAnswer\" placeholder=\"计算结果\" @keyup.enter=\"doLogin\" />\n"
                 + "            <img v-if=\"captchaImage\" :src=\"captchaImage\" class=\"captcha-img\" title=\"点击刷新\" @click=\"loadCaptcha\" />\n"
                 + "          </div>\n"
                 + "        </el-form-item>\n"
@@ -4403,32 +4404,32 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "  \"name\": \"" + module + "\",\n"
                 + "  \"version\": \"1.0.0\",\n"
                 + "  \"private\": true,\n"
+                + "  \"type\": \"module\",\n"
                 + "  \"description\": \"" + project + " 前端（由 codegen-server 脚手架生成）\",\n"
                 + "  \"scripts\": {\n"
-                + "    \"serve\": \"vue-cli-service serve\",\n"
-                + "    \"dev\": \"vue-cli-service serve\",\n"
-                + "    \"build\": \"vue-cli-service build\"\n"
+                + "    \"dev\": \"vite\",\n"
+                + "    \"build\": \"vite build\",\n"
+                + "    \"preview\": \"vite preview\"\n"
                 + "  },\n"
                 + "  \"dependencies\": {\n"
                 + "    \"axios\": \"^1.6.8\",\n"
-                + "    \"core-js\": \"^3.36.1\",\n"
-                + "    \"element-ui\": \"^2.15.14\",\n"
-                + "    \"vue\": \"^2.7.16\",\n"
-                + "    \"vue-router\": \"^3.6.5\",\n"
-                + "    \"vuex\": \"^3.6.2\""
+                + "    \"@element-plus/icons-vue\": \"^2.3.1\",\n"
+                + "    \"element-plus\": \"^2.7.0\",\n"
+                + "    \"vue\": \"^3.4.21\",\n"
+                + "    \"vue-router\": \"^4.3.0\",\n"
+                + "    \"vuex\": \"^4.1.0\""
                 + qrcodeDep + "\n"
                 + "  },\n"
                 + "  \"devDependencies\": {\n"
-                + "    \"@vue/cli-plugin-babel\": \"~5.0.8\",\n"
-                + "    \"@vue/cli-service\": \"~5.0.8\",\n"
-                + "    \"vue-template-compiler\": \"^2.7.16\"\n"
+                + "    \"@vitejs/plugin-vue\": \"^5.0.4\",\n"
+                + "    \"vite\": \"^5.2.0\"\n"
                 + "  }\n"
                 + "}\n";
     }
 
-    private String frontendVueConfig(int webPort, int serverPort, String gatewayPrefix, boolean fileEnabled) {
-        // api.js 的路径带 /api/{gatewayPrefix}（给网关预留），本地直连后端没有网关，
-        // 代理必须把这段前缀剥掉，否则后端收到 /api/demo/xxx 全部 404
+    private String frontendViteConfig(int webPort, int serverPort, String gatewayPrefix, boolean fileEnabled) {
+        // V9.0：Vite 配置（替代 vue-cli 的 vue.config.js）。
+        // dev 代理把 /dev-api 前缀剥掉；history 路由回退由 Vite SPA 默认处理（无需 historyApiFallback）。
         // V6.6 文件能力包：图片直链 /uploads/** 在后端，dev 必须单独代理（不剥任何前缀）
         // V6.8 素材链路：/img/** 是产物自带的静态素材（resources/static/img），dev 必须代理；
         // 漏了这一条整页图片都会落到 dev server 自己身上变成 404 → 全站占位图
@@ -4442,20 +4443,24 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "        target: 'http://127.0.0.1:" + serverPort + "',\n"
                 + "        changeOrigin: true\n"
                 + "      }" : "";
-        return "const { defineConfig } = require('@vue/cli-service')\n\n"
-                + "module.exports = defineConfig({\n"
-                + "  transpileDependencies: true,\n"
-                + "  lintOnSave: false,\n"
-                + "  devServer: {\n"
+        return "import { defineConfig } from 'vite'\n"
+                + "import vue from '@vitejs/plugin-vue'\n"
+                + "import { fileURLToPath, URL } from 'node:url'\n\n"
+                + "export default defineConfig({\n"
+                + "  plugins: [vue()],\n"
+                // V9.0：路由/组件用 @/ 别名（vue-cli 隐式内置，Vite 必须显式声明，否则 build 报 Rollup resolve 失败）
+                + "  resolve: {\n"
+                + "    alias: {\n"
+                + "      '@': fileURLToPath(new URL('./src', import.meta.url))\n"
+                + "    }\n"
+                + "  },\n"
+                + "  server: {\n"
                 + "    port: " + webPort + ",\n"
-                + "    // 缺了它，前端 history 路由刷新页面会 404\n"
-                + "    historyApiFallback: true,\n"
                 + "    proxy: {\n"
                 + "      '/dev-api': {\n"
                 + "        target: 'http://127.0.0.1:" + serverPort + "',\n"
                 + "        changeOrigin: true,\n"
-                + "        // http-proxy-middleware 多条 pathRewrite 不保证顺序执行，合并成一条正则\n"
-                + "        pathRewrite: { '^/dev-api(/api/" + gatewayPrefix + ")?': '' }\n"
+                + "        rewrite: (p) => p.replace(/^\\/dev-api(\\/api\\/" + gatewayPrefix + ")?/, '')\n"
                 + "      }" + imgProxy + uploadsProxy + "\n"
                 + "    }\n"
                 + "  }\n"
@@ -4473,14 +4478,14 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     private String frontendEnvDev(int serverPort) {
         return "# 开发环境\n"
                 + "ENV = 'development'\n\n"
-                + "VUE_APP_BASE_API = '/dev-api'\n"
-                + "VUE_APP_PROXY_TARGET = 'http://127.0.0.1:" + serverPort + "'\n";
+                + "VITE_APP_BASE_API = '/dev-api'\n"
+                + "VITE_APP_PROXY_TARGET = 'http://127.0.0.1:" + serverPort + "'\n";
     }
 
     private String frontendEnvProd() {
         return "# 生产环境\n"
                 + "ENV = 'production'\n\n"
-                + "VUE_APP_BASE_API = '/prod-api'\n";
+                + "VITE_APP_BASE_API = '/prod-api'\n";
     }
 
     private String frontendIndexHtml(String appName, String appLogo, String themeColor,
@@ -4494,7 +4499,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         // favicon 必须指向真的存在的文件：空 Logo 回落 placeholder.svg（脚手架必写），
         // 历史上写死的 logo.png 从来没有被生成过，等于每个新工程都挂一个 404
         String favicon = appLogo == null || appLogo.isBlank()
-                ? com.codegen.util.GenTemplateModel.FALLBACK_APP_LOGO : appLogo;
+                ? "/" + com.codegen.util.GenTemplateModel.FALLBACK_APP_LOGO : appLogo;
         String rtlCss = i18nOn
                 ? "  <style>[dir='rtl'] .header-right { flex-direction: row-reverse; }"
                 + "[dir='rtl'] .content, [dir='rtl'] .el-table, [dir='rtl'] .el-form-item__label { direction: rtl; text-align: right; }"
@@ -4515,6 +4520,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "<body>\n"
                 + "  <noscript>请启用 JavaScript 后继续访问。</noscript>\n"
                 + "  <div id=\"app\"></div>\n"
+                // V9.0：Vite 靠这个 module script 找应用入口（webpack 时代由 vue-cli 插件自动注入）
+                + "  <script type=\"module\" src=\"/src/main.js\"></script>\n"
                 + "</body>\n"
                 + "</html>\n";
     }
@@ -4523,7 +4530,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         return frontendMainJs(false);
     }
 
-    /** V8.0：开关打开时全局注册 $t / $setLocale 与切换器组件；关闭时内容零 diff */
+    /** V9.0：Vue 3 createApp；开关打开时全局注册 $t / $setLocale 与切换器组件 */
     private String frontendMainJs(boolean i18nOn) {
         // V6.4：注册 v-hasPermi 指令——perms 与后端权限点校验同源（登录响应下发），前后端一致
         String i18nImports = i18nOn
@@ -4531,27 +4538,31 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "import LanguageSwitch from './components/LanguageSwitch.vue'\n"
                 : "";
         String i18nInit = i18nOn
-                ? "// V8.0 产物国际化：Vue.observable 的 state 让所有 $t 调用点响应式重渲染\n"
-                + "Vue.component('LanguageSwitch', LanguageSwitch)\n"
-                + "Vue.prototype.$t = t\n"
-                + "Vue.prototype.$setLocale = setLocale\n"
-                + "Vue.prototype.$i18nLocales = availableLocales()\n"
-                + "Vue.prototype.$i18n = i18n\n"
+                ? "// V9.0 产物国际化：reactive 的 state 让所有 $t 调用点响应式重渲染\n"
+                + "app.component('LanguageSwitch', LanguageSwitch)\n"
+                + "app.config.globalProperties.$t = t\n"
+                + "app.config.globalProperties.$setLocale = setLocale\n"
+                + "app.config.globalProperties.$i18nLocales = availableLocales()\n"
+                + "app.config.globalProperties.$i18n = i18n\n"
                 + "window.$t = t\n\n"
                 : "";
-        return "import Vue from 'vue'\n"
-                + "import ElementUI from 'element-ui'\n"
-                + "import 'element-ui/lib/theme-chalk/index.css'\n"
+        return "import { createApp } from 'vue'\n"
+                + "import ElementPlus from 'element-plus'\n"
+                + "import 'element-plus/dist/index.css'\n"
+                + "import * as ElementPlusIconsVue from '@element-plus/icons-vue'\n"
                 + "import App from './App.vue'\n"
                 + "import router from './router'\n"
                 + "import store from './store'\n"
                 + i18nImports + "\n"
-                + "Vue.use(ElementUI, { size: 'small' })\n"
-                + "Vue.config.productionTip = false\n\n"
+                + "const app = createApp(App)\n"
+                + "for (const [key, component] of Object.entries(ElementPlusIconsVue)) {\n"
+                + "  app.component(key, component)\n"
+                + "}\n"
+                + "app.use(ElementPlus, { size: 'small' })\n"
                 + i18nInit
                 + "// V6.4 按钮级权限：v-hasPermi=\"['demo_fee:add']\"，命中任一即显示；超管 *:*:* 直通\n"
-                + "Vue.directive('hasPermi', {\n"
-                + "  inserted(el, binding) {\n"
+                + "app.directive('hasPermi', {\n"
+                + "  mounted(el, binding) {\n"
                 + "    let perms = []\n"
                 + "    try { perms = JSON.parse(localStorage.getItem('perms') || '[]') } catch (e) { perms = [] }\n"
                 + "    const need = binding.value || []\n"
@@ -4562,11 +4573,9 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    }\n"
                 + "  }\n"
                 + "})\n\n"
-                + "new Vue({\n"
-                + "  router,\n"
-                + "  store,\n"
-                + "  render: h => h(App)\n"
-                + "}).$mount('#app')\n";
+                + "app.use(router)\n"
+                + "app.use(store)\n"
+                + "app.mount('#app')\n";
     }
 
     private String frontendAppVue() {
@@ -4593,9 +4602,9 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
     private String frontendRequestJs() {
         return "import axios from 'axios'\n"
-                + "import { Message } from 'element-ui'\n\n"
+                + "import { ElMessage } from 'element-plus'\n\n"
                 + "const service = axios.create({\n"
-                + "  baseURL: process.env.VUE_APP_BASE_API,\n"
+                + "  baseURL: import.meta.env.VITE_APP_BASE_API,\n"
                 + "  timeout: 15000\n"
                 + "})\n\n"
                 + "service.interceptors.request.use(\n"
@@ -4615,7 +4624,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    }\n"
                 + "    const res = response.data\n"
                 + "    if (res.code !== 0 && res.code !== 200) {\n"
-                + "      Message({ message: res.msg || '请求失败', type: 'error', duration: 5000 })\n"
+                + "      ElMessage({ message: res.msg || '请求失败', type: 'error', duration: 5000 })\n"
                 + "      return Promise.reject(new Error(res.msg || '请求失败'))\n"
                 + "    }\n"
                 + "    return res\n"
@@ -4624,10 +4633,10 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "    const resp = error.response\n"
                 + "    if (resp && resp.status === 401) {\n"
                 + "      localStorage.removeItem('token')\n"
-                + "      window.location.href = '/#/login'\n"
+                + "      window.location.href = '/login'\n"
                 + "      return Promise.reject(new Error('登录状态已失效'))\n"
                 + "    }\n"
-                + "    Message({ message: (resp && resp.data && resp.data.msg) || error.message, type: 'error', duration: 5000 })\n"
+                + "    ElMessage({ message: (resp && resp.data && resp.data.msg) || error.message, type: 'error', duration: 5000 })\n"
                 + "    return Promise.reject(error)\n"
                 + "  }\n"
                 + ")\n\n"
@@ -4707,8 +4716,16 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         write(frontendRoot, "src/utils/i18n.js",
                 loadScaffoldResource("scaffold-i18n/i18n.js").replace("__DEFAULT_LOCALE__", defaultLocale),
                 "frontend", force, vo, counter);
+        // V8.1：i18n 纯函数核心（零依赖），与 i18n.js 同目录，随产物一起写出，供单测覆盖
+        write(frontendRoot, "src/utils/i18n-core.js",
+                loadScaffoldResource("scaffold-i18n/i18n-core.js"),
+                "frontend", force, vo, counter);
         write(frontendRoot, "src/components/LanguageSwitch.vue",
                 loadScaffoldResource("scaffold-i18n/LanguageSwitch.vue"),
+                "frontend", force, vo, counter);
+        // V8.1：翻译贡献校验脚本，随产物写出到 scripts/（CONTRIBUTING 引用的命令即此）
+        write(frontendRoot, "scripts/check-locale-keys.mjs",
+                loadScaffoldResource("scaffold-i18n/check-locale-keys.mjs"),
                 "frontend", force, vo, counter);
         log.info("[I18nScaffold] 生成 {} 个语言包，默认语言 {}，词库 {} 键",
                 locales.size(), defaultLocale, I18nCatalog.totalKeys());
@@ -4736,7 +4753,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         return "<template>\n"
                 + "  <div class=\"home\">\n"
                 + "    <el-card shadow=\"never\">\n"
-                + "      <div slot=\"header\">" + project + " 已就绪</div>\n"
+                + "      <template #header>" + project + " 已就绪</template>\n"
                 + "      <p>这是一个由 codegen-server 生成的空工程。</p>\n"
                 + "      <p>下一步：在平台的「代码生成」里导入表配置，生成页面后会自动落到 src/views 下。</p>\n"
                 + "      <el-button type=\"primary\" size=\"small\" @click=\"ping\">测试后端连通</el-button>\n"
@@ -4772,13 +4789,11 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     private String frontendRouterJs() {
-        return "import Vue from 'vue'\n"
-                + "import VueRouter from 'vue-router'\n"
+        return "import { createRouter, createWebHistory } from 'vue-router'\n"
                 + "import Layout from '@/layout/index.vue'\n"
                 // gen-routes.js 由 /gen/menu/route-sync 重建（系统 → 业务域 → 页面三级）；
                 // 侧边栏菜单树从 $router.options.routes 推导，不把它合进来菜单永远是空白
                 + "import genRoutes from './gen-routes'\n\n"
-                + "Vue.use(VueRouter)\n\n"
                 + "const routes = [\n"
                 + "  {\n"
                 + "    path: '/login',\n"
@@ -4801,7 +4816,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "  },\n"
                 + "  ...genRoutes\n"
                 + "]\n\n"
-                + "const router = new VueRouter({\n"
+                + "const router = createRouter({\n"
+                + "  history: createWebHistory(),\n"
                 + "  routes\n"
                 + "})\n\n"
                 + "// 未登录一律踢到 /login；401 时 request.js 会清 token 并跳这里\n"
@@ -4817,10 +4833,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     private String frontendStoreJs() {
-        return "import Vue from 'vue'\n"
-                + "import Vuex from 'vuex'\n\n"
-                + "Vue.use(Vuex)\n\n"
-                + "export default new Vuex.Store({\n"
+        return "import { createStore } from 'vuex'\n\n"
+                + "export default createStore({\n"
                 + "  state: {\n"
                 + "    user: null\n"
                 + "  },\n"
@@ -4846,7 +4860,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
     private String frontendReadme(String project, String module, int webPort, int serverPort) {
         return "# " + project + " 前端（" + module + "）\n\n"
-                + "Vue 2.7 + Element UI，由 codegen-server 脚手架生成。\n\n"
+                + "Vue 3 + Element Plus，由 codegen-server 脚手架生成。\n\n"
                 + "## 快速开始\n\n"
                 + "```bash\n"
                 + "npm install\n"
@@ -4854,7 +4868,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "```\n\n"
                 + "访问 `http://127.0.0.1:" + webPort + "`，`/dev-api` 已代理到后端 `http://127.0.0.1:" + serverPort + "`。\n\n"
                 + "## 已内置\n\n"
-                + "- `vue.config.js` 的 `historyApiFallback: true`（否则刷新页面 404）\n"
+                + "- `vite.config.js` 内置 SPA history 回退（刷新页面不会 404）\n"
                 + "- `utils/request.js` 统一注入 token、按 `code` 判成败、401 回登录页\n"
                 + "- `layout/index.vue` 侧边栏骨架\n";
     }
@@ -4960,8 +4974,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             items.add(fileItem("frontend.packageJson", "前端 package.json", "frontend", pkgJson,
                     "在前端工程根创建 package.json"));
 
-            Path vueConfig = findFirst(frontend, "vue.config.js", 3);
-            items.add(fileItem("frontend.vueConfig", "vue.config.js", "frontend", vueConfig,
+            Path vueConfig = findFirst(frontend, "vite.config.js", 3);
+            items.add(fileItem("frontend.vueConfig", "vite.config.js", "frontend", vueConfig,
                     "需要 devServer 端口与 /dev-api 代理"));
             if (vueConfig != null) {
                 String text = readQuietly(vueConfig);
