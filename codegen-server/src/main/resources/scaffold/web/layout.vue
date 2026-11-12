@@ -13,13 +13,13 @@
           :class="{ 'is-active': isSysActive(sys), 'is-open': panelSys && panelSys.path === sys.path }"
           @click="toggleSys(sys)"
         >
-          <i class="rail-icon" :class="sysIcon(i)"></i>
+          <el-icon class="rail-icon"><component :is="sysIcon(i)" /></el-icon>
           <span class="rail-label">{{ shortTitle(sys.title) }}</span>
         </div>
       </div>
       <div class="rail-list rail-foot">
         <div class="rail-item" :class="{ 'is-active': $route.path === '/home' }" @click="go('/home')">
-          <i class="rail-icon el-icon-s-home"></i>
+          <el-icon class="rail-icon"><HomeFilled /></el-icon>
           <span class="rail-label">{{ homeLabel }}</span>
         </div>
       </div>
@@ -41,7 +41,7 @@
         >
           <span class="group-name">{{ grp.title }}</span>
           <span class="group-count">{{ grp.children.length || 1 }}</span>
-          <i class="el-icon-arrow-right group-arrow"></i>
+          <el-icon class="group-arrow"><ArrowRight /></el-icon>
         </div>
       </div>
     </div>
@@ -128,12 +128,12 @@ function buildMenu(routes, parentPath) {
 }
 
 const ICONS = [
-  'el-icon-s-platform',
-  'el-icon-s-cooperation',
-  'el-icon-s-shop',
-  'el-icon-s-data',
-  'el-icon-s-check',
-  'el-icon-s-tools'
+  'Platform',
+  'Cooperation',
+  'Shop',
+  'DataAnalysis',
+  'Select',
+  'Setting'
 ]
 
 export default {

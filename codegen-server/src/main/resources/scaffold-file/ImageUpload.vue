@@ -12,13 +12,13 @@
       :style="{width: width, height: height}"
       class="image-box">
       <img v-if="innerUrl" :src="resolvedUrl" class="preview" @error="onImgError">
-      <i v-else class="el-icon-plus add-icon"></i>
+      <el-icon v-else class="add-icon"><Plus /></el-icon>
       <div v-if="innerUrl" class="mask" @click.prevent>
-        <i class="el-icon-zoom-in" title="预览" @click.stop="viewer = true"></i>
-        <i class="el-icon-delete" title="移除" @click.stop="remove"></i>
+        <el-icon title="预览" @click.stop="viewer = true"><ZoomIn /></el-icon>
+        <el-icon title="移除" @click.stop="remove"><Delete /></el-icon>
       </div>
     </el-upload>
-    <el-dialog :visible.sync="viewer" append-to-body title="图片预览" width="720px">
+    <el-dialog v-model="viewer" append-to-body title="图片预览" width="720px">
       <img :src="resolvedUrl" style="width: 100%" alt="预览">
     </el-dialog>
   </div>

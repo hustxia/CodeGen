@@ -1,0 +1,87 @@
+name: i18n contract gate
+
+# V8.1 质量门禁：固化 i18n 双轨制契约
+#   1) vuePage.ftl 快照契约（Java/Freemarker 离线渲染，不依赖 Spring/Maven/DB）
+#      - OFF（i18nEnabled 缺失）→ 输出不得含 $t(
+#      - ON （i18nEnabled=1）  → 输出必须含 $t(
+#      - 零 diff：ON 去 i18n 还原后必须与 OFF 逐字节相等（i18n 只是纯包裹）
+#   2) i18n-core 回落链单测（vitest，覆盖 resolveText 回落 + interpolate + RTL）
+# 任一任务失败即阻断合并。详见 ROADMAP.md V8.1。
+
+on:
+  push:
+    branches: [ "main", "master", "develop" ]
+  pull_request:
+    branches: [ "main", "master", "develop" ]
+
+permissions:
+  contents: read
+
+jobs:
+  backend-ftl-snapshot:
+    name: vuePage.ftl i18n 快照契约 (Java/Freemarker)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Download Freemarker 2.3.32
+        working-directory: scripts/i18n_snapshot
+        run: |
+          curl -sSL -o freemarker.jar https://repo1.maven.org/maven2/freemarker/freemarker/2.3.32/freemarker-2.3.32.jar
+          ls -l freemarker.jar
+
+      - name: Compile snapshot contract
+        working-directory: scripts/i18n_snapshot
+        run: javac -cp freemarker.jar -d . VuePageI18nContract.java
+
+      - name: Run snapshot contract (9 模式 OFF/ON 零 diff)
+        working-directory: scripts/i18n_snapshot
+        env:
+          FTL_DIR: ${{ github.workspace }}/src/main/resources/gen-templates
+        run: java -Dftl.dir="$FTL_DIR" -cp "freemarker.jar:." i18n_snapshot.VuePageI18nContract
+
+  frontend-i18n-core:
+    name: i18n-core 回落链单测 (vitest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: codegen-web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: codegen-web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run i18n-core unit tests
+        run: npx vitest run tests/i18n-core.test.mjs
+
+  gate:
+    name: i18n 契约门禁汇总
+    if: always()
+    needs: [ backend-ftl-snapshot, frontend-i18n-core ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 汇总结果
+        run: |
+          echo "backend-ftl-snapshot : ${{ needs.backend-ftl-snapshot.result }}"
+          echo "frontend-i18n-core   : ${{ needs.frontend-i18n-core.result }}"
+          if [ "${{ needs.backend-ftl-snapshot.result }}" != "success" ] || [ "${{ needs.frontend-i18n-core.result }}" != "success" ]; then
+            echo "::error::存在未通过的 i18n 契约任务，已阻断合并"
+            exit 1
+          fi
+          echo "✅ 全部 i18n 契约通过"
