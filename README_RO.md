@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Ce este acesta
 
 CodeGen este o fabrică de cod „condusă de tabele”. Aduceți tabelele dvs. de business (prin import din baza de date sau lipind DDL), configurați câmpurile și comutatoarele de generare, apoi faceți clic pe „Generate” — acesta produce backend-ul Entity/Mapper/Service/Controller/DTO/VO, front-end-ul `api.js` și paginile Vue, meniurile și rutele, până la paginile de tipărire A4 și scheletele de teste de integrare, și le scrie în siguranță în proiectul țintă.
@@ -258,7 +267,8 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 | V7.1 | Îmbunătățire seed-data AI (AI deține semantica, regulile dețin structura) | V7.1 (42 linii), 5ca6e72 |
 | V7.2 | Livrabile SQL scrise în `db/` după pipeline reușit | eebff88 |
 | **V7.3** | **Încredere livrare: teste artefacte compilate auto-verificate / ieșire unică livrare SQL / recomandări AI per tabel** | **V7.3 (138 linii)** |
-| **V7.4** | Livrare repetabilă: implementabil dintr-o bază de date goală, fiecare commit garantat rulabil | **Versiunea curentă** |
+| **V7.4** | Livrare repetabilă: implementabil dintr-o bază de date goală, fiecare commit garantat rulabil | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Versiunea curentă** |
 
 ---
 
@@ -266,7 +276,7 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 
 ## 13. Starea proiectului
 
-- Linia de versiune planificată curentă a ajuns la **V7.3** (capacitățile continuă să evolueze: modelare AI, îmbunătățire seed-data, sistem de pachete de capacități etc.).
+- Linia de versiune planificată curentă a ajuns la **V8.0** (capacitățile continuă să evolueze: modelare AI, îmbunătățire seed-data, sistem de pachete de capacități etc.).
 - Un proiect demo însoțitor `demo_admin` (backend 8140 / frontend 9040) acoperă scenariile arbore / CRUD / stăpân-detail / doar-citire / tipărire și rulează independent pentru verificare.
 - Ambele depozite sunt găzduite pe Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

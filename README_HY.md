@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Ինչ է սա
 
 CodeGen-ը "աղյուսակներով ղեկավարվող" կոդ գործարան է։ Բերեք ձեր բիզնես աղյուսակները (տվյալների բազայից ներմուծմամբ կամ DDL տեղադրելով), կարգավորեք դաշտերը և գեներացիայի անջատիչները, ապա սեղմեք "Գեներացնել" — այնուհետև ստեղծում է back-end Entity/Mapper/Service/Controller/DTO/VO, front-end `api.js` և Vue էջեր, մենյուներ և երթուղիներ, նույնիսկ A4 տպագրության էջեր և ինտեգրացիոն թեստի կմախքներ, և ամեն ինչ անվտանգ գրում է ձեր նպատակային նախագծի մեջ։
@@ -114,7 +123,10 @@ Back-end դեֆոլտ պորտ **8120**, front-end պորտ **9530**. Դեֆոլ
 
 ## 11. Նախագծի կարգավիճակ
 
-- Ընթացիկ պլանավորված տարբերակի գիծը հասել է **V7.3**.
+> **Version History · V8.0**
+> Full i18n for generated applications (including menus), 206 languages — `7d57aea`.
+
+- Ընթացիկ պլանավորված տարբերակի գիծը հասել է **V8.0**.
 - Երկու պահեստներն էլ հոսթվում են Gitee-ում: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Հեղինակ

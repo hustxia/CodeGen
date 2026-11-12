@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Co to je
 
 CodeGen je "tabulkami řízená" kódová továrna. Přiveďte své obchodní tabulky (importem z databáze nebo vložením DDL), nakonfigurujte pole a přepínače generování a klikněte na "Generovat" — pak vygeneruje backendové Entity/Mapper/Service/Controller/DTO/VO, frontendové `api.js` a Vue stránky, menu a routy, dokonce i A4 tiskové stránky a skeleton integračních testů a bezpečně je zapíše do vašeho cílového projektu.
@@ -261,7 +270,8 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 | V7.1 | AI vylepšení seed dat (AI vlastní sémantiku, pravidla vlastní strukturu) | V7.1 (42 řádků), 5ca6e72 |
 | V7.2 | SQL doručené objekty zapsané do `db/` po úspěšné pipeline | eebff88 |
 | **V7.3** | **Důvěryhodnost doručení: autokontrola kompilované artefakt testy / jednotný SQL výstup doručení / tabulkami řízená AI doporučení** | **V7.3 (138 řádků)** |
-| **V7.4** | Opakovatelné doručení: nasaditelné z prázdné databáze, každý commit zaručeně spustitelný | **Aktuální verze** |
+| **V7.4** | Opakovatelné doručení: nasaditelné z prázdné databáze, každý commit zaručeně spustitelný | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Aktuální verze** |
 
 ---
 
@@ -269,7 +279,7 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 
 ## 13. Stav projektu
 
-- Aktuální plánovaná verzní řada dosáhla **V7.3** (kapacity se neustále iterují: AI modelování, vylepšení seed dat, systém balíčků schopností atd.).
+- Aktuální plánovaná verzní řada dosáhla **V8.0** (kapacity se neustále iterují: AI modelování, vylepšení seed dat, systém balíčků schopností atd.).
 - Doprovodný demo projekt `demo_admin` (backend 8140 / frontend 9040) pokrývá scénáře strom / CRUD / master-detail / jen pro čtení / tisk a běží samostatně pro ověření.
 - Oba repozitáře jsou hostovány na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

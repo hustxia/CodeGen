@@ -267,7 +267,8 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | V7.1 | Seed-data AI enhancement (AI owns semantics, rules own structure) | V7.1 (42 lines), 5ca6e72 |
 | V7.2 | SQL deliverables written to `db/` after successful pipeline | eebff88 |
 | **V7.3** | **Delivery trustworthiness: self-check compiled artifact tests / unified SQL delivery outlet / per-table AI recommendations** | **V7.3 (138 lines)** |
-| **V7.4** | Repeatable delivery: deployable from an empty database, every commit guaranteed runnable | **Current version** |
+| **V7.4** | Repeatable delivery: deployable from an empty database, every commit guaranteed runnable | — |
+| **V8.0** | Full i18n for generated applications (including menus), 206 languages worldwide | **Current version** |
 
 ---
 
@@ -275,7 +276,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ## 13. Project Status
 
-- The current planned version line has reached **V7.3** (capabilities keep iterating: AI modeling, seed-data enhancement, capability-pack system, etc.).
+- The current planned version line has reached **V8.0** (capabilities keep iterating: AI modeling, seed-data enhancement, capability-pack system, etc.).
 - A companion demo project `demo_admin` (backend 8140 / frontend 9040) covers tree / CRUD / master-detail / read-only / print scenarios and runs standalone for verification.
 - Both repositories are hosted on Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

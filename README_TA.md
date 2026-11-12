@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. இது என்ன
 
 CodeGen என்பது "அட்டவணைகளால் இயக்கப்படும்" ஒரு குறியீடு தொழிற்சாலை. உங்கள் வணிக அட்டவணைகளை உள்ளே கொண்டு வாருங்கள் (தரவுத்தள இறக்குமதி மூலம் அல்லது ஒரு DDL ஐ ஒட்டுவதன் மூலம்), புலங்கள் மற்றும் உருவாக்க சுவிட்சுகளை கட்டமைக்கவும், பின்னர் "உருவாக்கு" என்பதை கிளிக் செய்யவும் — பின்னர் அது பின் இறுதி Entity/Mapper/Service/Controller/DTO/VO, முன் இறுதி `api.js` மற்றும் Vue பக்கங்கள், மெனுக்கள் மற்றும் வழிகள், A4 அச்சிடும் பக்கங்கள் மற்றும் ஒருங்கிணைப்பு சோதனை எலும்புக்கூடுகள் கூட உருவாக்குகிறது, மற்றும் அனைத்தையும் உங்கள் இலக்கு திட்டத்தில் பாதுகாப்பாக எழுதுகிறது.
@@ -121,7 +130,10 @@ npm run serve
 
 ## 11. திட்ட நிலை
 
-- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V7.3** ஐ அடைந்தது.
+> **Version History · V8.0**
+> Full i18n for generated applications (including menus), 206 languages — `7d57aea`.
+
+- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V8.0** ஐ அடைந்தது.
 - இரண்டு களஞ்சியங்களும் Gitee இல் ஹோஸ்ட் செய்யப்படுகின்றன: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. ஆசிரியர்

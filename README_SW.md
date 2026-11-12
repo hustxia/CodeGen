@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Ni Nini Hii
 
 CodeGen ni "kiwanda cha kanuni kinachoendeshwa na meza". Lete meza zako za biashara (kwa kuagiza kutoka hifadhidata au kwa kubandika DDL), sanidi nyanja na swichi za kuzalisha, kisha bonyeza "Zalisha" — basi inazalisha Entity/Mapper/Service/Controller/DTO/VO za nyuma, `api.js` na kurasa za Vue za mbele, menyu na njia, hata kurasa za uchapishaji A4 na mifupa ya jaribio la ujumuishaji, na kuandika kila kitu kwa usalama kwenye mradi wako wa lengo.
@@ -114,7 +123,10 @@ Nyuma default kwenye bandari **8120**, mbele kwenye bandari **9530**. Akaunti ya
 
 ## 11. Hali ya Mradi
 
-- Mstari wa matoleo uliopangwa sasa umefikia **V7.3**.
+> **Version History · V8.0**
+> Full i18n for generated applications (including menus), 206 languages — `7d57aea`.
+
+- Mstari wa matoleo uliopangwa sasa umefikia **V8.0**.
 - Hifadhi zote mbili zinapatikana kwenye Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Mwandishi

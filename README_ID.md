@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Apa Ini
 
 CodeGen adalah pabrik kode "berbasis tabel". Bawa tabel bisnis Anda (melalui impor basis data atau menempelkan DDL), konfigurasikan bidang dan sakelar pembuatan, lalu klik "Generate" — ia menghasilkan Entity/Mapper/Service/Controller/DTO/VO back-end, `api.js` dan halaman Vue front-end, menu dan rute, bahkan halaman cetak A4 dan kerangka pengujian integrasi, lalu menuliskannya dengan aman ke proyek target Anda.
@@ -260,7 +269,8 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 | V7.1 | Peningkatan data-bibit AI (AI memiliki semantik, aturan memiliki struktur) | V7.1 (42 baris), 5ca6e72 |
 | V7.2 | Hasil SQL ditulis ke `db/` setelah pipeline berhasil | eebff88 |
 | **V7.3** | **Keandalan pengiriman: pengujian artefak terkompilasi pemeriksaan-mandiri / saluran pengiriman SQL terpadu / rekomendasi AI per tabel** | **V7.3 (138 baris)** |
-| **V7.4** | Pengiriman yang dapat diulang: dapat diterapkan dari basis data kosong, setiap commit terjamin dapat dijalankan | **Versi saat ini** |
+| **V7.4** | Pengiriman yang dapat diulang: dapat diterapkan dari basis data kosong, setiap commit terjamin dapat dijalankan | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Versi saat ini** |
 
 ---
 
@@ -268,7 +278,7 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 
 ## 13. Status Proyek
 
-- Garis versi yang direncanakan saat ini telah mencapai **V7.3** (kapabilitas terus beriterasi: pemodelan AI, peningkatan data-bibit, sistem paket-kapabilitas, dll.).
+- Garis versi yang direncanakan saat ini telah mencapai **V8.0** (kapabilitas terus beriterasi: pemodelan AI, peningkatan data-bibit, sistem paket-kapabilitas, dll.).
 - Proyek demo pendamping `demo_admin` (back-end 8140 / front-end 9040) mencakup skenario pohon / CRUD / master-detail / hanya-baca / cetak dan berjalan mandiri untuk verifikasi.
 - Kedua repositori dihosting di Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

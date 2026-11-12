@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## ۱. این چیست؟
 
 CodeGen یک کارخانه کد «مبتنی بر جدول» است. جداول تجاری خود را وارد کنید (از طریق واردات پایگاه داده یا الصاق DDL)، فیلدها و کلیدهای تولید را پیکربندی کنید، سپس روی «تولید» کلیک کنید — تولیدکننده Entity/Mapper/Service/Controller/DTO/VO بک‌اند، `api.js` و صفحات Vue فرانت‌اند، منوها و مسیرها، حتی صفحات چاپ A4 و اسکلت‌های تست یکپارچه‌سازی را تولید کرده و آن‌ها را با خیالی آسوده در پروژه مقصد می‌نویسد.
@@ -259,7 +268,8 @@ npm run serve
 | V7.1 | بهبود داده‌های‌بذر با AI (AI معنا را دارد، قوانین ساختار را دارند) | V7.1 (۴۲ خط)، 5ca6e72 |
 | V7.2 | تحویل‌های SQL پس از موفقیت خط لوله در `db/` نوشته می‌شوند | eebff88 |
 | **V7.3** | **اعتمادپذیری تحویل: تست‌های مصنوف کامپایل‌شده خودبررسی‌شده / خروجی یکپارچه تحویل SQL / توصیه‌های AI به‌ازای هر جدول** | **V7.3 (۱۳۸ خط)** |
-| **V7.4** | تحویل تکرارپذیر: قابل استقرار از یک پایگاه داده خالی، هر کامیت تضمین‌شده اجرایی | **نسخه فعلی** |
+| **V7.4** | تحویل تکرارپذیر: قابل استقرار از یک پایگاه داده خالی، هر کامیت تضمین‌شده اجرایی | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **نسخه فعلی** |
 
 ---
 
@@ -267,7 +277,7 @@ npm run serve
 
 ## ۱۳. وضعیت پروژه
 
-- خط نسخه برنامه‌ریزی‌شده فعلی به **V7.3** رسیده است (قابلیت‌ها همچنان تکرار می‌شوند: مدل‌سازی AI، بهبود داده‌های‌بذر، سیستم بسته قابلیت و غیره).
+- خط نسخه برنامه‌ریزی‌شده فعلی به **V8.0** رسیده است (قابلیت‌ها همچنان تکرار می‌شوند: مدل‌سازی AI، بهبود داده‌های‌بذر، سیستم بسته قابلیت و غیره).
 - یک پروژه دموی همراه `demo_admin` (بک‌اند ۸۱۴۰ / فرانت‌اند ۹۰۴۰) سناریوهای درختی / CRUD / استاد-جزئیات / فقط‌خواندنی / چاپ را پوشش می‌دهد و برای تأیید به‌طور مستقل اجرا می‌شود.
 - هر دو مخزن روی Gitee میزبانی می‌شوند: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

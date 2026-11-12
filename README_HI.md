@@ -10,6 +10,15 @@
 
 GitHub पता: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. यह क्या है
 
 CodeGen एक "टेबल-आधारित" कोड फैक्ट्री है। आपको बस अपनी बिज़नेस टेबल्स लानी हैं (डेटाबेस इंपोर्ट या DDL पेस्ट करके), फ़ील्ड और जेनरेशन स्विच कॉन्फ़िगर करने हैं, फिर "जेनरेट" पर क्लिक करना है — यह आपके लिए बैक-एंड Entity/Mapper/Service/Controller/DTO/VO, फ्रंट-एंड `api.js` और Vue पेज, मेनू और रूट, यहाँ तक कि A4 प्रिंट पेज और इंटीग्रेशन-टेस्ट स्केलेटन भी जेनरेट कर देता है, और उन्हें सुरक्षित रूप से आपके टारगेट प्रोजेक्ट में लिख देता है।
@@ -261,7 +270,8 @@ npm run serve
 | V7.1 | सीड-डेटा AI एन्हांसमेंट (AI सिमेंटिक्स का मालिक, नियम संरचना का मालिक) | V7.1 (42 पंक्तियाँ), 5ca6e72 |
 | V7.2 | सफल पाइपलाइन के बाद SQL डिलीवरेबल्स `db/` में लिखे गए | eebff88 |
 | **V7.3** | **डिलीवरी विश्वसनीयता: सेल्फ-चेक कंपाइल्ड आर्टिफैक्ट टेस्ट / एकीकृत SQL डिलीवरी आउटलेट / प्रति-टेबल AI अनुशंसाएँ** | **V7.3 (138 पंक्तियाँ)** |
-| **V7.4** | दोहराने योग्य डिलीवरी: खाली डेटाबेस से डिप्लॉय हो सके, हर कमिट चलाने योग्य होने की गारंटी | **वर्तमान संस्करण** |
+| **V7.4** | दोहराने योग्य डिलीवरी: खाली डेटाबेस से डिप्लॉय हो सके, हर कमिट चलाने योग्य होने की गारंटी | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **वर्तमान संस्करण** |
 
 ---
 
@@ -269,7 +279,7 @@ npm run serve
 
 ## 13. परियोजना की स्थिति
 
-- वर्तमान योजना संस्करण लाइन **V7.3** तक पहुँच चुकी है (क्षमताएँ निरंतर विकसित हो रही हैं: AI मॉडलिंग, सीड-डेटा एन्हांसमेंट, कैपेबिलिटी-पैक सिस्टम आदि)।
+- वर्तमान योजना संस्करण लाइन **V8.0** तक पहुँच चुकी है (क्षमताएँ निरंतर विकसित हो रही हैं: AI मॉडलिंग, सीड-डेटा एन्हांसमेंट, कैपेबिलिटी-पैक सिस्टम आदि)।
 - साथ में एक डेमो प्रोजेक्ट `demo_admin` (बैक-एंड 8140 / फ्रंट-एंड 9040) है, जो ट्री / CRUD / मास्टर-डिटेल / केवल-पढ़ने योग्य / प्रिंट — सभी परिदृश्यों को कवर करता है और स्वतंत्र रूप से चलाकर सत्यापित किया जा सकता है।
 - दोनों रिपॉज़िटरी Gitee पर होस्ट हैं: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

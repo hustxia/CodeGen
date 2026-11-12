@@ -10,6 +10,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. یہ کیا ہے؟
 
 CodeGen ایک "ٹیبل کو بنیاد بنا کر چلنے والی" کوڈ فیکٹری ہے۔ آپ صرف اپنے بزنس ٹیبل منسلک کریں (ڈیٹابیس سے امپورٹ کریں یا DDL کا ایک ٹکڑا چسپاں کریں)، فیلڈز اور جنریشن سوئچز ترتیب دیں، اور "جنریٹ" پر کلک کریں — پھر یہ آپ کے لیے بیک اینڈ کا Entity/Mapper/Service/Controller/DTO/VO، فرنٹ اینڈ کا `api.js` اور Vue صفحات، مینو اور روٹس، حتیٰ کہ A4 پرنٹ صفحہ اور انٹیگریشن ٹیسٹ کا ڈھانچہ سب تیار کر کے محفوظ طریقے سے آپ کے ہدف منصوبے میں لکھ دیتا ہے۔
@@ -257,7 +266,8 @@ npm run serve
 | V7.1 | سیڈ ڈیٹا کی AI افزودگی (معانی AI کے ذمے، ساخت قواعد کے ذمے) | V7.1 (42 سطریں)، 5ca6e72 |
 | V7.2 | پائپ لائن کی کامیابی کے بعد SQL مصنوعات کا `db/` میں محفوظ ہونا | eebff88 |
 | **V7.3** | **ترسیل کا اعتبار: سیلف چیک کمپائل شدہ مصنوعات کے ٹیسٹ / SQL ترسیل کا متحد اخراجی راستہ / ٹیبل سطح کی AI تجاویز** | **V7.3 (138 سطریں)** |
-| **V7.4** | قابلِ تکرار ترسیل: خالی ڈیٹابیس سے تعیناتی ممکن، ہر کمیٹ کے چلنے کی ضمانت | **موجودہ ورژن** |
+| **V7.4** | قابلِ تکرار ترسیل: خالی ڈیٹابیس سے تعیناتی ممکن، ہر کمیٹ کے چلنے کی ضمانت | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **موجودہ ورژن** |
 
 ---
 
@@ -265,7 +275,7 @@ npm run serve
 
 ## 13. منصوبے کی موجودہ حیثیت
 
-- موجودہ منصوبہ بندی کی ورژن لائن **V7.3** تک پہنچ چکی ہے، صلاحیتیں مسلسل بڑھ رہی ہیں (AI ماڈلنگ، سیڈ ڈیٹا کی افزودگی، کیپابیلیٹی پیک کا نظام وغیرہ)۔
+- موجودہ منصوبہ بندی کی ورژن لائن **V8.0** تک پہنچ چکی ہے، صلاحیتیں مسلسل بڑھ رہی ہیں (AI ماڈلنگ، سیڈ ڈیٹا کی افزودگی، کیپابیلیٹی پیک کا نظام وغیرہ)۔
 - ساتھ ساتھ ڈیمو منصوبہ `demo_admin` (بیک اینڈ 8140 / فرنٹ اینڈ 9040) تیار ہے، جو ٹری / CRUD / ماسٹر-ڈیٹیل / صرف پڑھنے / پرنٹ کے تمام منظرناموں کا احاطہ کرتا ہے اور آزادانہ چل کر تصدیق ہو سکتا ہے۔
 - دونوں ریپوزٹریاں Gitee پر میزبانی شدہ ہیں: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

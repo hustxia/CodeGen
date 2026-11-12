@@ -9,6 +9,15 @@
 ---
 Adresse GitHub : https://github.com/hustxia/CodeGen
 
+> **V8.0 · Internationalisation complète des applications générées (menus inclus), 206 langues**
+> Après activation de l'i18n dans les paramètres projet et choix des langues par défaut / activées,
+> toutes les pages générées (boutons, en-têtes de tableaux, libellés de champs, titres de dialogues,
+> menus) passent par le runtime `$t`. 8 packs traduits manuellement sont fournis
+> (zh-CN / en-US / ja-JP / ko-KR / fr-FR / de-DE / es-ES / ar-SA) ; les autres locales suivent
+> « locale courante → zh-CN → chinois inline », sans jamais afficher de vide.
+> Le sélecteur couvre 206 langues, les langues RTL se reflètent automatiquement.
+> Switch désactivé : sortie générée identique octet pour octet.
+
 
 ## 1. Qu'est-ce que c'est
 
@@ -261,7 +270,8 @@ Le front-end écoute par défaut sur le port **9530**, avec `/dev-api` proxifié
 | V7.1 | Enrichissement IA des données de seed (l'IA gère la sémantique, les règles gèrent la structure) | V7.1 (42 lignes), 5ca6e72 |
 | V7.2 | Écriture des livrables SQL dans `db/` après succès du pipeline | eebff88 |
 | **V7.3** | **Fiabilité de la livraison : tests des artefacts compilés par auto-vérification / sortie unique de livraison SQL / recommandations IA au niveau de la table** | **V7.3 (138 lignes)** |
-| **V7.4** | **Livraison reproductible : déployable depuis une base vide, chaque commit garanti exécutable** | **Version actuelle** |
+| **V7.4** | **Livraison reproductible : déployable depuis une base vide, chaque commit garanti exécutable** | — |
+| **V8.0** | Internationalisation complète (menus inclus), 206 langues | **Version actuelle** |
 
 ---
 
@@ -269,7 +279,7 @@ Le front-end écoute par défaut sur le port **9530**, avec `/dev-api` proxifié
 
 ## 13. État du projet
 
-- La ligne de versions planifiée atteint aujourd'hui **V7.3** ; les capacités continuent d'évoluer (modélisation IA, enrichissement des données de seed, système de packs de capacités, etc.).
+- La ligne de versions planifiée atteint aujourd'hui **V8.0** ; les capacités continuent d'évoluer (modélisation IA, enrichissement des données de seed, système de packs de capacités, etc.).
 - Un projet de démonstration d'accompagnement `demo_admin` (back-end 8140 / front-end 9040) est disponible : il couvre les scénarios arborescent / CRUD / maître-détail / lecture seule / impression et peut être lancé indépendamment pour vérification.
 - Les deux dépôts sont hébergés sur Gitee : `https://gitee.com/hustxiayuhong/CodeGen.git`
 

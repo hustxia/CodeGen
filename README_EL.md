@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Τι είναι αυτό
 
 Το CodeGen είναι ένα «εργοστάσιο κώδικα» οδηγούμενο από πίνακες. Φέρε τους πίνακες επιχειρηματικής λογικής σου (μέσω εισαγωγής βάσης δεδομένων ή επικολλώντας DDL), ρύθμισε τα πεδία και τους διακόπτες δημιουργίας, και μετά πάτα «Δημιουργία» — παράγει το back-end Entity/Mapper/Service/Controller/DTO/VO, το front-end `api.js` και τις σελίδες Vue, τα μενού και τις διαδρομές, ακόμη και σελίδες εκτύπωσης A4 και σκελετούς ενσωματωμένων δοκιμών (integration test), και τα εγγράφει με ασφάλεια στο έργο-στόχο σου.
@@ -259,7 +268,8 @@ npm run serve
 | V7.1 | Βελτίωση seed-data με AI (η AI κατέχει τη σημασιολογία, οι κανόνες κατέχουν τη δομή) | V7.1 (42 γραμμές), 5ca6e72 |
 | V7.2 | Παραδοτέα SQL εγγράφονται στο `db/` μετά την επιτυχία της pipeline | eebff88 |
 | **V7.3** | **Αξιοπιστία παράδοσης: δοκιμές τεχνουργημάτων μεταγλωττισμένων μέσω αυτοελέγχου / ενοποιημένη έξοδος παράδοσης SQL / συστάσεις AI ανά πίνακα** | **V7.3 (138 γραμμές)** |
-| **V7.4** | Επαναλαμβανόμενη παράδοση: αναπτύσσεται από κενή βάση δεδομένων, κάθε commit εγγυημένα εκτελέσιμο | **Τρέχουσα έκδοση** |
+| **V7.4** | Επαναλαμβανόμενη παράδοση: αναπτύσσεται από κενή βάση δεδομένων, κάθε commit εγγυημένα εκτελέσιμο | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Τρέχουσα έκδοση** |
 
 ---
 
@@ -267,7 +277,7 @@ npm run serve
 
 ## 13. Κατάσταση έργου
 
-- Η τρέχουσα προγραμματισμένη γραμμή εκδόσεων έχει φτάσει την **V7.3** (οι δυνατότητες συνεχίζουν να επαναλαμβάνονται: μοντελοποίηση AI, βελτίωση seed-data, σύστημα πακέτων δυνατοτήτων κ.λπ.).
+- Η τρέχουσα προγραμματισμένη γραμμή εκδόσεων έχει φτάσει την **V8.0** (οι δυνατότητες συνεχίζουν να επαναλαμβάνονται: μοντελοποίηση AI, βελτίωση seed-data, σύστημα πακέτων δυνατοτήτων κ.λπ.).
 - Ένα συνοδευτικό έργο demo `demo_admin` (back-end 8140 / front-end 9040) καλύπτει σενάρια δέντρου / CRUD / master-detail / μόνο-ανάγνωση / εκτύπωσης και τρέχει αυτόνομα για επαλήθευση.
 - Και τα δύο αποθετήρια φιλοξενούνται στο Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

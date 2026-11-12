@@ -10,6 +10,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 · Internacionalización completa de las aplicaciones generadas (incl. menús), 206 idiomas**
+> Al activar i18n en la configuración del proyecto y elegir los idiomas predeterminados / habilitados,
+> todas las páginas generadas (botones, cabeceras de tabla, etiquetas de campo, títulos de diálogo
+> y menús) se resuelven mediante el runtime `$t`. Se incluyen 8 paquetes traducidos manualmente
+> (zh-CN / en-US / ja-JP / ko-KR / fr-FR / de-DE / es-ES / ar-SA); el resto de locales sigue
+> « idioma actual → zh-CN → chino en línea », sin mostrarse nunca en blanco.
+> El selector cubre 206 idiomas y los idiomas RTL se reflejan automáticamente.
+> Con el interruptor apagado, la salida generada es idéntica byte a byte.
+
 ## 1. ¿Qué es esto?
 
 CodeGen es una fábrica de código "guiada por tablas". Basta con incorporar tus tablas de negocio (importándolas desde la base de datos o pegando un DDL), configurar los campos y los interruptores de generación y pulsar "Generar": el sistema produce por ti el Entity/Mapper/Service/Controller/DTO/VO del backend, el `api.js` y las páginas Vue del frontend, los menús y las rutas, e incluso páginas de impresión A4 y esqueletos de pruebas de integración, escribiéndolo todo de forma segura en tu proyecto destino.
@@ -260,7 +269,8 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 | V7.1 | Enriquecimiento de datos semilla con IA (la IA gobierna la semántica, las reglas la estructura) | V7.1 (42 líneas), 5ca6e72 |
 | V7.2 | Volcado de entregables SQL en `db/` tras un pipeline exitoso | eebff88 |
 | **V7.3** | **Fiabilidad de la entrega: pruebas de los artefactos compilados en el autochequeo / salida unificada de entregables SQL / recomendaciones de IA por tabla** | **V7.3 (138 líneas)** |
-| **V7.4** | **Entrega repetible: desplegable desde una base de datos vacía, cada commit garantiza que se puede ejecutar** | **Versión actual** |
+| **V7.4** | **Entrega repetible: desplegable desde una base de datos vacía, cada commit garantiza que se puede ejecutar** | — |
+| **V8.0** | Internacionalización completa (incl. menús), 206 idiomas | **Versión actual** |
 
 ---
 
@@ -268,7 +278,7 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 
 ## 13. Estado del proyecto
 
-- La línea de versiones planificada ha alcanzado la **V7.3**, con capacidades en iteración continua (modelado por IA, enriquecimiento de datos semilla, sistema de paquetes de capacidades, etc.).
+- La línea de versiones planificada ha alcanzado la **V8.0**, con capacidades en iteración continua (modelado por IA, enriquecimiento de datos semilla, sistema de paquetes de capacidades, etc.).
 - Se ha consolidado el proyecto de demostración complementario `demo_admin` (backend 8140 / frontend 9040), que cubre los escenarios de árbol / CRUD / maestro-detalle / solo lectura / impresión y puede ejecutarse de forma independiente para su verificación.
 - Ambos repositorios están alojados en Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

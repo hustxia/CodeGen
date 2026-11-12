@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Hva er dette
 
 CodeGen er en "tabellstyrt" kodefaktor. Ta med deg dine forretningstabeller (via databaseimport eller ved å lime inn en DDL), konfigurer felt og genereringsbrytere og klikk på "Generer" — da produserer den bakre delens Entity/Mapper/Service/Controller/DTO/VO, den forreste delens `api.js` og Vue-sider, menyer og ruter, selv A4-utskriftssider og integrasjonstestskjeletter, og skriver alt sikkert til ditt målprosjekt.
@@ -259,7 +268,8 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 | V7.1 | Seed-data AI forbedring (AI eier semantikk, regler eier struktur) | V7.1 (42 linjer), 5ca6e72 |
 | V7.2 | SQL leverte objekter skrevet til `db/` etter vellykket pipeline | eebff88 |
 | **V7.3** | **Leveringspålitelighet: selvkontroll kompilerte artefakt tester / enhetlig SQL leveringsutgang / tabellstyrte AI anbefalinger** | **V7.3 (138 linjer)** |
-| **V7.4** | Gjennomsnittlig levering: deployerbar fra en tom database, hvert commit garantert kjørbar | **Nåværende versjon** |
+| **V7.4** | Gjennomsnittlig levering: deployerbar fra en tom database, hvert commit garantert kjørbar | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Nåværende versjon** |
 
 ---
 
@@ -267,7 +277,7 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 
 ## 13. Prosjektstatus
 
-- Den nåværende planlagte versjonslinjen har nådd **V7.3** (kapasiteter fortsetter å iterere: AI-modellering, seed-data forbedring, kapasitetspakke system osv.).
+- Den nåværende planlagte versjonslinjen har nådd **V8.0** (kapasiteter fortsetter å iterere: AI-modellering, seed-data forbedring, kapasitetspakke system osv.).
 - Et følgedemo-prosjekt `demo_admin` (bakre del 8140 / forreste del 9040) dekker tre / CRUD / master-detail / skrivebeskyttet / utskrift scenarier og kjører uavhengig for verifisering.
 - Begge repositorier hostes på Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

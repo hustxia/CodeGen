@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Mi ez
 
 A CodeGen egy "táblaalapú" kódgyár. Hozza létre üzleti tábláit (adatbázis-importálás vagy DDL beillesztésével), konfigurálja a mezőket és a generációs kapcsolókat, majd kattintson a "Generálás" gombra — a rendszer létrehozza a back-end Entity/Mapper/Service/Controller/DTO/VO osztályait, a front-end `api.js` fájlt és Vue oldalakat, a menüket és route-okat, sőt még A4-es nyomtatási oldalakat és integrációs tesztvázlatokat is, és mindent biztonságosan a célprojektjébe ír.
@@ -261,7 +270,8 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 | V7.1 | Seed adat AI fejlesztés (AI birtokolja a szemantikát, szabályok birtokolják a struktúrát) | V7.1 (42 sor), 5ca6e72 |
 | V7.2 | SQL szállított objektumok írva a `db/` könyvtárba sikeres folyamat után | eebff88 |
 | **V7.3** | **Szállítási megbízhatóság: önellenőrzés lefordított műtermék tesztek / egységes SQL szállítási kimenet / táblaalapú AI ajánlások** | **V7.3 (138 sor)** |
-| **V7.4** | Ismételhető szállítás: üres adatbázisból telepíthető, minden commit garantáltan futtatható | **Aktuális verzió** |
+| **V7.4** | Ismételhető szállítás: üres adatbázisból telepíthető, minden commit garantáltan futtatható | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Aktuális verzió** |
 
 ---
 
@@ -269,7 +279,7 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 
 ## 13. Projekt állapot
 
-- A jelenlegi tervezett verzióvonal elérte a **V7.3**-at (képességek folyamatosan iterálódnak: AI modellezés, seed adat fejlesztés, képességcsomag rendszer stb.).
+- A jelenlegi tervezett verzióvonal elérte a **V8.0**-at (képességek folyamatosan iterálódnak: AI modellezés, seed adat fejlesztés, képességcsomag rendszer stb.).
 - Egy kísérő demo projekt `demo_admin` (backend 8140 / front-end 9040) lefedi a fa / CRUD / master-detail / csak olvasható / nyomtatási forgatókönyveket és önállóan futtatható ellenőrzés céljából.
 - Mindkét repozitório a Gitee-en van tárolva: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

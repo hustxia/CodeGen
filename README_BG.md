@@ -8,6 +8,15 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
+> Once i18n is enabled in project settings and the default / supported languages are picked,
+> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
+> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
+> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
+> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
+> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
+> generated output stays byte-for-byte unchanged.
+
 ## 1. Какво е това
 
 CodeGen е „таблично управлявана“ фабрика за код. Донесете своите бизнес таблици (чрез импорт от базата данни или чрез поставяне на DDL), конфигурирайте полетата и превключвателите за генериране, след това натиснете „Generate“ — той създава бек-енд Entity/Mapper/Service/Controller/DTO/VO, фронт-енд `api.js` и Vue страници, менюта и маршрути, дори A4 страници за печат и скелети за тестове за интеграция, и ги записва безопасно в целевия проект.
@@ -258,7 +267,8 @@ npm run serve
 | V7.1 | AI подобрение на seed данни (AI притежава семантиката, правилата притежават структурата) | V7.1 (42 реда), 5ca6e72 |
 | V7.2 | SQL артефакти, записани в `db/` след успешен конвейер | eebff88 |
 | **V7.3** | **Надеждност на доставката: тестове на компилирани артефакти със самопроверка / унифициран изход за доставка на SQL / AI препоръки за всяка таблица** | **V7.3 (138 реда)** |
-| **V7.4** | Повторима доставка: внедряем от празна база данни, всеки комит гарантирано изпълним | **Текуща версия** |
+| **V7.4** | Повторима доставка: внедряем от празна база данни, всеки комит гарантирано изпълним | — |
+| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Текуща версия** |
 
 ---
 
@@ -266,7 +276,7 @@ npm run serve
 
 ## 13. Състояние на проекта
 
-- Текущата планирана линия на версиите е достигнала **V7.3** (възможностите продължават да се развиват: AI моделиране, подобрение на seed данни, система от пакети с възможности и т.н.).
+- Текущата планирана линия на версиите е достигнала **V8.0** (възможностите продължават да се развиват: AI моделиране, подобрение на seed данни, система от пакети с възможности и т.н.).
 - Придружаващ демо проект `demo_admin` (бек-енд 8140 / фронт-енд 9040) покрива сценариите дърво / CRUD / главен-детайл / само четене / печат и работи самостоятелно за проверка.
 - И двете хранилища са хоствани в Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
