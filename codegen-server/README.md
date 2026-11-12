@@ -1,188 +1,204 @@
-# 码匠 · 代码生成器（CodeGen）项目介绍
+# Majiang · Code Generator (CodeGen) — Project Introduction
 
-> 面向 **Spring Boot + Vue** 的多工程代码生成器：从数据库表结构出发，产出**可编译、可运行、带菜单权限**的前后端业务代码，并负责写盘、备份、记账、回滚的完整交付闭环。
+> Languages: [简体中文](README_ZH.md) · [繁體中文](README_ZH_TW.md) · **English** · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
 
 ---
 
-## 一、这是什么
+> **Language support**: generated systems ship with full-page internationalization built in. The framework supports switching and fallback across **206 languages**; **8 are professionally translated** (zh-CN, en-US, ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA), and all others fall back to Simplified Chinese. Want to contribute a translation? See [`多语言项目介绍/CONTRIBUTING.md`](../多语言项目介绍/CONTRIBUTING.md).
 
-CodeGen 是一套“以表为源”的代码工厂。你只要把业务表接进来（连库导入或贴一段 DDL），配置好字段与生成开关，点一下“生成”，它就替你把后端 Entity/Mapper/Service/Controller/DTO/VO、前端 api.js 与 Vue 页面、菜单与路由、甚至 A4 打印页和集成测试骨架全部生成好，并安全地写进你的目标工程。
+> A multi-project code generator for **Spring Boot + Vue**: starting from database table structures, it produces **compilable, runnable, menu-and-permission-ready** front-end and back-end business code, and handles the full delivery loop of writing to disk, backup, ledgering and rollback.
 
-它不只“吐代码”，而是一条**带质量门禁与回滚能力的交付流水线**：
+GitHub: https://github.com/hustxia/CodeGen
+
+## 1. What Is This
+
+CodeGen is a "table-driven" code factory. Bring in your business tables (via database import or by pasting DDL), configure fields and generation switches, then click "Generate" — it produces the backend Entity/Mapper/Service/Controller/DTO/VO, the frontend `api.js` and Vue pages, menus and routes, even A4 print pages and integration-test skeletons, and safely writes them into your target project.
+
+It doesn't just "spit out code" — it is a **delivery pipeline with quality gates and rollback capability**:
 
 ```
-接表（库导入 / DDL）
-   → 字段与生成开关配置（含 AI 推荐）
-      → 一键生成：自检 → 备份 → 写盘 → 编译/校验 → 注册菜单 → 重建路由
-         → 台账记账 → 可回滚
+Table intake (DB import / DDL)
+   → Field & switch configuration (with AI recommendations)
+      → One-click generation: self-check → backup → write to disk → compile/validate → register menu → rebuild routes
+         → Ledger bookkeeping → rollback-capable
 ```
 
 ---
 
-## 二、解决什么问题
+## 2. Who Are the Users, and How They Use It
 
-| 痛点 | CodeGen 的做法 |
-| --- | --- |
-| 重复 CRUD 地狱，每张表都要手写一堆样板代码 | 表级开关一键产出完整前后端，含增删改查、分页、校验、导入导出 |
-| 前后端字段/接口对不齐，联调反复改 | 同一份表元数据同时驱动后端接口与前端页面，字段语义零偏差 |
-| 团队规范难以统一，每人写出来的风格各异 | 模板即规范，22 个 FreeMarker 模板集中管控、支持在线编辑与版本回滚 |
-| 生成器“覆盖即丢失”，手写逻辑被冲掉 | 标记块（marker block）合并机制：手写代码被保留，只替换生成区 |
-| 生成物不可信，编译才发现问题 | 内存编译自检（真实 javac）、结构契约检查、磁盘 diff 预览，编译不过不准落盘 |
-| 新系统从 0 搭脚手架费时 | 流水线“一句话建系统”：建库→脚手架→生成→打包→注册菜单全自动 |
-
----
-
-## 三、核心能力全景
-
-- **接表**：DDL 解析、库表直连导入、批量接管向导、列配置自动推导（控件 / 校验 / 字典 / 关联）。
-- **表形态**：单表、树形表（tree 接口 + 树表格）、主子表（同事务保存 + 明细 Tab）、多对多中间表。
-- **生成产物**：Entity / Mapper / Service / Controller / DTO / VO + `api.js` + Vue 页面 + A4 打印页 + 集成测试骨架。
-- **业务增强**：关联下拉、字典翻译、脱敏、唯一性校验、表单联动、数据权限、Excel 导入导出、审批流、支付 / 文件 / 移动端能力包。
-- **质量门禁**：内存编译自检（真实 `javac`）、结构契约检查、权限一致性检查、磁盘 diff 预览、前端产物真校验。
-- **安全落地**：写盘 + `.gen-backup` 批次备份、标记块合并保留手写代码、`gen_output` 四态台账（新建 / 合并 / 跳过 / 失败）、历史回滚。
-- **多系统隔离**：每套目标工程是一份“系统配置”（前后端路径、包名、网关前缀、依赖 classpath、生成开关默认值），可并行服务多个项目。
-- **AI 增强**：一句话建系统（AI 建模）、种子数据 AI 增强、表级 AI 推荐配置（diff 预览 + 勾选应用）。
-
----
-
-## 四、典型场景
-
-| 场景 | 说明 |
-| --- | --- |
-| 树形表 | 商品分类等层级数据，自动产出 tree 接口与树表格、上级选择下拉 |
-| 单表 CRUD | 客户、商品等，外键下拉 + 字典翻译 + 导入导出开箱即用 |
-| 主子表 | 销售订单 + 订单明细，同事务保存，详情抽屉双 Tab（主表信息 / 明细） |
-| 只读 / 统计 | 库存流水等，关闭增删改开关，仅保留查询与导出 |
-| 打印单据 | 勾选“打印”开关，产出 A4 打印页与路由，支持表头 + 明细表 |
-| 一句话建系统 | 描述业务域，AI 建库建表 + 脚手架 + 全量生成 + 注册菜单一气呵成 |
-
-> 以上场景均有可运行演示（`demo_admin` 工程）与配套截图，详见 `docs/典型场景操作指南-演示后台demo.md`。
-
----
-
-## 五、核心工作流
-
-```
-┌──────────┐   ┌──────────────┐   ┌───────────────────────────────────────┐
-│  接表     │ → │  字段/开关配置 │ → │  一键生成（自检→备份→写盘→编译→菜单→路由）│ → │ 台账 · 回滚 │
-└──────────┘   └──────────────┘   └───────────────────────────────────────┘
-   库导入/DDL      控件/校验/字典       质量门禁全过才落盘，手写代码保留           批次级追溯
-```
-
-- **差异预览**：生成物与磁盘现状逐文件 diff，确认后再落盘，避免误覆盖。
-- **生成台账**：每个文件记录动作、字节数、MD5、备份位置，批次可整体回滚。
-
----
-
-## 六、一句话建系统（Pipeline）
-
-面向“从零搭一个后台”的高阶能力。描述业务域后，流水线按 5 个阶段全自动推进：
-
-| 阶段 | 含义 |
-| --- | --- |
-| `CHECK` | 校验目标工程配置与依赖 classpath |
-| `WRITE` | 建库、建表、写脚手架与生成物 |
-| `COMPILE` | 后端 `mvn package` / 前端构建，内存编译自检 |
-| `MENU` | 产出并注册菜单权限（双出口：artifact SQL / internal 直写） |
-| `ROUTE` | 重建前端路由片段 |
-
-任一阶段失败即中断并给出可读错误，便于定位。
-
----
-
-## 七、系统架构
-
-前后端分离，两个仓库协同：
-
-| 仓库 | 角色 | 技术栈 |
+| Users | Typical Needs | Path the Platform Provides |
 | --- | --- | --- |
-| `codegen-server` | 后端：生成引擎、模板、校验、台账、流水线 | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | 前端：控制台（表配置 / 模板 / 台账 / 系统管理） | Vue 2.7 · Element UI · axios · Vue Router(history) |
+| Backend developer | Has a batch of tables (or DDL) and wants to quickly spin up CRUD | Table config page: import → configure fields → one-click generation |
+| Full-stack / solo developer | Wants to build a complete system from scratch (with login, permissions, dictionaries) | Pipeline page: build a system with one sentence |
+| Team lead | Wants to unify code style, coding standards, directory structure | System management: one system = one output config, applied in batch |
+| Platform maintainer | Wants to change templates without changing code | Template management: online editing, takes effect on save, supports history rollback |
+## 3. What Problems It Solves
 
-后端分层：
-
-```
-controller/   接口层（Gen* 生成链路 / Sys* 系统管理 / 流水线）
-service/impl/ 核心实现（生成链路、模板引擎、合并、校验、流水线执行）
-util/         模板引擎、模型装配、标记块合并、自检编译
-config/       输出配置、自检配置、模板种子器
-common/       Result / BaseEntity / 异常 / 审计
-resources/gen-templates/   22 个 FreeMarker 模板（backend / frontend / shared / test 分组）
-```
-
-**目标工程必须自带的基座能力**（生成器只产业务代码，基座缺失会静默故障）：
-
-1. MyBatis-Plus 分页插件（`PaginationInnerInterceptor`）
-2. `Result` / `BaseEntity` / `PageQuery` 等基座类（包名前缀与 `root-package` 一致）
-3. 前端 `utils/request.js` 的 `toPageData`（把 `Page{records,total}` 转成 `{list,total}`）
-4. 依赖 `springdoc-openapi-starter-webmvc-ui`（生成物用 `@Operation`）与 `poi-ooxml`（Excel）
-
----
-
-## 八、技术栈一览
-
-| 维度 | 选型 |
+| Pain point | What CodeGen does |
 | --- | --- |
-| 后端语言 / 框架 | Java 21 / Spring Boot 3.2.5 |
-| 持久层 | MyBatis-Plus 3.5.5 |
-| 模板引擎 | FreeMarker（22 个种子模板，支持在线编辑 + 版本回滚） |
-| 安全 | JWT 鉴权 |
-| 数据库 | MySQL 8 |
-| 前端 | Vue 2.7 + Element UI |
-| 本地 AI | qwen2.5-coder:7b（建模 / 推荐配置 / 种子数据增强） |
-| 接口文档 | springdoc-openapi（Swagger UI） |
+| Repetitive CRUD hell — a pile of boilerplate for every table | Per-table switches produce a complete front & back end in one click, including CRUD, pagination, validation, import/export |
+| Front/back field & API mismatches causing endless integration fixes | The same table metadata drives both backend APIs and frontend pages — zero semantic drift |
+| Team conventions hard to unify; everyone's style differs | Templates are the convention: 22 FreeMarker templates centrally managed, editable online with version rollback |
+| Generators "overwrite and lose" hand-written logic | Marker-block merge mechanism: hand-written code is preserved, only generated regions are replaced |
+| Generated code untrustworthy until compile time | In-memory compile self-check (real `javac`), structural contract checks, on-disk diff preview — nothing lands on disk unless it compiles |
+| Scaffolding a new system from zero is time-consuming | Pipeline "build a system with one sentence": create DB → scaffold → generate → package → register menus, fully automated |
 
 ---
 
-## 九、快速开始
+## 4. Capability Landscape
 
-### 1. 建库（13 张平台表 + 默认账号 admin/admin123）
+- **Table intake**: DDL parsing, direct database import, batch intake wizard, auto-derived column configuration (controls / validation / dictionaries / relations).
+- **Table shapes**: single table, tree table (tree API + tree grid), master-detail (same-transaction save + detail tabs), many-to-many junction tables.
+- **Generated artifacts**: Entity / Mapper / Service / Controller / DTO / VO + `api.js` + Vue pages + A4 print pages + integration-test skeletons.
+- **Business enhancements**: relation dropdowns, dictionary translation, data masking, uniqueness checks, form linkage, data-scope permissions, Excel import/export, approval workflow, payment / file / mobile capability packs.
+- **Quality gates**: in-memory compile self-check (real `javac`), structural contract checks, permission-consistency checks, on-disk diff preview, real validation of frontend artifacts.
+- **Safe landing**: write to disk + `.gen-backup` batch backups, marker-block merging to preserve hand-written code, `gen_output` four-state ledger (created / merged / skipped / failed), historical rollback.
+- **Multi-system isolation**: each target project is a "system configuration" (front/back paths, package names, gateway prefix, dependency classpath, generation-switch defaults) — multiple projects served in parallel.
+- **AI enhancements**: build a system with one sentence (AI modeling), seed-data AI enhancement, per-table AI recommended configuration (diff preview + checked apply).
+
+---
+
+## 5. Typical Scenarios
+
+| Scenario | Description |
+| --- | --- |
+| Tree table | Hierarchical data such as product categories — auto-produced tree API, tree grid and parent-selection dropdown |
+| Single-table CRUD | Customers, products, etc. — FK dropdowns + dictionary translation + import/export out of the box |
+| Master-detail | Sales orders + order items — same-transaction save, detail drawer with dual tabs (master info / details) |
+| Read-only / stats | Inventory flows, etc. — write switches off, query and export only |
+| Print documents | Tick the "print" switch to produce an A4 print page and route, with header + detail table |
+| One-sentence system build | Describe the business domain — AI creates DB & tables + scaffold + full generation + menu registration in one go |
+
+> All scenarios have runnable demos (`demo_admin` project) with screenshots — see `docs/典型场景操作指南-演示后台demo.md` (Chinese).
+
+---
+
+## 6. Core Workflow
+
+```
+┌─────────────┐   ┌───────────────────┐   ┌──────────────────────────────────────────────────┐
+│ Table intake │ → │ Field/switch conf. │ → │ One-click generate (self-check→backup→write→     │ → │ Ledger · Rollback │
+│              │   │                    │   │ compile→menu→route)                              │   │                   │
+└─────────────┘   └───────────────────┘   └──────────────────────────────────────────────────┘
+  DB import/DDL     controls/validation     Lands on disk only after all quality gates pass;      Batch-level traceability
+                    /dictionaries           hand-written code is preserved
+```
+
+- **Diff preview**: generated artifacts are diffed file-by-file against the current disk state; you confirm before anything is written, avoiding accidental overwrites.
+- **Generation ledger**: every file records its action, byte count, MD5 and backup location; a whole batch can be rolled back.
+
+---
+
+## 7. Build a System with One Sentence (Pipeline)
+
+A high-level capability aimed at "scaffolding a backend from scratch". After you describe the business domain, the pipeline advances automatically through 5 stages:
+
+| Stage | Meaning |
+| --- | --- |
+| `CHECK` | Validate target project configuration and dependency classpath |
+| `WRITE` | Create database & tables, write scaffold and generated artifacts |
+| `COMPILE` | Backend `mvn package` / frontend build, in-memory compile self-check |
+| `MENU` | Produce and register menu permissions (dual outlets: artifact SQL / internal direct write) |
+| `ROUTE` | Rebuild frontend route fragments |
+
+Any stage failure aborts immediately with a readable error for easy locating.
+
+---
+
+## 8. System Architecture
+
+Front-end and back-end separated, two repositories working together:
+
+| Repository | Role | Stack |
+| --- | --- | --- |
+| `codegen-server` | Backend: generation engine, templates, validation, ledger, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
+| `codegen-web` | Frontend: console (table config / templates / ledger / system management) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+
+Backend layering:
+
+```
+controller/    API layer (Gen* generation chain / Sys* system management / pipeline)
+service/impl/  Core implementations (generation chain, template engine, merge, validation, pipeline execution)
+util/          Template engine, model assembly, marker-block merge, self-check compilation
+config/        Output config, self-check config, template seeder
+common/        Result / BaseEntity / exceptions / audit
+resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared / test groups)
+```
+
+**Foundation capabilities the target project must provide** (the generator only produces business code; a missing foundation fails silently):
+
+1. MyBatis-Plus pagination plugin (`PaginationInnerInterceptor`)
+2. Foundation classes such as `Result` / `BaseEntity` / `PageQuery` (package prefix must match `root-package`)
+3. Frontend `utils/request.js` with `toPageData` (converts `Page{records,total}` into `{list,total}`)
+4. Dependencies `springdoc-openapi-starter-webmvc-ui` (generated code uses `@Operation`) and `poi-ooxml` (Excel)
+
+---
+
+## 9. Tech Stack at a Glance
+
+| Dimension | Choice |
+| --- | --- |
+| Backend language / framework | Java 21 / Spring Boot 3.2.5 |
+| Persistence | MyBatis-Plus 3.5.5 |
+| Template engine | FreeMarker (22 seed templates, online editing + version rollback) |
+| Security | JWT authentication |
+| Database | MySQL 8 |
+| Frontend | Vue 2.7 + Element UI |
+| Local AI | qwen2.5-coder:7b (modeling / recommended config / seed-data enhancement) |
+| API docs | springdoc-openapi (Swagger UI) |
+
+---
+
+## 10. Quick Start
+
+### 1. Create the database (13 platform tables + default account admin/admin123)
 
 ```bash
 mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
 mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
 ```
 
-### 2. 配置目标工程
+### 2. Configure the target project
 
-复制配置模板并按本机路径修改：
+Copy the config template and adjust to your local paths:
 
 ```bash
 cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
 ```
 
-`application-local.yml` 已在 `.gitignore` 中排除，不会提交。主要配置项：
+`application-local.yml` is excluded by `.gitignore` and will not be committed. Key settings:
 
 ```yaml
 gen:
   output:
-    backend-root: /path/to/your-target-project      # 生成物写盘基准
+    backend-root: /path/to/your-target-project      # write-to-disk base for artifacts
     frontend-root: /path/to/your-target-project
-    frontend-path: demo-web                          # monorepo 时前端子目录
+    frontend-path: demo-web                          # frontend subdirectory for monorepos
     backend-path: demo-server/src/main/java/com/demo
     package-name: com.demo
-    root-package: com.demo                           # 生成物 import 基座类的前缀
+    root-package: com.demo                           # prefix for foundation-class imports in artifacts
   selfcheck:
     classpath: /path/to/your-target-project/demo-lib/*
 ```
 
-自检的依赖目录这样导出：
+Export the self-check dependency directory like this:
 
 ```bash
 cd your-target/demo-server
 mvn dependency:copy-dependencies -DoutputDirectory=../demo-lib
 ```
 
-### 3. 启动后端
+### 3. Start the backend
 
 ```bash
 mvn package -DskipTests
 java -jar target/codegen-server.jar
 ```
 
-服务默认端口 **8120**，接口文档 `/swagger-ui/index.html`。
+The service defaults to port **8120**; API docs at `/swagger-ui/index.html`.
 
-### 4. 启动前端
+### 4. Start the frontend
 
 ```bash
 cd ../codegen-web
@@ -190,63 +206,117 @@ npm install
 npm run serve
 ```
 
-前端默认端口 **9530**，`/dev-api` 代理到后端 8120。默认账号 `admin / admin123`。
+The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120. Default account `admin / admin123`.
 
-### 5. 关键配置项
+### 5. Key configuration items
 
-| 配置 | 说明 |
+| Setting | Description |
 | --- | --- |
-| `gen.output.*` | 生成物写盘路径、包名、模块映射 |
-| `gen.selfcheck.classpath` | 自检内存编译的依赖 classpath，支持 `dir/*` |
-| `gen.menu.outlet` | `artifact` 只产出菜单 SQL 与路由片段；`internal` 同时写入平台自身 `sys_menu` |
+| `gen.output.*` | Artifact write paths, package names, module mapping |
+| `gen.selfcheck.classpath` | Dependency classpath for in-memory compile self-check, supports `dir/*` |
+| `gen.menu.outlet` | `artifact` produces menu SQL & route fragments only; `internal` also writes the platform's own `sys_menu` |
 
 ---
 
-## 十、文档导航
+## 11. Documentation Map
 
-| 文档 | 内容 |
+| Document | Content |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` | 部署、五分钟上手、表配置、批量接管、模板管理、台账、接口目录、流水线全流程（含实拍截图） |
-| `docs/典型场景操作指南-演示后台demo.md` | 6 张表覆盖 5 类典型场景，含可运行 demo 与实跑截图 |
-| `docs/项目介绍.md` | 与本文同源的项目介绍文档 |
-| `docs/代码生成器-Vx.x-规划.md` | V3.1 → V7.3 各版本规划与功能盘点 |
-| `codegen-web/README.md` | 前端控制台快速上手参考 |
+| `docs/代码生成器-操作手册.md` (Chinese) | Deployment, 5-minute start, table config, batch intake, template management, ledger, API catalog, full pipeline (with screenshots) |
+| `docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
+| `docs/项目介绍.md` | Project introduction document, same source as this file |
+| `docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V7.3 |
+| `codegen-web/README.md` | Frontend console quick-start reference |
 
 ---
 
-## 十一、历史版本演进
+## 12. Version History
 
-| 版本 | 版本主题 / 规划文档 | 落地提交 |
+| Version | Theme / plan document | Landing commit |
 | --- | --- | --- |
-| V1.2 / V1.3 | 一键生成 / 批量 / 回滚；diff 预览与结构同步 | —（仅见 `src/api/gen.js` 注释） |
-| V2.0 | 动态路由（后端下发菜单树） | — |
-| V3.0 / V3.1 | 多系统台账；多系统闭环 + 首批自动化测试 | V3.1（174 行） |
-| V4.2 | 生成结果可追溯、可回滚（写盘台账） | V4.2（292 行） |
-| V4.3 | 模板回归与质量护栏 | V4.3（200 行） |
-| V4.4 | 一主多子、级联写完整化、模板分道 | V4.4（154 行） |
-| V4.5 | A4 打印单据（零第三方依赖） | V4.5（127 行） |
-| V5.0 | 一句话建系统：流水线 + AI 建模 + 脚手架基座 | — |
-| V5.1 | DDL 审计列自动补齐 | V5.1（100 行） |
-| V5.2 | 流水线 seed 数据初始化步 | V5.2（107 行），84ec8dd |
-| V5.5 | 多模块工程生成收尾 | af73dd3 |
-| V6.0 | 微服务设施（Nacos / Gateway / Feign，第三态 micro） | V6.0（111 行），1deecbd |
-| V6.1 | Activiti 工作流双引擎 | V6.1（100 行），02b671e |
-| V6.2 | 产物交付面（CLI / 部署物 / 配置安全） | V6.2（114 行），02b671e |
-| V6.3 | 支付能力包（微信 / 支付宝 + Mock） | V6.3（104 行），1c4ee6a、22eede5 |
-| V6.4 | 权限安全基线（token 持久化 / BCrypt / 接口权限 / 登录防护） | V6.4（107 行），007a202 |
-| V6.5 | 移动端 uni-app（H5 + 微信小程序） | V6.5（105 行），779ac41 |
-| V6.6 | 文件能力包 | 98f3c09 |
-| V6.7 | 产物测试出厂（test_enabled 三态 + H2 骨架） | V6.7（134 行），4e7d318 |
-| V6.8 | 生成物可维护性（dryRun / 受保护跳过 / 品牌参数化） | V6.8（141 行），be6f858 |
-| V7.0 | AI 页面与菜单推荐（preview / apply） | V7.0（94 行），45f2670 |
-| V7.1 | 种子数据 AI 增强（AI 管语义、规则管结构） | V7.1（42 行），5ca6e72 |
-| V7.2 | 流水线成功后 SQL 交付物落盘 `db/` | eebff88 |
-| **V7.3** | **交付可信度：自检编译产物测试 / 统一 SQL 交付出口 / 表级 AI 推荐** | **V7.3（138 行），当前版本** |
+| V1.2 / V1.3 | One-click generation / batch / rollback; diff preview & structure sync | — (only in `src/api/gen.js` comments) |
+| V2.0 | Dynamic routes (backend-delivered menu tree) | — |
+| V3.0 / V3.1 | Multi-system ledger; multi-system loop + first automated tests | V3.1 (174 lines) |
+| V4.2 | Traceable, rollback-able generation results (write ledger) | V4.2 (292 lines) |
+| V4.3 | Template regression & quality guardrails | V4.3 (200 lines) |
+| V4.4 | One-master-many-detail, cascade-write completeness, template lanes | V4.4 (154 lines) |
+| V4.5 | A4 print documents (zero third-party dependencies) | V4.5 (127 lines) |
+| V5.0 | One-sentence system build: pipeline + AI modeling + scaffold base | — |
+| V5.1 | DDL audit columns auto-completion | V5.1 (100 lines) |
+| V5.2 | Pipeline seed-data initialization step | V5.2 (107 lines), 84ec8dd |
+| V5.5 | Multi-module project generation wrap-up | af73dd3 |
+| V6.0 | Microservice infrastructure (Nacos / Gateway / Feign, third mode "micro") | V6.0 (111 lines), 1deecbd |
+| V6.1 | Activiti workflow dual engine | V6.1 (100 lines), 02b671e |
+| V6.2 | Artifact delivery surface (CLI / deployment artifacts / config security) | V6.2 (114 lines), 02b671e |
+| V6.3 | Payment capability pack (WeChat / Alipay + Mock) | V6.3 (104 lines), 1c4ee6a, 22eede5 |
+| V6.4 | Permission & security baseline (token persistence / BCrypt / API permissions / login protection) | V6.4 (107 lines), 007a202 |
+| V6.5 | Mobile uni-app (H5 + WeChat Mini Program) | V6.5 (105 lines), 779ac41 |
+| V6.6 | File capability pack | 98f3c09 |
+| V6.7 | Artifact test factory acceptance (test_enabled tri-state + H2 skeleton) | V6.7 (134 lines), 4e7d318 |
+| V6.8 | Artifact maintainability (dryRun / protected skip / brand parameterization) | V6.8 (141 lines), be6f858 |
+| V6.9 | Platform documentation center (backend base, frontend finished in the same batch) | — |
+| V6.10 | Platform observability: Actuator + in-memory metric window + embedded monitor page | — |
+| V7.0 | AI page & menu recommendations (preview / apply) | V7.0 (94 lines), 45f2670 |
+| V7.1 | Seed-data AI enhancement (AI owns semantics, rules own structure) | V7.1 (42 lines), 5ca6e72 |
+| V7.2 | SQL deliverables written to `db/` after successful pipeline | eebff88 |
+| **V7.3** | **Delivery trustworthiness: self-check compiled artifact tests / unified SQL delivery outlet / per-table AI recommendations** | **V7.3 (138 lines)** |
+| **V7.4** | Repeatable delivery: deployable from an empty database, every commit guaranteed runnable | — |
+| **V8.0** | **Full-page i18n: 206-language framework (8 professionally translated), dual-track i18n with OFF zero-diff contract** | current |
+| **V8.1** | Quality hardening: `vuePage.ftl` snapshot tests + `i18n` unit tests + CI gate + honest README split | in dev |
+| **V9.0** | Frontend modernization: Vue 3 + Element Plus + Vite migration | planned |
 
 ---
 
-## 十二、项目状态
+> **V6.10 Platform observability**: integrates Actuator + Micrometer, sampling every 5 seconds into an in-memory ring buffer (30-minute window), plus a new embedded "System Monitor" page — backend `/monitor/*` aggregation APIs + frontend ECharts panels. Only `health/info/metrics` endpoints are whitelisted; `/actuator/health` is token-free while `metrics` etc. require auth; `env/beans/heapdump/threaddump/loggers` are never exposed. The sampling window is per-process only, lost on restart, and not shared across instances. See `docs/可观测性说明.md` (Chinese) for details.
 
-- 当前规划版本线已达 **V7.3**，能力持续迭代（AI 建模、种子数据增强、能力包体系等）。
-- 已沉淀配套演示工程 `demo_admin`（后端 8140 / 前端 9040），覆盖树形 / CRUD / 主子表 / 只读 / 打印全场景，可独立运行验证。
-- 两仓库均托管于 Gitee：`https://gitee.com/hust<user>/CodeGen.git`
+## 13. Project Status
+
+- The current released version is **V8.0** (full-page internationalization, 206-language framework). **V8.1** (quality hardening) is in development; **V9.0** (Vue 3 + Element Plus + Vite) is planned.
+- A companion demo project `demo_admin` (backend 8140 / frontend 9040) covers tree / CRUD / master-detail / read-only / print scenarios and runs standalone for verification.
+- Both repositories are hosted on Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
+
+---
+
+## 14. Author & Support
+
+- **Author**: a Chinese programmer (independent developer)
+- **Email**: `hustxiayuhong@126.com`
+- **Technical support**: please write your email **in Chinese**, including the problem description, runtime environment (JDK / MySQL / version) and reproduction steps
+
+> I read and reply to every email. Bug reports, feature requests and collaboration inquiries are all welcome.
+
+---
+
+## 15. How It Compares with Similar Tools
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.

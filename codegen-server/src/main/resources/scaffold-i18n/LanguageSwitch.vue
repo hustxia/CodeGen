@@ -1,7 +1,7 @@
 <template>
   <el-select
     :value="current"
-    size="mini"
+    size="small"
     class="lang-switch"
     @change="onChange"
   >
@@ -12,7 +12,7 @@
       :value="l.locale"
     >
       <span>{{ l.label }}</span>
-      <span class="lang-native">{{ l.nameNative }}<i v-if="l.dir === 'rtl'" class="el-icon-refresh" /></span>
+      <span class="lang-native">{{ l.nameNative }}<el-icon v-if="l.dir === 'rtl'"><Refresh /></el-icon></span>
     </el-option>
   </el-select>
 </template>
