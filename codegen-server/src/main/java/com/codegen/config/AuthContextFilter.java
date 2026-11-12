@@ -42,8 +42,9 @@ public class AuthContextFilter extends OncePerRequestFilter {
     /** 无需 token 即可访问的路径前缀（与前端登录页、探活、接口文档相关） */
     private static final List<String> WHITE_LIST = List.of(
             "/auth/login",
-            "/health",
-            "/actuator",
+            // V6.10：只放行探活；metrics 等其余端点必须带 token。
+            // 匹配逻辑是 equals || startsWith(prefix + "/")，所以 /actuator/health/liveness 也自动放行
+            "/actuator/health",
             "/v3/api-docs",
             "/swagger-ui",
             "/swagger-resources",

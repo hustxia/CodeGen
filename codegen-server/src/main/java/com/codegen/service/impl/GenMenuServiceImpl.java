@@ -535,14 +535,18 @@ public class GenMenuServiceImpl implements GenMenuService {
                     break;
                 }
             }
+            // V8.0 菜单国际化：每级菜单挂一个稳定 i18nKey，layout 运行时按当前语言解析，
+            // 缺译文时回落到 title（中文）。支持任意语言（含未预置译文的 198 种）回落中文。
+            String systemKey = "menu." + (systemCode.isEmpty() ? "sys" : systemCode);
             sb.append("  {\n");
             sb.append("    path: '").append(jsEscape(systemPath)).append("',\n");
             sb.append("    component: Layout,\n");
-            sb.append("    meta: { title: '").append(jsEscape(system.getKey())).append("' },\n");
+            sb.append("    meta: { title: '").append(jsEscape(system.getKey())).append("', i18nKey: '").append(systemKey).append("' },\n");
             sb.append("    children: [\n");
             boolean firstGroup = true;
             for (Map.Entry<String, List<Map<String, Object>>> group : system.getValue().entrySet()) {
                 String groupCode = str(group.getValue().get(0).get("group_code"), "other");
+                String groupKey = systemKey + "." + (groupCode.isEmpty() ? "group" : groupCode);
                 if (!firstGroup) {
                     sb.append(",\n");
                 }
@@ -550,7 +554,7 @@ public class GenMenuServiceImpl implements GenMenuService {
                 sb.append("      {\n");
                 sb.append("        path: '").append(jsEscape(groupCode)).append("',\n");
                 sb.append("        component: GroupView,\n");
-                sb.append("        meta: { title: '").append(jsEscape(group.getKey())).append("' },\n");
+                sb.append("        meta: { title: '").append(jsEscape(group.getKey())).append("', i18nKey: '").append(groupKey).append("' },\n");
                 sb.append("        children: [\n");
                 boolean firstPage = true;
                 for (Map<String, Object> row : group.getValue()) {
@@ -562,6 +566,7 @@ public class GenMenuServiceImpl implements GenMenuService {
                     String leafPath = path.endsWith("/" + LEAF)
                             ? module + "/" + LEAF
                             : module;
+                    String pageKey = groupKey + "." + module;
                     if (!firstPage) {
                         sb.append(",\n");
                     }
@@ -571,7 +576,7 @@ public class GenMenuServiceImpl implements GenMenuService {
                     sb.append("            name: '").append(className).append("',\n");
                     sb.append("            component: () => import('@/views/").append(module)
                             .append("/index.vue'),\n");
-                    sb.append("            meta: { title: '").append(jsEscape(title)).append("' }\n");
+                    sb.append("            meta: { title: '").append(jsEscape(title)).append("', i18nKey: '").append(pageKey).append("' }\n");
                     sb.append("          }");
                 }
                 sb.append("\n        ]\n");
@@ -596,11 +601,13 @@ public class GenMenuServiceImpl implements GenMenuService {
                 String module = String.valueOf(row.get("module_name"));
                 String className = String.valueOf(row.get("class_name"));
                 String title = jsEscape(String.valueOf(row.get("table_comment")));
+                String printProjectCode = str(row.get("project_code"), "");
+                String printKey = "menu." + (printProjectCode.isEmpty() ? "sys" : printProjectCode) + ".print." + module;
                 sb.append("  {\n");
                 sb.append("    path: '/print/").append(module).append("/:id',\n");
                 sb.append("    name: 'Print").append(className).append("',\n");
                 sb.append("    component: () => import('@/views/").append(module).append("/print.vue'),\n");
-                sb.append("    meta: { title: '").append(title).append("打印' }\n");
+                sb.append("    meta: { title: '").append(title).append("打印', i18nKey: '").append(printKey).append("' }\n");
                 sb.append("  },\n");
             }
         }

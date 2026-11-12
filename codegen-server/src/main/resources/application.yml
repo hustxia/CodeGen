@@ -23,6 +23,11 @@ spring:
     multipart:
       max-file-size: 30MB
       max-request-size: 35MB
+  # V6.10 平台首次引入调度（MonitorSampler）。默认单线程，将来再加定时任务会互相阻塞
+  task:
+    scheduling:
+      pool:
+        size: 2
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
@@ -46,6 +51,37 @@ springdoc:
   swagger-ui:
     enabled: ${SPRINGDOC_UI_ENABLED:true}
     path: /swagger-ui.html
+
+# ============================================================
+# V6.10 平台可观测性
+#
+# 端点只枚举放行 health/info/metrics：env/beans/heapdump/threaddump/loggers 永不暴露。
+# health.show-details=never：外部只看得到 {"status":"UP"}，不吐数据库地址。
+# 带点的 key 必须写 "[http.server.requests]"，否则 yml 会按点拆层级。
+# ============================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    tags:
+      application: codegen-server
+    web:
+      server:
+        max-uri-tags: 100
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+
+# 采样窗口：5s 一采、360 点 = 30 分钟；仅进程内，重启归零，多实例不共享
+monitor:
+  sample:
+    interval-ms: ${MONITOR_SAMPLE_INTERVAL_MS:5000}
+    buffer-size: ${MONITOR_SAMPLE_BUFFER_SIZE:360}
 
 logging:
   config: classpath:logback-spring.xml
@@ -114,7 +150,7 @@ gen:
       # api-key: sk-xxx
       # model: gpt-4o-mini
       timeout-seconds: 30
-    # java-home: ~/.jdks/temurin-21   # 打包后端用，留空用当前进程
+    # java-home: C:/Users/xiayuhong/.jdks/temurin-21   # 打包后端用，留空用当前进程
     # maven: C:/dev/maven/bin/mvn.cmd                  # 留空回落 gen.output.maven
     npm: npm
     backend-port-base: 8140

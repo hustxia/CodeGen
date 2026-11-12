@@ -16,6 +16,7 @@ import com.codegen.monitor.MonitorMetrics;
 import com.codegen.service.GenCodeService;
 import com.codegen.service.GenDriftService;
 import com.codegen.service.GenSqlDeliverService;
+import com.codegen.service.I18nTextRewriter;
 import com.codegen.service.GenTableColumnService;
 import com.codegen.support.GenPathResolver;
 import com.codegen.util.GenDigestUtils;
@@ -638,7 +639,8 @@ public class GenCodeServiceImpl implements GenCodeService {
             List<GenTableColumn> cols = columnsByTable.getOrDefault(table.getId(), List.of());
             autoDetectRefs(table, cols);
             rendered.add(new TableFiles(table,
-                    genTemplateEngine.renderWithProject(table, cols, projectConfigOf(table))));
+                    rewriteForI18n(table,
+                            genTemplateEngine.renderWithProject(table, cols, projectConfigOf(table)))));
         }
         return rendered;
     }
@@ -690,7 +692,8 @@ public class GenCodeServiceImpl implements GenCodeService {
                 project.getRootPackage(), project.getProjectCode(),
                 project.getDefaultDeleteCascadeMode(), project.getDefaultGenPrint(),
                 project.getProjectStructure(), project.getPayEnabled(), project.getMobileEnabled(),
-                project.getFileEnabled(), project.getTestEnabled(), project.getDefaultLanguage());
+                project.getFileEnabled(), project.getTestEnabled(), project.getDefaultLanguage(),
+                project.getI18nEnabled());
     }
 
     /**
@@ -703,7 +706,16 @@ public class GenCodeServiceImpl implements GenCodeService {
         wrapper.orderByAsc(GenTableColumn::getSort);
         List<GenTableColumn> cols = columnService.list(wrapper);
         autoDetectRefs(table, cols);
-        return genTemplateEngine.renderWithProject(table, cols, projectConfigOf(table));
+        // V8.0：渲染结果统一过文案重写器；开关关闭时原样返回（存量产物逐字节零 diff）。
+        // 放在 renderOne 出口，写盘 / 预览 / 差异 / 下载四条路径自动一致。
+        return rewriteForI18n(table, genTemplateEngine.renderWithProject(table, cols, projectConfigOf(table)));
+    }
+
+    /** V8.0 单一判定点：读系统台账的 i18n 开关，回落实现在 GenTemplateModel.resolveI18n */
+    private Map<String, String> rewriteForI18n(GenTable table, Map<String, String> files) {
+        SysProject project = projectOf(table);
+        boolean on = project != null && GenTemplateModel.resolveI18n(project.getI18nEnabled());
+        return I18nTextRewriter.rewrite(files, on);
     }
 
     /**

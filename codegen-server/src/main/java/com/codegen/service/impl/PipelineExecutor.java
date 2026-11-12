@@ -11,6 +11,7 @@ import com.codegen.entity.GenPipelineStep;
 import com.codegen.entity.GenTable;
 import com.codegen.mapper.GenPipelineMapper;
 import com.codegen.mapper.GenPipelineStepMapper;
+import com.codegen.monitor.MonitorMetrics;
 import com.codegen.service.GenApplyService;
 import com.codegen.service.GenDdlService;
 import com.codegen.service.GenScaffoldService;
@@ -26,6 +27,8 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import io.micrometer.core.instrument.Timer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -90,6 +93,7 @@ public class PipelineExecutor {
     private final com.codegen.service.AiRecommendService aiRecommendService;
     private final com.codegen.service.AiModelService aiModelService;
     private final com.codegen.service.GenSqlDeliverService sqlDeliverService;
+    private final MonitorMetrics monitorMetrics;
 
     public PipelineExecutor(GenPipelineMapper pipelineMapper,
                             GenPipelineStepMapper stepMapper,
@@ -109,7 +113,8 @@ public class PipelineExecutor {
                             com.codegen.service.FlowDefBpmnService flowDefBpmnService,
                             com.codegen.service.AiRecommendService aiRecommendService,
                             com.codegen.service.AiModelService aiModelService,
-                            com.codegen.service.GenSqlDeliverService sqlDeliverService) {
+                            com.codegen.service.GenSqlDeliverService sqlDeliverService,
+                            MonitorMetrics monitorMetrics) {
         this.pipelineMapper = pipelineMapper;
         this.stepMapper = stepMapper;
         this.scaffoldService = scaffoldService;
@@ -129,6 +134,7 @@ public class PipelineExecutor {
         this.aiRecommendService = aiRecommendService;
         this.aiModelService = aiModelService;
         this.sqlDeliverService = sqlDeliverService;
+        this.monitorMetrics = monitorMetrics;
     }
 
     /**
@@ -168,6 +174,7 @@ public class PipelineExecutor {
 
                 mark(step, "running", null, null);
                 push(pipeline);
+                Timer.Sample stepSample = monitorMetrics.start();
                 try {
                     String message = switch (step.getStepKey()) {
                         case "model" -> stepModel(pipeline);
@@ -185,12 +192,15 @@ public class PipelineExecutor {
                         default -> "未知步骤，跳过";
                     };
                     mark(step, "success", message, null);
+                    monitorMetrics.stop(stepSample, "pipeline.step", "step", step.getStepKey(), "state", "success");
                 } catch (AiRecommendDegradedException e) {
                     // V7.0 降级不阻断：AI 推荐是增强步骤，失败/未启用只标记本步，
                     // pipeline 用 V6.6 规则推断继续，整体仍可为成功（带降级标记）
                     log.warn("AI 推荐降级 {}#{}: {}", pipeline.getPipelineNo(), step.getStepKey(), e.getMessage());
                     mark(step, e.getStatus(), e.getMessage(), null);
+                    monitorMetrics.stop(stepSample, "pipeline.step", "step", step.getStepKey(), "state", "degraded");
                 } catch (Exception e) {
+                    monitorMetrics.stop(stepSample, "pipeline.step", "step", step.getStepKey(), "state", "failed");
                     log.error("流水线步骤失败 {}#{}: {}", pipeline.getPipelineNo(), step.getStepKey(), e.getMessage(), e);
                     mark(step, "failed", e.getMessage(), tailOf(logFile(pipeline, step.getStepKey()), 40));
                     GenPipeline failed = pipelineMapper.selectById(pipelineId);
@@ -450,6 +460,12 @@ public class PipelineExecutor {
         dto.setAppName(project.getAppName());
         dto.setAppLogo(project.getAppLogo());
         dto.setAppThemeColor(project.getAppThemeColor());
+        // V7.5：语言配置此前只在直调 /gen/scaffold 时下发，流水线路径漏传 → 生成物恒为 zh-CN。
+        // V8.0 一并补齐，保证两条生成路径产出同样的语言配置。
+        dto.setDefaultLanguage(project.getDefaultLanguage());
+        dto.setSupportedLanguages(project.getSupportedLanguages());
+        dto.setProjectId(project.getId());
+        dto.setI18nEnabled(com.codegen.util.GenTemplateModel.resolveI18n(project.getI18nEnabled()));
         // V6.7：测试骨架开关（回落唯一实现 resolveTest，缺省开——只写 src/test 零运行时侵入）
         dto.setTestEnabled(com.codegen.util.GenTemplateModel.resolveTest(project.getTestEnabled()));
         GenScaffoldVO vo = scaffoldService.scaffold(dto);

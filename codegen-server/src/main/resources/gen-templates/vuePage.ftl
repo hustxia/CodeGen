@@ -3,9 +3,11 @@
     <!-- <gen:begin key="vue-template"> -->
     <!-- 页头：一眼看清「我在哪个页面、这页能干什么」 -->
     <div class="page-head">
-      <div class="page-head__main">
+      <div class="page-head__main"><#if i18nEnabled?? && i18nEnabled == 1>
+        <h2 class="page-title">{{ $t('crud.${className}.title', '${comment}') }}</h2>
+        <p class="page-desc">{{ $t('crud.${className}.desc', '维护${comment}数据，可按条件筛选、编辑与导出') }}</p><#else>
         <h2 class="page-title">${comment}</h2>
-        <p class="page-desc">维护${comment}数据，可按条件筛选、编辑与导出</p>
+        <p class="page-desc">维护${comment}数据，可按条件筛选、编辑与导出</p></#if>
       </div>
       <div class="page-head__meta">
         <span class="meta-pill">{{ total }} 条记录</span>
@@ -16,24 +18,24 @@
     <el-card shadow="never" class="filter-card">
       <el-form :inline="true" :model="query" @submit.native.prevent>
 <#list vueQueryColumns as c>
-        <el-form-item label="${c.commentLabel}">
+        <el-form-item <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if>>
 <#if c.isSelect || c.isRadio>
-          <el-select v-model="query.${c.javaField}" placeholder="请选择${c.commentLabel}" clearable style="width: 160px">
+          <el-select v-model="query.${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '请选择${c.commentLabel}')"<#else>placeholder="请选择${c.commentLabel}"</#if> clearable style="width: 160px">
             <el-option v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#elseif c.hasEnum>enumMap.${c.javaField} || []<#else>[]</#if>" :key="d.value" :label="d.label" :value="d.value" />
           </el-select>
 <#elseif c.isSwitch>
-          <el-select v-model="query.${c.javaField}" placeholder="请选择${c.commentLabel}" clearable style="width: 120px">
+          <el-select v-model="query.${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '请选择${c.commentLabel}')"<#else>placeholder="请选择${c.commentLabel}"</#if> clearable style="width: 120px">
             <el-option label="启用" :value="1" />
             <el-option label="停用" :value="0" />
           </el-select>
 <#elseif c.isNumberCtrl>
           <el-input-number v-model="query.${c.javaField}" controls-position="right" style="width: 160px" />
 <#elseif c.isDate>
-          <el-date-picker v-model="query.${c.javaField}" type="date" value-format="yyyy-MM-dd" placeholder="请选择${c.commentLabel}" style="width: 160px" />
+          <el-date-picker v-model="query.${c.javaField}" type="date" value-format="yyyy-MM-dd" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '请选择${c.commentLabel}')"<#else>placeholder="请选择${c.commentLabel}"</#if> style="width: 160px" />
 <#elseif c.isDatetime>
-          <el-date-picker v-model="query.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="请选择${c.commentLabel}" style="width: 200px" />
+          <el-date-picker v-model="query.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '请选择${c.commentLabel}')"<#else>placeholder="请选择${c.commentLabel}"</#if> style="width: 200px" />
 <#else>
-          <el-input v-model="query.${c.javaField}" placeholder="${c.commentLabel}" clearable @keyup.enter.native="handleSearch" />
+          <el-input v-model="query.${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '${c.commentLabel}')"<#else>placeholder="${c.commentLabel}"</#if> clearable @keyup.enter.native="handleSearch" />
 </#if>
         </el-form-item>
 </#list>
@@ -49,7 +51,7 @@
     <el-card shadow="never" class="table-card">
       <div slot="header" class="card-header">
         <div class="card-title">
-          <span class="title">${comment}</span>
+          <span class="title"><#if i18nEnabled?? && i18nEnabled == 1>{{ $t('crud.${className}.title', '${comment}') }}<#else>${comment}</#if></span>
           <span class="subtitle">共 {{ total }} 条</span>
         </div>
         <div class="card-actions">
@@ -80,7 +82,7 @@
         <el-table-column prop="id" label="ID" width="<#if idColWidth gt 0>${idColWidth}<#else>70</#if>" />
 <#list listColumns as c>
 <#if c.isMultiImage && fileEnabled>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="center">
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> width="${c.colWidth}" align="center">
           <template slot-scope="{ row }">
             <el-image v-if="firstImage(row.${c.javaField})" :src="firstImage(row.${c.javaField})" :preview-src-list="imageListOf(row.${c.javaField})" fit="cover" style="width: ${imageListSize}px; height: ${imageListSize}px; border-radius: 4px">
               <div slot="error"><img src="/placeholder.svg" alt="" style="width: 100%; height: 100%; object-fit: cover" /></div>
@@ -89,7 +91,7 @@
           </template>
         </el-table-column>
 <#elseif c.isImage && fileEnabled>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="center">
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> width="${c.colWidth}" align="center">
           <template slot-scope="{ row }">
             <el-image v-if="row.${c.javaField}" :src="row.${c.javaField}" :preview-src-list="[row.${c.javaField}]" fit="cover" style="width: ${imageListSize}px; height: ${imageListSize}px; border-radius: 4px">
               <div slot="error"><img src="/placeholder.svg" alt="" style="width: 100%; height: 100%; object-fit: cover" /></div>
@@ -98,16 +100,16 @@
           </template>
         </el-table-column>
 <#elseif c.isFile && fileEnabled>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip>
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="${c.colWidth}" show-overflow-tooltip>
           <template slot-scope="{ row }">
             <el-link v-if="row.${c.javaField}" type="primary" :href="row.${c.javaField}" target="_blank" icon="el-icon-document">{{ row.${c.javaField}.split('/').pop() }}</el-link>
           </template>
         </el-table-column>
 <#elseif c.hasRef>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="${c.colWidth}" show-overflow-tooltip
           :formatter="(row) => refText('${c.javaField}', row.${c.javaField})" />
 <#elseif c.isSwitch>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="center">
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> width="${c.colWidth}" align="center">
           <template slot-scope="{ row }">
             <el-tag :type="row.${c.javaField} === 1 ? 'success' : 'info'" size="mini">
               {{ row.${c.javaField} === 1 ? '启用' : '停用' }}
@@ -115,21 +117,21 @@
           </template>
         </el-table-column>
 <#elseif c.hasDict>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="${c.colWidth}" show-overflow-tooltip
           :formatter="(row) => dictText('${c.dictType}', row.${c.javaField})" />
 <#elseif c.hasEnum>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="${c.colWidth}" show-overflow-tooltip
           :formatter="(row) => enumText('${c.javaField}', row.${c.javaField})" />
 <#elseif c.isDatetime>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="center" show-overflow-tooltip />
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> width="${c.colWidth}" align="center" show-overflow-tooltip />
 <#elseif c.isDate>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="center" />
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> width="${c.colWidth}" align="center" />
 <#elseif c.isNumberCtrl || c.isNumber>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" width="${c.colWidth}" align="right" show-overflow-tooltip />
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> width="${c.colWidth}" align="right" show-overflow-tooltip />
 <#elseif c.isText || c.isTextarea>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip />
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="${c.colWidth}" show-overflow-tooltip />
 <#else>
-        <el-table-column prop="${c.javaField}" label="${c.commentLabel}" min-width="${c.colWidth}" show-overflow-tooltip />
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="${c.colWidth}" show-overflow-tooltip />
 </#if>
 </#list>
         <el-table-column prop="updateTime" label="更新时间" width="170" align="center" />
@@ -186,7 +188,7 @@
 <#if hasDialog>
 <#assign twoColForm = (formColumns?size gt 6)>
     <!-- 新增/编辑弹窗 -->
-    <el-dialog :title="form.id ? '编辑${comment}' : '新增${comment}'" :visible.sync="dialogVisible" width="<#if hasChild>900px<#elseif twoColForm>760px<#else>560px</#if>" top="6vh" class="form-dialog">
+    <el-dialog <#if i18nEnabled?? && i18nEnabled == 1>:title="form.id ? $t('crud.${className}.editTitle', '编辑${comment}') : $t('crud.${className}.addTitle', '新增${comment}')"<#else>:title="form.id ? '编辑${comment}' : '新增${comment}'"</#if> :visible.sync="dialogVisible" width="<#if hasChild>900px<#elseif twoColForm>760px<#else>560px</#if>" top="6vh" class="form-dialog">
       <el-form ref="form" :model="form" :rules="rules" label-width="<#if twoColForm>96px<#else>110px</#if>">
 <#if twoColForm>
         <el-row :gutter="20">
@@ -195,7 +197,7 @@
 <#if twoColForm>
           <el-col :span="12">
 </#if>
-        <el-form-item<#if c.hasLink> v-if="link.visible('${c.javaField}')"</#if> label="${c.commentLabel}" prop="${c.javaField}">
+        <el-form-item<#if c.hasLink> v-if="link.visible('${c.javaField}')"</#if> <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> prop="${c.javaField}">
 <#if c.isMultiImage && fileEnabled>
           <multi-image-upload v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> />
 <#elseif c.isImage && fileEnabled>
@@ -203,13 +205,13 @@
 <#elseif c.isFile && fileEnabled>
           <file-upload v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> />
 <#elseif c.hasRef>
-          <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> filterable remote clearable placeholder="输入关键字搜索${c.commentLabel}"
+          <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> filterable remote clearable <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '输入关键字搜索${c.commentLabel}')"<#else>placeholder="输入关键字搜索${c.commentLabel}"</#if>
             :remote-method="kw => searchRef('${c.javaField}', '${c.refTable}', '${c.refLabel}', kw)"
             :loading="refLoading['${c.javaField}']" style="width: 100%">
             <el-option v-for="o in refOptions['${c.javaField}'] || []" :key="o.id" :label="o.label" :value="o.id" />
           </el-select>
 <#elseif c.isSelect>
-          <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> placeholder="请选择${c.commentLabel}" clearable style="width: 100%">
+          <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '请选择${c.commentLabel}')"<#else>placeholder="请选择${c.commentLabel}"</#if> clearable style="width: 100%">
             <el-option v-for="d in <#if c.hasDict>dicts.${c.dictType} || []<#elseif c.hasEnum>enumMap.${c.javaField} || []<#else>[]</#if>" :key="d.value" :label="d.label" :value="d.value" />
           </el-select>
 <#elseif c.isRadio>
@@ -221,13 +223,13 @@
 <#elseif c.isNumberCtrl>
           <el-input-number v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> controls-position="right" style="width: 100%" />
 <#elseif c.isDate>
-          <el-date-picker v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="date" value-format="yyyy-MM-dd" placeholder="请选择${c.commentLabel}" style="width: 100%" />
+          <el-date-picker v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="date" value-format="yyyy-MM-dd" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '请选择${c.commentLabel}')"<#else>placeholder="请选择${c.commentLabel}"</#if> style="width: 100%" />
 <#elseif c.isDatetime>
-          <el-date-picker v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="请选择${c.commentLabel}" style="width: 100%" />
+          <el-date-picker v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="datetime" value-format="yyyy-MM-dd HH:mm:ss" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '请选择${c.commentLabel}')"<#else>placeholder="请选择${c.commentLabel}"</#if> style="width: 100%" />
 <#elseif c.isTextarea>
-          <el-input v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="textarea" :rows="3" placeholder="请输入${c.commentLabel}" />
+          <el-input v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> type="textarea" :rows="3" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '请输入${c.commentLabel}')"<#else>placeholder="请输入${c.commentLabel}"</#if> />
 <#else>
-          <el-input v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> placeholder="请输入${c.commentLabel}" />
+          <el-input v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '请输入${c.commentLabel}')"<#else>placeholder="请输入${c.commentLabel}"</#if> />
 </#if>
         </el-form-item>
 <#if twoColForm>
@@ -254,14 +256,14 @@
 <#if hasChild>
       <el-tabs v-model="activeChildTab" type="card" class="child-tabs">
 <#list children as child>
-        <el-tab-pane label="${child.comment}" name="${child.varName}">
+        <el-tab-pane <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.child.${child.varName}', '${child.comment}')"<#else>label="${child.comment}"</#if> name="${child.varName}">
           <div class="child-bar">
             <el-button type="primary" icon="el-icon-plus" size="mini" @click="addChildRow('${child.varName}')">添加明细</el-button>
             <span class="child-tip">主表与子表在同一事务中保存（先清后插）</span>
           </div>
           <el-table :data="${child.varName}Rows" border size="mini" class="child-table">
 <#list child.formColumns as c>
-            <el-table-column label="${c.commentLabel}" min-width="130">
+            <el-table-column <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="130">
               <template slot-scope="{ row }">
 <#if c.isMultiImage && fileEnabled>
                 <multi-image-upload v-model="row.${c.javaField}" />
@@ -278,7 +280,7 @@
 <#elseif c.isDatetime>
                 <el-date-picker v-model="row.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" size="mini" style="width: 100%" />
 <#else>
-                <el-input v-model="row.${c.javaField}" size="mini" placeholder="${c.commentLabel}" />
+                <el-input v-model="row.${c.javaField}" size="mini" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '${c.commentLabel}')"<#else>placeholder="${c.commentLabel}"</#if> />
 </#if>
               </template>
             </el-table-column>
@@ -286,7 +288,7 @@
             <el-table-column label="操作" width="<#if child.hasGrandChild>150<#else>70</#if>" align="center">
               <template slot-scope="{ row, $index }">
 <#list child.grandChildren as gc>
-                <el-button type="text" @click="openGrandRows('${child.varName}', '${gc.varName}', row)">${gc.comment}</el-button>
+                <el-button type="text" @click="openGrandRows('${child.varName}', '${gc.varName}', row)"><#if i18nEnabled?? && i18nEnabled == 1>{{ $t('crud.${className}.gc.${gc.varName}', '${gc.comment}') }<#else>${gc.comment}</#if></el-button>
 </#list>
                 <el-button type="text" class="danger-btn" @click="${child.varName}Rows.splice($index, 1)">删除</el-button>
               </template>
@@ -323,7 +325,7 @@
 <#list child.grandChildren as gc>
       <el-table v-show="grandDialog === '${child.varName}.${gc.varName}'" :data="grandRows" border size="mini" class="child-table">
 <#list gc.formColumns as c>
-        <el-table-column label="${c.commentLabel}" min-width="130">
+        <el-table-column <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="130">
           <template slot-scope="{ row }">
 <#if c.isMultiImage && fileEnabled>
             <multi-image-upload v-model="row.${c.javaField}" />
@@ -340,7 +342,7 @@
 <#elseif c.isDatetime>
             <el-date-picker v-model="row.${c.javaField}" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" size="mini" style="width: 100%" />
 <#else>
-            <el-input v-model="row.${c.javaField}" size="mini" placeholder="${c.commentLabel}" />
+            <el-input v-model="row.${c.javaField}" size="mini" <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '${c.commentLabel}')"<#else>placeholder="${c.commentLabel}"</#if> />
 </#if>
           </template>
         </el-table-column>
@@ -363,7 +365,7 @@
 <#if hasDetail>
     <!-- 详情抽屉（只读）。主子表：宽抽屉 + el-tabs，tab1 主表字段，tab2..N 每张明细一张只读表；
          数据复用 /with-children 一次拉全，不逐 tab 发请求 -->
-    <el-drawer title="${comment}详情" :visible.sync="detailVisible" size="<#if hasChild>62%<#else>420px</#if>">
+    <el-drawer <#if i18nEnabled?? && i18nEnabled == 1>:title="$t('crud.${className}.detailTitle', '${comment}详情')"<#else>title="${comment}详情"</#if> :visible.sync="detailVisible" size="<#if hasChild>62%<#else>420px</#if>">
 <#if hasChild>
       <el-tabs v-model="activeDetailTab" type="card" class="detail-tabs">
         <el-tab-pane label="主表信息" name="main">
@@ -383,9 +385,9 @@
 </#if>
 <#list listColumns as c>
 <#if hasChild>          <div class="detail-row">
-            <span class="detail-label">${c.commentLabel}</span>
+            <span class="detail-label"><#if i18nEnabled?? && i18nEnabled == 1>{{ $t('crud.${className}.field.${c.javaField}', '${c.commentLabel}') }}<#else>${c.commentLabel}</#if></span>
 <#else>        <div class="detail-row">
-          <span class="detail-label">${c.commentLabel}</span>
+          <span class="detail-label"><#if i18nEnabled?? && i18nEnabled == 1>{{ $t('crud.${className}.field.${c.javaField}', '${c.commentLabel}') }}<#else>${c.commentLabel}</#if></span>
 </#if>
 <#if c.isMultiImage && fileEnabled>
 <#if hasChild>            <span class="detail-value"><span v-if="imageListOf(detail.${c.javaField}).length"><el-image v-for="(u, i) in imageListOf(detail.${c.javaField})" :key="i" :src="u" :preview-src-list="imageListOf(detail.${c.javaField})" fit="cover" style="width: ${imageDetailSize}px; height: ${imageDetailSize}px; border-radius: 4px; margin-right: 6px" /></span><span v-else>—</span></span>
@@ -435,10 +437,10 @@
           </div>
         </el-tab-pane>
 <#list children as child>
-        <el-tab-pane label="${child.comment}" name="${child.varName}">
+        <el-tab-pane <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.child.${child.varName}', '${child.comment}')"<#else>label="${child.comment}"</#if> name="${child.varName}">
           <el-table :data="detailGroupRows('${child.varName}')" border size="mini" max-height="520">
 <#list child.listColumns as c>
-            <el-table-column label="${c.commentLabel}" min-width="120" prop="${c.javaField}">
+            <el-table-column <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="120" prop="${c.javaField}">
               <template slot-scope="{ row }">
 <#if c.hasRef>
                 {{ refText('${c.javaField}', row.${c.javaField}) }}
@@ -474,7 +476,7 @@
 
 <#if hasExcelImport>
     <!-- 导入对话框 -->
-    <el-dialog title="导入${comment}" :visible.sync="importVisible" width="480px">
+    <el-dialog <#if i18nEnabled?? && i18nEnabled == 1>:title="$t('crud.${className}.importTitle', '导入${comment}')"<#else>title="导入${comment}"</#if> :visible.sync="importVisible" width="480px">
       <div class="import-tpl-tip">
         表头必须与模板一致。模板第 2 行是填写说明，
         <b>填写真实数据前请先删掉说明行</b>。
