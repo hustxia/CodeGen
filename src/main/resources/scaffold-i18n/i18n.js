@@ -26,11 +26,29 @@ function interpolate(text, params) {
   })
 }
 
+/**
+ * 文案翻译。
+ *
+ * @param {string} key 文案键，如 'common.query' / 'menu.demo.order' / 'crud.Order.title'
+ * @param {object|string} [params]
+ *    - 对象：插值参数，如 { count: 10 } 配合 '共 {count} 条'
+ *    - 字符串：显式「源语言/回落文案」。动态数据（菜单名、实体名）没有词条时，
+ *      直接把中文原文当回落值传进来，任何语言缺失译文都回落到它，天然支持 206 种语言。
+ *      例：$t('menu.demo.order', '订单管理') —— 该键任何语言都没译文时显示「订单管理」。
+ *
+ * 回落链：当前语言非空译文 → 默认语言译文 → 第二参回文/键本身。
+ */
 export function t(key, params) {
   const current = messagesOf(state.locale)
   const fallback = messagesOf(DEFAULT_LOCALE)
-  const value = current[key] || fallback[key] || key
-  return interpolate(value, params)
+  let value
+  if (params !== undefined && typeof params !== 'object') {
+    // 第二参是字符串：当作源语言文案（动态数据没有词条时的回落源）
+    value = current[key] || fallback[key] || params
+  } else {
+    value = current[key] || fallback[key] || key
+  }
+  return interpolate(value, params && typeof params === 'object' ? params : undefined)
 }
 
 export function getLocale() {
