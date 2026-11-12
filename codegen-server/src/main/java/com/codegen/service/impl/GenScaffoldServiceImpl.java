@@ -3,8 +3,12 @@ package com.codegen.service.impl;
 import com.codegen.common.exception.BusinessException;
 import com.codegen.common.log.Ip2RegionSearcher;
 import com.codegen.config.GenOutputProperties;
+import com.codegen.config.I18nCatalog;
+import com.codegen.config.LanguageConfig;
 import com.codegen.dto.GenScaffoldDTO;
 import com.codegen.service.GenScaffoldService;
+import com.codegen.service.I18nMessageService;
+import com.codegen.service.I18nTextRewriter;
 import com.codegen.support.GenNaming;
 import com.codegen.support.GenPathResolver;
 import com.codegen.vo.GenScaffoldCheckVO;
@@ -38,6 +42,10 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
     @Autowired
     private GenOutputProperties outputProperties;
+
+    /** V8.0：读取该系统的用户译文，组装产物语言包 */
+    @Autowired
+    private I18nMessageService i18nMessageService;
 
     @Override
     public GenScaffoldVO scaffold(GenScaffoldDTO dto) {
@@ -79,7 +87,12 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         Path serviceRoot = multi ? backendRoot.resolve(stem + "-service") : backendRoot;
         Path gatewayRoot = backendRoot.resolve(stem + "-gateway");
 
+        // V8.0：产物国际化开关。放在 VO 上（每次 scaffold 新建）而不是实例字段，
+        // 单例 service 并发生成时不会串状态；write() 据此决定是否做文案重写。
+        boolean i18nOn = Boolean.TRUE.equals(dto.getI18nEnabled());
+
         GenScaffoldVO vo = new GenScaffoldVO();
+        vo.setI18nEnabled(i18nOn);
         vo.setBackendPath(backendRoot.toString());
         vo.setFrontendPath(Boolean.TRUE.equals(dto.getWithFrontend()) ? frontendRoot.toString() : null);
 
@@ -380,16 +393,17 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             write(frontendRoot, ".env.development",
                     frontendEnvDev(proxyPort), "frontend", force, vo, counter);
             write(frontendRoot, ".env.production", frontendEnvProd(), "frontend", force, vo, counter);
-            write(frontendRoot, "public/index.html", frontendIndexHtml(appName, appLogo, themeColor, htmlLang, htmlDir),
+            write(frontendRoot, "public/index.html",
+                    frontendIndexHtml(appName, appLogo, themeColor, htmlLang, htmlDir, i18nOn),
                     "frontend", force, vo, counter);
             // V6.8 素材链路：产物自带占位图，图片列 onerror / el-image error 槽统一指向它，
             // 种子数据里指向不存在文件的 URL 不再显示浏览器破图
             write(frontendRoot, "public/placeholder.svg", loadScaffoldResource("scaffold/web/placeholder.svg"),
                     "frontend", force, vo, counter);
-            write(frontendRoot, "src/main.js", frontendMainJs(), "frontend", force, vo, counter);
+            write(frontendRoot, "src/main.js", frontendMainJs(i18nOn), "frontend", force, vo, counter);
             write(frontendRoot, "src/App.vue", frontendAppVue(), "frontend", force, vo, counter);
             write(frontendRoot, "src/utils/request.js", frontendRequestJs(), "frontend", force, vo, counter);
-            write(frontendRoot, "src/layout/index.vue", frontendLayoutVue(appName, appLogo, themeColor),
+            write(frontendRoot, "src/layout/index.vue", frontendLayoutVue(appName, appLogo, themeColor, i18nOn),
                     "frontend", force, vo, counter);
             write(frontendRoot, "src/views/index.vue", frontendHomeVue(appName), "frontend", force, vo, counter);
             // V5.0 F-07：登录页与路由守卫（401 跳转目标从 request.js 来）
@@ -411,6 +425,12 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 // V6.8 多图字段：multiImage 列 import 这个组件（JSON 数组字符串 v-model）
                 write(frontendRoot, "src/components/MultiImageUpload.vue",
                         fileResource("MultiImageUpload.vue", pkg), "frontend", force, vo, counter);
+            }
+            // V8.0 产物国际化：只有开关打开才写这一组文件，存量工程零 diff
+            if (i18nOn) {
+                writeI18nResources(frontendRoot, dto, force, vo, counter);
+                vo.getNextSteps().add("产物国际化：系统管理→文案翻译 可逐语言补译；"
+                        + "页面右上角切换语言，RTL 语言自动镜像；语言包在 src/locales/");
             }
             write(frontendRoot, ".gitignore", frontendGitignore(), "frontend", force, vo, counter);
             write(frontendRoot, "README.md", frontendReadme(appName, frontendModule, webPort, serverPort),
@@ -503,6 +523,13 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
     private void write(Path root, String relPath, String content, String side,
                        boolean force, GenScaffoldVO vo, int[] counter) {
+        // V8.0：骨架文件（Java 字符串拼出来的布局/登录/首页/main.js/request.js）
+        // 与表生成页走同一个重写器、同一份规则表，避免两套文案接线分叉。
+        // 开关关闭时 rewriteOne 不会被调用，产物逐字节零 diff。
+        if (vo.isI18nEnabled() && "frontend".equals(side)
+                && I18nTextRewriter.isFrontendFile(relPath)) {
+            content = I18nTextRewriter.rewriteOne(relPath, content);
+        }
         Path target = safeTarget(root, relPath);
         try {
             boolean existed = Files.exists(target);
@@ -4458,10 +4485,22 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
     private String frontendIndexHtml(String appName, String appLogo, String themeColor,
                                      String htmlLang, String htmlDir) {
+        return frontendIndexHtml(appName, appLogo, themeColor, htmlLang, htmlDir, false);
+    }
+
+    /** V8.0：i18nOn 时补一段 RTL 镜像样式；关开关时输出与 V7.5 逐字节一致 */
+    private String frontendIndexHtml(String appName, String appLogo, String themeColor,
+                                     String htmlLang, String htmlDir, boolean i18nOn) {
         // favicon 必须指向真的存在的文件：空 Logo 回落 placeholder.svg（脚手架必写），
         // 历史上写死的 logo.png 从来没有被生成过，等于每个新工程都挂一个 404
         String favicon = appLogo == null || appLogo.isBlank()
                 ? com.codegen.util.GenTemplateModel.FALLBACK_APP_LOGO : appLogo;
+        String rtlCss = i18nOn
+                ? "  <style>[dir='rtl'] .header-right { flex-direction: row-reverse; }"
+                + "[dir='rtl'] .content, [dir='rtl'] .el-table, [dir='rtl'] .el-form-item__label { direction: rtl; text-align: right; }"
+                + "[dir='rtl'] code, [dir='rtl'] pre, [dir='rtl'] .path { direction: ltr; text-align: left; }"
+                + "[dir='rtl'] .lang-switch { margin-inline-start: 0; margin-inline-end: 12px; }</style>\n"
+                : "";
         return "<!DOCTYPE html>\n"
                 + "<html lang=\"" + htmlLang + "\"" + ("rtl".equals(htmlDir) ? " dir=\"rtl\"" : "") + ">\n"
                 + "<head>\n"
@@ -4471,6 +4510,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 + "  <title>" + appName + "</title>\n"
                 + "  <link rel=\"icon\" href=\"" + favicon + "\">\n"
                 + "  <style>:root { --app-primary: " + themeColor + "; }</style>\n"
+                + rtlCss
                 + "</head>\n"
                 + "<body>\n"
                 + "  <noscript>请启用 JavaScript 后继续访问。</noscript>\n"
@@ -4480,15 +4520,35 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     private String frontendMainJs() {
+        return frontendMainJs(false);
+    }
+
+    /** V8.0：开关打开时全局注册 $t / $setLocale 与切换器组件；关闭时内容零 diff */
+    private String frontendMainJs(boolean i18nOn) {
         // V6.4：注册 v-hasPermi 指令——perms 与后端权限点校验同源（登录响应下发），前后端一致
+        String i18nImports = i18nOn
+                ? "import i18n, { t, setLocale, availableLocales } from './utils/i18n'\n"
+                + "import LanguageSwitch from './components/LanguageSwitch.vue'\n"
+                : "";
+        String i18nInit = i18nOn
+                ? "// V8.0 产物国际化：Vue.observable 的 state 让所有 $t 调用点响应式重渲染\n"
+                + "Vue.component('LanguageSwitch', LanguageSwitch)\n"
+                + "Vue.prototype.$t = t\n"
+                + "Vue.prototype.$setLocale = setLocale\n"
+                + "Vue.prototype.$i18nLocales = availableLocales()\n"
+                + "Vue.prototype.$i18n = i18n\n"
+                + "window.$t = t\n\n"
+                : "";
         return "import Vue from 'vue'\n"
                 + "import ElementUI from 'element-ui'\n"
                 + "import 'element-ui/lib/theme-chalk/index.css'\n"
                 + "import App from './App.vue'\n"
                 + "import router from './router'\n"
-                + "import store from './store'\n\n"
+                + "import store from './store'\n"
+                + i18nImports + "\n"
                 + "Vue.use(ElementUI, { size: 'small' })\n"
                 + "Vue.config.productionTip = false\n\n"
+                + i18nInit
                 + "// V6.4 按钮级权限：v-hasPermi=\"['demo_fee:add']\"，命中任一即显示；超管 *:*:* 直通\n"
                 + "Vue.directive('hasPermi', {\n"
                 + "  inserted(el, binding) {\n"
@@ -4584,16 +4644,79 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
     }
 
     private String frontendLayoutVue(String appName, String appLogo, String themeColor) {
+        return frontendLayoutVue(appName, appLogo, themeColor, false);
+    }
+
+    /** V8.0：开关打开时把 header 占位符换成全局注册的切换器；关闭时占位符被清空，字节零 diff */
+    private String frontendLayoutVue(String appName, String appLogo, String themeColor, boolean i18nOn) {
         String name = appName == null || appName.isBlank() ? "业务系统" : appName;
         String initial = name.length() > 1 ? name.substring(0, 1) : name;
         // 品牌区二选一：配了 Logo 用图，没配用首字标识（绝不留空占位）
         String brandMark = appLogo == null || appLogo.isBlank()
                 ? "<div class=\"brand-mark\">" + initial + "</div>"
                 : "<img class=\"brand-logo\" src=\"" + appLogo + "\" alt=\"" + name + "\">";
+        String switchTag = i18nOn ? "\n          <language-switch />" : "";
         return loadScaffoldResource("scaffold/web/layout.vue")
                 .replace("__BRAND_MARK__", brandMark)
                 .replace("__PROJECT__", name)
-                .replace("__THEME_COLOR__", themeColor);
+                .replace("__THEME_COLOR__", themeColor)
+                .replace("__I18N_SWITCH__", switchTag);
+    }
+
+    /**
+     * V8.0 产物国际化资源：语言包 + 聚合入口 + 零依赖运行时 + 切换器。
+     *
+     * <p>文件名来自 {@link I18nCatalog#resolveLocales(String, String)} 的白名单标签
+     * （{@code ^[A-Za-z0-9-]{2,32}$} 先验），拼路径前已过滤，不存在穿越风险。
+     * 所有文件仍走 {@link #write}，备份 / 台账 / 受保护跳过三件套一个不少。
+     */
+    private void writeI18nResources(Path frontendRoot, GenScaffoldDTO dto,
+                                    boolean force, GenScaffoldVO vo, int[] counter) {
+        String defaultLocale = LanguageConfig.resolveLocale(dto.getDefaultLanguage());
+        List<String> locales = I18nCatalog.resolveLocales(dto.getSupportedLanguages(), defaultLocale);
+        if (locales.isEmpty()) {
+            locales = List.of(defaultLocale);
+        }
+        Long projectId = dto.getProjectId();
+        StringBuilder imports = new StringBuilder();
+        StringBuilder messages = new StringBuilder();
+        StringBuilder available = new StringBuilder();
+        int idx = 0;
+        for (String loc : locales) {
+            Map<String, String> overrides = projectId == null ? Map.of()
+                    : i18nMessageService.overrides(projectId, loc);
+            write(frontendRoot, "src/locales/" + loc + ".json",
+                    I18nCatalog.languagePackage(loc, overrides, defaultLocale),
+                    "frontend", force, vo, counter);
+            imports.append("import v").append(idx).append(" from './").append(loc).append(".json'\n");
+            messages.append("  '").append(loc).append("': v").append(idx).append(",\n");
+            I18nCatalog.LocaleMeta meta = I18nCatalog.localeMeta(loc);
+            available.append("  { locale: '").append(loc)
+                    .append("', label: '").append(jsQuote(meta.label()))
+                    .append("', nameNative: '").append(jsQuote(meta.nameNative()))
+                    .append("', dir: '").append(meta.dir()).append("' },\n");
+            idx++;
+        }
+        String indexJs = "// V8.0 产物语言包入口（代码生成器自动维护，请勿手工编辑）\n"
+                + imports + "\n"
+                + "export const available = [\n" + available + "]\n\n"
+                + "const messages = {\n" + messages + "}\n\n"
+                + "export function messagesOf(locale) { return messages[locale] || {} }\n"
+                + "export default messages\n";
+        write(frontendRoot, "src/locales/index.js", indexJs, "frontend", force, vo, counter);
+        write(frontendRoot, "src/utils/i18n.js",
+                loadScaffoldResource("scaffold-i18n/i18n.js").replace("__DEFAULT_LOCALE__", defaultLocale),
+                "frontend", force, vo, counter);
+        write(frontendRoot, "src/components/LanguageSwitch.vue",
+                loadScaffoldResource("scaffold-i18n/LanguageSwitch.vue"),
+                "frontend", force, vo, counter);
+        log.info("[I18nScaffold] 生成 {} 个语言包，默认语言 {}，词库 {} 键",
+                locales.size(), defaultLocale, I18nCatalog.totalKeys());
+    }
+
+    /** JS 单引号字符串转义：语言自称里可能出现撇号（如 Norsk bokmål / Cymraeg） */
+    private static String jsQuote(String s) {
+        return s == null ? "" : s.replace("\\", "\\\\").replace("'", "\\'");
     }
 
     /**

@@ -4,6 +4,8 @@ import com.codegen.common.exception.BusinessException;
 import com.codegen.common.result.ResultCode;
 import com.codegen.config.DocProperties;
 import com.codegen.entity.SysDoc;
+import com.codegen.monitor.MonitorMetrics;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -57,6 +59,9 @@ public class DocPreviewEngine implements InitializingBean {
 
     @Autowired
     private DocProperties props;
+
+    @Autowired
+    private MonitorMetrics monitorMetrics;
 
     @Autowired
     private DocStorage storage;
@@ -157,9 +162,26 @@ public class DocPreviewEngine implements InitializingBean {
     }
 
     /**
-     * 转 PDF 并缓存。缓存键含 size+mtime：记录不可变（重传即新行），故无需失效逻辑。
+     * V6.10 埋点包装：缓存命中 / 实际转换 / 失败三个出口都要可见，
+     * LibreOffice 是已知慢点，没有数据时只能靠猜。
      */
     private Path convertToPdf(SysDoc doc) {
+        boolean hit = Files.isRegularFile(cachePathOf(doc));
+        Timer.Sample sample = monitorMetrics.start();
+        String result = "failed";
+        try {
+            Path pdf = doConvertToPdf(doc);
+            result = hit ? "hit" : "converted";
+            return pdf;
+        } finally {
+            monitorMetrics.stop(sample, "doc.convert", "result", result);
+        }
+    }
+
+    /**
+     * 转 PDF 并缓存。缓存键含 size+mtime：记录不可变（重传即新行），故无需失效逻辑。
+     */
+    private Path doConvertToPdf(SysDoc doc) {
         Path cached = cachePathOf(doc);
         if (Files.isRegularFile(cached)) {
             return cached;

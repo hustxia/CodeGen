@@ -115,7 +115,8 @@ public final class GenTemplateModel {
     public record ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                                 String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                                 String projectStructure, Integer payEnabled, Integer mobileEnabled,
-                                Integer fileEnabled, Integer testEnabled, String defaultLanguage) {
+                                Integer fileEnabled, Integer testEnabled, String defaultLanguage,
+                                Integer i18nEnabled) {
 
         /** 兼容 V3.0 之前的构造：无系统编码，权限点不加前缀 */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage) {
@@ -176,9 +177,9 @@ public final class GenTemplateModel {
         /**
          * 兼容 V7.4 及之前的「11 参全参构造」：无语言配置，回落 {@code zh-CN}。
          *
-         * <p>V7.5 给 record 加了第 12 个组件 defaultLanguage，如果不留这个重载，
-         * 仓库里十几个基线/契约测试（以及未来任何旧调用）会全部编译失败。
-         * 存量系统的行为必须保持不变——所以这里显式传 null，让 LanguageConfig 走默认。
+         * <p>V7.5 给 record 加了第 12 个组件 defaultLanguage，V8.0 又加了第 13 个 i18nEnabled，
+         * 如果不留这些重载，仓库里十几个基线/契约测试（以及未来任何旧调用）会全部编译失败。
+         * 存量系统的行为必须保持不变——这里显式传 null，让 LanguageConfig / resolveI18n 走默认（关）。
          */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
@@ -186,7 +187,22 @@ public final class GenTemplateModel {
                              Integer fileEnabled, Integer testEnabled) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
                     defaultGenPrint, projectStructure, payEnabled, mobileEnabled, fileEnabled,
-                    testEnabled, null);
+                    testEnabled, null, null);
+        }
+
+        /**
+         * 兼容 V7.5 的「12 参全参构造」：无国际化开关配置，回落关。
+         *
+         * <p>V8.0 加第 13 个组件 i18nEnabled 时保留；仓库里十几个基线/契约测试仍用这个签名。
+         * 显式传 null 让 resolveI18n 走默认（关），存量产物逐字节零 diff。
+         */
+        public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
+                             String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
+                             String projectStructure, Integer payEnabled, Integer mobileEnabled,
+                             Integer fileEnabled, Integer testEnabled, String defaultLanguage) {
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
+                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, fileEnabled,
+                    testEnabled, defaultLanguage, null);
         }
     }
 
@@ -253,6 +269,22 @@ public final class GenTemplateModel {
      */
     public static boolean resolveTest(Integer projectVal) {
         return projectVal == null || projectVal == 1;
+    }
+
+    /**
+     * V8.0 产物国际化开关的回落唯一实现：系统级 → 硬编码关。
+     * 与 {@link #resolvePay(Integer)} / {@link #resolveFile(Integer)} 同款语义
+     * （可空三态，NULL/0=关，1=开；存量系统产物逐字节零 diff）。
+     *
+     * <p>V8.0 后期把开关作为第 13 个组件塞进 {@link #ProjectConfig(String, String, String, String, Integer, Integer, String, Integer, Integer, Integer, Integer, String, Integer)}
+     * 并写进模板模型（键 {@code i18nEnabled}，0/1）——模板用
+     * {@code <#if i18nEnabled?? && i18nEnabled == 1>} 条件包裹动态文案（实体名/菜单名），
+     * 基线模型传 null 落 0 → 条件为假 → 存量产物逐字节零 diff。
+     * 静态 UI 文案（按钮/表头/对话框）仍由 I18nTextRewriter + keys.json 在渲染后接线，
+     * 无需模板改动。
+     */
+    public static boolean resolveI18n(Integer projectVal) {
+        return projectVal != null && projectVal == 1;
     }
 
     /**
@@ -389,6 +421,9 @@ public final class GenTemplateModel {
                 project == null ? null : project.defaultLanguage());
         m.put("lang", htmlLang);
         m.put("dir", com.codegen.config.LanguageConfig.resolveDir(htmlLang));
+        // V8.0 产物国际化开关：三态回落（NULL/0=关，1=开），模板用 <#if i18nEnabled?? && i18nEnabled == 1> 消费。
+        // 基线模型传 null → 这里落 0 → 条件为假 → 存量产物逐字节零 diff。
+        m.put("i18nEnabled", GenTemplateModel.resolveI18n(project == null ? null : project.i18nEnabled()) ? 1 : 0);
         // F-09：空前缀 → /{module}（与后端 @RequestMapping("/${moduleName}") 直连，代理只剥 /dev-api）；
         // 有前缀 → /api/{prefix}/{module}（网关段原样保留，代理剥 /dev-api/api/{prefix}）
         // V6.0 micro：产物工程自带网关，网关按 /{module}/** 路由，前端不再拼 /api/{prefix} 段；

@@ -86,6 +86,9 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     @Autowired
     private com.codegen.support.GenSeedGenerator seedGenerator;
 
+    @Autowired
+    private com.codegen.monitor.MonitorMetrics monitorMetrics;
+
     /** 单线程执行器：M1 只允许一条流水线在跑，排队即拒绝 */
     private final ExecutorService runner = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "pipeline-runner");
@@ -356,6 +359,8 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         pipeline.setStatus("stopped");
         pipelineMapper.updateById(pipeline);
         push(pipeline);
+        // V6.10：停止发生在 executor 之外，不单独记会让面板的流水线成功率失真
+        monitorMetrics.count("pipeline.run", 1, "state", "stopped");
         return detail(id);
     }
 

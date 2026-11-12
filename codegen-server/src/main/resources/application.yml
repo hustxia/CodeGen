@@ -150,7 +150,7 @@ gen:
       # api-key: sk-xxx
       # model: gpt-4o-mini
       timeout-seconds: 30
-    # java-home: ~/.jdks/temurin-21   # 打包后端用，留空用当前进程
+    # java-home: C:/Users/xiayuhong/.jdks/temurin-21   # 打包后端用，留空用当前进程
     # maven: C:/dev/maven/bin/mvn.cmd                  # 留空回落 gen.output.maven
     npm: npm
     backend-port-base: 8140

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>V8.0 产物页面语言切换 效果图</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#f0f2f5; color:#303133; font:13px/1.5 "Helvetica Neue",Arial,"Microsoft YaHei",sans-serif; }
+  .wrap { max-width:1240px; margin:22px auto; padding:0 16px; }
+  h1 { font-size:21px; margin:0 0 6px; }
+  .sub { color:#8492a6; font-size:13px; margin:0 0 18px; }
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .panel { background:#fff; border:1px solid #e4e7ed; border-radius:5px; overflow:hidden; }
+  .panel-hd { padding:9px 12px; background:#fafafa; border-bottom:1px solid #ebeef5; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+  .badge { font-size:11px; padding:2px 7px; border-radius:3px; background:#ecf5ff; color:#409EFF; border:1px solid #d9ecff; }
+  .badge.rtl { background:#fdf6ec; color:#E6A23C; border-color:#faecd8; }
+  .app { min-height:300px; }
+  .app .header { height:44px; background:#fff; border-bottom:1px solid #ebeef5; display:flex; align-items:center; justify-content:space-between; padding:0 12px; }
+  .crumb { color:#909399; font-size:12px; }
+  .header-right { display:flex; align-items:center; gap:8px; }
+  .user { color:#606266; font-size:12px; }
+  .sel { border:1px solid #dcdfe6; border-radius:3px; padding:4px 8px; font-size:12px; color:#409EFF; background:#fff; min-width:96px; }
+  .body { padding:14px; background:#fafafa; min-height:254px; }
+  .title { font-size:15px; font-weight:600; margin:0 0 3px; }
+  .desc { color:#909399; font-size:12px; margin:0 0 12px; }
+  .toolbar { background:#fff; border:1px solid #ebeef5; border-radius:3px; padding:9px 10px; margin-bottom:10px; }
+  .btn { display:inline-block; border:1px solid #dcdfe6; border-radius:3px; padding:4px 10px; font-size:12px; margin-right:6px; color:#606266; background:#fff; }
+  .btn.p { background:#409EFF; border-color:#409EFF; color:#fff; }
+  table { width:100%; border-collapse:collapse; background:#fff; font-size:12px; }
+  th,td { border:1px solid #ebeef5; padding:7px 8px; text-align:left; }
+  th { background:#fafafa; color:#909399; font-weight:500; }
+  .rtl .header-right { flex-direction:row-reverse; }
+  .rtl .body, .rtl .toolbar, .rtl table, .rtl th, .rtl td { direction:rtl; text-align:right; }
+  .rtl .btn { margin-right:0; margin-left:6px; }
+  .rtl .sel { text-align:right; }
+  .rtl-mark { color:#E6A23C; font-size:11px; }
+  .note { margin-top:16px; background:#fff; border:1px solid #ebeef5; border-radius:4px; padding:14px 16px; font-size:12px; color:#606266; line-height:1.9; }
+  code { background:#f4f4f5; padding:1px 5px; border-radius:3px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>产物页面 · 语言切换与 RTL 镜像</h1>
+  <p class="sub">同一份生成物、同一套 <code>$t('common.*')</code> 键，切换语言后整页响应式重渲染；<code>&lt;html lang/dir&gt;</code> 同步更新。</p>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-hd"><span>中文（默认）</span><span class="badge">lang="zh-CN" dir="ltr"</span></div>
+      <div class="app">
+        <div class="header"><span class="crumb">订单中心 / 采购订单</span><div class="header-right"><span class="user">admin</span><div class="sel">中文 ▾</div></div></div>
+        <div class="body">
+          <p class="title">采购订单</p><p class="desc">维护采购订单数据，可按条件筛选、编辑与导出</p>
+          <div class="toolbar"><span class="btn p">查询</span><span class="btn">重置</span><span class="btn p">新增采购订单</span><span class="btn">导出</span></div>
+          <table><thead><tr><th>订单号</th><th>状态</th><th>更新时间</th><th>操作</th></tr></thead>
+          <tbody><tr><td>PO-2026-001</td><td>启用</td><td>2026-11-11 10:22</td><td>编辑 删除</td></tr>
+          <tr><td>PO-2026-002</td><td>停用</td><td>2026-11-10 16:08</td><td>编辑 删除</td></tr></tbody></table>
+          <p style="color:#909399;margin:9px 0 0;font-size:12px">共 2 条记录</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd"><span>English</span><span class="badge">lang="en-US" dir="ltr"</span></div>
+      <div class="app">
+        <div class="header"><span class="crumb">Order Center / Purchase Order</span><div class="header-right"><span class="user">admin</span><div class="sel">English ▾</div></div></div>
+        <div class="body">
+          <p class="title">Purchase Order</p><p class="desc">Manage Purchase Order records: filter, edit and export</p>
+          <div class="toolbar"><span class="btn p">Search</span><span class="btn">Reset</span><span class="btn p">Add Purchase Order</span><span class="btn">Export</span></div>
+          <table><thead><tr><th>Order No.</th><th>Status</th><th>Updated at</th><th>Actions</th></tr></thead>
+          <tbody><tr><td>PO-2026-001</td><td>Enabled</td><td>11/11/2026, 10:22 AM</td><td>Edit Delete</td></tr>
+          <tr><td>PO-2026-002</td><td>Disabled</td><td>11/10/2026, 4:08 PM</td><td>Edit Delete</td></tr></tbody></table>
+          <p style="color:#909399;margin:9px 0 0;font-size:12px">2 records</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd"><span>العربية（RTL）</span><span class="badge rtl">lang="ar-SA" dir="rtl"</span></div>
+      <div class="app rtl">
+        <div class="header"><span class="crumb">مركز الطلبات / أمر الشراء</span><div class="header-right"><span class="user">admin</span><div class="sel">العربية ▾</div></div></div>
+        <div class="body">
+          <p class="title">أمر الشراء</p><p class="desc">إدارة بيانات أمر الشراء مع التصفية والتحرير والتصدير</p>
+          <div class="toolbar"><span class="btn p">بحث</span><span class="btn">إعادة تعيين</span><span class="btn p">إضافة أمر الشراء</span><span class="btn">تصدير</span></div>
+          <table><thead><tr><th>رقم الطلب</th><th>الحالة</th><th>وقت التحديث</th><th>العمليات</th></tr></thead>
+          <tbody><tr><td>PO-2026-001</td><td>مُفعّل</td><td>١١/١١/٢٠٢٦</td><td>تحرير حذف</td></tr>
+          <tr><td>PO-2026-002</td><td>مُعطّل</td><td>١٠/١١/٢٠٢٦</td><td>تحرير حذف</td></tr></tbody></table>
+          <p style="color:#909399;margin:9px 0 0;font-size:12px">إجمالي ٢ <span class="rtl-mark">· RTL 镜像布局</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>机制</b>：<code>src/utils/i18n.js</code> 用 Vue 2.7 原生 <code>Vue.observable</code> 持有 locale；
+    所有在 render 期间调用过 <code>$t</code> 的组件自动重渲染，无需刷新。<br>
+    <b>回落链</b>：当前语言非空译文 → 默认语言 → key 本身。占位语言包键齐全、值为空串，切过去不会显示空白。<br>
+    <b>RTL</b>：切换时 <code>document.documentElement.dir</code> 同步更新，骨架样式用逻辑属性
+    （<code>margin-inline-start</code>）与 <code>[dir='rtl']</code> 规则镜像；代码块 / 路径保持 LTR。<br>
+    <b>零重依赖</b>：不引 vue-i18n，产物 <code>npm install</code> 依赖清单与 V7.5 完全一致。
+  </div>
+</div>
+</body>
+</html>

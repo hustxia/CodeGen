@@ -44,7 +44,7 @@ TplRenderCheck.java
 cp.txt
 target/cp.txt
 
-# Trae skills 已统一到 ./skills 真源（目录联接），不纳入仓库
+# Trae skills 已统一到 D:/workspace/skills 真源（目录联接），不纳入仓库
 .trae/skills/
 
 # 走查产物（台账与扫描报告，本地留档不入库）

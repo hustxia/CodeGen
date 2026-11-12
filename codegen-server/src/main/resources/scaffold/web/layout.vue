@@ -20,7 +20,7 @@
       <div class="rail-list rail-foot">
         <div class="rail-item" :class="{ 'is-active': $route.path === '/home' }" @click="go('/home')">
           <i class="rail-icon el-icon-s-home"></i>
-          <span class="rail-label">首页</span>
+          <span class="rail-label">{{ homeLabel }}</span>
         </div>
       </div>
     </aside>
@@ -29,7 +29,7 @@
     <div class="flyout flyout-sub" :class="{ 'is-open': !!panelSys }">
       <div v-if="panelSys" class="flyout-head">
         <div class="flyout-title">{{ panelSys.title }}</div>
-        <div class="flyout-desc">{{ panelSys.children.length }} 个业务模块</div>
+        <div class="flyout-desc">{{ businessModulesHint }}</div>
       </div>
       <div v-if="panelSys" class="flyout-body">
         <div
@@ -75,7 +75,7 @@
         </div>
         <div class="header-right">
           <span class="env-tag">DEV</span>
-          <span class="user">{{ userName }}</span>
+          <span class="user">{{ userName }}</span>__I18N_SWITCH__
         </div>
       </div>
       <div class="content" @click="closePanels">
@@ -93,6 +93,20 @@
  * 也不能静态 import 路由表——gen-routes 与本组件互相引用会形成循环依赖，
  * 一旦加载顺序不利，Layout 会被解析成 undefined，所有生成页面直接白屏。
  */
+/**
+ * V8.0 菜单国际化：把路由 meta 的中文 title 按当前语言解析。
+ * - meta 带了 i18nKey 且运行时挂了 $t（开 i18n）：调用 $t(i18nKey, 中文)，缺译文回落中文。
+ * - 没有 i18nKey（旧路由）或没挂 $t（关 i18n）：直接返回中文 title。
+ * 第二参是中文回落源，保证 206 种语言里没预置译文的也能显示中文，不会空白。
+ */
+function resolveTitle(meta, fallback) {
+  const raw = (meta && meta.title) || fallback
+  if (meta && meta.i18nKey && typeof window.$t === 'function') {
+    return window.$t(meta.i18nKey, raw)
+  }
+  return raw
+}
+
 function buildMenu(routes, parentPath) {
   const list = []
   ;(routes || []).forEach(route => {
@@ -106,7 +120,7 @@ function buildMenu(routes, parentPath) {
     if (!children.length && !hasComponent) return
     list.push({
       path,
-      title: (route.meta && route.meta.title) || route.name || path,
+      title: resolveTitle(route.meta, route.name || path),
       children
     })
   })
@@ -137,11 +151,24 @@ export default {
         // 顶层 '/' 是 Layout 壳（包首页），侧栏底部已单独有「首页」入口，这里不重复
         .filter(m => m.path !== '/' && m.path !== '/home')
     },
+    // V8.0 菜单国际化：面包屑同样按当前语言解析；回落「首页」
     crumbs() {
       const list = this.$route.matched
-        .map(item => (item.meta && item.meta.title) || '')
+        .map(item => resolveTitle(item.meta, ''))
         .filter(Boolean)
-      return list.length ? list : ['首页']
+      return list.length ? list : [this.homeLabel]
+    },
+    // 「首页」入口文案：开 i18n 时取译文，关 i18n / 未挂 $t 时回落中文
+    homeLabel() {
+      return (typeof window.$t === 'function') ? window.$t('common.home') : '首页'
+    },
+    // 业务模块计数文案：开 i18n 时按 {count} 插值解析，关时回落「N 个业务模块」
+    businessModulesHint() {
+      const count = (this.panelSys && this.panelSys.children) ? this.panelSys.children.length : 0
+      if (typeof window.$t === 'function') {
+        return window.$t('common.businessModules', { count: count })
+      }
+      return count + ' 个业务模块'
     }
   },
   watch: {
