@@ -1,8 +1,8 @@
 # 代码生成器 · 版本路线图（Roadmap）
 
-> 当前版本：**V8.0** — 全页面国际化，206 语言框架支持（双轨制 i18n）  
-> 路线图建立：2026-11-12  
-> 状态：V8.1 已落地（测试网 + 文档诚实化，CI 卡点生效）；V9.0 生成物 Vue3 改造已完成并通过离线「OFF 零 diff」契约，运行时端到端验证（Maven+DB+浏览器）待真实环境。
+> 当前版本：**V9.0** — 全页面国际化（V8.0）→ 质量加固与诚实化（V8.1）→ 生成物前端现代化 Vue3 + Element Plus + Vite（V9.0），均已落地并通过验证  
+> 路线图建立：2026-11-12　|　最近更新：2026-11-13  
+> 状态：V8.1 已落地（测试网 + 文档诚实化，CI 卡点生效）；V9.0 生成物 Vue3 改造已完成——离线「OFF 零 diff」契约 9/9 通过，运行时端到端验证已完成（Maven 打包 + API 生成 + 40/40 断言 + `vite build` 成功 + Chrome 8 语言截图），运行中另修复 3 个真实缺陷（详见「五」补记）。
 
 本文档承接项目评估结论，把近期必须推进的三件事拆成可执行的版本里程碑：  
 **P0 前端升级 Vue 3 + Element Plus**、**P1 i18n 自动化测试**、**P1 README 诚实化与翻译共建**。
@@ -77,9 +77,9 @@
   - 输出 `<script setup>`（或 `defineComponent`）结构；组件用法对齐 Element Plus（el-table / el-form 等部分 prop 差异）。
   - **关键契约**：`i18nEnabled=0` 时生成的代码必须与「Vue 3 无 i18n 基线」逐字节零 diff（i18n 开关的 OFF 契约在 Vue 3 下继续成立，不能被升级破坏）。
 - [x] **构建迁移**：webpack → Vite；devServer proxy / alias / 环境变量迁移。
-- [ ] **回归复验**
-  - 8 语言截图（UI 全量译文、ar-SA RTL 镜像、回落不空白）。
-  - 构建耗时对比（预期下降）。
+- [x] **回归复验**（2026-11-13 完成，证据见「五」补记）
+  - 8 语言截图（UI 全量译文、ar-SA RTL 镜像、回落不空白）：14 张 Chrome Headless 实拍，`ar-SA` RTL 表格渲染正常。
+  - 构建验证：生成物 `npm install` + `vite build` 成功（Vite 5.4.21，14.4s，dist 完整产出）。
 
 **验收标准**
 
@@ -140,3 +140,10 @@
   3. 路由用 `@/layout/index.vue` 别名但 `vite.config.js` 未声明（vue-cli 隐式内置，Vite 必须显式配）→ Rollup resolve 失败。已补 `resolve.alias`（`fileURLToPath(new URL('./src', import.meta.url))`）。
 - 验证脚本已加严：B20 拆成 B20/B20a/B20b（根目录入口 HTML、module script、禁止 public/index.html），B7 增加 `@` 别名断言，防回归。
 - **最终结果**：修复后重新生成产物，`vite build` 成功（Vite 5.4.21，14.4s，dist 完整产出），verify 40/40 通过。
+
+### 2026-11-13 语言支持全量核验（206 种）
+- `/language/list` 返回 **206** 种语言，与静态清单 `i18n/languages.json` 完全一致；每条均含 code / ISO639-2 / locale / 中英文名 / 原文名 / 书写方向 / 启用状态，**0 缺字段、0 重复、0 禁用**。
+- `/language/options` 下拉项 **204**（BCP47 主语言去重，符合设计）；**12 种 RTL**（ar-SA、fa-IR、ur-PK、he-IL、ar-EG、dv-MV、ks-IN、ku-IQ、ps-AF、sd-PK、ug-CN、yi-IL）。
+- **36 个主要语区抽样全覆盖**（zh/en/ja/ko/fr/de/es/ru/pt-BR/hi-IN/th-TH/vi-VN/id-ID/tr-TR/it-IT/nl-NL/pl-PL/sv-SE/da-DK/fi-FI/nb-NO/el-GR/he-IL/hu-HU/cs-CZ/ro-RO/uk-UA/ms-MY/bn-BD/ta-IN/te-IN/fa-IR/ur-PK/sw-KE/af-ZA → 36/36）。
+- 词库 `i18n/messages/` 共 **204** 个 JSON；8 精译语言词库与 `zh-CN` 基线**逐键一致**（各 60 键，偏差 0）。
+- 口径重申：**框架支持 206 / 精译 8**；未精译语言按回落链（目标语言 → 中文内联兜底）展示，不出现空白。验证明细存档 `.screenshots/v9/lang-verify-result.json`。
