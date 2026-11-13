@@ -72,7 +72,7 @@ Table intake (DB import / DDL)
 | Documente de tipărire | Bifați comutatorul „print” pentru a produce o pagină de tipărire A4 și o rută, cu antet + tabel de detail |
 | Construire sistem cu o propoziție | Descrieți domeniul de business — AI creează BD & tabele + scaffold + generare completă + înregistrare meniuri dintr-o singură mișcare |
 
-> Toate scenariile au demo-uri rulabile (proiectul `demo_admin`) cu capturi de ecran — consultați `docs/典型场景操作指南-演示后台demo.md` (chineză).
+> Toate scenariile au demo-uri rulabile (proiectul `demo_admin`) cu capturi de ecran — consultați `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (chineză).
 
 ---
 
@@ -228,7 +228,7 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (chineză) | 6 tabele acoperind 5 scenarii tipice, cu demo rulabil și capturi de ecran din rulare reală |
 | `项目介绍.md` | Document de introducere în proiect, aceeași sursă ca acest fișier |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Planuri de versiune și inventare de funcționalități de la V3.1 → V9.0 |
-| `codegen-web/README.md` | Referință rapidă de pornire pentru consola frontend |
+| `../codegen-web/README.md` | Referință rapidă de pornire pentru consola frontend |
 
 ---
 
@@ -270,7 +270,7 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 
 ---
 
-> **V6.10 Observabilitate platformă**: integrează Actuator + Micrometer, eșantionând la fiecare 5 secunde într-un buffer inelar în memorie (fereastră de 30 de minute), plus o nouă pagină înglobată „System Monitor” — API-uri de agregare backend `/monitor/*` + panouri ECharts frontend. Doar endpoint-urile `health/info/metrics` sunt pe listă albă; `/actuator/health` este fără token în timp ce `metrics` etc. necesită autentificare; `env/beans/heapdump/threaddump/loggers` nu sunt niciodată expuse. Fereastra de eșantionare este doar per-proces, pierdută la restart și nu este partajată între instanțe. Consultați `docs/可观测性说明.md` (chineză) pentru detalii.
+> **V6.10 Observabilitate platformă**: integrează Actuator + Micrometer, eșantionând la fiecare 5 secunde într-un buffer inelar în memorie (fereastră de 30 de minute), plus o nouă pagină înglobată „System Monitor” — API-uri de agregare backend `/monitor/*` + panouri ECharts frontend. Doar endpoint-urile `health/info/metrics` sunt pe listă albă; `/actuator/health` este fără token în timp ce `metrics` etc. necesită autentificare; `env/beans/heapdump/threaddump/loggers` nu sunt niciodată expuse. Fereastra de eșantionare este doar per-proces, pierdută la restart și nu este partajată între instanțe. Consultați `../codegen-server/docs/可观测性说明.md` (chineză) pentru detalii.
 
 ## 13. Starea proiectului
 

@@ -73,7 +73,7 @@ Taulukontuloa (DB-tuonti / DDL)
 | Tulostusasiakirjat | Valitse "tulosta" kytkin tuottaaksesi A4-tulostussivun ja reitin, otsikko + yksityiskohtataulu |
 | Yksi lause järjestelmän rakentamiseksi | Kuvaa liiketoiminta-alue — AI luo DB:n & taulut + telineen + täyden generoinnin + valikkorekisteröinnin yhdellä kertaa |
 
-> Kaikissa skenaarioissa on ajettavia demoja (`demo_admin`-projekti) kuvakaappauksilla — katso `docs/典型场景操作指南-演示后台demo.md` (kiina).
+> Kaikissa skenaarioissa on ajettavia demoja (`demo_admin`-projekti) kuvakaappauksilla — katso `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kiina).
 
 ---
 
@@ -229,7 +229,7 @@ Etupää käyttää oletusarvoisesti porttia **9530**, välittää `/dev-api` ta
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kiina) | 6 taulua jotka kattavat 5 tyypillistä skenaariota, ajettava demo ja todelliset kuvakaappaukset |
 | `项目介绍.md` | Projektin esittely asiakirja, sama lähde kuin tämä tiedosto |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versiosuunnitelmat ja omaisuusinventaariot V3.1 → V9.0 |
-| `codegen-web/README.md` | Etupääkonsolin nopea aloitusviite |
+| `../codegen-web/README.md` | Etupääkonsolin nopea aloitusviite |
 
 ---
 
@@ -271,7 +271,7 @@ Etupää käyttää oletusarvoisesti porttia **9530**, välittää `/dev-api` ta
 
 ---
 
-> **V6.10 Alustan havaittavuus**: integroi Actuator + Micrometer, näyttelee joka 5. sekunti muistin sisäiseen rengaspuskuriin (30 minuutin ikkuna), sekä uusi upotettu "Järjestelmävalvonta"-sivu — takapään `/monitor/*` aggregointi API-rajapinnat + etupään ECharts-paneelit. Vain `health/info/metrics` päätepisteet ovat sallittujen listalla; `/actuator/health` on vapaa tokeneista kun taas `metrics` jne. vaativat todennuksen; `env/beans/heapdump/threaddump/loggers` ei koskaan paljasteta. Näyteikkuna on vain prosessikohtainen, menetetään uudelleenkäynnistyksessä, eikä sitä jaeta instanssien välillä. Katso `docs/可观测性说明.md` (kiina) lisätietoja varten.
+> **V6.10 Alustan havaittavuus**: integroi Actuator + Micrometer, näyttelee joka 5. sekunti muistin sisäiseen rengaspuskuriin (30 minuutin ikkuna), sekä uusi upotettu "Järjestelmävalvonta"-sivu — takapään `/monitor/*` aggregointi API-rajapinnat + etupään ECharts-paneelit. Vain `health/info/metrics` päätepisteet ovat sallittujen listalla; `/actuator/health` on vapaa tokeneista kun taas `metrics` jne. vaativat todennuksen; `env/beans/heapdump/threaddump/loggers` ei koskaan paljasteta. Näyteikkuna on vain prosessikohtainen, menetetään uudelleenkäynnistyksessä, eikä sitä jaeta instanssien välillä. Katso `../codegen-server/docs/可观测性说明.md` (kiina) lisätietoja varten.
 
 ## 13. Projektin tila
 

@@ -73,7 +73,7 @@ Tabelindtag (DB-import / DDL)
 | Udskrivningsdokumenter | Marker "udskriv" kontakten for at producere en A4-udskriftsside og rute, med header + detaljetabel |
 | Én-sætnings systembygning | Beskriv forretningsdomen — AI opretter DB & tabeller + scaffolding + fuld generering + menuregistrering i ét træk |
 
-> Alle scenarier har kørbare demo:er (`demo_admin` projekt) med skærmbilleder — se `docs/典型场景操作指南-演示后台demo.md` (kinesisk).
+> Alle scenarier har kørbare demo:er (`demo_admin` projekt) med skærmbilleder — se `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kinesisk).
 
 ---
 
@@ -229,7 +229,7 @@ Frontenden kører som standard på port **9530**, proxyer `/dev-api` til backend
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kinesisk) | 6 tabeller der dækker 5 typiske scenarier, med kørbar demo og rigtige skærmbilleder |
 | `项目介绍.md` | Projektintroduktionsdokument, samme kilde som denne fil |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versionsplaner og funktionsopgørelser fra V3.1 → V9.0 |
-| `codegen-web/README.md` | Frontend-konsol hurtig start reference |
+| `../codegen-web/README.md` | Frontend-konsol hurtig start reference |
 
 ---
 
@@ -271,7 +271,7 @@ Frontenden kører som standard på port **9530**, proxyer `/dev-api` til backend
 
 ---
 
-> **V6.10 Platform observerbarhed**: integrerer Actuator + Micrometer, sampler hvert 5. sekund til en in-memory ringbuffer (30-minutter vindue), plus en ny indlejret "System Monitor" side — backend `/monitor/*` aggregerings-API'er + frontend ECharts paneler. Kun `health/info/metrics` endpoints er whitelisted; `/actuator/health` er tokenfri mens `metrics` osv. kræver auth; `env/beans/heapdump/threaddump/loggers` eksponeres aldrig. Samplingsvinduet er kun per proces, mistes ved genstart, og deles ikke på tværs af instanser. Se `docs/可观测性说明.md` (kinesisk) for detaljer.
+> **V6.10 Platform observerbarhed**: integrerer Actuator + Micrometer, sampler hvert 5. sekund til en in-memory ringbuffer (30-minutter vindue), plus en ny indlejret "System Monitor" side — backend `/monitor/*` aggregerings-API'er + frontend ECharts paneler. Kun `health/info/metrics` endpoints er whitelisted; `/actuator/health` er tokenfri mens `metrics` osv. kræver auth; `env/beans/heapdump/threaddump/loggers` eksponeres aldrig. Samplingsvinduet er kun per proces, mistes ved genstart, og deles ikke på tværs af instanser. Se `../codegen-server/docs/可观测性说明.md` (kinesisk) for detaljer.
 
 ## 13. Projektstatus
 

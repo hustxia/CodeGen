@@ -72,7 +72,7 @@ Table intake (DB import / DDL)
 | Drukowanie dokumentów | Zaznacz przełącznik „druk”, aby wyprodukować stronę druku A4 i trasę z nagłówkiem + tabelą szczegółów |
 | Budowa systemu jednym zdaniem | Opisz domenę biznesową — AI tworzy BD i tabele + szkielet + pełne generowanie + rejestrację menu za jednym razem |
 
-> Dla wszystkich scenariuszy dostępne są uruchamialne dema (`demo_admin` projekt) ze zrzutami ekranu — zob. `docs/典型场景操作指南-演示后台demo.md` (chiński).
+> Dla wszystkich scenariuszy dostępne są uruchamialne dema (`demo_admin` projekt) ze zrzutami ekranu — zob. `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (chiński).
 
 ---
 
@@ -228,7 +228,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (chiński) | 6 tabel pokrywających 5 typowych scenariuszy, z uruchamialnym demo i zrzutami rzeczywistego działania |
 | `项目介绍.md` | Dokument wprowadzający do projektu, to samo źródło co ten plik |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Plany wersji i inwentarze funkcji od V3.1 → V9.0 |
-| `codegen-web/README.md` | Referencyjny szybki start konsoli frontendu |
+| `../codegen-web/README.md` | Referencyjny szybki start konsoli frontendu |
 
 ---
 
@@ -270,7 +270,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 
 ---
 
-> **V6.10 Obserwowalność platformy**: integruje Actuator + Micrometer, próbkując co 5 sekund do bufora pierścieniowego w pamięci (okno 30 minut), plus nowa wbudowana strona „Monitor systemu” — API agregacji backendu `/monitor/*` + panele ECharts frontendu. Na białej liście są tylko punkty końcowe `health/info/metrics`; `/actuator/health` jest bez tokena, podczas gdy `metrics` itp. wymagają uwierzytelnienia; `env/beans/heapdump/threaddump/loggers` nigdy nie są eksponowane. Okno próbkowania jest tylko na poziomie procesu, tracone po restarcie i nie współdzielone między instancjami. Szczegóły zob. `docs/可观测性说明.md` (chiński).
+> **V6.10 Obserwowalność platformy**: integruje Actuator + Micrometer, próbkując co 5 sekund do bufora pierścieniowego w pamięci (okno 30 minut), plus nowa wbudowana strona „Monitor systemu” — API agregacji backendu `/monitor/*` + panele ECharts frontendu. Na białej liście są tylko punkty końcowe `health/info/metrics`; `/actuator/health` jest bez tokena, podczas gdy `metrics` itp. wymagają uwierzytelnienia; `env/beans/heapdump/threaddump/loggers` nigdy nie są eksponowane. Okno próbkowania jest tylko na poziomie procesu, tracone po restarcie i nie współdzielone między instancjami. Szczegóły zob. `../codegen-server/docs/可观测性说明.md` (chiński).
 
 ## 13. Status projektu
 

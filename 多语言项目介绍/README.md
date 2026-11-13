@@ -87,7 +87,7 @@ Table intake (DB import / DDL)
 | Print documents | Tick the "print" switch to produce an A4 print page and route, with header + detail table |
 | One-sentence system build | Describe the business domain — AI creates DB & tables + scaffold + full generation + menu registration in one go |
 
-> All scenarios have runnable demos (`demo_admin` project) with screenshots — see `docs/典型场景操作指南-演示后台demo.md` (Chinese).
+> All scenarios have runnable demos (`demo_admin` project) with screenshots — see `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinese).
 
 ---
 
@@ -243,7 +243,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
 | `项目介绍.md` | Project introduction document, same source as this file |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V9.0 |
-| `codegen-web/README.md` | Frontend console quick-start reference |
+| `../codegen-web/README.md` | Frontend console quick-start reference |
 
 ---
 
@@ -285,7 +285,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ---
 
-> **V6.10 Platform observability**: integrates Actuator + Micrometer, sampling every 5 seconds into an in-memory ring buffer (30-minute window), plus a new embedded "System Monitor" page — backend `/monitor/*` aggregation APIs + frontend ECharts panels. Only `health/info/metrics` endpoints are whitelisted; `/actuator/health` is token-free while `metrics` etc. require auth; `env/beans/heapdump/threaddump/loggers` are never exposed. The sampling window is per-process only, lost on restart, and not shared across instances. See `docs/可观测性说明.md` (Chinese) for details.
+> **V6.10 Platform observability**: integrates Actuator + Micrometer, sampling every 5 seconds into an in-memory ring buffer (30-minute window), plus a new embedded "System Monitor" page — backend `/monitor/*` aggregation APIs + frontend ECharts panels. Only `health/info/metrics` endpoints are whitelisted; `/actuator/health` is token-free while `metrics` etc. require auth; `env/beans/heapdump/threaddump/loggers` are never exposed. The sampling window is per-process only, lost on restart, and not shared across instances. See `../codegen-server/docs/可观测性说明.md` (Chinese) for details.
 
 ## 13. Project Status
 

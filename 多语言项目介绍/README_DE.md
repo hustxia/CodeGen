@@ -75,7 +75,7 @@ Tabellenaufnahme (DB-Import / DDL)
 | Druckdokumente | Den „Drucken“-Schalter aktivieren, um eine A4-Druckseite und Route zu erzeugen, mit Kopfzeile + Detailtabelle |
 | System mit einem Satz bauen | Das Business-Domäne beschreiben — KI legt DB & Tabellen an + Scaffold + vollständige Generierung + Menüregistrierung in einem Durchgang |
 
-> Alle Szenarien haben lauffähige Demos (`demo_admin`-Projekt) mit Screenshots — siehe `docs/典型场景操作指南-演示后台demo.md` (Chinesisch).
+> Alle Szenarien haben lauffähige Demos (`demo_admin`-Projekt) mit Screenshots — siehe `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinesisch).
 
 ---
 
@@ -231,7 +231,7 @@ Das Frontend läuft standardmäßig auf Port **9530** und proxyt `/dev-api` an d
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinesisch) | 6 Tabellen, die 5 typische Szenarien abdecken, mit lauffähiger Demo und Real-Run-Screenshots |
 | `项目介绍.md` (Chinesisch) | Projektvorstellungsdokument, gleiche Quelle wie diese Datei |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` (Chinesisch) | Versionspläne und Feature-Inventare von V3.1 → V9.0 |
-| `codegen-web/README.md` | Schnellstart-Referenz für die Frontend-Konsole |
+| `../codegen-web/README.md` | Schnellstart-Referenz für die Frontend-Konsole |
 
 ---
 
@@ -273,7 +273,7 @@ Das Frontend läuft standardmäßig auf Port **9530** und proxyt `/dev-api` an d
 
 ---
 
-> **V6.10 Plattform-Observability**: integriert Actuator + Micrometer, Sampling alle 5 Sekunden in einen In-Memory-Ringpuffer (30-Minuten-Fenster), plus eine neue eingebettete „System-Monitoring“-Seite — Backend-`/monitor/*`-Aggregations-APIs + Frontend-ECharts-Panels. Nur die Endpunkte `health/info/metrics` sind auf der Whitelist; `/actuator/health` ist tokenfrei, während `metrics` usw. Authentifizierung benötigen; `env/beans/heapdump/threaddump/loggers` werden niemals freigegeben. Das Sampling-Fenster ist rein prozessintern, geht beim Neustart verloren und wird nicht über Instanzen hinweg geteilt. Details siehe `docs/可观测性说明.md` (Chinesisch).
+> **V6.10 Plattform-Observability**: integriert Actuator + Micrometer, Sampling alle 5 Sekunden in einen In-Memory-Ringpuffer (30-Minuten-Fenster), plus eine neue eingebettete „System-Monitoring“-Seite — Backend-`/monitor/*`-Aggregations-APIs + Frontend-ECharts-Panels. Nur die Endpunkte `health/info/metrics` sind auf der Whitelist; `/actuator/health` ist tokenfrei, während `metrics` usw. Authentifizierung benötigen; `env/beans/heapdump/threaddump/loggers` werden niemals freigegeben. Das Sampling-Fenster ist rein prozessintern, geht beim Neustart verloren und wird nicht über Instanzen hinweg geteilt. Details siehe `../codegen-server/docs/可观测性说明.md` (Chinesisch).
 
 ## 13. Projektstatus
 

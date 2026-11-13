@@ -75,7 +75,7 @@ Prise en charge de la table (import BD / DDL)
 | Documents imprimables | Cochez l'option « impression » pour produire une page d'impression A4 et sa route, avec entête + tableau de détail |
 | Un système en une phrase | Décrivez le domaine métier : l'IA crée la base et les tables + l'échafaudage + la génération complète + l'enregistrement des menus, d'un seul trait |
 
-> Tous ces scénarios disposent d'une démo exécutable (projet `demo_admin`) et de captures d'écran associées ; voir `docs/典型场景操作指南-演示后台demo.md` (chinois).
+> Tous ces scénarios disposent d'une démo exécutable (projet `demo_admin`) et de captures d'écran associées ; voir `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (chinois).
 
 ---
 
@@ -231,7 +231,7 @@ Le front-end écoute par défaut sur le port **9530**, avec `/dev-api` proxifié
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (chinois) | 6 tables couvrant 5 scénarios typiques, avec démo exécutable et captures d'exécution réelle |
 | `项目介绍.md` (chinois) | Document de présentation du projet, de même source que le présent fichier |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` (chinois) | Plans de version et inventaire des fonctionnalités de V3.1 → V9.0 |
-| `codegen-web/README.md` | Référence de prise en main rapide de la console front-end |
+| `../codegen-web/README.md` | Référence de prise en main rapide de la console front-end |
 
 ---
 
@@ -273,7 +273,7 @@ Le front-end écoute par défaut sur le port **9530**, avec `/dev-api` proxifié
 
 ---
 
-> **V6.10 Observabilité de la plateforme** : intégration d'Actuator + Micrometer, échantillonnage toutes les 5 secondes dans un tampon circulaire en mémoire (fenêtre de 30 minutes), et ajout d'une page embarquée « Supervision système » — API d'agrégation back-end `/monitor/*` + panneaux ECharts côté front-end. Seuls les endpoints `health/info/metrics` sont autorisés par liste blanche ; `/actuator/health` est accessible sans token, tandis que `metrics` et d'autres exigent une authentification ; `env/beans/heapdump/threaddump/loggers` ne sont jamais exposés. La fenêtre d'échantillonnage est strictement interne au processus : perdue au redémarrage, non partagée entre plusieurs instances. Voir `docs/可观测性说明.md` (chinois) pour les détails.
+> **V6.10 Observabilité de la plateforme** : intégration d'Actuator + Micrometer, échantillonnage toutes les 5 secondes dans un tampon circulaire en mémoire (fenêtre de 30 minutes), et ajout d'une page embarquée « Supervision système » — API d'agrégation back-end `/monitor/*` + panneaux ECharts côté front-end. Seuls les endpoints `health/info/metrics` sont autorisés par liste blanche ; `/actuator/health` est accessible sans token, tandis que `metrics` et d'autres exigent une authentification ; `env/beans/heapdump/threaddump/loggers` ne sont jamais exposés. La fenêtre d'échantillonnage est strictement interne au processus : perdue au redémarrage, non partagée entre plusieurs instances. Voir `../codegen-server/docs/可观测性说明.md` (chinois) pour les détails.
 
 ## 13. État du projet
 

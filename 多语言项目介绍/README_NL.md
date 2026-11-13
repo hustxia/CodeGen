@@ -73,7 +73,7 @@ Tabellenopname (DB-import / DDL)
 | Afdrukdocumenten | Vink de "afdruk" schakelaar aan om een A4-afdrukpagina en route te produceren, met kop + detailtabel |
 | Eén-zin systeembouw | Beschrijf het bedrijfsdomein — AI maakt DB & tabellen + scaffold + volledige generatie + menuregistratie in één keer |
 
-> Alle scenario's hebben uitvoerbare demo's (`demo_admin` project) met screenshots — zie `docs/典型场景操作指南-演示后台demo.md` (Chinees).
+> Alle scenario's hebben uitvoerbare demo's (`demo_admin` project) met screenshots — zie `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinees).
 
 ---
 
@@ -229,7 +229,7 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinees) | 6 tabellen die 5 typische scenario's dekken, met uitvoerbare demo en echte screenshots |
 | `项目介绍.md` | Projectintroductiedocument, dezelfde bron als dit bestand |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versieplannen en functie-inventarissen van V3.1 → V9.0 |
-| `codegen-web/README.md` | Frontend console snelle start verwijzing |
+| `../codegen-web/README.md` | Frontend console snelle start verwijzing |
 
 ---
 
@@ -271,7 +271,7 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 
 ---
 
-> **V6.10 Platformobserveerbaarheid**: integreert Actuator + Micrometer, bemonstert elke 5 seconden naar een in-memory ringbuffer (30-minuten venster), plus een nieuwe ingebedde "Systeemmonitor" pagina — backend `/monitor/*` aggregatie API's + frontend ECharts panelen. Alleen `health/info/metrics` endpoints zijn whitelisted; `/actuator/health` is token-vrij terwijl `metrics` enz. auth vereisen; `env/beans/heapdump/threaddump/loggers` worden nooit blootgesteld. Het bemonsteringsvenster is alleen per proces, verloren bij herstart, en niet gedeeld over instanties. Zie `docs/可观测性说明.md` (Chinees) voor details.
+> **V6.10 Platformobserveerbaarheid**: integreert Actuator + Micrometer, bemonstert elke 5 seconden naar een in-memory ringbuffer (30-minuten venster), plus een nieuwe ingebedde "Systeemmonitor" pagina — backend `/monitor/*` aggregatie API's + frontend ECharts panelen. Alleen `health/info/metrics` endpoints zijn whitelisted; `/actuator/health` is token-vrij terwijl `metrics` enz. auth vereisen; `env/beans/heapdump/threaddump/loggers` worden nooit blootgesteld. Het bemonsteringsvenster is alleen per proces, verloren bij herstart, en niet gedeeld over instanties. Zie `../codegen-server/docs/可观测性说明.md` (Chinees) voor details.
 
 ## 13. Projectstatus
 

@@ -72,7 +72,7 @@ Table intake (DB import / DDL)
 | Yazdırma belgeleri | "Yazdır" anahtarını işaretleyin, başlık + ayrıntı tablosuyla A4 yazdırma sayfası ve rotası üretilir |
 | Tek cümleyle sistem kurma | İş alanını tarif edin — yapay zeka tek seferde DB ve tabloları + iskeleti + tam üretimi + menü kaydını oluşturur |
 
-> Tüm senaryoların çalıştırılabilir demoları (`demo_admin` projesi) ekran görüntüleriyle mevcuttur — bkz. `docs/典型场景操作指南-演示后台demo.md` (Çince).
+> Tüm senaryoların çalıştırılabilir demoları (`demo_admin` projesi) ekran görüntüleriyle mevcuttur — bkz. `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Çince).
 
 ---
 
@@ -228,7 +228,7 @@ npm run serve
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Çince) | 5 tipik senaryoyu kapsayan 6 tablo, çalıştırılabilir demo ve gerçek çalışma ekran görüntüleriyle |
 | `项目介绍.md` | Proje tanıtım belgesi, bu dosyayla aynı kaynak |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.0 arasındaki sürüm planları ve özellik envanterleri |
-| `codegen-web/README.md` | Ön yüz konsol hızlı başlangıç referansı |
+| `../codegen-web/README.md` | Ön yüz konsol hızlı başlangıç referansı |
 
 ---
 
@@ -270,7 +270,7 @@ npm run serve
 
 ---
 
-> **V6.10 Platform gözlemlenebilirliği**: Actuator + Micrometer'i entegre eder, her 5 saniyede bir bellekteki halka tampona (30 dakikalık pencere) örnekler, ayrıca yeni bir gömülü "Sistem İzleyici" sayfası — arka uç `/monitor/*` toplama API'leri + ön yüz ECharts panelleri. Yalnızca `health/info/metrics` uç noktaları beyaz listeye alınır; `/actuator/health` tokensizken `metrics` vb. kimlik doğrulama gerektirir; `env/beans/heapdump/threaddump/loggers` asla açığa çıkmaz. Örnekleme penceresi yalnızca süreç başına olup yeniden başlatmada kaybolur ve örnekler arasında paylaşılmaz. Ayrıntılar için bkz. `docs/可观测性说明.md` (Çince).
+> **V6.10 Platform gözlemlenebilirliği**: Actuator + Micrometer'i entegre eder, her 5 saniyede bir bellekteki halka tampona (30 dakikalık pencere) örnekler, ayrıca yeni bir gömülü "Sistem İzleyici" sayfası — arka uç `/monitor/*` toplama API'leri + ön yüz ECharts panelleri. Yalnızca `health/info/metrics` uç noktaları beyaz listeye alınır; `/actuator/health` tokensizken `metrics` vb. kimlik doğrulama gerektirir; `env/beans/heapdump/threaddump/loggers` asla açığa çıkmaz. Örnekleme penceresi yalnızca süreç başına olup yeniden başlatmada kaybolur ve örnekler arasında paylaşılmaz. Ayrıntılar için bkz. `../codegen-server/docs/可观测性说明.md` (Çince).
 
 ## 13. Proje Durumu
 

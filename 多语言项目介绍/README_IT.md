@@ -73,7 +73,7 @@ Table intake (DB import / DDL)
 | Documenti di stampa | Spunta l'interruttore "print" per produrre una pagina di stampa A4 e una rotta, con intestazione + tabella dettagli |
 | Costruzione sistema con una frase | Descrivi il dominio di business — l'AI crea DB e tabelle + scaffold + generazione completa + registrazione menu in un'unica soluzione |
 
-> Tutti gli scenari hanno demo eseguibili (progetto `demo_admin`) con screenshot — vedi `docs/典型场景操作指南-演示后台demo.md` (cinese).
+> Tutti gli scenari hanno demo eseguibili (progetto `demo_admin`) con screenshot — vedi `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (cinese).
 
 ---
 
@@ -229,7 +229,7 @@ Il front-end usa di default la porta **9530**, con proxy di `/dev-api` alla port
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (cinese) | 6 tabelle che coprono 5 scenari tipici, con demo eseguibile e screenshot di esecuzione reale |
 | `项目介绍.md` | Documento di introduzione al progetto, stessa fonte di questo file |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Piani di versione e inventari di funzionalità da V3.1 → V9.0 |
-| `codegen-web/README.md` | Riferimento di avvio rapido per la console front-end |
+| `../codegen-web/README.md` | Riferimento di avvio rapido per la console front-end |
 
 ---
 
@@ -271,7 +271,7 @@ Il front-end usa di default la porta **9530**, con proxy di `/dev-api` alla port
 
 ---
 
-> **Osservabilità piattaforma V6.10**: integra Actuator + Micrometer, campionamento ogni 5 secondi in un buffer circolare in memoria (finestra di 30 minuti), più una nuova pagina incorporata "System Monitor" — API di aggregazione back-end `/monitor/*` + pannelli ECharts front-end. Solo gli endpoint `health/info/metrics` sono in whitelist; `/actuator/health` è senza token mentre `metrics` ecc. richiedono auth; `env/beans/heapdump/threaddump/loggers` non vengono mai esposti. La finestra di campionamento è solo per-processo, persa al riavvio e non condivisa tra le istanze. Vedi `docs/可观测性说明.md` (cinese) per i dettagli.
+> **Osservabilità piattaforma V6.10**: integra Actuator + Micrometer, campionamento ogni 5 secondi in un buffer circolare in memoria (finestra di 30 minuti), più una nuova pagina incorporata "System Monitor" — API di aggregazione back-end `/monitor/*` + pannelli ECharts front-end. Solo gli endpoint `health/info/metrics` sono in whitelist; `/actuator/health` è senza token mentre `metrics` ecc. richiedono auth; `env/beans/heapdump/threaddump/loggers` non vengono mai esposti. La finestra di campionamento è solo per-processo, persa al riavvio e non condivisa tra le istanze. Vedi `../codegen-server/docs/可观测性说明.md` (cinese) per i dettagli.
 
 ## 13. Stato del progetto
 

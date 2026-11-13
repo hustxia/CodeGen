@@ -73,7 +73,7 @@ Table intake (DB import / DDL)
 | Imprimir documentos | Marque a chave "imprimir" para produzir uma página de impressão A4 e rota, com cabeçalho + tabela de detalhes |
 | Construção de sistema em uma frase | Descreva o domínio de negócio — a IA cria BD e tabelas + scaffold + geração completa + registro de menus de uma vez |
 
-> Todos os cenários têm demos executáveis (projeto `demo_admin`) com capturas de tela — veja `docs/典型场景操作指南-演示后台demo.md` (em chinês).
+> Todos os cenários têm demos executáveis (projeto `demo_admin`) com capturas de tela — veja `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (em chinês).
 
 ---
 
@@ -229,7 +229,7 @@ O front-end usa a porta **9530** por padrão, fazendo proxy de `/dev-api` para a
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (em chinês) | 6 tabelas cobrindo 5 cenários típicos, com demo executável e capturas de tela de execução real |
 | `项目介绍.md` | Documento de introdução do projeto, mesma fonte deste arquivo |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Planos de versão e inventários de recursos de V3.1 → V9.0 |
-| `codegen-web/README.md` | Referência de início rápido do console front-end |
+| `../codegen-web/README.md` | Referência de início rápido do console front-end |
 
 ---
 
@@ -271,7 +271,7 @@ O front-end usa a porta **9530** por padrão, fazendo proxy de `/dev-api` para a
 
 ---
 
-> **V6.10 Observabilidade da plataforma**: integra Actuator + Micrometer, amostrando a cada 5 segundos em um buffer circular em memória (janela de 30 minutos), mais uma nova página embutida "Monitor do Sistema" — APIs de agregação `/monitor/*` do back-end + painéis ECharts do front-end. Apenas endpoints `health/info/metrics` estão na lista branca; `/actuator/health` é livre de token enquanto `metrics` etc. exigem autenticação; `env/beans/heapdump/threaddump/loggers` nunca são expostos. A janela de amostragem é apenas por processo, perdida na reinicialização e não compartilhada entre instâncias. Veja `docs/可观测性说明.md` (em chinês) para detalhes.
+> **V6.10 Observabilidade da plataforma**: integra Actuator + Micrometer, amostrando a cada 5 segundos em um buffer circular em memória (janela de 30 minutos), mais uma nova página embutida "Monitor do Sistema" — APIs de agregação `/monitor/*` do back-end + painéis ECharts do front-end. Apenas endpoints `health/info/metrics` estão na lista branca; `/actuator/health` é livre de token enquanto `metrics` etc. exigem autenticação; `env/beans/heapdump/threaddump/loggers` nunca são expostos. A janela de amostragem é apenas por processo, perdida na reinicialização e não compartilhada entre instâncias. Veja `../codegen-server/docs/可观测性说明.md` (em chinês) para detalhes.
 
 ## 13. Status do Projeto
 

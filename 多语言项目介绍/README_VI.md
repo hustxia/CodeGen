@@ -72,7 +72,7 @@ Table intake (DB import / DDL)
 | In tài liệu | Tích chọn công tắc "print" để sinh trang in A4 và route, kèm header + bảng chi tiết |
 | Dựng hệ thống một câu | Mô tả miền nghiệp vụ — AI tạo DB & bảng + scaffold + sinh đầy đủ + đăng ký menu trong một lần |
 
-> Mọi kịch bản đều có demo chạy được (dự án `demo_admin`) kèm ảnh chụp màn hình — xem `docs/典型场景操作指南-演示后台demo.md` (tiếng Trung).
+> Mọi kịch bản đều có demo chạy được (dự án `demo_admin`) kèm ảnh chụp màn hình — xem `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (tiếng Trung).
 
 ---
 
@@ -228,7 +228,7 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (tiếng Trung) | 6 bảng bao phủ 5 kịch bản điển hình, kèm demo chạy được và ảnh chụp thực tế |
 | `项目介绍.md` | Tài liệu giới thiệu dự án, cùng nguồn với tệp này |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Kế hoạch phiên bản và danh mục tính năng từ V3.1 → V9.0 |
-| `codegen-web/README.md` | Tham khảo khởi động nhanh bảng điều khiển front-end |
+| `../codegen-web/README.md` | Tham khảo khởi động nhanh bảng điều khiển front-end |
 
 ---
 
@@ -270,7 +270,7 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 
 ---
 
-> **V6.10 Khả năng quan sát nền tảng**: tích hợp Actuator + Micrometer, lấy mẫu mỗi 5 giây vào bộ đệm vòng trong bộ nhớ (cửa sổ 30 phút), cộng thêm trang "System Monitor" nhúng mới — API tổng hợp back-end `/monitor/*` + panel ECharts front-end. Chỉ các endpoint `health/info/metrics` được whitelist; `/actuator/health` không cần token trong khi `metrics` v.v. yêu cầu xác thực; `env/beans/heapdump/threaddump/loggers` không bao giờ được phơi bày. Cửa sổ lấy mẫu chỉ trong một tiến trình, mất khi khởi động lại, và không chia sẻ giữa các instance. Xem `docs/可观测性说明.md` (tiếng Trung) để biết chi tiết.
+> **V6.10 Khả năng quan sát nền tảng**: tích hợp Actuator + Micrometer, lấy mẫu mỗi 5 giây vào bộ đệm vòng trong bộ nhớ (cửa sổ 30 phút), cộng thêm trang "System Monitor" nhúng mới — API tổng hợp back-end `/monitor/*` + panel ECharts front-end. Chỉ các endpoint `health/info/metrics` được whitelist; `/actuator/health` không cần token trong khi `metrics` v.v. yêu cầu xác thực; `env/beans/heapdump/threaddump/loggers` không bao giờ được phơi bày. Cửa sổ lấy mẫu chỉ trong một tiến trình, mất khi khởi động lại, và không chia sẻ giữa các instance. Xem `../codegen-server/docs/可观测性说明.md` (tiếng Trung) để biết chi tiết.
 
 ## 13. Trạng thái dự án
 

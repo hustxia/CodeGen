@@ -75,7 +75,7 @@ Převod tabulek (DB import / DDL)
 | Tiskové dokumenty | Zaškrtněte přepínač "tisk" pro produkci A4 tiskové stránky a routy s hlavičkou + tabulkou detailů |
 | Sestavení systému jednou větou | Popište obchodní doménu — AI vytvoří DB a tabulky + skeleton + kompletní generování + registraci menu najednou |
 
-> Všechny scénáře mají spustitelné demo (`demo_admin` projekt) s screenshoty — viz `docs/典型场景操作指南-演示后台demo.md` (čínština).
+> Všechny scénáře mají spustitelné demo (`demo_admin` projekt) s screenshoty — viz `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (čínština).
 
 ---
 
@@ -231,7 +231,7 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (čínština) | 6 tabulek pokrývajících 5 typických scénářů, se spustitelným demem a skutečnými screenshoty |
 | `项目介绍.md` | Dokument s představením projektu, stejný zdroj jako tento soubor |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verzní plány a inventáře funkcí z V3.1 → V9.0 |
-| `codegen-web/README.md` | Rychlá referenční příručka pro frontend konzoli |
+| `../codegen-web/README.md` | Rychlá referenční příručka pro frontend konzoli |
 
 ---
 
@@ -273,7 +273,7 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 
 ---
 
-> **V6.10 Platformní pozorovatelnost**: integruje Actuator + Micrometer, vzorkuje každých 5 sekund do kruhového bufferu v paměti (30minutové okno), plus nová vestavěná stránka "Systémový monitor" — backend `/monitor/*` agregace API + frontend ECharts panely. Pouze `health/info/metrics` endpointy jsou whitelisted; `/actuator/health` je bez tokenu, zatímco `metrics` atd. vyžadují auth; `env/beans/heapdump/threaddump/loggers` nejsou nikdy vystaveny. Vzorkovací okno je pouze per-proces, ztrácí se při restartu a není sdíleno mezi instancemi. Viz `docs/可观测性说明.md` (čínština) pro podrobnosti.
+> **V6.10 Platformní pozorovatelnost**: integruje Actuator + Micrometer, vzorkuje každých 5 sekund do kruhového bufferu v paměti (30minutové okno), plus nová vestavěná stránka "Systémový monitor" — backend `/monitor/*` agregace API + frontend ECharts panely. Pouze `health/info/metrics` endpointy jsou whitelisted; `/actuator/health` je bez tokenu, zatímco `metrics` atd. vyžadují auth; `env/beans/heapdump/threaddump/loggers` nejsou nikdy vystaveny. Vzorkovací okno je pouze per-proces, ztrácí se při restartu a není sdíleno mezi instancemi. Viz `../codegen-server/docs/可观测性说明.md` (čínština) pro podrobnosti.
 
 ## 13. Stav projektu
 

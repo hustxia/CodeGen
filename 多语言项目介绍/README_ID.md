@@ -74,7 +74,7 @@ Table intake (DB import / DDL)
 | Cetak dokumen | Centang sakelar "cetak" untuk menghasilkan halaman cetak A4 dan rute, dengan tajuk + tabel detail |
 | Bangun sistem satu kalimat | Jelaskan domain bisnis — AI membuat DB & tabel + scaffold + pembuatan penuh + pendaftaran menu sekaligus |
 
-> Semua skenario memiliki demo yang dapat dijalankan (proyek `demo_admin`) dengan tangkapan layar — lihat `docs/典型场景操作指南-演示后台demo.md` (dalam bahasa Mandarin).
+> Semua skenario memiliki demo yang dapat dijalankan (proyek `demo_admin`) dengan tangkapan layar — lihat `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (dalam bahasa Mandarin).
 
 ---
 
@@ -230,7 +230,7 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (dalam bahasa Mandarin) | 6 tabel mencakup 5 skenario tipikal, dengan demo yang dapat dijalankan dan tangkapan layar jalan nyata |
 | `项目介绍.md` | Dokumen pengantar proyek, sumber yang sama dengan file ini |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Rencana versi dan inventaris fitur dari V3.1 → V9.0 |
-| `codegen-web/README.md` | Referensi mulai cepat konsol front-end |
+| `../codegen-web/README.md` | Referensi mulai cepat konsol front-end |
 
 ---
 
@@ -272,7 +272,7 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 
 ---
 
-> **V6.10 Observabilitas platform**: mengintegrasikan Actuator + Micrometer, pengambilan sampel setiap 5 detik ke buffer cincin di memori (jendela 30 menit), plus halaman "System Monitor" tertanam baru — API agregasi `/monitor/*` back-end + panel ECharts front-end. Hanya titik akhir `health/info/metrics` yang masuk daftar putih; `/actuator/health` bebas token sementara `metrics` dll. memerlukan autentikasi; `env/beans/heapdump/threaddump/loggers` tidak pernah diekspos. Jendela pengambilan sampel hanya per-proses, hilang saat restart, dan tidak dibagikan antar instance. Lihat `docs/可观测性说明.md` (dalam bahasa Mandarin) untuk detail.
+> **V6.10 Observabilitas platform**: mengintegrasikan Actuator + Micrometer, pengambilan sampel setiap 5 detik ke buffer cincin di memori (jendela 30 menit), plus halaman "System Monitor" tertanam baru — API agregasi `/monitor/*` back-end + panel ECharts front-end. Hanya titik akhir `health/info/metrics` yang masuk daftar putih; `/actuator/health` bebas token sementara `metrics` dll. memerlukan autentikasi; `env/beans/heapdump/threaddump/loggers` tidak pernah diekspos. Jendela pengambilan sampel hanya per-proses, hilang saat restart, dan tidak dibagikan antar instance. Lihat `../codegen-server/docs/可观测性说明.md` (dalam bahasa Mandarin) untuk detail.
 
 ## 13. Status Proyek
 

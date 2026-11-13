@@ -75,7 +75,7 @@ Prijem tablica (DB import / DDL)
 | Dokumenti za ispis | Označite prekidač "ispis" za proizvodnju A4 stranice za ispis i rute, s zaglavljem + tablicom detalja |
 | Izgradnja sustava jednom rečenicom | Opišite poslovnu domenu — AI stvara DB & tablice + kostur + potpuno generiranje + registraciju izbornika u jednom potezu |
 
-> Svi scenariji imaju pokretne demo primjere (`demo_admin` projekt) sa snimkama zaslona — pogledajte `docs/典型场景操作指南-演示后台demo.md` (kineski).
+> Svi scenariji imaju pokretne demo primjere (`demo_admin` projekt) sa snimkama zaslona — pogledajte `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kineski).
 
 ---
 
@@ -231,7 +231,7 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kineski) | 6 tablica koje pokrivaju 5 tipičnih scenarija, s pokretnim demo primjerom i stvarnim snimkama zaslona |
 | `项目介绍.md` | Dokument s predstavljanjem projekta, isti izvor kao ova datoteka |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verzijski planovi i popisi funkcionalnosti od V3.1 → V9.0 |
-| `codegen-web/README.md` | Referenca za brzi početak na front-end konzoli |
+| `../codegen-web/README.md` | Referenca za brzi početak na front-end konzoli |
 
 ---
 
@@ -273,7 +273,7 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 
 ---
 
-> **V6.10 Promatranje platforme**: integrira Actuator + Micrometer, uzorkuje svakih 5 sekundi u memorijski kružni međuspremnik (30-minutni prozor), plus nova ugrađena stranica "Monitor sustava" — back-end `/monitor/*` agregacijski API-ji + front-end ECharts ploče. Samo `health/info/metrics` krajnje točke su whitelisted; `/actuator/health` je bez tokena dok `metrics` itd. zahtijevaju auth; `env/beans/heapdump/threaddump/loggers` nikada nisu izloženi. Prozor uzorkovanja je samo po procesu, gubi se prilikom ponovnog pokretanja, i nije dijeljen između instanci. Pogledajte `docs/可观测性说明.md` (kineski) za detalje.
+> **V6.10 Promatranje platforme**: integrira Actuator + Micrometer, uzorkuje svakih 5 sekundi u memorijski kružni međuspremnik (30-minutni prozor), plus nova ugrađena stranica "Monitor sustava" — back-end `/monitor/*` agregacijski API-ji + front-end ECharts ploče. Samo `health/info/metrics` krajnje točke su whitelisted; `/actuator/health` je bez tokena dok `metrics` itd. zahtijevaju auth; `env/beans/heapdump/threaddump/loggers` nikada nisu izloženi. Prozor uzorkovanja je samo po procesu, gubi se prilikom ponovnog pokretanja, i nije dijeljen između instanci. Pogledajte `../codegen-server/docs/可观测性说明.md` (kineski) za detalje.
 
 ## 13. Status projekta
 

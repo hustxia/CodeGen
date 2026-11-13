@@ -75,7 +75,7 @@ Tábla bevitel (DB import / DDL)
 | Nyomtatási dokumentumok | Jelölje be a "nyomtatás" kapcsolót A4-es nyomtatási oldal és route létrehozásához, fejléc + részlettáblával |
 | Egy mondatban rendszer létrehozás | Írja le az üzleti tartományt — AI létrehozza a DB-t és táblákat + állványt + teljes generálást + menü regisztrálást egy lépésben |
 
-> Minden forgatókönyvnek futtatható demoja van (`demo_admin` projekt) képernyőképekkel — lásd a `docs/典型场景操作指南-演示后台demo.md` fájlt (kínai).
+> Minden forgatókönyvnek futtatható demoja van (`demo_admin` projekt) képernyőképekkel — lásd a `../codegen-server/docs/典型场景操作指南-演示后台demo.md` fájlt (kínai).
 
 ---
 
@@ -231,7 +231,7 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kínai) | 6 tábla, amely 5 tipikus forgatókönyvet fed le, futtatható demóval és valódi képernyőképekkel |
 | `项目介绍.md` | Projektbemutató dokumentum, ugyanaz a forrás, mint ez a fájl |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verziótervek és funkcióleltárak V3.1 → V9.0 |
-| `codegen-web/README.md` | Front-end konzol gyorskezelés referencia |
+| `../codegen-web/README.md` | Front-end konzol gyorskezelés referencia |
 
 ---
 
@@ -273,7 +273,7 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 
 ---
 
-> **V6.10 Platform megfigyelhetőség**: integrálja az Actuator + Micrometer rendszert, 5 másodpercenként mintát vesz egy memóriabeli körbufferbe (30 perces ablak), plusz egy új beágyazott "Rendszerfigyelő" oldal — backend `/monitor/*` aggregációs API-k + front-end ECharts panelek. Csak `health/info/metrics` végpontok vannak engedélyezve a whitelist-en; `/actuator/health` token nélküli, míg a `metrics` stb. hitelesítést igényel; `env/beans/heapdump/threaddump/loggers` soha nem kerül közzétételre. A mintavételi ablak csak folyamatonkénti, újraindítás esetén elveszik, és nincs megosztva a példányok között. Lásd a `docs/可观测性说明.md` fájlt (kínai) részletekért.
+> **V6.10 Platform megfigyelhetőség**: integrálja az Actuator + Micrometer rendszert, 5 másodpercenként mintát vesz egy memóriabeli körbufferbe (30 perces ablak), plusz egy új beágyazott "Rendszerfigyelő" oldal — backend `/monitor/*` aggregációs API-k + front-end ECharts panelek. Csak `health/info/metrics` végpontok vannak engedélyezve a whitelist-en; `/actuator/health` token nélküli, míg a `metrics` stb. hitelesítést igényel; `env/beans/heapdump/threaddump/loggers` soha nem kerül közzétételre. A mintavételi ablak csak folyamatonkénti, újraindítás esetén elveszik, és nincs megosztva a példányok között. Lásd a `../codegen-server/docs/可观测性说明.md` fájlt (kínai) részletekért.
 
 ## 13. Projekt állapot
 

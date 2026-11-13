@@ -77,7 +77,7 @@ CodeGen 是一套“以表为源”的代码工厂。你只要把业务表接进
 | 打印单据 | 勾选“打印”开关，产出 A4 打印页与路由，支持表头 + 明细表 |
 | 一句话建系统 | 描述业务域，AI 建库建表 + 脚手架 + 全量生成 + 注册菜单一气呵成 |
 
-> 以上场景均有可运行演示（`demo_admin` 工程）与配套截图，详见 `docs/典型场景操作指南-演示后台demo.md`。
+> 以上场景均有可运行演示（`demo_admin` 工程）与配套截图，详见 `../codegen-server/docs/典型场景操作指南-演示后台demo.md`。
 
 ---
 
@@ -231,7 +231,7 @@ npm run serve
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` | 6 张表覆盖 5 类典型场景，含可运行 demo 与实跑截图 |
 | `项目介绍.md` | 与本文同源的项目介绍文档 |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.0 各版本规划与功能盘点 |
-| `codegen-web/README.md` | 前端控制台快速上手参考 |
+| `../codegen-web/README.md` | 前端控制台快速上手参考 |
 
 ---
 
@@ -273,7 +273,7 @@ npm run serve
 
 ---
 
-> **V6.10 平台可观测性**：接入 Actuator + Micrometer，5 秒采样写入内存环形缓冲（保留 30 分钟窗口），新增内嵌「系统监控」页——后端 `/monitor/*` 聚合接口 + 前端 ECharts 面板。端点仅白名单放行 `health/info/metrics`，`/actuator/health` 免 token，`metrics` 等需鉴权；`env/beans/heapdump/threaddump/loggers` 永不暴露。采样窗口仅进程内、重启即丢、多实例不共享。详见 `docs/可观测性说明.md`。
+> **V6.10 平台可观测性**：接入 Actuator + Micrometer，5 秒采样写入内存环形缓冲（保留 30 分钟窗口），新增内嵌「系统监控」页——后端 `/monitor/*` 聚合接口 + 前端 ECharts 面板。端点仅白名单放行 `health/info/metrics`，`/actuator/health` 免 token，`metrics` 等需鉴权；`env/beans/heapdump/threaddump/loggers` 永不暴露。采样窗口仅进程内、重启即丢、多实例不共享。详见 `../codegen-server/docs/可观测性说明.md`。
 
 ## 十三、项目状态
 

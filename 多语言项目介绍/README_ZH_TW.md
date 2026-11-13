@@ -72,7 +72,7 @@ Table intake (DB import / DDL)
 | 列印文件 | 勾選「列印」開關產出 A4 列印頁面與路由，含表頭 + 明細表 |
 | 一句話建系統 | 描述業務領域——AI 一次性建立資料庫與資料表 + 腳手架 + 完整產生 + 選單註冊 |
 
-> 所有場景皆有可執行示範（`demo_admin` 專案）與螢幕截圖——詳見 `docs/典型场景操作指南-演示后台demo.md`（中文）。
+> 所有場景皆有可執行示範（`demo_admin` 專案）與螢幕截圖——詳見 `../codegen-server/docs/典型场景操作指南-演示后台demo.md`（中文）。
 
 ---
 
@@ -228,7 +228,7 @@ npm run serve
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (中文) | 6 張表涵蓋 5 個典型場景，含可執行示範與實際執行截圖 |
 | `项目介绍.md` | 專案介紹文件，與本文件同源 |
 | `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.0 的版本規劃與功能清單 |
-| `codegen-web/README.md` | 前端控制台快速上手參考 |
+| `../codegen-web/README.md` | 前端控制台快速上手參考 |
 
 ---
 
@@ -270,7 +270,7 @@ npm run serve
 
 ---
 
-> **V6.10 平台可觀測性**：整合 Actuator + Micrometer，每 5 秒取樣至記憶體環形緩衝區（30 分鐘視窗），並新增內嵌「系統監控」頁面——後端 `/monitor/*` 聚合 API + 前端 ECharts 面板。僅開放 `health/info/metrics` 端點；`/actuator/health` 免令牌，而 `metrics` 等需驗證；`env/beans/heapdump/threaddump/loggers` 永不暴露。取樣視窗僅限單一程序，重啟即遺失，且不跨實例共享。詳見 `docs/可观测性说明.md`（中文）。
+> **V6.10 平台可觀測性**：整合 Actuator + Micrometer，每 5 秒取樣至記憶體環形緩衝區（30 分鐘視窗），並新增內嵌「系統監控」頁面——後端 `/monitor/*` 聚合 API + 前端 ECharts 面板。僅開放 `health/info/metrics` 端點；`/actuator/health` 免令牌，而 `metrics` 等需驗證；`env/beans/heapdump/threaddump/loggers` 永不暴露。取樣視窗僅限單一程序，重啟即遺失，且不跨實例共享。詳見 `../codegen-server/docs/可观测性说明.md`（中文）。
 
 ## 13. 專案狀態
 
