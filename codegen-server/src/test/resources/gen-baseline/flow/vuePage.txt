@@ -13,29 +13,29 @@
     </div>
     <!-- 筛选区 -->
     <el-card shadow="never" class="filter-card">
-      <el-form :inline="true" :model="query" @submit.native.prevent>
+      <el-form :inline="true" :model="query" @submit.prevent>
         <el-form-item label="请假事由">
-          <el-input v-model="query.reason" placeholder="请假事由" clearable @keyup.enter.native="handleSearch" />
+          <el-input v-model="query.reason" placeholder="请假事由" clearable @keyup.enter="handleSearch" />
         </el-form-item>
         <el-form-item>
-          <el-button v-hasPermi="['demo_leave:query']" type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
-          <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+          <el-button v-hasPermi="['demo_leave:query']" type="primary" icon="Search" @click="handleSearch">查询</el-button>
+          <el-button icon="Refresh" @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
     <!-- 列表 -->
     <el-card shadow="never" class="table-card">
-      <div slot="header" class="card-header">
+      <template #header><div class="card-header">
         <div class="card-title">
           <span class="title">请假单</span>
           <span class="subtitle">共 {{ total }} 条</span>
         </div>
         <div class="card-actions">
-          <el-button v-hasPermi="['demo_leave:add']" type="primary" icon="el-icon-plus" size="small" @click="openDialog()">新增请假单</el-button>
-          <el-button icon="el-icon-download" size="small" @click="handleExport">导出</el-button>
+          <el-button v-hasPermi="['demo_leave:add']" type="primary" icon="Plus" size="small" @click="openDialog()">新增请假单</el-button>
+          <el-button icon="Download" size="small" @click="handleExport">导出</el-button>
         </div>
-      </div>
+      </div></template>
 
       <el-table
         v-loading="loading"
@@ -50,7 +50,7 @@
         <el-table-column prop="status" label="状态" min-width="140" show-overflow-tooltip />
         <el-table-column prop="updateTime" label="更新时间" width="170" align="center" />
         <el-table-column label="操作" width="464" fixed="right" align="center">
-          <template slot-scope="{ row }">
+          <template #default="{ row }">
             <el-button type="text" @click="openDetail(row)">详情</el-button>
             <el-button type="text" @click="handlePrintRow(row)">打印</el-button>
             <!--
@@ -75,14 +75,14 @@
         :total="total"
         :page-sizes="[10, 20, 50]"
         :page-size="query.size"
-        :current-page.sync="query.page"
+        v-model:current-page="query.page"
         @size-change="handleSizeChange"
         @current-change="fetchList"
       />
     </el-card>
 
     <!-- 新增/编辑弹窗 -->
-    <el-dialog :title="form.id ? '编辑请假单' : '新增请假单'" :visible.sync="dialogVisible" width="560px" top="6vh" class="form-dialog">
+    <el-dialog :title="form.id ? '编辑请假单' : '新增请假单'" v-model="dialogVisible" width="560px" top="6vh" class="form-dialog">
       <el-form ref="form" :model="form" :rules="rules" label-width="110px">
         <el-form-item label="请假事由" prop="reason">
           <el-input v-model="form.reason" placeholder="请输入请假事由" />
@@ -93,15 +93,15 @@
       </el-form>
 
 
-      <div slot="footer">
+      <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
-      </div>
+      </template>
     </el-dialog>
 
     <!-- 详情抽屉（只读）。主子表：宽抽屉 + el-tabs，tab1 主表字段，tab2..N 每张明细一张只读表；
          数据复用 /with-children 一次拉全，不逐 tab 发请求 -->
-    <el-drawer title="请假单详情" :visible.sync="detailVisible" size="420px">
+    <el-drawer title="请假单详情" v-model="detailVisible" size="420px">
       <div class="detail-body">
         <div class="detail-row">
           <span class="detail-label">ID</span>
@@ -129,7 +129,7 @@
     <!-- 提交/审批/驳回的确认框，顺便收一句意见 -->
     <el-dialog
       :title="flowAction === 'submit' ? '提交审批' : (flowAction === 'reject' ? '驳回' : '审批通过')"
-      :visible.sync="flowDialogVisible"
+      v-model="flowDialogVisible"
       width="420px"
       append-to-body
     >
@@ -141,13 +141,13 @@
         show-word-limit
         :placeholder="flowAction === 'reject' ? '请填写驳回理由' : '审批意见（选填）'"
       />
-      <div slot="footer">
+      <template #footer>
         <el-button @click="flowDialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="flowSubmitting" @click="submitFlow">确定</el-button>
-      </div>
+      </template>
     </el-dialog>
     <!-- 审批记录抽屉：流程流水是只追加的，看的就是「谁在什么时候把单子推到了哪一步」 -->
-    <el-drawer title="请假单审批记录" :visible.sync="flowVisible" size="480px">
+    <el-drawer title="请假单审批记录" v-model="flowVisible" size="480px">
       <div v-loading="flowLoading" class="detail-body">
         <div v-if="!flowRecords.length" class="flow-empty">还没有流转记录</div>
         <el-timeline v-else>

@@ -10,7 +10,14 @@ GitHub: https://github.com/hustxia/CodeGen
 > 各语言完整项目说明见 **[多语言项目介绍/](多语言项目介绍/)** 文件夹。
 
 
-> **Current release — V9.0 (Vue 3 generated artifacts) on top of V8.1 (quality gate)**
+> **Current release — V9.1 (maintainability) on top of V9.0 (Vue 3 artifacts) and V8.1 (quality gate)**
+> `GenScaffoldServiceImpl` was split from **5,072 → 914 lines** into 8 single-purpose writers
+> (Flow / Ops / Pom / Common / Auth / Seed / Frontend / TextSupport). Equivalence was proven by
+> building the old and new jar, generating the same two projects from both (119 + 62 files) and
+> diffing recursively — **zero byte differences**. Full suite **312/312 green** (13 legacy red
+> tests paid off), offline i18n contract still **9/9**.
+>
+> **V9.0 — Vue 3 generated artifacts on top of V8.1 (quality gate)**
 > Generated projects now target **Vue 3 + Element Plus + Vite**: `package.json`, `vite.config.js`,
 > `main.js`, router, store and `request.js` are emitted Vue 3-native, and template mechanics were
 > migrated (`.sync` → `v-model`, `slot=` → `#`, `slot-scope` → `#default`, `.native` removed,
@@ -284,7 +291,8 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | **V7.5** | **Project language configuration: 206-language list / default language / enabled languages, generated `lang` & `dir` injection + system-config page language selectors** | 7a9afa0 + abac56d |
 | **V8.0** | **Full-page i18n: 206-language framework (8 professionally translated), dual-track i18n with OFF zero-diff contract** | 9e5dd57 (scaffold i18n base) → 7d57aea (full rollout, 206 languages) |
 | **V8.1** | **Quality hardening: offline Freemarker contract harness (9 modes, OFF byte-zero-diff / ON emits `$t`) + `i18n-core` unit tests (vitest) + CI gate (`i18n-contract.yml`) + honest README split (framework 206 / translated 8) + `check-locale-keys.mjs` shipped in generated projects + translation contribution guide** | 93a12d5 + e49330b |
-| **V9.0** | **Generated-artifact modernization: Vue 3 + Element Plus + Vite (package.json / vite.config.js / main.js / router / store / request.js; template mechanics: `.sync`→`v-model`, `slot=`→`#`, `slot-scope`→`#default`, `.native` removed, font icons→component icons, `size="mini"`→`small`). Runtime-verified: Maven build + API-driven generation + 40/40 script assertions + `vite build` success + 14 Chrome screenshots incl. ar-SA RTL. 3 real defects found & fixed at runtime (`.native` leftovers, `index.html` entry location, missing `@` alias)** | 93a12d5 + e49330b (docs abe1c5d), **current** |
+| **V9.0** | **Generated-artifact modernization: Vue 3 + Element Plus + Vite (package.json / vite.config.js / main.js / router / store / request.js; template mechanics: `.sync`→`v-model`, `slot=`→`#`, `slot-scope`→`#default`, `.native` removed, font icons→component icons, `size="mini"`→`small`). Runtime-verified: Maven build + API-driven generation + 40/40 script assertions + `vite build` success + 14 Chrome screenshots incl. ar-SA RTL. 3 real defects found & fixed at runtime (`.native` leftovers, `index.html` entry location, missing `@` alias)** | 93a12d5 + e49330b (docs abe1c5d) |
+| **V9.1** | **Maintainability: `GenScaffoldServiceImpl` split 5,072 → 914 lines into 8 single-purpose writers; output byte-identical (old vs new jar: 119 + 62 files, `diff -r` empty); full suite 312/312 green (Vue 3 baseline snapshots refreshed, i18n template guard made stack-aware, histogram probe locked to config contract); offline i18n contract 9/9** | 654b8e0, **current** |
 
 ---
 
@@ -292,7 +300,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ## 13. Project Status
 
-- The current released version is **V9.0** (generated artifacts on Vue 3 + Element Plus + Vite, runtime-verified). It builds on **V8.1** quality hardening (offline contract harness + unit tests + CI gate) and **V8.0** full-page i18n (206-language framework, 8 professionally translated). Language support verified on 2026-11-13: 206/206 locales complete in `/language/list`, 12 RTL languages, 8 translated word banks key-identical to the zh-CN baseline (60 keys each).
+- The current released version is **V9.1** (maintainability refactor on top of the Vue 3 + Element Plus + Vite artifacts): the 5,072-line `GenScaffoldServiceImpl` is now 914 lines plus 8 single-purpose writers, with byte-identical generated output. It builds on **V8.1** quality hardening (offline contract harness + unit tests + CI gate) and **V8.0** full-page i18n (206-language framework, 8 professionally translated). Language support verified on 2026-11-13: 206/206 locales complete in `/language/list`, 12 RTL languages, 8 translated word banks key-identical to the zh-CN baseline (60 keys each).
 - A companion demo project `demo_admin` (backend 8140 / frontend 9040) covers tree / CRUD / master-detail / read-only / print scenarios and runs standalone for verification.
 - Both repositories are hosted on Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

@@ -61,14 +61,34 @@ class I18nTextRewriterTest {
     }
 
     @Test
-    @DisplayName("22 个 .ftl 模板源码零改动：不出现 $t / @@T@@（V7.4 三副本基线）")
+    @DisplayName("vuePage.ftl 双轨制契约：$t( 只出现在 i18nEnabled 守卫内，源中文文案保留")
     void 模板源码零改动() throws Exception {
         try (InputStream in = getClass().getClassLoader()
                 .getResourceAsStream("gen-templates/vuePage.ftl")) {
             assertNotNull(in, "模板资源缺失");
             String tpl = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            assertFalse(tpl.contains("$t("), "模板被直接改写，基线快照会全量漂移");
-            assertFalse(tpl.contains("@@T@@"));
+            // V8.0 起模板不再是「只放中文、运行时再改写」：ON 分支由 <#if i18nEnabled> 守卫
+            // 直接产出 $t(…)，OFF 分支保留中文原文，二者拼成「剥掉 $t 后逐字节相等」的契约。
+            // 因此断言从「模板不得出现 $t(」改为「出现时必须处于 i18nEnabled 守卫分支内」。
+            assertFalse(tpl.contains("@@T@@"), "不应出现占位符改写标记");
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("<#if\\b[^>]*>|</#if>|<#elseif\\b[^>]*>|<#else>|\\$t\\(")
+                    .matcher(tpl);
+            java.util.Deque<Boolean> guards = new java.util.ArrayDeque<>();
+            while (m.find()) {
+                String tok = m.group();
+                if (tok.startsWith("<#if")) {
+                    guards.push(tok.contains("i18nEnabled"));
+                } else if (tok.startsWith("</#if")) {
+                    if (!guards.isEmpty()) guards.pop();
+                } else if (tok.startsWith("<#else")) {
+                    if (!guards.isEmpty()) guards.pop();
+                    guards.push(tok.contains("i18nEnabled"));
+                } else {
+                    assertTrue(guards.contains(Boolean.TRUE),
+                            "出现未被 i18nEnabled 守卫的 $t(，会破坏 OFF 零 diff 契约（偏移 " + m.start() + "）");
+                }
+            }
             assertTrue(tpl.contains(">查询</el-button>"), "源中文文案应留在模板里");
         }
     }

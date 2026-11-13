@@ -13,29 +13,29 @@
     </div>
     <!-- 筛选区 -->
     <el-card shadow="never" class="filter-card">
-      <el-form :inline="true" :model="query" @submit.native.prevent>
+      <el-form :inline="true" :model="query" @submit.prevent>
         <el-form-item label="订单号">
-          <el-input v-model="query.orderNo" placeholder="订单号" clearable @keyup.enter.native="handleSearch" />
+          <el-input v-model="query.orderNo" placeholder="订单号" clearable @keyup.enter="handleSearch" />
         </el-form-item>
         <el-form-item>
-          <el-button v-hasPermi="['demo_order:query']" type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
-          <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+          <el-button v-hasPermi="['demo_order:query']" type="primary" icon="Search" @click="handleSearch">查询</el-button>
+          <el-button icon="Refresh" @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
     <!-- 列表 -->
     <el-card shadow="never" class="table-card">
-      <div slot="header" class="card-header">
+      <template #header><div class="card-header">
         <div class="card-title">
           <span class="title">订单</span>
           <span class="subtitle">共 {{ total }} 条</span>
         </div>
         <div class="card-actions">
-          <el-button v-hasPermi="['demo_order:add']" type="primary" icon="el-icon-plus" size="small" @click="openDialog()">新增订单</el-button>
-          <el-button icon="el-icon-download" size="small" @click="handleExport">导出</el-button>
+          <el-button v-hasPermi="['demo_order:add']" type="primary" icon="Plus" size="small" @click="openDialog()">新增订单</el-button>
+          <el-button icon="Download" size="small" @click="handleExport">导出</el-button>
         </div>
-      </div>
+      </div></template>
 
       <el-table
         v-loading="loading"
@@ -49,7 +49,7 @@
         <el-table-column prop="orderNo" label="订单号" min-width="140" show-overflow-tooltip />
         <el-table-column prop="updateTime" label="更新时间" width="170" align="center" />
         <el-table-column label="操作" width="278" fixed="right" align="center">
-          <template slot-scope="{ row }">
+          <template #default="{ row }">
             <el-button type="text" @click="openDetail(row)">详情</el-button>
             <el-button type="text" @click="handlePrintRow(row)">打印</el-button>
             <el-button v-hasPermi="['demo_order:edit']" type="text" @click="openDialog(row)">编辑</el-button>
@@ -65,14 +65,14 @@
         :total="total"
         :page-sizes="[10, 20, 50]"
         :page-size="query.size"
-        :current-page.sync="query.page"
+        v-model:current-page="query.page"
         @size-change="handleSizeChange"
         @current-change="fetchList"
       />
     </el-card>
 
     <!-- 新增/编辑弹窗 -->
-    <el-dialog :title="form.id ? '编辑订单' : '新增订单'" :visible.sync="dialogVisible" width="900px" top="6vh" class="form-dialog">
+    <el-dialog :title="form.id ? '编辑订单' : '新增订单'" v-model="dialogVisible" width="900px" top="6vh" class="form-dialog">
       <el-form ref="form" :model="form" :rules="rules" label-width="110px">
         <el-form-item label="订单号" prop="orderNo">
           <el-input v-model="form.orderNo" placeholder="请输入订单号" />
@@ -82,22 +82,22 @@
       <el-tabs v-model="activeChildTab" type="card" class="child-tabs">
         <el-tab-pane label="订单明细" name="demoOrderItem">
           <div class="child-bar">
-            <el-button type="primary" icon="el-icon-plus" size="mini" @click="addChildRow('demoOrderItem')">添加明细</el-button>
+            <el-button type="primary" icon="Plus" size="small" @click="addChildRow('demoOrderItem')">添加明细</el-button>
             <span class="child-tip">主表与子表在同一事务中保存（先清后插）</span>
           </div>
-          <el-table :data="demoOrderItemRows" border size="mini" class="child-table">
+          <el-table :data="demoOrderItemRows" border size="small" class="child-table">
             <el-table-column label="商品名称" min-width="130">
-              <template slot-scope="{ row }">
-                <el-input v-model="row.goodsName" size="mini" placeholder="商品名称" />
+              <template #default="{ row }">
+                <el-input v-model="row.goodsName" size="small" placeholder="商品名称" />
               </template>
             </el-table-column>
             <el-table-column label="数量" min-width="130">
-              <template slot-scope="{ row }">
-                <el-input v-model="row.qty" size="mini" placeholder="数量" />
+              <template #default="{ row }">
+                <el-input v-model="row.qty" size="small" placeholder="数量" />
               </template>
             </el-table-column>
             <el-table-column label="操作" width="150" align="center">
-              <template slot-scope="{ row, $index }">
+              <template #default="{ row, $index }">
                 <el-button type="text" @click="openGrandRows('demoOrderItem', 'demoOrderItemAttr', row)">明细属性</el-button>
                 <el-button type="text" class="danger-btn" @click="demoOrderItemRows.splice($index, 1)">删除</el-button>
               </template>
@@ -109,17 +109,17 @@
         </el-tab-pane>
         <el-tab-pane label="操作日志" name="demoOrderLog">
           <div class="child-bar">
-            <el-button type="primary" icon="el-icon-plus" size="mini" @click="addChildRow('demoOrderLog')">添加明细</el-button>
+            <el-button type="primary" icon="Plus" size="small" @click="addChildRow('demoOrderLog')">添加明细</el-button>
             <span class="child-tip">主表与子表在同一事务中保存（先清后插）</span>
           </div>
-          <el-table :data="demoOrderLogRows" border size="mini" class="child-table">
+          <el-table :data="demoOrderLogRows" border size="small" class="child-table">
             <el-table-column label="日志内容" min-width="130">
-              <template slot-scope="{ row }">
-                <el-input v-model="row.logText" size="mini" placeholder="日志内容" />
+              <template #default="{ row }">
+                <el-input v-model="row.logText" size="small" placeholder="日志内容" />
               </template>
             </el-table-column>
             <el-table-column label="操作" width="70" align="center">
-              <template slot-scope="{ row, $index }">
+              <template #default="{ row, $index }">
                 <el-button type="text" class="danger-btn" @click="demoOrderLogRows.splice($index, 1)">删除</el-button>
               </template>
             </el-table-column>
@@ -127,42 +127,42 @@
         </el-tab-pane>
       </el-tabs>
 
-      <div slot="footer">
+      <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
-      </div>
+      </template>
     </el-dialog>
 
     <!-- 三级明细编辑：直接改选中行的下级数组（引用直改），保存时随主表一起提交 -->
     <el-dialog
       :title="grandTitle"
-      :visible.sync="grandVisible"
+      v-model="grandVisible"
       width="720px"
       append-to-body
     >
       <div class="child-bar">
-        <el-button type="primary" icon="el-icon-plus" size="mini" @click="addGrandRow">添加{{ grandTitle }}</el-button>
+        <el-button type="primary" icon="Plus" size="small" @click="addGrandRow">添加{{ grandTitle }}</el-button>
       </div>
-      <el-table v-show="grandDialog === 'demoOrderItem.demoOrderItemAttr'" :data="grandRows" border size="mini" class="child-table">
+      <el-table v-show="grandDialog === 'demoOrderItem.demoOrderItemAttr'" :data="grandRows" border size="small" class="child-table">
         <el-table-column label="属性名" min-width="130">
-          <template slot-scope="{ row }">
-            <el-input v-model="row.attrName" size="mini" placeholder="属性名" />
+          <template #default="{ row }">
+            <el-input v-model="row.attrName" size="small" placeholder="属性名" />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="70" align="center">
-          <template slot-scope="{ $index }">
+          <template #default="{ $index }">
             <el-button type="text" class="danger-btn" @click="grandRows.splice($index, 1)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
-      <div slot="footer">
+      <template #footer>
         <el-button @click="grandVisible = false">关闭</el-button>
-      </div>
+      </template>
     </el-dialog>
 
     <!-- 详情抽屉（只读）。主子表：宽抽屉 + el-tabs，tab1 主表字段，tab2..N 每张明细一张只读表；
          数据复用 /with-children 一次拉全，不逐 tab 发请求 -->
-    <el-drawer title="订单详情" :visible.sync="detailVisible" size="62%">
+    <el-drawer title="订单详情" v-model="detailVisible" size="62%">
       <el-tabs v-model="activeDetailTab" type="card" class="detail-tabs">
         <el-tab-pane label="主表信息" name="main">
           <div class="detail-body">
@@ -185,23 +185,23 @@
           </div>
         </el-tab-pane>
         <el-tab-pane label="订单明细" name="demoOrderItem">
-          <el-table :data="detailGroupRows('demoOrderItem')" border size="mini" max-height="520">
+          <el-table :data="detailGroupRows('demoOrderItem')" border size="small" max-height="520">
             <el-table-column label="商品名称" min-width="120" prop="goodsName">
-              <template slot-scope="{ row }">
+              <template #default="{ row }">
                 {{ row.goodsName }}
               </template>
             </el-table-column>
             <el-table-column label="数量" min-width="120" prop="qty">
-              <template slot-scope="{ row }">
+              <template #default="{ row }">
                 {{ row.qty }}
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
         <el-tab-pane label="操作日志" name="demoOrderLog">
-          <el-table :data="detailGroupRows('demoOrderLog')" border size="mini" max-height="520">
+          <el-table :data="detailGroupRows('demoOrderLog')" border size="small" max-height="520">
             <el-table-column label="日志内容" min-width="120" prop="logText">
-              <template slot-scope="{ row }">
+              <template #default="{ row }">
                 {{ row.logText }}
               </template>
             </el-table-column>

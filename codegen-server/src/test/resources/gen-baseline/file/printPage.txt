@@ -2,8 +2,8 @@
   <div class="print-wrap" v-loading="loading">
     <!-- 屏幕工具条：打印时整体隐藏 -->
     <div class="print-toolbar no-print">
-      <el-button type="primary" icon="el-icon-printer" @click="handlePrint">打印 / 另存为 PDF</el-button>
-      <el-button icon="el-icon-back" @click="handleBack">返回</el-button>
+      <el-button type="primary" icon="Printer" @click="handlePrint">打印 / 另存为 PDF</el-button>
+      <el-button icon="Back" @click="handleBack">返回</el-button>
     </div>
 
     <!-- A4 纸面：屏幕预览 794px 等比模拟，打印时交给 @page 控版 -->
