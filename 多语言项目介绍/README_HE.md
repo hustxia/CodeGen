@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **הגרסה הנוכחית V9.0 · ה-artifacts שנוצרו שודרגו ל-Vue 3 + Element Plus + Vite; אומתו בזמן ריצה (40/40 טענות, vite build מוצלח, 14 צילומי מסך incl. ar-SA RTL); תוקנו 3 באגים בזמן ריצה**
+> **הגרסה הנוכחית V9.1 · רפקטור לתחזוקתיות · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **V9.0 · ה-artifacts שנוצרו שודרגו ל-Vue 3 + Element Plus + Vite; אומתו בזמן ריצה (40/40 טענות, vite build מוצלח, 14 צילומי מסך incl. ar-SA RTL); תוקנו 3 באגים בזמן ריצה**
 > **V8.1** · חיזוק איכות: מנגנון חוזה אופליין (9 מצבים, אפס הפרש ב-OFF) + בדיקות יחידה i18n-core + שער CI + פיצול כן ב-README (מסגרת 206 / מתורגמות 8) + check-locale-keys.mjs
 > **V8.0** · i18n לעמוד מלא: מסגרת של 206 שפות (8 מתורגמות מקצועית), i18n דו-מסלולית עם חוזה אפס הפרש ב-OFF
 
@@ -140,10 +141,11 @@ npm run serve
 
 ## 11. סטטוס פרויקט
 
-> **Version History · V9.0**
+> **Version History · V9.1**
+> **V9.1** · רפקטור לתחזוקתיות · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9 — `654b8e0 → b0d081e`.
 > ה-artifacts שנוצרו שודרגו ל-Vue 3 + Element Plus + Vite; אומתו בזמן ריצה (40/40 טענות, vite build מוצלח, 14 צילומי מסך incl. ar-SA RTL); תוקנו 3 באגים בזמן ריצה — `93a12d5 + e49330b`.
 
-- קו הגרסה המתוכנן הנוכחי הגיע ל-**V9.0**.
+- קו הגרסה המתוכנן הנוכחי הגיע ל-**V9.1**.
 - שני המאגרים מתארחים ב-Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. מחבר

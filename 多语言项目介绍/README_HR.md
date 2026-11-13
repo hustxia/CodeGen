@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **trenutna verzija V9.0 · Generirani artefakti modernizirani na Vue 3 + Element Plus + Vite; provjereno u izvođenju (40/40 tvrdnji, uspješan vite build, 14 snimki zaslona incl. ar-SA RTL); popravljene 3 izvedbene greške**
+> **trenutna verzija V9.1 · Refaktoriranje održivosti · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **V9.0 · Generirani artefakti modernizirani na Vue 3 + Element Plus + Vite; provjereno u izvođenju (40/40 tvrdnji, uspješan vite build, 14 snimki zaslona incl. ar-SA RTL); popravljene 3 izvedbene greške**
 > **V8.1** · Očvršćivanje kvalitete: offline ugovorni harness (9 načina, nulta razlika OFF) + jedinični testovi i18n-core + CI kapija + poštena podjela README (okvir 206 / prevedenih 8) + check-locale-keys.mjs
 > **V8.0** · i18n cijele stranice: okvir 206 jezika (8 stručno prevedenih), dvokolosiječna i18n s ugovorom nulte razlike u OFF
 
@@ -230,7 +231,7 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 | `../codegen-server/docs/代码生成器-操作手册.md` (kineski) | Postavljanje, 5-minutni početak, konfiguracija tablica, prijem u serijama, upravljanje predlošcima, knjigovodstvo, API katalog, cijeli proces (sa snimkama zaslona) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kineski) | 6 tablica koje pokrivaju 5 tipičnih scenarija, s pokretnim demo primjerom i stvarnim snimkama zaslona |
 | `项目介绍.md` | Dokument s predstavljanjem projekta, isti izvor kao ova datoteka |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verzijski planovi i popisi funkcionalnosti od V3.1 → V9.0 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verzijski planovi i popisi funkcionalnosti od V3.1 → V9.1 |
 | `../codegen-web/README.md` | Referenca za brzi početak na front-end konzoli |
 
 ---
@@ -269,7 +270,8 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 | **V7.5** | **Jezična konfiguracija projekta: popis 206 jezika / zadani jezik / omogućeni jezici, ubacivanje lang i dir u generirani kod** | 7a9afa0 + abac56d |
 | **V8.0** | **i18n cijele stranice: okvir 206 jezika (8 stručno prevedenih), dvokolosiječna i18n s ugovorom nulte razlike u OFF** | 9e5dd57 → 7d57aea |
 | **V8.1** | **Očvršćivanje kvalitete: offline ugovorni harness (9 načina, nulta razlika OFF) + jedinični testovi i18n-core + CI kapija + poštena podjela README (okvir 206 / prevedenih 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
-| **V9.0** | **Generirani artefakti modernizirani na Vue 3 + Element Plus + Vite; provjereno u izvođenju (40/40 tvrdnji, uspješan vite build, 14 snimki zaslona incl. ar-SA RTL); popravljene 3 izvedbene greške** | 93a12d5 + e49330b, **Trenutna verzija** |
+| **V9.0** | **Generirani artefakti modernizirani na Vue 3 + Element Plus + Vite; provjereno u izvođenju (40/40 tvrdnji, uspješan vite build, 14 snimki zaslona incl. ar-SA RTL); popravljene 3 izvedbene greške** | 93a12d5 + e49330b  |
+| **V9.1** | **Refaktoriranje održivosti · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **trenutna verzija** |
 
 ---
 

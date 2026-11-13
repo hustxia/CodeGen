@@ -121,7 +121,8 @@ npm run serve
 
 ## 11. ప్రాజెక్ట్ స్థితి
 
-- ప్రస్తుతం ప్రణాళిక చేయబడిన వెర్షన్ లైన్ **V9.0** ను చేరుకుంది.
+- ప్రస్తుతం ప్రణాళిక చేయబడిన వెర్షన్ లైన్ **V9.1** ను చేరుకుంది.
+- **V9.1** · నిర్వహణ సౌలభ్య పునర్నిర్మాణం · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - రెండు రిపోజిటరీలు Gitee లో హోస్ట్ చేయబడ్డాయి: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. రచయిత

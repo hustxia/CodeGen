@@ -265,7 +265,8 @@ Le front-end écoute par défaut sur le port **9530**, avec `/dev-api` proxifié
 | **V7.5** | Configuration linguistique du projet : liste de 206 langues / langue par défaut / langues activées, injection de lang & dir dans les artefacts générés | 7a9afa0 + abac56d |
 | **V8.0** | i18n pleine page : framework 206 langues (8 traduites professionnellement), i18n à double voie avec contrat zéro diff en mode OFF | 9e5dd57 → 7d57aea |
 | **V8.1** | Durcissement qualité : harnais de contrat hors ligne (9 modes, zéro diff OFF) + tests unitaires i18n-core + porte CI + lecture honnête du README (framework 206 / traduites 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | Artefacts générés modernisés vers Vue 3 + Element Plus + Vite ; vérifiés à l'exécution (40/40 assertions, vite build réussi, 14 captures dont ar-SA RTL) ; 3 défauts d'exécution corrigés | 93a12d5 + e49330b, **Version actuelle** |
+| **V9.0** | Artefacts générés modernisés vers Vue 3 + Element Plus + Vite ; vérifiés à l'exécution (40/40 assertions, vite build réussi, 14 captures dont ar-SA RTL) ; 3 défauts d'exécution corrigés | 93a12d5 + e49330b  |
+| **V9.1** | **Refactorisation de maintenabilité · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **Version actuelle** |
 
 ---
 
@@ -273,7 +274,7 @@ Le front-end écoute par défaut sur le port **9530**, avec `/dev-api` proxifié
 
 ## 13. État du projet
 
-- La ligne de versions planifiée atteint aujourd'hui **V9.0** ; les capacités continuent d'évoluer (modélisation IA, enrichissement des données de seed, système de packs de capacités, etc.).
+- La ligne de versions planifiée atteint aujourd'hui **V9.1** ; les capacités continuent d'évoluer (modélisation IA, enrichissement des données de seed, système de packs de capacités, etc.).
 - Un projet de démonstration d'accompagnement `demo_admin` (back-end 8140 / front-end 9040) est disponible : il couvre les scénarios arborescent / CRUD / maître-détail / lecture seule / impression et peut être lancé indépendamment pour vérification.
 - Les deux dépôts sont hébergés sur Gitee : `https://gitee.com/hustxiayuhong/CodeGen.git`
 

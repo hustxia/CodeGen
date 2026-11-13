@@ -8,6 +8,7 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **Current version V9.1 · Refactoring para sa maintainability · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > ** V9.0 · **
 > **V8.1** · 
 > **V8.0** · 
@@ -118,10 +119,11 @@ Ang back-end ay naka-port na default na **8120**, ang front-end ay naka-port na 
 
 ## 11. Kalagayan ng Proyekto
 
-> **Version History · V9.0**
+> **Version History · V9.1**
+> **V9.1** · Refactoring para sa maintainability · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9 — `654b8e0 → b0d081e`.
 >  — `93a12d5 + e49330b`.
 
-- Ang kasalukuyang pinaplanong linya ng bersyon ay umabot na sa **V9.0**.
+- Ang kasalukuyang pinaplanong linya ng bersyon ay umabot na sa **V9.1**.
 - Ang dalawang repository ay naka-host sa Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. May-akda

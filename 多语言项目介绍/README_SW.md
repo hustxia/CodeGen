@@ -8,6 +8,7 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **Current version V9.1 · Urekebishaji kwa matengenezo rahisi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > ** V9.0 · **
 > **V8.1** · 
 > **V8.0** · 
@@ -118,10 +119,11 @@ Nyuma default kwenye bandari **8120**, mbele kwenye bandari **9530**. Akaunti ya
 
 ## 11. Hali ya Mradi
 
-> **Version History · V9.0**
+> **Version History · V9.1**
+> **V9.1** · Urekebishaji kwa matengenezo rahisi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9 — `654b8e0 → b0d081e`.
 >  — `93a12d5 + e49330b`.
 
-- Mstari wa matoleo uliopangwa sasa umefikia **V9.0**.
+- Mstari wa matoleo uliopangwa sasa umefikia **V9.1**.
 - Hifadhi zote mbili zinapatikana kwenye Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Mwandishi

@@ -8,6 +8,7 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **Current version V9.1 · Refaktoriranje za vzdrževanje · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > ** V9.0 · **
 > **V8.1** · 
 > **V8.0** · 
@@ -147,10 +148,11 @@ Backend privzeto zažene vrata **8120**; frontend **9530**. Privzeti račun `adm
 
 ## 11. Stanje projekta
 
-> **Version History · V9.0**
+> **Version History · V9.1**
+> **V9.1** · Refaktoriranje za vzdrževanje · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9 — `654b8e0 → b0d081e`.
 >  — `93a12d5 + e49330b`.
 
-- Trenutno načrtovana različica dosega **V9.0**.
+- Trenutno načrtovana različica dosega **V9.1**.
 - Oba repozitorija gostujeta na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Avtor

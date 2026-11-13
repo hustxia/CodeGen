@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **aktuell version V9.0 · Genererade artefakter moderniserade till Vue 3 + Element Plus + Vite; verifierade i drift (40/40 asserteringar, lyckad vite build, 14 skärmbilder inkl. ar-SA RTL); 3 runtime-fel åtgärdade**
+> **aktuell version V9.1 · Underhållsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **V9.0 · Genererade artefakter moderniserade till Vue 3 + Element Plus + Vite; verifierade i drift (40/40 asserteringar, lyckad vite build, 14 skärmbilder inkl. ar-SA RTL); 3 runtime-fel åtgärdade**
 > **V8.1** · Kvalitetshärdning: offline kontrakts-harness (9 lägen, OFF zero-diff) + i18n-core enhetstester + CI-grind + ärlig README-fördelning (ramverk 206 / översatta 8) + check-locale-keys.mjs
 > **V8.0** · Helsides-i18n: ramverk med 206 språk (8 professionellt översatta), tvåspårig i18n med OFF zero-diff-kontrakt
 
@@ -228,7 +229,7 @@ Frontenden körs som standard på port **9530**, proxyrar `/dev-api` till backen
 | `../codegen-server/docs/代码生成器-操作手册.md` (kinesiska) | Distribution, 5-minutersstart, tabellkonfig, satsvis inmatning, mallhantering, reskontra, API-katalog, fullständig pipeline (med skärmdumpar) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kinesiska) | 6 tabeller som täcker 5 typiska scenarier, med körbar demo och verkliga skärmdumpar |
 | `项目介绍.md` | Projektintroduktionsdokument, samma källa som denna fil |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versionsplaner och funktionsinventarier från V3.1 → V9.0 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versionsplaner och funktionsinventarier från V3.1 → V9.1 |
 | `../codegen-web/README.md` | Frontend-konsol snabbstartreferens |
 
 ---
@@ -267,7 +268,8 @@ Frontenden körs som standard på port **9530**, proxyrar `/dev-api` till backen
 | **V7.5** | **Projektspråkskonfiguration: lista över 206 språk / standardspråk / aktiverade språk, injicering av lang och dir i genererad kod** | 7a9afa0 + abac56d |
 | **V8.0** | **Helsides-i18n: ramverk med 206 språk (8 professionellt översatta), tvåspårig i18n med OFF zero-diff-kontrakt** | 9e5dd57 → 7d57aea |
 | **V8.1** | **Kvalitetshärdning: offline kontrakts-harness (9 lägen, OFF zero-diff) + i18n-core enhetstester + CI-grind + ärlig README-fördelning (ramverk 206 / översatta 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
-| **V9.0** | **Genererade artefakter moderniserade till Vue 3 + Element Plus + Vite; verifierade i drift (40/40 asserteringar, lyckad vite build, 14 skärmbilder inkl. ar-SA RTL); 3 runtime-fel åtgärdade** | 93a12d5 + e49330b, **Nuvarande version** |
+| **V9.0** | **Genererade artefakter moderniserade till Vue 3 + Element Plus + Vite; verifierade i drift (40/40 asserteringar, lyckad vite build, 14 skärmbilder inkl. ar-SA RTL); 3 runtime-fel åtgärdade** | 93a12d5 + e49330b  |
+| **V9.1** | **Underhållsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **aktuell version** |
 
 ---
 
@@ -275,7 +277,7 @@ Frontenden körs som standard på port **9530**, proxyrar `/dev-api` till backen
 
 ## 13. Projektstatus
 
-- Den nuvarande planerade versionslinjen har nått **V9.0** (kapaciteter fortsätter iterera: AI-modellering, frödataförbättring, kapacitetspaketsystem, etc.).
+- Den nuvarande planerade versionslinjen har nått **V9.1** (kapaciteter fortsätter iterera: AI-modellering, frödataförbättring, kapacitetspaketsystem, etc.).
 - Ett medföljande demo-projekt `demo_admin` (backend 8140 / frontend 9040) täcker träd / CRUD / master-detail / skrivskyddad / utskriftsscenarier och kör fristående för verifiering.
 - Båda repositorierna hostas på Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

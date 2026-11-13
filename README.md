@@ -252,8 +252,8 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | `codegen-server/docs/代码生成器-操作手册.md` (Chinese) | Deployment, 5-minute start, table config, batch intake, template management, ledger, API catalog, full pipeline (with screenshots) |
 | `codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
 | `多语言项目介绍/项目介绍.md` | Project introduction document, same source as this file |
-| `codegen-server/docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V9.0 |
-| `codegen-server/ROADMAP.md` | Release-by-release progress and verification records (V8.0 / V8.1 / V9.0) |
+| `codegen-server/docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V9.1 |
+| `codegen-server/ROADMAP.md` | Release-by-release progress and verification records (V8.0 / V8.1 / V9.0 / V9.1) |
 | `codegen-web/README.md` | Frontend console quick-start reference |
 
 ---

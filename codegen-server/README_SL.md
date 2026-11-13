@@ -143,7 +143,8 @@ Backend privzeto zažene vrata **8120**; frontend **9530**. Privzeti račun `adm
 
 ## 11. Stanje projekta
 
-- Trenutno načrtovana različica dosega **V9.0**.
+- Trenutno načrtovana različica dosega **V9.1**.
+- **V9.1** · Refaktoriranje za vzdrževanje · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - Oba repozitorija gostujeta na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Avtor

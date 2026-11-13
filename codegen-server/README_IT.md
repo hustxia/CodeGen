@@ -263,7 +263,8 @@ Il front-end usa di default la porta **9530**, con proxy di `/dev-api` alla port
 | **V7.5** | Configurazione lingua del progetto: elenco di 206 lingue / lingua predefinita / lingue abilitate, iniezione di lang e dir nei generati | 7a9afa0 + abac56d |
 | **V8.0** | i18n a pagina intera: framework di 206 lingue (8 tradotte professionalmente), i18n a doppia via con contratto zero-diff in OFF | 9e5dd57 → 7d57aea |
 | **V8.1** | Rafforzamento qualità: harness di contratto offline (9 modalità, zero-diff OFF) + test unitari i18n-core + gate CI + suddivisione onesta del README (framework 206 / tradotte 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | Artefatti generati modernizzati a Vue 3 + Element Plus + Vite; verificati a runtime (40/40 asserzioni, vite build riuscita, 14 screenshot incl. ar-SA RTL); 3 difetti runtime corretti | 93a12d5 + e49330b, **Versione corrente** |
+| **V9.0** | Artefatti generati modernizzati a Vue 3 + Element Plus + Vite; verificati a runtime (40/40 asserzioni, vite build riuscita, 14 screenshot incl. ar-SA RTL); 3 difetti runtime corretti | 93a12d5 + e49330b  |
+| **V9.1** | **Refactoring per manutenibilità · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **Versione attuale** |
 
 ---
 
@@ -271,7 +272,7 @@ Il front-end usa di default la porta **9530**, con proxy di `/dev-api` alla port
 
 ## 13. Stato del progetto
 
-- La linea di versione pianificata corrente ha raggiunto **V9.0** (le capacità continuano a iterare: modellazione AI, miglioramento seed-data, sistema di pacchetti capacità, ecc.).
+- La linea di versione pianificata corrente ha raggiunto **V9.1** (le capacità continuano a iterare: modellazione AI, miglioramento seed-data, sistema di pacchetti capacità, ecc.).
 - Un progetto demo compagno `demo_admin` (back-end 8140 / front-end 9040) copre scenari albero / CRUD / master-detail / sola lettura / stampa ed è eseguibile in autonomia per la verifica.
 - Entrambi i repository sono ospitati su Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

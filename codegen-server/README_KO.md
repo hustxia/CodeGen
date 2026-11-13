@@ -262,7 +262,8 @@ npm run serve
 | **V7.5** | 프로젝트 언어 설정: 206개 언어 목록 / 기본 언어 / 사용 언어, 생성물에 lang·dir 주입 | 7a9afa0 + abac56d |
 | **V8.0** | 전 페이지 i18n: 206개 언어 프레임워크(8개 정밀 번역), OFF 제로 diff 계약의 듀얼 트랙 i18n | 9e5dd57 → 7d57aea |
 | **V8.1** | 품질 강화: 오프라인 계약 하네스(9 모드 OFF 제로 diff) + i18n-core 단위 테스트 + CI 게이트 + README 정직 분할(프레임워크 206 / 정밀 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | 생성물을 Vue 3 + Element Plus + Vite로 현대화; 런타임 검증 완료(40/40 어설션, vite build 성공, ar-SA RTL 포함 14장 스크린샷); 런타임 결함 3건 수정 | 93a12d5 + e49330b, **현재 버전** |
+| **V9.0** | 생성물을 Vue 3 + Element Plus + Vite로 현대화; 런타임 검증 완료(40/40 어설션, vite build 성공, ar-SA RTL 포함 14장 스크린샷); 런타임 결함 3건 수정 | 93a12d5 + e49330b  |
+| **V9.1** | **유지보수성 리팩터링 · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **현재 버전** |
 
 ---
 
@@ -270,7 +271,7 @@ npm run serve
 
 ## 13. 프로젝트 현황
 
-- 현재 계획 버전 라인은 **V9.0**에 도달했으며, 기능은 지속적으로 반복 개선 중입니다 (AI 모델링, 시드 데이터 강화, 기능 팩 체계 등).
+- 현재 계획 버전 라인은 **V9.1**에 도달했으며, 기능은 지속적으로 반복 개선 중입니다 (AI 모델링, 시드 데이터 강화, 기능 팩 체계 등).
 - 동반 데모 프로젝트 `demo_admin`(백엔드 8140 / 프론트엔드 9040)이 준비되어 있으며, 트리 / CRUD / 마스터-디테일 / 읽기 전용 / 인쇄 전 시나리오를 커버하고 독립적으로 실행·검증할 수 있습니다.
 - 두 리포지토리 모두 Gitee에 호스팅되어 있습니다: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

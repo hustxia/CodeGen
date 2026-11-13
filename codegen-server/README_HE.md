@@ -136,7 +136,8 @@ npm run serve
 
 ## 11. סטטוס פרויקט
 
-- קו הגרסה המתוכנן הנוכחי הגיע ל-**V9.0**.
+- קו הגרסה המתוכנן הנוכחי הגיע ל-**V9.1**.
+- **V9.1** · רפקטור לתחזוקתיות · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - שני המאגרים מתארחים ב-Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. מחבר

@@ -114,7 +114,8 @@ npm run serve
 
 ## ၁၁။ ပရောဂျက် အခြေအနေ
 
-- လက်ရှိစီစဉ်ထားသော version line **V9.0** သို့ ရောက်ရှိလာပြီ.
+- လက်ရှိစီစဉ်ထားသော version line **V9.1** သို့ ရောက်ရှိလာပြီ.
+- **V9.1** · ပြုပြင်ထိန်းသိမ်းလွယ်မှု ပြန်လည်ဖွဲ့စည်းခြင်း · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - Repository နှစ်ခုလုံး Gitee တွင် host လုပ်ထားသည်: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## ၁၂။ ရေးသားသူ

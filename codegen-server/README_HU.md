@@ -265,7 +265,8 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 | **V7.5** | Projekt nyelvi konfiguráció: 206 nyelv listája / alapértelmezett nyelv / engedélyezett nyelvek, lang és dir befecskendezése a generált kódba | 7a9afa0 + abac56d |
 | **V8.0** | Teljes oldal i18n: 206 nyelvű keretrendszer (8 szakmailag lefordítva), kétvágányú i18n OFF zero-diff szerződéssel | 9e5dd57 → 7d57aea |
 | **V8.1** | Minőségszilárdítás: offline szerződéses harness (9 mód, OFF zero-diff) + i18n-core egységtesztek + CI kapu + őszinte README felosztás (keretrendszer 206 / lefordítva 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | A generált artefaktok modernizálva Vue 3 + Element Plus + Vite-re; futásidőben ellenőrizve (40/40 assertion, sikeres vite build, 14 képernyőkép incl. ar-SA RTL); 3 futásidejű hiba javítva | 93a12d5 + e49330b, **Aktuális verzió** |
+| **V9.0** | A generált artefaktok modernizálva Vue 3 + Element Plus + Vite-re; futásidőben ellenőrizve (40/40 assertion, sikeres vite build, 14 képernyőkép incl. ar-SA RTL); 3 futásidejű hiba javítva | 93a12d5 + e49330b  |
+| **V9.1** | **Karbantarthatósági refaktorálás · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **Jelenlegi verzió** |
 
 ---
 

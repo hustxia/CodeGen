@@ -262,7 +262,8 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 | **V7.5** | Configurarea lingvistică a proiectului: lista de 206 limbi / limba implicită / limbile activate, injectarea lang și dir în codul generat | 7a9afa0 + abac56d |
 | **V8.0** | i18n pe pagina întreagă: cadru cu 206 limbi (8 traduse profesional), i18n pe două căi cu contract de diferență zero în OFF | 9e5dd57 → 7d57aea |
 | **V8.1** | Întărirea calității: harness offline de contract (9 moduri, diferență zero OFF) + teste unitare i18n-core + poartă CI + împărțire onestă în README (cadru 206 / traduse 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | Artefactele generate modernizate la Vue 3 + Element Plus + Vite; verificate la runtime (40/40 aserțiuni, vite build reușit, 14 capturi incl. ar-SA RTL); 3 defecte de runtime reparate | 93a12d5 + e49330b, **Versiunea curentă** |
+| **V9.0** | Artefactele generate modernizate la Vue 3 + Element Plus + Vite; verificate la runtime (40/40 aserțiuni, vite build reușit, 14 capturi incl. ar-SA RTL); 3 defecte de runtime reparate | 93a12d5 + e49330b  |
+| **V9.1** | **Refactorizare pentru mentenabilitate · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **versiunea curentă** |
 
 ---
 
@@ -270,7 +271,7 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 
 ## 13. Starea proiectului
 
-- Linia de versiune planificată curentă a ajuns la **V9.0** (capacitățile continuă să evolueze: modelare AI, îmbunătățire seed-data, sistem de pachete de capacități etc.).
+- Linia de versiune planificată curentă a ajuns la **V9.1** (capacitățile continuă să evolueze: modelare AI, îmbunătățire seed-data, sistem de pachete de capacități etc.).
 - Un proiect demo însoțitor `demo_admin` (backend 8140 / frontend 9040) acoperă scenariile arbore / CRUD / stăpân-detail / doar-citire / tipărire și rulează independent pentru verificare.
 - Ambele depozite sunt găzduite pe Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

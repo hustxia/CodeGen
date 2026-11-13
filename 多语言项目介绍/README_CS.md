@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **aktuální verze V9.0 · Generované artefakty modernizovány na Vue 3 + Element Plus + Vite; ověřeno za běhu (40/40 assertion, úspěšný vite build, 14 snímků vč. ar-SA RTL); opraveny 3 běhové defekty**
+> **aktuální verze V9.1 · Refaktoring pro udržovatelnost · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **V9.0 · Generované artefakty modernizovány na Vue 3 + Element Plus + Vite; ověřeno za běhu (40/40 assertion, úspěšný vite build, 14 snímků vč. ar-SA RTL); opraveny 3 běhové defekty**
 > **V8.1** · Posílení kvality: offline kontraktní harness (9 režimů, nulový rozdíl OFF) + unit testy i18n-core + CI brána + čestné rozdělení README (rámec 206 / přeloženo 8) + check-locale-keys.mjs
 > **V8.0** · i18n celé stránky: rámec 206 jazyků (8 profesionálně přeloženo), dvoustopá i18n s kontraktem nulového rozdílu při OFF
 
@@ -230,7 +231,7 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 | `../codegen-server/docs/代码生成器-操作手册.md` (čínština) | Nasazení, 5minutový start, konfigurace tabulek, dávkový převod, správa šablon, hlavní kniha, API katalog, celá pipeline (se screenshoty) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (čínština) | 6 tabulek pokrývajících 5 typických scénářů, se spustitelným demem a skutečnými screenshoty |
 | `项目介绍.md` | Dokument s představením projektu, stejný zdroj jako tento soubor |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verzní plány a inventáře funkcí z V3.1 → V9.0 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verzní plány a inventáře funkcí z V3.1 → V9.1 |
 | `../codegen-web/README.md` | Rychlá referenční příručka pro frontend konzoli |
 
 ---
@@ -269,7 +270,8 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 | **V7.5** | **Jazyková konfigurace projektu: seznam 206 jazyků / výchozí jazyk / povolené jazyky, vkládání lang a dir do generovaného kódu** | 7a9afa0 + abac56d |
 | **V8.0** | **i18n celé stránky: rámec 206 jazyků (8 profesionálně přeloženo), dvoustopá i18n s kontraktem nulového rozdílu při OFF** | 9e5dd57 → 7d57aea |
 | **V8.1** | **Posílení kvality: offline kontraktní harness (9 režimů, nulový rozdíl OFF) + unit testy i18n-core + CI brána + čestné rozdělení README (rámec 206 / přeloženo 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
-| **V9.0** | **Generované artefakty modernizovány na Vue 3 + Element Plus + Vite; ověřeno za běhu (40/40 assertion, úspěšný vite build, 14 snímků vč. ar-SA RTL); opraveny 3 běhové defekty** | 93a12d5 + e49330b, **Aktuální verze** |
+| **V9.0** | **Generované artefakty modernizovány na Vue 3 + Element Plus + Vite; ověřeno za běhu (40/40 assertion, úspěšný vite build, 14 snímků vč. ar-SA RTL); opraveny 3 běhové defekty** | 93a12d5 + e49330b  |
+| **V9.1** | **Refaktoring pro udržovatelnost · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **aktuální verze** |
 
 ---
 
@@ -277,7 +279,7 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 
 ## 13. Stav projektu
 
-- Aktuální plánovaná verzní řada dosáhla **V9.0** (kapacity se neustále iterují: AI modelování, vylepšení seed dat, systém balíčků schopností atd.).
+- Aktuální plánovaná verzní řada dosáhla **V9.1** (kapacity se neustále iterují: AI modelování, vylepšení seed dat, systém balíčků schopností atd.).
 - Doprovodný demo projekt `demo_admin` (backend 8140 / frontend 9040) pokrývá scénáře strom / CRUD / master-detail / jen pro čtení / tisk a běží samostatně pro ověření.
 - Oba repozitáře jsou hostovány na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

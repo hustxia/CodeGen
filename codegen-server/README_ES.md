@@ -264,7 +264,8 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 | **V7.5** | Configuración de idiomas del proyecto: lista de 206 idiomas / idioma predeterminado / idiomas habilitados, inyección de lang y dir en los generados | 7a9afa0 + abac56d |
 | **V8.0** | i18n de página completa: marco de 206 idiomas (8 traducidos profesionalmente), i18n de doble vía con contrato de dif cero en OFF | 9e5dd57 → 7d57aea |
 | **V8.1** | Reforzamiento de calidad: arnés de contrato fuera de línea (9 modos, dif cero en OFF) + pruebas unitarias i18n-core + compuerta CI + división honesta del README (marco 206 / traducidos 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | Artefactos generados modernizados a Vue 3 + Element Plus + Vite; verificados en tiempo de ejecución (40/40 aserciones, vite build exitoso, 14 capturas incl. ar-SA RTL); 3 defectos de ejecución corregidos | 93a12d5 + e49330b, **Versión actual** |
+| **V9.0** | Artefactos generados modernizados a Vue 3 + Element Plus + Vite; verificados en tiempo de ejecución (40/40 aserciones, vite build exitoso, 14 capturas incl. ar-SA RTL); 3 defectos de ejecución corregidos | 93a12d5 + e49330b  |
+| **V9.1** | **Refactorización de mantenibilidad · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **Versión actual** |
 
 ---
 
@@ -272,7 +273,7 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 
 ## 13. Estado del proyecto
 
-- La línea de versiones planificada ha alcanzado la **V9.0**, con capacidades en iteración continua (modelado por IA, enriquecimiento de datos semilla, sistema de paquetes de capacidades, etc.).
+- La línea de versiones planificada ha alcanzado la **V9.1**, con capacidades en iteración continua (modelado por IA, enriquecimiento de datos semilla, sistema de paquetes de capacidades, etc.).
 - Se ha consolidado el proyecto de demostración complementario `demo_admin` (backend 8140 / frontend 9040), que cubre los escenarios de árbol / CRUD / maestro-detalle / solo lectura / impresión y puede ejecutarse de forma independiente para su verificación.
 - Ambos repositorios están alojados en Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
