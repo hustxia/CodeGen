@@ -111,7 +111,7 @@ Table intake (DB import / DDL)
 | Хранилище (Repository) | Роля | Стек (Stack) |
 | --- | --- | --- |
 | `codegen-server` | Бек-енд: двигател за генериране, шаблони, валидация, ledger, конвейер | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Фронт-енд: конзола (конфиг таблица / шаблони / ledger / управление на системата) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Фронт-енд: конзола (конфиг таблица / шаблони / ledger / управление на системата) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 Слойна структура на бек-енда:
 
@@ -142,7 +142,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | Двигател за шаблони | FreeMarker (22 seed шаблона, онлайн редактиране + възстановяване на версии) |
 | Сигурност | JWT автентикация |
 | База данни | MySQL 8 |
-| Фронт-енд | Vue 2.7 + Element UI |
+| Фронт-енд (generated projects) | Vue 3 + Element Plus + Vite |
+| Фронт-енд (platform console) | Vue 2.7 + Element UI |
 | Локален AI | qwen2.5-coder:7b (моделиране / препоръчана конфигурация / подобрение на seed данни) |
 | API документация | springdoc-openapi (Swagger UI) |
 

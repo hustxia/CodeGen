@@ -111,7 +111,7 @@ Front-end și back-end separate, două depozite care lucrează împreună:
 | Depozit (Repository) | Rol | Tehnologie (Stack) |
 | --- | --- | --- |
 | `codegen-server` | Backend: motor de generare, șabloane, validare, ledger, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Frontend: consolă (config tabel / șabloane / ledger / management sistem) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Frontend: consolă (config tabel / șabloane / ledger / management sistem) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 Stratificarea backend-ului:
 
@@ -142,7 +142,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | Motor de șabloane | FreeMarker (22 șabloane seed, editare online + rollback de versiune) |
 | Securitate | Autentificare JWT |
 | Bază de date | MySQL 8 |
-| Frontend | Vue 2.7 + Element UI |
+| Frontend (generated projects) | Vue 3 + Element Plus + Vite |
+| Frontend (platform console) | Vue 2.7 + Element UI |
 | AI local | qwen2.5-coder:7b (modelare / config recomandată / îmbunătățire seed-data) |
 | Documentație API | springdoc-openapi (Swagger UI) |
 

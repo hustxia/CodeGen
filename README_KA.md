@@ -79,7 +79,7 @@ DB იმპორტი/DDL  კონტროლი/ვალიდაცი�
 | რეპოზიტორია | როლი | სტეკი |
 | --- | --- | --- |
 | `codegen-server` | Back-end: გენერაციის ძრავა, შაბლონები, ვალიდაცია, ლეჯერი, მილსადენი | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Front-end: კონსოლი (ცხრილის კონფ. / შაბლონები / ლეჯერი / სისტემის მართვა) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Front-end: კონსოლი (ცხრილის კონფ. / შაბლონები / ლეჯერი / სისტემის მართვა) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 ## 9. ტექნოლოგიური სტეკი
 
@@ -90,7 +90,8 @@ DB იმპორტი/DDL  კონტროლი/ვალიდაცი�
 | შაბლონის ძრავა | FreeMarker (22 სათესლე შაბლონი, ონლაინ რედაქტირება + ვერსიის უკან დაბრუნება) |
 | უსაფრთხოება | JWT ავთენტიფიკაცია |
 | მონაცემთა ბაზა | MySQL 8 |
-| Front-end | Vue 2.7 + Element UI |
+| Front-end (generated projects) | Vue 3 + Element Plus + Vite |
+| Front-end (platform console) | Vue 2.7 + Element UI |
 | ლოკალური AI | qwen2.5-coder:7b |
 | API დოკუმენტაცია | springdoc-openapi (Swagger UI) |
 

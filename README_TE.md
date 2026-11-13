@@ -86,7 +86,7 @@ DB దిగుమతి/DDL   కంట్రోల్స్/వాలిడే
 | రిపోజిటరీ | పాత్ర | స్టాక్ |
 | --- | --- | --- |
 | `codegen-server` | వెనుక చివర: జనరేషన్ ఇంజిన్, టెంప్లేట్లు, వాలిడేషన్, లెడ్జర్, పైప్‌లైన్ | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | ముందు చివర: కన్సోల్ (పట్టిక కాన్ఫిగ్ / టెంప్లేట్లు / లెడ్జర్ / సిస్టమ్ మేనేజ్‌మెంట్) | Vue 2.7 · Element UI · axios · Vue Router (హిస్టరీ మోడ్) |
+| `codegen-web` | ముందు చివర: కన్సోల్ (పట్టిక కాన్ఫిగ్ / టెంప్లేట్లు / లెడ్జర్ / సిస్టమ్ మేనేజ్‌మెంట్) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (హిస్టరీ మోడ్) |
 
 ## 9. సాంకేతిక స్టాక్
 
@@ -97,7 +97,8 @@ DB దిగుమతి/DDL   కంట్రోల్స్/వాలిడే
 | టెంప్లేట్ ఇంజిన్ | FreeMarker (22 సీడ్ టెంప్లేట్లు, ఆన్‌లైన్ ఎడిటింగ్ + వెర్షన్ రోల్‌బ్యాక్) |
 | భద్రత | JWT అథెంటికేషన్ |
 | డేటాబేస్ | MySQL 8 |
-| ముందు చివర | Vue 2.7 + Element UI |
+| ముందు చివర (generated projects) | Vue 3 + Element Plus + Vite |
+| ముందు చివర (platform console) | Vue 2.7 + Element UI |
 | స్థానిక AI | qwen2.5-coder:7b |
 | API డాక్యుమెంటేషన్ | springdoc-openapi (Swagger UI) |
 

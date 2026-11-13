@@ -101,7 +101,7 @@ CodeGen הוא "מפעל קוד מונע טבלאות". הבא את טבלאות
 | מאגר | תפקיד | מחסנית |
 | --- | --- | --- |
 | `codegen-server` | עורף: מנוע יצירה, תבניות, אימות, ספר חשבונות, צנרת | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | חזית: קונסולה (תצורת טבלה / תבניות / ספר חשבונות / ניהול מערכת) | Vue 2.7 · Element UI · axios · Vue Router (היסטוריה) |
+| `codegen-web` | חזית: קונסולה (תצורת טבלה / תבניות / ספר חשבונות / ניהול מערכת) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (היסטוריה) |
 
 ## 9. מחסנית טכנולוגית
 
@@ -112,7 +112,8 @@ CodeGen הוא "מפעל קוד מונע טבלאות". הבא את טבלאות
 | מנוע תבניות | FreeMarker (22 תבניות זרע, עריכה מקוונת + חזרת גרסאות) |
 | אבטחה | אימות JWT |
 | מסד נתונים | MySQL 8 |
-| חזית | Vue 2.7 + Element UI |
+| חזית (generated projects) | Vue 3 + Element Plus + Vite |
+| חזית (platform console) | Vue 2.7 + Element UI |
 | AI מקומי | qwen2.5-coder:7b |
 | תיעוד API | springdoc-openapi (Swagger UI) |
 

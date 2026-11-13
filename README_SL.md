@@ -105,7 +105,7 @@ Visoka zmogljivost, usmerjena v "postavitev backenda iz nič". Ko opišete poslo
 | Repozitorij | Vloga | Zlaganje |
 | --- | --- | --- |
 | `codegen-server` | Backend: generacijski motor, predloge, validacija, knjigovodstvo, cevovod | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Frontend: konzola (konf. tabel / predloge / knjigovodstvo / upravljanje sistema) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Frontend: konzola (konf. tabel / predloge / knjigovodstvo / upravljanje sistema) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 ## 9. Tehnološko zlaganje
 
@@ -116,7 +116,8 @@ Visoka zmogljivost, usmerjena v "postavitev backenda iz nič". Ko opišete poslo
 | Predlogni motor | FreeMarker (22 semenske predloge, spletno urejanje + vračanje različic) |
 | Varnost | JWT avtentikacija |
 | Baza podatkov | MySQL 8 |
-| Frontend | Vue 2.7 + Element UI |
+| Frontend (generated projects) | Vue 3 + Element Plus + Vite |
+| Frontend (platform console) | Vue 2.7 + Element UI |
 | Lokalni AI | qwen2.5-coder:7b |
 | API dokumentacija | springdoc-openapi (Swagger UI) |
 

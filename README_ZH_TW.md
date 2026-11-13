@@ -111,7 +111,7 @@ Table intake (DB import / DDL)
 | 倉庫 | 角色 | 技術堆疊 |
 | --- | --- | --- |
 | `codegen-server` | 後端：產生引擎、模板、驗證、記帳、管線 | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | 前端：控制台（表設定 / 模板 / 記帳 / 系統管理） | Vue 2.7 · Element UI · axios · Vue Router（history 模式） |
+| `codegen-web` | 前端：控制台（表設定 / 模板 / 記帳 / 系統管理） | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router（history 模式） |
 
 後端分層：
 
@@ -142,7 +142,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | 模板引擎 | FreeMarker（22 個種子模板，線上編輯 + 版本回滾） |
 | 安全 | JWT 認證 |
 | 資料庫 | MySQL 8 |
-| 前端 | Vue 2.7 + Element UI |
+| 前端 (generated projects) | Vue 3 + Element Plus + Vite |
+| 前端 (platform console) | Vue 2.7 + Element UI |
 | 本地 AI | qwen2.5-coder:7b（建模 / 推薦設定 / 種子資料增強） |
 | API 文件 | springdoc-openapi（Swagger UI） |
 

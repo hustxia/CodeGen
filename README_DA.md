@@ -112,7 +112,7 @@ Frontend og backend adskilt, to repositorier arbejder sammen:
 | Repositorium | Rolle | Stack |
 | --- | --- | --- |
 | `codegen-server` | Backend: generationsmotor, skabeloner, validering, regnskab, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Frontend: konsol (tabelkonfig / skabeloner / regnskab / systemhåndtering) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Frontend: konsol (tabelkonfig / skabeloner / regnskab / systemhåndtering) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 Backend-lag:
 
@@ -143,7 +143,8 @@ resources/gen-templates/   22 FreeMarker-skabeloner (backend / frontend / shared
 | Skabelonmotor | FreeMarker (22 frøskabeloner, online-redigering + versionsrulletilbage) |
 | Sikkerhed | JWT-autentisering |
 | Database | MySQL 8 |
-| Frontend | Vue 2.7 + Element UI |
+| Frontend (generated projects) | Vue 3 + Element Plus + Vite |
+| Frontend (platform console) | Vue 2.7 + Element UI |
 | Lokal AI | qwen2.5-coder:7b (modellering / anbefalet konfiguration / seed-data forbedring) |
 | API-dokumentation | springdoc-openapi (Swagger UI) |
 

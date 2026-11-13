@@ -110,7 +110,7 @@ CodeGen ایک "ٹیبل کو بنیاد بنا کر چلنے والی" کوڈ �
 | ریپوزٹری | کردار | ٹیک اسٹیک |
 | --- | --- | --- |
 | `codegen-server` | بیک اینڈ: جنریشن انجن، ٹیمپلیٹس، توثیق، لیجر، پائپ لائن | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | فرنٹ اینڈ: کنسول (ٹیبل کنفیگریشن / ٹیمپلیٹس / لیجر / سسٹم مینجمنٹ) | Vue 2.7 · Element UI · axios · Vue Router(history) |
+| `codegen-web` | فرنٹ اینڈ: کنسول (ٹیبل کنفیگریشن / ٹیمپلیٹس / لیجر / سسٹم مینجمنٹ) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router(history) |
 
 بیک اینڈ کی تہیں:
 
@@ -141,7 +141,8 @@ resources/gen-templates/   22 FreeMarker ٹیمپلیٹس (گروپس: backend /
 | ٹیمپلیٹ انجن | FreeMarker (22 سیڈ ٹیمپلیٹس، آن لائن ترمیم + ورژن رول بیک) |
 | سیکیورٹی | JWT کی تصدیق |
 | ڈیٹابیس | MySQL 8 |
-| فرنٹ اینڈ | Vue 2.7 + Element UI |
+| فرنٹ اینڈ (generated projects) | Vue 3 + Element Plus + Vite |
+| فرنٹ اینڈ (platform console) | Vue 2.7 + Element UI |
 | مقامی AI | qwen2.5-coder:7b (ماڈلنگ / تجویز کردہ ترتیب / سیڈ ڈیٹا کی افزودگی) |
 | API دستاویزات | springdoc-openapi (Swagger UI) |
 

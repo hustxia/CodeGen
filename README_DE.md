@@ -114,7 +114,7 @@ Getrenntes Front- und Backend, zwei Repositories, die zusammenarbeiten:
 | Repository | Rolle | Stack |
 | --- | --- | --- |
 | `codegen-server` | Backend: Generierungs-Engine, Templates, Validierung, Protokoll, Pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Frontend: Konsole (Tabellenkonfiguration / Templates / Protokoll / Systemverwaltung) | Vue 2.7 · Element UI · axios · Vue Router (History-Mode) |
+| `codegen-web` | Frontend: Konsole (Tabellenkonfiguration / Templates / Protokoll / Systemverwaltung) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (History-Mode) |
 
 Backend-Schichtung:
 
@@ -145,7 +145,8 @@ resources/gen-templates/   22 FreeMarker-Templates (Gruppen: backend / frontend 
 | Template-Engine | FreeMarker (22 Seed-Templates, Online-Bearbeitung + Versions-Rollback) |
 | Sicherheit | JWT-Authentifizierung |
 | Datenbank | MySQL 8 |
-| Frontend | Vue 2.7 + Element UI |
+| Frontend (generated projects) | Vue 3 + Element Plus + Vite |
+| Frontend (platform console) | Vue 2.7 + Element UI |
 | Lokale KI | qwen2.5-coder:7b (Modellierung / Empfehlungskonfiguration / Seed-Daten-Verbesserung) |
 | API-Dokumentation | springdoc-openapi (Swagger UI) |
 

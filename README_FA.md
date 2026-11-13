@@ -112,7 +112,7 @@ Table intake (DB import / DDL)
 | مخزن | نقش | پشته |
 | --- | --- | --- |
 | `codegen-server` | بک‌اند: موتور تولید، الگوها، اعتبارسنجی، دفترچه، خط لوله | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | فرانت‌اند: کنسول (پیکربندی جدول / الگوها / دفترچه / مدیریت سیستم) | Vue 2.7 · Element UI · axios · Vue Router (حالت history) |
+| `codegen-web` | فرانت‌اند: کنسول (پیکربندی جدول / الگوها / دفترچه / مدیریت سیستم) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (حالت history) |
 
 لایه‌بندی بک‌اند:
 
@@ -143,7 +143,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | موتور الگو | FreeMarker (۲۲ الگوی بذر، ویرایش آنلاین + بازگشت نسخه) |
 | امنیت | احراز هویت JWT |
 | پایگاه داده | MySQL 8 |
-| فرانت‌اند | Vue 2.7 + Element UI |
+| فرانت‌اند (generated projects) | Vue 3 + Element Plus + Vite |
+| فرانت‌اند (platform console) | Vue 2.7 + Element UI |
 | AI محلی | qwen2.5-coder:7b (مدل‌سازی / پیکربندی توصیه‌شده / بهبود داده‌های‌بذر) |
 | مستندات API | springdoc-openapi (Swagger UI) |
 

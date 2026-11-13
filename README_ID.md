@@ -113,7 +113,7 @@ Front-end dan back-end terpisah, dua repositori bekerja bersama:
 | Repositori | Peran | Tumpukan |
 | --- | --- | --- |
 | `codegen-server` | Back-end: mesin pembuatan, template, validasi, buku besar, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Front-end: konsol (konfigurasi tabel / template / buku besar / manajemen sistem) | Vue 2.7 · Element UI · axios · Vue Router (mode history) |
+| `codegen-web` | Front-end: konsol (konfigurasi tabel / template / buku besar / manajemen sistem) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (mode history) |
 
 Pelapisan back-end:
 
@@ -144,7 +144,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | Mesin template | FreeMarker (22 template bibit, pengeditan daring + rollback versi) |
 | Keamanan | Autentikasi JWT |
 | Basis data | MySQL 8 |
-| Front-end | Vue 2.7 + Element UI |
+| Front-end (generated projects) | Vue 3 + Element Plus + Vite |
+| Front-end (platform console) | Vue 2.7 + Element UI |
 | AI lokal | qwen2.5-coder:7b (pemodelan / konfigurasi yang direkomendasikan / peningkatan data-bibit) |
 | Dokumentasi API | springdoc-openapi (Swagger UI) |
 
