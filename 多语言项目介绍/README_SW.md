@@ -84,7 +84,7 @@ Kuingiza DB/DDL  Vidhibiti/uthibitishaji   Hualandisha kwenye diski tu baada ya 
 | Hifadhi | Jukumu | Mfuriko |
 | --- | --- | --- |
 | `codegen-server` | Nyuma: injini ya kuzalisha, mifano, uthibitishaji, leja, bomba | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Mbele: konsole (usanidi wa meza / mifano / leja / usimamizi wa mfumo) | Vue 2.7 · Element UI · axios · Vue Router (historia) |
+| `codegen-web` | Mbele: konsole (usanidi wa meza / mifano / leja / usimamizi wa mfumo) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (historia) |
 
 ## 9. Mfuriko wa Teknolojia
 
@@ -95,7 +95,8 @@ Kuingiza DB/DDL  Vidhibiti/uthibitishaji   Hualandisha kwenye diski tu baada ya 
 | Injini ya mifano | FreeMarker (mifano 22 ya mbegu, uhariri mtandaoni + kurudisha nyuma matoleo) |
 | Usalama | Uthibitishaji wa JWT |
 | Hifadhidata | MySQL 8 |
-| Mbele | Vue 2.7 + Element UI |
+| Mbele (generated projects) | Vue 3 + Element Plus + Vite |
+| Mbele (platform console) | Vue 2.7 + Element UI |
 | AI ya ndani | qwen2.5-coder:7b |
 | Nyaraka za API | springdoc-openapi (Swagger UI) |
 

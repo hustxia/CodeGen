@@ -119,7 +119,7 @@ CodeGen 是一套“以表为源”的代码工厂。你只要把业务表接进
 | 仓库 | 角色 | 技术栈 |
 | --- | --- | --- |
 | `codegen-server` | 后端：生成引擎、模板、校验、台账、流水线 | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | 前端：控制台（表配置 / 模板 / 台账 / 系统管理） | Vue 2.7 · Element UI · axios · Vue Router(history) |
+| `codegen-web` | 前端：控制台（表配置 / 模板 / 台账 / 系统管理） | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router(history) |
 
 后端分层：
 
@@ -150,7 +150,8 @@ resources/gen-templates/   22 个 FreeMarker 模板（backend / frontend / share
 | 模板引擎 | FreeMarker（22 个种子模板，支持在线编辑 + 版本回滚） |
 | 安全 | JWT 鉴权 |
 | 数据库 | MySQL 8 |
-| 前端 | Vue 2.7 + Element UI |
+| 前端 (generated projects) | Vue 3 + Element Plus + Vite |
+| 前端 (platform console) | Vue 2.7 + Element UI |
 | 本地 AI | qwen2.5-coder:7b（建模 / 推荐配置 / 种子数据增强） |
 | 接口文档 | springdoc-openapi（Swagger UI） |
 

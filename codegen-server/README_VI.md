@@ -111,7 +111,7 @@ Tách biệt front-end và back-end, hai kho lưu trữ phối hợp:
 | Kho | Vai trò | Stack |
 | --- | --- | --- |
 | `codegen-server` | Back-end: engine sinh, template, xác thực, sổ, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Front-end: bảng điều khiển (cấu hình bảng / template / sổ / quản lý hệ thống) | Vue 2.7 · Element UI · axios · Vue Router (chế độ history) |
+| `codegen-web` | Front-end: bảng điều khiển (cấu hình bảng / template / sổ / quản lý hệ thống) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (chế độ history) |
 
 Phân lớp back-end:
 
@@ -142,7 +142,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | Template engine | FreeMarker (22 template hạt giống, chỉnh sửa trực tuyến + rollback phiên bản) |
 | Bảo mật | Xác thực JWT |
 | Cơ sở dữ liệu | MySQL 8 |
-| Front-end | Vue 2.7 + Element UI |
+| Front-end (generated projects) | Vue 3 + Element Plus + Vite |
+| Front-end (platform console) | Vue 2.7 + Element UI |
 | Local AI | qwen2.5-coder:7b (mô hình hóa / cấu hình đề xuất / tăng cường dữ liệu hạt giống) |
 | API docs | springdoc-openapi (Swagger UI) |
 

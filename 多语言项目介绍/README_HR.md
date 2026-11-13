@@ -119,7 +119,7 @@ Front-end i back-end odvojeni, dva repozitorija rade zajedno:
 | Repozitorij | Uloga | Stog |
 | --- | --- | --- |
 | `codegen-server` | Back-end: generacijski motor, predlošci, validacija, knjigovodstvo, proces | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Front-end: konzola (konf. tablica / predlošci / knjigovodstvo / upravljanje sustavom) | Vue 2.7 · Element UI · axios · Vue Router (historija način) |
+| `codegen-web` | Front-end: konzola (konf. tablica / predlošci / knjigovodstvo / upravljanje sustavom) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (historija način) |
 
 Back-end slojevi:
 
@@ -150,7 +150,8 @@ resources/gen-templates/   22 FreeMarker predloška (backend / frontend / shared
 | Motor predložaka | FreeMarker (22 sijača predložaka, online uređivanje + povrat verzija) |
 | Sigurnost | JWT autentifikacija |
 | Baza podataka | MySQL 8 |
-| Front-end | Vue 2.7 + Element UI |
+| Front-end (generated projects) | Vue 3 + Element Plus + Vite |
+| Front-end (platform console) | Vue 2.7 + Element UI |
 | Lokalni AI | qwen2.5-coder:7b (modeliranje / preporučena konfiguracija / poboljšanje seed podataka) |
 | API dokumentacija | springdoc-openapi (Swagger UI) |
 

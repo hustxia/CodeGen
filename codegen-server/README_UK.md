@@ -111,7 +111,7 @@ Table intake (DB import / DDL)
 | Репозиторій | Роль | Стек |
 | --- | --- | --- |
 | `codegen-server` | Бекенд: рушій генерації, шаблони, валідація, журнал, конвеєр | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Фронтенд: консоль (конфігурація таблиць / шаблони / журнал / керування системою) | Vue 2.7 · Element UI · axios · Vue Router (режим history) |
+| `codegen-web` | Фронтенд: консоль (конфігурація таблиць / шаблони / журнал / керування системою) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (режим history) |
 
 Шарування бекенду:
 
@@ -142,7 +142,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | Шаблонний рушій | FreeMarker (22 початкових шаблони, онлайн-редагування + відкат версій) |
 | Безпека | Аутентифікація JWT |
 | База даних | MySQL 8 |
-| Фронтенд | Vue 2.7 + Element UI |
+| Фронтенд (generated projects) | Vue 3 + Element Plus + Vite |
+| Фронтенд (platform console) | Vue 2.7 + Element UI |
 | Локальний ШІ | qwen2.5-coder:7b (моделювання / рекомендована конфігурація / покращення початкових даних) |
 | Документація API | springdoc-openapi (Swagger UI) |
 

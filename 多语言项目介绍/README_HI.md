@@ -119,7 +119,7 @@ CodeGen एक "टेबल-आधारित" कोड फैक्ट्र
 | रिपॉज़िटरी | भूमिका | स्टैक |
 | --- | --- | --- |
 | `codegen-server` | बैक-एंड: जेनरेशन इंजन, टेम्प्लेट, वैलिडेशन, लेज़र, पाइपलाइन | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | फ्रंट-एंड: कंसोल (टेबल कॉन्फ़िग / टेम्प्लेट / लेज़र / सिस्टम प्रबंधन) | Vue 2.7 · Element UI · axios · Vue Router (history मोड) |
+| `codegen-web` | फ्रंट-एंड: कंसोल (टेबल कॉन्फ़िग / टेम्प्लेट / लेज़र / सिस्टम प्रबंधन) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history मोड) |
 
 बैक-एंड लेयरिंग:
 
@@ -150,7 +150,8 @@ resources/gen-templates/   22 FreeMarker टेम्प्लेट (backend / 
 | टेम्प्लेट इंजन | FreeMarker (22 सीड टेम्प्लेट, ऑनलाइन संपादन + संस्करण रोलबैक सहित) |
 | सुरक्षा | JWT प्रमाणीकरण |
 | डेटाबेस | MySQL 8 |
-| फ्रंट-एंड | Vue 2.7 + Element UI |
+| फ्रंट-एंड (generated projects) | Vue 3 + Element Plus + Vite |
+| फ्रंट-एंड (platform console) | Vue 2.7 + Element UI |
 | लोकल AI | qwen2.5-coder:7b (मॉडलिंग / अनुशंसित कॉन्फ़िग / सीड-डेटा एन्हांसमेंट) |
 | API दस्तावेज़ीकरण | springdoc-openapi (Swagger UI) |
 

@@ -116,7 +116,7 @@ Herhangi bir aşama başarısızlığı, kolayca konumlandırılabilmesi için o
 | Depo | Rol | Yığın |
 | --- | --- | --- |
 | `codegen-server` | Arka uç: üretim motoru, şablonlar, doğrulama, defter, hat | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Ön yüz: konsol (tablo yapılandırma / şablonlar / defter / sistem yönetimi) | Vue 2.7 · Element UI · axios · Vue Router (history modu) |
+| `codegen-web` | Ön yüz: konsol (tablo yapılandırma / şablonlar / defter / sistem yönetimi) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history modu) |
 
 Arka uç katmanlaması:
 
@@ -147,7 +147,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | Şablon motoru | FreeMarker (22 tohum şablonu, çevrimiçi düzenleme + sürüm geri alma) |
 | Güvenlik | JWT kimlik doğrulaması |
 | Veritabanı | MySQL 8 |
-| Ön yüz | Vue 2.7 + Element UI |
+| Ön yüz (generated projects) | Vue 3 + Element Plus + Vite |
+| Ön yüz (platform console) | Vue 2.7 + Element UI |
 | Yerel yapay zeka | qwen2.5-coder:7b (modelleme / önerilen yapılandırma / tohum-veri geliştirmesi) |
 | API belgeleri | springdoc-openapi (Swagger UI) |
 

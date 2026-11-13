@@ -119,7 +119,7 @@ CodeGen হলো একটি "টেবিল-ভিত্তিক" কোড
 | রিপোজিটরি | ভূমিকা | স্ট্যাক |
 | --- | --- | --- |
 | `codegen-server` | ব্যাক-এন্ড: জেনারেশন ইঞ্জিন, টেমপ্লেট, ভ্যালিডেশন, লেজার, পাইপলাইন | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | ফ্রন্ট-এন্ড: কনসোল (টেবিল কনফিগ / টেমপ্লেট / লেজার / সিস্টেম ম্যানেজমেন্ট) | Vue 2.7 · Element UI · axios · Vue Router (history মোড) |
+| `codegen-web` | ফ্রন্ট-এন্ড: কনসোল (টেবিল কনফিগ / টেমপ্লেট / লেজার / সিস্টেম ম্যানেজমেন্ট) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history মোড) |
 
 ব্যাক-এন্ড স্তরবিন্যাস:
 
@@ -150,7 +150,8 @@ resources/gen-templates/   ২২টি FreeMarker টেমপ্লেট (bac
 | টেমপ্লেট ইঞ্জিন | FreeMarker (২২টি সিড টেমপ্লেট, অনলাইন সম্পাদনা + ভার্সন রোলব্যাক) |
 | নিরাপত্তা | JWT অথেনটিকেশন |
 | ডেটাবেস | MySQL 8 |
-| ফ্রন্ট-এন্ড | Vue 2.7 + Element UI |
+| ফ্রন্ট-এন্ড (generated projects) | Vue 3 + Element Plus + Vite |
+| ফ্রন্ট-এন্ড (platform console) | Vue 2.7 + Element UI |
 | লোকাল AI | qwen2.5-coder:7b (মডেলিং / সুপারিশকৃত কনফিগ / সিড-ডেটা এনহ্যান্সমেন্ট) |
 | API ডকুমেন্টেশন | springdoc-openapi (Swagger UI) |
 

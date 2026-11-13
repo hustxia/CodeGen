@@ -117,7 +117,7 @@ Front- och back-end separerade, två repositorier som arbetar tillsammans:
 | Repositorium | Roll | Teknikstack |
 | --- | --- | --- |
 | `codegen-server` | Backend: generationsmotor, mallar, validering, reskontra, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Frontend: konsol (tabellkonfig / mallar / reskontra / systemhantering) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Frontend: konsol (tabellkonfig / mallar / reskontra / systemhantering) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 Backend-lager:
 
@@ -148,7 +148,8 @@ resources/gen-templates/   22 FreeMarker-mallar (backend / frontend / shared / t
 | Mallmotor | FreeMarker (22 frömallar, online-redigering + versionsåterställning) |
 | Säkerhet | JWT-autentisering |
 | Databas | MySQL 8 |
-| Frontend | Vue 2.7 + Element UI |
+| Frontend (generated projects) | Vue 3 + Element Plus + Vite |
+| Frontend (platform console) | Vue 2.7 + Element UI |
 | Lokal AI | qwen2.5-coder:7b (modellering / rekommenderad konfig / frödataförbättring) |
 | API-dokumentation | springdoc-openapi (Swagger UI) |
 

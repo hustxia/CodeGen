@@ -119,7 +119,7 @@ Front-end a back-end oddělené, dvě repozitáře spolupracují:
 | Repozitář | Role | Stack |
 | --- | --- | --- |
 | `codegen-server` | Backend: generační engine, šablony, validace, hlavní kniha, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Frontend: konzole (konf. tabulek / šablony / hlavní kniha / správa systému) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Frontend: konzole (konf. tabulek / šablony / hlavní kniha / správa systému) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 Backendové vrstvy:
 
@@ -150,7 +150,8 @@ resources/gen-templates/   22 FreeMarker šablon (backend / frontend / shared / 
 | Šablonový engine | FreeMarker (22 osivových šablon, online úprava + vrácení verzí) |
 | Zabezpečení | Ověřování JWT |
 | Databáze | MySQL 8 |
-| Frontend | Vue 2.7 + Element UI |
+| Frontend (generated projects) | Vue 3 + Element Plus + Vite |
+| Frontend (platform console) | Vue 2.7 + Element UI |
 | Lokální AI | qwen2.5-coder:7b (modelování / doporučená konfigurace / vylepšení seed dat) |
 | API dokumentace | springdoc-openapi (Swagger UI) |
 

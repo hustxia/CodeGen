@@ -79,7 +79,7 @@ DB import/DDL         ထိန်းချုပ်မှု/စမ်းသပ
 | Repository | အခန်းကဏ္ဍ | Stack |
 | --- | --- | --- |
 | `codegen-server` | နောက်ပိုင်း: ဂျင်နရေတာ အင်ဂျင်, template များ, စမ်းသပ်မှု, စာရင်းစာအုပ်, ပိုက်လိုင်း | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | ရှေ့ပိုင်း: console (ဇယား ပြင်ဆင်မှု / template များ / စာရင်းစာအုပ် / စနစ်စီမံခန့်ခွဲမှု) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | ရှေ့ပိုင်း: console (ဇယား ပြင်ဆင်မှု / template များ / စာရင်းစာအုပ် / စနစ်စီမံခန့်ခွဲမှု) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 ## ၉။ နည်းပညာ Stack
 
@@ -90,7 +90,8 @@ DB import/DDL         ထိန်းချုပ်မှု/စမ်းသပ
 | Template အင်ဂျင် | FreeMarker (22 seed template များ, အွန်လိုင်း တည်းဖြတ်ခြင်း + version ပြန်လည်ပြင်ဆင်ခြင်း) |
 | လုံခြုံရေး | JWT authentication |
 | ဒေတာဘေ့စ် | MySQL 8 |
-| ရှေ့ပိုင်း | Vue 2.7 + Element UI |
+| ရှေ့ပိုင်း (generated projects) | Vue 3 + Element Plus + Vite |
+| ရှေ့ပိုင်း (platform console) | Vue 2.7 + Element UI |
 | Local AI | qwen2.5-coder:7b |
 | API စာရွက်စာတမ်း | springdoc-openapi (Swagger UI) |
 

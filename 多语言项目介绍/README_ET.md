@@ -96,7 +96,7 @@ See ei ole lihtsalt "koodi pritsimine" — see on **tarnevõrk kvaliteedivärava
 | Repositoorium | Roll | Stakk |
 | --- | --- | --- |
 | `codegen-server` | Tagakülg: generatsioonimootor, mallid, valideerimine, pearaamat, toru | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Esikülg: konsool (tabeli konf. / mallid / pearaamat / süsteemi haldamine) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Esikülg: konsool (tabeli konf. / mallid / pearaamat / süsteemi haldamine) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 ## 9. Tehnoloogiline stakk
 
@@ -107,7 +107,8 @@ See ei ole lihtsalt "koodi pritsimine" — see on **tarnevõrk kvaliteedivärava
 | Mallimootor | FreeMarker (22 seemne malli, võrgus redigeerimine + versioonitagasiminek) |
 | Turvalisus | JWT autentimine |
 | Andmebaas | MySQL 8 |
-| Esikülg | Vue 2.7 + Element UI |
+| Esikülg (generated projects) | Vue 3 + Element Plus + Vite |
+| Esikülg (platform console) | Vue 2.7 + Element UI |
 | Kohalik AI | qwen2.5-coder:7b |
 | API dokumentatsioon | springdoc-openapi (Swagger UI) |
 

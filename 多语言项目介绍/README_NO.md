@@ -117,7 +117,7 @@ Forreste og bakre del adskilt, to repositorier som samarbeider:
 | Repositorium | Rolle | Stack |
 | --- | --- | --- |
 | `codegen-server` | Bakre del: generasjonsmotor, maler, validering, hovedbok, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Forreste del: konsoll (tabellkonfig / maler / hovedbok / systemhåndtering) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Forreste del: konsoll (tabellkonfig / maler / hovedbok / systemhåndtering) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 Bakre del lag:
 
@@ -148,7 +148,8 @@ resources/gen-templates/   22 FreeMarker-maler (backend / frontend / shared / te
 | Malmotor | FreeMarker (22 frømaler, online-redigering + versjonstilbakestilling) |
 | Sikkerhet | JWT-autentisering |
 | Database | MySQL 8 |
-| Forreste del | Vue 2.7 + Element UI |
+| Forreste del (generated projects) | Vue 3 + Element Plus + Vite |
+| Forreste del (platform console) | Vue 2.7 + Element UI |
 | Lokal AI | qwen2.5-coder:7b (modellering / anbefalet konfigurasjon / seed-data forbedring) |
 | API-dokumentasjon | springdoc-openapi (Swagger UI) |
 

@@ -113,7 +113,7 @@ Table intake (DB import / DDL)
 | คลัง | บทบาท | Stack |
 | --- | --- | --- |
 | `codegen-server` | แบ็กเอนด์: เอนจินสร้าง เทมเพลต การตรวจสอบ บัญชี ท่อ | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | ฝั่งหน้า: คอนโซล (ตั้งค่าตาราง / เทมเพลต / บัญชี / จัดการระบบ) | Vue 2.7 · Element UI · axios · Vue Router (โหมด history) |
+| `codegen-web` | ฝั่งหน้า: คอนโซล (ตั้งค่าตาราง / เทมเพลต / บัญชี / จัดการระบบ) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (โหมด history) |
 
 การแบ่งเลเยอร์แบ็กเอนด์:
 
@@ -144,7 +144,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | Template engine | FreeMarker (เทมเพลตเมล็ดพันธุ์ 22 อัน แก้ไขออนไลน์ + ย้อนเวอร์ชัน) |
 | ความปลอดภัย | ยืนยันตัวตน JWT |
 | ฐานข้อมูล | MySQL 8 |
-| ฝั่งหน้า | Vue 2.7 + Element UI |
+| ฝั่งหน้า (generated projects) | Vue 3 + Element Plus + Vite |
+| ฝั่งหน้า (platform console) | Vue 2.7 + Element UI |
 | Local AI | qwen2.5-coder:7b (สร้างโมเดล / คำแนะนำตั้งค่า / เสริมข้อมูลเมล็ดพันธุ์) |
 | API docs | springdoc-openapi (Swagger UI) |
 

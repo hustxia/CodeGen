@@ -117,7 +117,7 @@ Front-end aur back-end alag hain, do repositories milkar kaam karte hain:
 | Repository | Role | Stack |
 | --- | --- | --- |
 | `codegen-server` | Backend: generation engine, templates, validation, ledger, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Frontend: console (table config / templates / ledger / system management) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Frontend: console (table config / templates / ledger / system management) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 Backend layering:
 
@@ -148,7 +148,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | Template engine | FreeMarker (22 seed templates, online editing + version rollback) |
 | Security | JWT authentication |
 | Database | MySQL 8 |
-| Frontend | Vue 2.7 + Element UI |
+| Frontend (generated projects) | Vue 3 + Element Plus + Vite |
+| Frontend (platform console) | Vue 2.7 + Element UI |
 | Local AI | qwen2.5-coder:7b (modeling / recommended config / seed-data enhancement) |
 | API docs | springdoc-openapi (Swagger UI) |
 

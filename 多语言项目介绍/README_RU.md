@@ -120,7 +120,7 @@ CodeGen — это «кодовая фабрика, управляемая та�
 | Репозиторий | Роль | Технологии |
 | --- | --- | --- |
 | `codegen-server` | Бэкенд: движок генерации, шаблоны, валидация, реестр, конвейер | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Фронтенд: консоль (конфигурация таблиц / шаблоны / реестр / управление системой) | Vue 2.7 · Element UI · axios · Vue Router (history) |
+| `codegen-web` | Фронтенд: консоль (конфигурация таблиц / шаблоны / реестр / управление системой) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history) |
 
 Слои бэкенда:
 
@@ -151,7 +151,8 @@ resources/gen-templates/   22 шаблона FreeMarker (группы backend / 
 | Движок шаблонов | FreeMarker (22 seed-шаблона, онлайн-редактирование + откат версий) |
 | Безопасность | Аутентификация JWT |
 | База данных | MySQL 8 |
-| Фронтенд | Vue 2.7 + Element UI |
+| Фронтенд (generated projects) | Vue 3 + Element Plus + Vite |
+| Фронтенд (platform console) | Vue 2.7 + Element UI |
 | Локальный AI | qwen2.5-coder:7b (моделирование / рекомендации конфигурации / обогащение seed-данных) |
 | Документация API | springdoc-openapi (Swagger UI) |
 

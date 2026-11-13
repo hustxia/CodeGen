@@ -84,7 +84,7 @@ DB នាំចូល/DDL    ការគ្រប់គ្រង/ផ្ទៀ�
 | Repository | តួនាទី | Stack |
 | --- | --- | --- |
 | `codegen-server` | ក្រោយ: ម៉ាស៊ីនបង្កើត, ម៉ូដែល, ការផ្ទៀងផ្ទាត់, សៀវភៅគណនី, បំពង់ | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | មុខ: កុងសូល (កំណត់រចនាសម្ព័ន្ធតារាង / ម៉ូដែល / សៀវភៅគណនី / គ្រប់គ្រងប្រព័ន្ធ) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | មុខ: កុងសូល (កំណត់រចនាសម្ព័ន្ធតារាង / ម៉ូដែល / សៀវភៅគណនី / គ្រប់គ្រងប្រព័ន្ធ) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 ## ៩។ Stack បច្ចេកទេស
 
@@ -95,7 +95,8 @@ DB នាំចូល/DDL    ការគ្រប់គ្រង/ផ្ទៀ�
 | ម៉ាស៊ីនម៉ូដែល | FreeMarker (22 ម៉ូដែលគ្រាប់ពូជ, កែសម្រួលតាមអ៊ីនធឺណែត + ត្រឡប់មកវិញកំណែ) |
 | សុវត្ថិភាព | ការផ្ទៀងផ្ទាត់ JWT |
 | មូលដ្ឋានទិន្នន័យ | MySQL 8 |
-| មុខ | Vue 2.7 + Element UI |
+| មុខ (generated projects) | Vue 3 + Element Plus + Vite |
+| មុខ (platform console) | Vue 2.7 + Element UI |
 | AI ក្នុងស្រុក | qwen2.5-coder:7b |
 | ឯកសារ API | springdoc-openapi (Swagger UI) |
 

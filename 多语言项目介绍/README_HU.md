@@ -119,7 +119,7 @@ Front-end és back-end elkülönítve, két repozitório együttműködik:
 | Repozitório | Szerep | Verem |
 | --- | --- | --- |
 | `codegen-server` | Backend: generációs motor, sablonok, validáció, napló, folyamat | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Frontend: konzol (tábla konfiguráció / sablonok / napló / rendszerkezelés) | Vue 2.7 · Element UI · axios · Vue Router (history mód) |
+| `codegen-web` | Frontend: konzol (tábla konfiguráció / sablonok / napló / rendszerkezelés) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mód) |
 
 Backend rétegek:
 
@@ -150,7 +150,8 @@ resources/gen-templates/   22 FreeMarker sablon (backend / frontend / shared / t
 | Sablonmotor | FreeMarker (22 vető sablon, online szerkesztés + verzióvisszaállítás) |
 | Biztonság | JWT hitelesítés |
 | Adatbázis | MySQL 8 |
-| Frontend | Vue 2.7 + Element UI |
+| Frontend (generated projects) | Vue 3 + Element Plus + Vite |
+| Frontend (platform console) | Vue 2.7 + Element UI |
 | Helyi AI | qwen2.5-coder:7b (modellezés / ajánlott konfiguráció / seed adat fejlesztés) |
 | API dokumentáció | springdoc-openapi (Swagger UI) |
 

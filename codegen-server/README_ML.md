@@ -113,7 +113,7 @@ Table intake (DB import / DDL)
 | റിപ്പോസിറ്ററി | റോൾ | സ്റ്റാക്ക് |
 | --- | --- | --- |
 | `codegen-server` | ബാക്ക്-എൻഡ്: ജനറേഷൻ എഞ്ചിൻ, ടെംപ്ലേറ്റുകൾ, വാലിഡേഷൻ, ലെഡ്ജർ, പൈപ്പ്ലൈൻ | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | ഫ്രണ്ട്-എൻഡ്: കൺസോൾ (ടേബിൾ കോൺഫിഗ് / ടെംപ്ലേറ്റുകൾ / ലെഡ്ജർ / സിസ്റ്റം മാനേജ്മെന്റ്) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | ഫ്രണ്ട്-എൻഡ്: കൺസോൾ (ടേബിൾ കോൺഫിഗ് / ടെംപ്ലേറ്റുകൾ / ലെഡ്ജർ / സിസ്റ്റം മാനേജ്മെന്റ്) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 ബാക്ക്-എൻഡ് ലെയറിംഗ്:
 
@@ -144,7 +144,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | ടെംപ്ലേറ്റ് എഞ്ചിൻ | FreeMarker (22 seed ടെംപ്ലേറ്റുകൾ, ഓൺലൈൻ എഡിറ്റിംഗ് + പതിപ്പ് റോൾബാക്ക്) |
 | സെക്യൂരിറ്റി | JWT ഓതന്റിക്കേഷൻ |
 | ഡാറ്റാബേസ് | MySQL 8 |
-| ഫ്രണ്ട്-എൻഡ് | Vue 2.7 + Element UI |
+| ഫ്രണ്ട്-എൻഡ് (generated projects) | Vue 3 + Element Plus + Vite |
+| ഫ്രണ്ട്-എൻഡ് (platform console) | Vue 2.7 + Element UI |
 | ലോക്കൽ AI | qwen2.5-coder:7b (മോഡലിംഗ് / ശുപാർശ ചെയ്ത കോൺഫിഗ് / seed-data വർദ്ധനവ്) |
 | API ഡോക്സ് | springdoc-openapi (Swagger UI) |
 

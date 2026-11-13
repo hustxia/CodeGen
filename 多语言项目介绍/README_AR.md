@@ -119,7 +119,7 @@ Table intake (DB import / DDL)
 | المستودع | الدور | حزمة التقنيات |
 | --- | --- | --- |
 | `codegen-server` | الخلفية: محرك التوليد، القوالب، التحقق، السجل، خط الأنابيب | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | الواجهة الأمامية: لوحة التحكم (إعداد الجداول / القوالب / السجل / إدارة النظام) | Vue 2.7 · Element UI · axios · Vue Router (history) |
+| `codegen-web` | الواجهة الأمامية: لوحة التحكم (إعداد الجداول / القوالب / السجل / إدارة النظام) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history) |
 
 طبقات الواجهة الخلفية:
 
@@ -150,7 +150,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | محرك القوالب | FreeMarker (22 قالبًا أساسيًا، مع تحرير عبر الإنترنت + تراجع بين الإصدارات) |
 | الأمان | مصادقة JWT |
 | قاعدة البيانات | MySQL 8 |
-| الواجهة الأمامية | Vue 2.7 + Element UI |
+| الواجهة الأمامية (generated projects) | Vue 3 + Element Plus + Vite |
+| الواجهة الأمامية (platform console) | Vue 2.7 + Element UI |
 | الذكاء الاصطناعي المحلي | qwen2.5-coder:7b (النمذجة / الإعدادات الموصى بها / تعزيز بيانات البذر) |
 | توثيق الواجهات | springdoc-openapi (Swagger UI) |
 

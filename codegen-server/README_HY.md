@@ -79,7 +79,7 @@ DB ներմուծում/DDL   Կառավարում/վավերացում   Սկա
 | Պահեստ | Դեր | Տեխնոլոգիական կույտ |
 | --- | --- | --- |
 | `codegen-server` | Back-end: գեներացիայի շարժիչ, կաղապարներ, վավերացում, գլխավոր գիրք, խողովակ | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Front-end: կոնսոլ (աղյուսակի կարգավորում / կաղապարներ / գլխավոր գիրք / համակարգի կառավարում) | Vue 2.7 · Element UI · axios · Vue Router (history ռեժիմ) |
+| `codegen-web` | Front-end: կոնսոլ (աղյուսակի կարգավորում / կաղապարներ / գլխավոր գիրք / համակարգի կառավարում) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history ռեժիմ) |
 
 ## 9. Տեխնոլոգիական կույտ
 
@@ -90,7 +90,8 @@ DB ներմուծում/DDL   Կառավարում/վավերացում   Սկա
 | Կաղապարի շարժիչ | FreeMarker (22 սերմի կաղապար, առցանց խմբագրում + տարբերակի հետադարձում) |
 | Անվտանգություն | JWT նույնականացում |
 | Տվյալների բազա | MySQL 8 |
-| Front-end | Vue 2.7 + Element UI |
+| Front-end (generated projects) | Vue 3 + Element Plus + Vite |
+| Front-end (platform console) | Vue 2.7 + Element UI |
 | Տեղական AI | qwen2.5-coder:7b |
 | API փաստաթղթեր | springdoc-openapi (Swagger UI) |
 

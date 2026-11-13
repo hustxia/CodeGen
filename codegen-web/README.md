@@ -1,6 +1,8 @@
-# 代码生存器前端（CodeGen Web）
+# 代码生成器前端（CodeGen Web）
 
-代码生成平台的前端控制台。Vue 2.7 + Element UI，对接 `codegen-server`（默认 `http://127.0.0.1:8120`）。
+代码生成平台的**平台控制台**。Vue 2.7 + Element UI，对接 `codegen-server`（默认 `http://127.0.0.1:8120`）。
+
+> **技术栈说明**：本仓库是平台自身的控制台，仍为 Vue 2.7 + Element UI + Vue CLI 5。V9.0 起**生成物**（`codegen-server` 脚手架产出的目标项目）已升级为 **Vue 3 + Element Plus + Vite**（`package.json` / `vite.config.js` / `src/main.js` / `index.html`）。两者互不耦合，请勿把本仓库的依赖当成生成物的技术栈。
 
 ## 功能
 

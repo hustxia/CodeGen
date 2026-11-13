@@ -112,7 +112,7 @@ Etu- ja takapää eristetty, kaksi säilöä toimii yhdessä:
 | Säilö | Rooli | Pino |
 | --- | --- | --- |
 | `codegen-server` | Takapää: generaatiomoottori, mallit, validointi, kirjanpito, putki | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Etupää: konsoli (taulukokonfig / mallit / kirjanpito / järjestelmähallinta) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Etupää: konsoli (taulukokonfig / mallit / kirjanpito / järjestelmähallinta) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 Takapään kerrokset:
 
@@ -143,7 +143,8 @@ resources/gen-templates/   22 FreeMarker-mallia (backend / frontend / shared / t
 | Mallimoottori | FreeMarker (22 siemenmallia, verkkomuokkaus + versionpalautus) |
 | Turvallisuus | JWT-todentaminen |
 | Tietokanta | MySQL 8 |
-| Etupää | Vue 2.7 + Element UI |
+| Etupää (generated projects) | Vue 3 + Element Plus + Vite |
+| Etupää (platform console) | Vue 2.7 + Element UI |
 | Paikallinen AI | qwen2.5-coder:7b (mallinnus / suositettu konfiguraatio / siemen datan parannus) |
 | API-dokumentaatio | springdoc-openapi (Swagger UI) |
 

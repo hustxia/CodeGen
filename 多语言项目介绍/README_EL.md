@@ -117,7 +117,7 @@ Front-end και back-end χωριστά, δύο αποθετήρια που σ�
 | Αποθετήριο | Ρόλος | Στοίβα (Stack) |
 | --- | --- | --- |
 | `codegen-server` | Backend: μηχανή δημιουργίας, πρότυπα, επικύρωση, καθολικό, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Frontend: κονσόλα (ρύθμιση πινάκων / πρότυπα / καθολικό / διαχείριση συστήματος) | Vue 2.7 · Element UI · axios · Vue Router (λειτουργία history) |
+| `codegen-web` | Frontend: κονσόλα (ρύθμιση πινάκων / πρότυπα / καθολικό / διαχείριση συστήματος) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (λειτουργία history) |
 
 Στρώματα back-end:
 
@@ -148,7 +148,8 @@ resources/gen-templates/   22 FreeMarker templates (backend / frontend / shared 
 | Μηχανή προτύπων | FreeMarker (22 seed πρότυπα, online επεξεργασία + επαναφορά εκδόσεων) |
 | Ασφάλεια | Αυθεντικοποίηση JWT |
 | Βάση δεδομένων | MySQL 8 |
-| Frontend | Vue 2.7 + Element UI |
+| Frontend (generated projects) | Vue 3 + Element Plus + Vite |
+| Frontend (platform console) | Vue 2.7 + Element UI |
 | Τοπικό AI | qwen2.5-coder:7b (μοντελοποίηση / συνιστώμενη ρύθμιση / βελτίωση seed-data) |
 | Έγγραφα API | springdoc-openapi (Swagger UI) |
 

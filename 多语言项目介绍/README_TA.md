@@ -91,7 +91,7 @@ DB இறக்குமதி/DDL  கட்டுப்பாடுகள்/�
 | களஞ்சியம் | பங்கு | அடுக்கு |
 | --- | --- | --- |
 | `codegen-server` | பின் இறுதி: உருவாக்கி இயந்திரம், டெம்ப்ளேட்டுகள், சரிபார்ப்பு, லெட்ஜர், பைப்லைன் | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | முன் இறுதி: கன்சோல் (அட்டவணை கட்டமைப்பு / டெம்ப்ளேட்டுகள் / லெட்ஜர் / அமைப்பு மேலாண்மை) | Vue 2.7 · Element UI · axios · Vue Router (வரலாறு முறை) |
+| `codegen-web` | முன் இறுதி: கன்சோல் (அட்டவணை கட்டமைப்பு / டெம்ப்ளேட்டுகள் / லெட்ஜர் / அமைப்பு மேலாண்மை) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (வரலாறு முறை) |
 
 ## 9. தொழில்நுட்ப அடுக்கு
 
@@ -102,7 +102,8 @@ DB இறக்குமதி/DDL  கட்டுப்பாடுகள்/�
 | டெம்ப்ளேட் இயந்திரம் | FreeMarker (22 விதை டெம்ப்ளேட்டுகள், ஆன்லைன் திருத்தம் + பதிப்பு திரும்பப்பெறல்) |
 | பாதுகாப்பு | JWT அங்கீகாரம் |
 | தரவுத்தளம் | MySQL 8 |
-| முன் இறுதி | Vue 2.7 + Element UI |
+| முன் இறுதி (generated projects) | Vue 3 + Element Plus + Vite |
+| முன் இறுதி (platform console) | Vue 2.7 + Element UI |
 | உள்ளூர் AI | qwen2.5-coder:7b |
 | API ஆவணங்கள் | springdoc-openapi (Swagger UI) |
 

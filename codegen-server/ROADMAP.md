@@ -59,7 +59,7 @@
 
 ### V9.0 — 前端现代化（P0，破坏性升级）
 
-**目标**：Vue 2.7 + Element UI → Vue 3 + Element Plus + Vite，功能与 i18n 能力等价。
+**目标**：**生成物**前端 Vue 2.7 + Element UI → Vue 3 + Element Plus + Vite，功能与 i18n 能力等价（平台控制台 `codegen-web` 仍是 Vue 2.7 + Element UI，不在本次升级范围）。
 
 **任务清单**
 

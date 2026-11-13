@@ -116,7 +116,7 @@ CodeGen는 "테이블을 원천으로 하는" 코드 팩토리입니다. 비즈�
 | 리포지토리 | 역할 | 기술 스택 |
 | --- | --- | --- |
 | `codegen-server` | 백엔드: 생성 엔진, 템플릿, 검증, 대장, 파이프라인 | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | 프론트엔드: 콘솔(테이블 설정 / 템플릿 / 대장 / 시스템 관리) | Vue 2.7 · Element UI · axios · Vue Router(history 모드) |
+| `codegen-web` | 프론트엔드: 콘솔(테이블 설정 / 템플릿 / 대장 / 시스템 관리) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router(history 모드) |
 
 백엔드 레이어 구성:
 
@@ -147,7 +147,8 @@ resources/gen-templates/   22개 FreeMarker 템플릿 (backend / frontend / shar
 | 템플릿 엔진 | FreeMarker (22개 시드 템플릿, 온라인 편집 + 버전 롤백 지원) |
 | 보안 | JWT 인증 |
 | 데이터베이스 | MySQL 8 |
-| 프론트엔드 | Vue 2.7 + Element UI |
+| 프론트엔드 (generated projects) | Vue 3 + Element Plus + Vite |
+| 프론트엔드 (platform console) | Vue 2.7 + Element UI |
 | 로컬 AI | qwen2.5-coder:7b (모델링 / 추천 설정 / 시드 데이터 강화) |
 | API 문서 | springdoc-openapi (Swagger UI) |
 

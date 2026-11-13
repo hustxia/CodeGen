@@ -84,7 +84,7 @@ DB import/DDL              Mga kontrol/validation   Lumapag sa disk lamang pagka
 | Repository | Tungkulin | Stack |
 | --- | --- | --- |
 | `codegen-server` | Back-end: engine ng pagbuo, mga template, validation, ledger, pipeline | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
-| `codegen-web` | Front-end: console (config ng talahanayan / mga template / ledger / pamamahala ng sistema) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+| `codegen-web` | Front-end: console (config ng talahanayan / mga template / ledger / pamamahala ng sistema) | Vue 2.7 · Element UI (platform console only; generated projects use Vue 3 + Element Plus + Vite) · axios · Vue Router (history mode) |
 
 ## 9. Teknikal na Stack
 
@@ -95,7 +95,8 @@ DB import/DDL              Mga kontrol/validation   Lumapag sa disk lamang pagka
 | Engine ng template | FreeMarker (22 seed template, online na pag-edit + rollback ng bersyon) |
 | Seguridad | JWT authentication |
 | Database | MySQL 8 |
-| Front-end | Vue 2.7 + Element UI |
+| Front-end (generated projects) | Vue 3 + Element Plus + Vite |
+| Front-end (platform console) | Vue 2.7 + Element UI |
 | Lokal na AI | qwen2.5-coder:7b |
 | Dokumentasyon ng API | springdoc-openapi (Swagger UI) |
 
