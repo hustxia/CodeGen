@@ -261,7 +261,11 @@ Das Frontend läuft standardmäßig auf Port **9530** und proxyt `/dev-api` an d
 | V7.1 | Seed-Daten-KI-Verbesserung (KI besitzt Semantik, Regeln besitzen Struktur) | V7.1 (42 Zeilen), 5ca6e72 |
 | V7.2 | SQL-Lieferobjekte werden nach erfolgreicher Pipeline nach `db/` geschrieben | eebff88 |
 | **V7.3** | **Liefer-Vertrauenswürdigkeit: Selbstprüfungs-kompilierte Artefakt-Tests / einheitlicher SQL-Lieferausgang / tabellenbezogene KI-Empfehlungen** | **V7.3 (138 Zeilen)** |
-| **V7.4** | Wiederholbare Lieferung: aus leerer Datenbank deploybar, jeder Commit garantiert lauffähig | **Aktuelle Version** |
+| **V7.4** | Wiederholbare Lieferung: aus leerer Datenbank deploybar, jeder Commit garantiert lauffähig | c306e29 |
+| **V7.5** | Projekt-Sprachkonfiguration: 206-Sprachenliste / Standardsprache / aktivierte Sprachen, Injektion von lang & dir in die generierten Artefakte | 7a9afa0 + abac56d |
+| **V8.0** | Vollseiten-i18n: 206-Sprachen-Framework (8 professionell übersetzt), Zwei-Track-i18n mit OFF Zero-Diff-Vertrag | 9e5dd57 → 7d57aea |
+| **V8.1** | Qualitätshärtung: Offline-Contract-Harness (9 Modi, OFF Zero-Diff) + i18n-Core-Unit-Tests + CI-Gate + ehrliche README-Aufteilung (Framework 206 / übersetzt 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | Generierte Artefakte auf Vue 3 + Element Plus + Vite modernisiert; zur Laufzeit verifiziert (40/40 Assertions, erfolgreicher vite build, 14 Screenshots inkl. ar-SA RTL); 3 Laufzeitfehler gefunden & behoben | 93a12d5 + e49330b, **Aktuelle Version** |
 
 ---
 
@@ -269,7 +273,7 @@ Das Frontend läuft standardmäßig auf Port **9530** und proxyt `/dev-api` an d
 
 ## 13. Projektstatus
 
-- Die aktuelle geplante Versionslinie hat **V7.3** erreicht (Fähigkeiten werden kontinuierlich weiterentwickelt: KI-Modellierung, Seed-Daten-Verbesserung, Fähigkeitspaket-System usw.).
+- Die aktuelle geplante Versionslinie hat **V9.0** erreicht (Fähigkeiten werden kontinuierlich weiterentwickelt: KI-Modellierung, Seed-Daten-Verbesserung, Fähigkeitspaket-System usw.).
 - Ein begleitendes Demo-Projekt `demo_admin` (Backend 8140 / Frontend 9040) deckt die Szenarien Baum / CRUD / Master-Detail / Nur-Lesen / Drucken ab und läuft eigenständig zur Verifikation.
 - Beide Repositories sind auf Gitee gehostet: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

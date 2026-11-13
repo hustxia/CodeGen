@@ -259,7 +259,11 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 | V7.1 | Seed-data AI enhancement (AI owns semantics, rules own structure) | V7.1 (42 lines), 5ca6e72 |
 | V7.2 | SQL deliverables written to `db/` after successful pipeline | eebff88 |
 | **V7.3** | **Delivery trustworthiness: self-check compiled artifact tests / unified SQL delivery outlet / per-table AI recommendations** | **V7.3 (138 lines)** |
-| **V7.4** | Repeatable delivery: deployable from an empty database, every commit guaranteed runnable | **Current version** |
+| **V7.4** | Repeatable delivery: deployable from an empty database, every commit guaranteed runnable | c306e29 |
+| **V7.5** | Project ki zubaan configuration: 206 zabanoon ki list / default zubaan / enabled zabanein, generated code mein lang aur dir injection | 7a9afa0 + abac56d |
+| **V8.0** | Full-page i18n: 206 zabanoon ka framework (8 professional tarjuma shuda), OFF zero-diff contract ke saath dual-track i18n | 9e5dd57 → 7d57aea |
+| **V8.1** | Quality hardening: offline contract harness (9 modes, OFF zero-diff) + i18n-core unit tests + CI gate + imandaar README taqseem (framework 206 / tarjuma 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | Generated artifacts ko Vue 3 + Element Plus + Vite par modernize kiya; runtime par verify shuda (40/40 assertions, kamyab vite build, 14 screenshots incl. ar-SA RTL); 3 runtime defects theek kiye | 93a12d5 + e49330b, **Current version** |
 
 ---
 
@@ -267,7 +271,7 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 
 ## 13. Project Status
 
-- Mazkoor planned version line **V7.3** tak pahunch chuki hai (capabilities iterate hoti rahtin hain: AI modeling, seed-data enhancement, capability-pack system, waghaira).
+- Mazkoor planned version line **V9.0** tak pahunch chuki hai (capabilities iterate hoti rahtin hain: AI modeling, seed-data enhancement, capability-pack system, waghaira).
 - Ek companion demo project `demo_admin` (backend 8140 / frontend 9040) tree / CRUD / master-detail / read-only / print scenarios cover karta hai aur verification ke liye standalone run hota hai.
 - Dono repositories Gitee par host hain: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

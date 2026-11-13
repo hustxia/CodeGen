@@ -261,7 +261,11 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 | V7.1 | Seed adat AI fejlesztés (AI birtokolja a szemantikát, szabályok birtokolják a struktúrát) | V7.1 (42 sor), 5ca6e72 |
 | V7.2 | SQL szállított objektumok írva a `db/` könyvtárba sikeres folyamat után | eebff88 |
 | **V7.3** | **Szállítási megbízhatóság: önellenőrzés lefordított műtermék tesztek / egységes SQL szállítási kimenet / táblaalapú AI ajánlások** | **V7.3 (138 sor)** |
-| **V7.4** | Ismételhető szállítás: üres adatbázisból telepíthető, minden commit garantáltan futtatható | **Aktuális verzió** |
+| **V7.4** | Ismételhető szállítás: üres adatbázisból telepíthető, minden commit garantáltan futtatható | c306e29 |
+| **V7.5** | Projekt nyelvi konfiguráció: 206 nyelv listája / alapértelmezett nyelv / engedélyezett nyelvek, lang és dir befecskendezése a generált kódba | 7a9afa0 + abac56d |
+| **V8.0** | Teljes oldal i18n: 206 nyelvű keretrendszer (8 szakmailag lefordítva), kétvágányú i18n OFF zero-diff szerződéssel | 9e5dd57 → 7d57aea |
+| **V8.1** | Minőségszilárdítás: offline szerződéses harness (9 mód, OFF zero-diff) + i18n-core egységtesztek + CI kapu + őszinte README felosztás (keretrendszer 206 / lefordítva 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | A generált artefaktok modernizálva Vue 3 + Element Plus + Vite-re; futásidőben ellenőrizve (40/40 assertion, sikeres vite build, 14 képernyőkép incl. ar-SA RTL); 3 futásidejű hiba javítva | 93a12d5 + e49330b, **Aktuális verzió** |
 
 ---
 

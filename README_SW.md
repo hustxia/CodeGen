@@ -114,7 +114,7 @@ Nyuma default kwenye bandari **8120**, mbele kwenye bandari **9530**. Akaunti ya
 
 ## 11. Hali ya Mradi
 
-- Mstari wa matoleo uliopangwa sasa umefikia **V7.3**.
+- Mstari wa matoleo uliopangwa sasa umefikia **V9.0**.
 - Hifadhi zote mbili zinapatikana kwenye Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Mwandishi

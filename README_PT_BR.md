@@ -259,7 +259,11 @@ O front-end usa a porta **9530** por padrão, fazendo proxy de `/dev-api` para a
 | V7.1 | Aprimoramento de dados-semente por IA (IA possui semântica, regras possuem estrutura) | V7.1 (42 linhas), 5ca6e72 |
 | V7.2 | Entregáveis SQL gravados em `db/` após pipeline bem-sucedido | eebff88 |
 | **V7.3** | **Confiabilidade de entrega: testes de artefatos compilados auto-verificados / saída unificada de entrega SQL / recomendações de IA por tabela** | **V7.3 (138 linhas)** |
-| **V7.4** | Entrega repetível: implantável a partir de um banco de dados vazio, todo commit garantido executável | **Versão atual** |
+| **V7.4** | Entrega repetível: implantável a partir de um banco de dados vazio, todo commit garantido executável | c306e29 |
+| **V7.5** | Configuração de idiomas do projeto: lista de 206 idiomas / idioma padrão / idiomas habilitados, injeção de lang e dir nos gerados | 7a9afa0 + abac56d |
+| **V8.0** | i18n de página inteira: framework de 206 idiomas (8 traduzidos profissionalmente), i18n de via dupla com contrato de diff zero em OFF | 9e5dd57 → 7d57aea |
+| **V8.1** | Endurecimento de qualidade: arnês de contrato offline (9 modos, diff zero OFF) + testes unitários i18n-core + portão de CI + divisão honesta do README (framework 206 / traduzidos 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | Artefatos gerados modernizados para Vue 3 + Element Plus + Vite; verificados em execução (40/40 asserções, vite build com sucesso, 14 capturas incl. ar-SA RTL); 3 defeitos de execução corrigidos | 93a12d5 + e49330b, **Versão atual** |
 
 ---
 

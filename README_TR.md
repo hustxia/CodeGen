@@ -258,7 +258,11 @@ npm run serve
 | V7.1 | Tohum-veri yapay zeka geliştirmesi (yapay zeka semantiğe sahip, kurallar yapıya) | V7.1 (42 satır), 5ca6e72 |
 | V7.2 | Başarılı hatın ardından SQL teslimatları `db/` dizinine yazılır | eebff88 |
 | **V7.3** | **Teslimat güvenilirliği: öz denetimli derlenen artefakt testleri / birleşik SQL teslimat çıkışı / tablo başına yapay zeka önerileri** | **V7.3 (138 satır)** |
-| **V7.4** | Tekrarlanabilir teslimat: boş bir veritabanından dağıtılabilir, her commit çalıştırılabilir garanti edilir | **Mevcut sürüm** |
+| **V7.4** | Tekrarlanabilir teslimat: boş bir veritabanından dağıtılabilir, her commit çalıştırılabilir garanti edilir | c306e29 |
+| **V7.5** | Proje dil yapılandırması: 206 dillik liste / varsayılan dil / etkin diller, üretilen koda lang ve dir enjeksiyonu | 7a9afa0 + abac56d |
+| **V8.0** | Tam sayfa i18n: 206 dilli çerçeve (8'i profesyonelce çevrildi), OFF sıfır fark sözleşmeli çift hatlı i18n | 9e5dd57 → 7d57aea |
+| **V8.1** | Kalite sertleştirme: çevrimdışı sözleşme düzeneği (9 mod, OFF sıfır fark) + i18n-core birim testleri + CI kapısı + dürüst README ayrımı (çerçeve 206 / çevrili 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | Üretilen artefaktlar Vue 3 + Element Plus + Vite'a modernize edildi; çalışma zamanında doğrulandı (40/40 iddia, başarılı vite build, ar-SA RTL dahil 14 ekran görüntüsü); 3 çalışma zamanı hatası giderildi | 93a12d5 + e49330b, **Mevcut sürüm** |
 
 ---
 
@@ -266,7 +270,7 @@ npm run serve
 
 ## 13. Proje Durumu
 
-- Mevcut planlanan sürüm hattı **V7.3** seviyesine ulaştı (yetenekler sürekli yinelemede: yapay zeka modelleme, tohum-veri geliştirmesi, yetenek-paketi sistemi vb.).
+- Mevcut planlanan sürüm hattı **V9.0** seviyesine ulaştı (yetenekler sürekli yinelemede: yapay zeka modelleme, tohum-veri geliştirmesi, yetenek-paketi sistemi vb.).
 - Eşlik eden demo projesi `demo_admin` (arka uç 8140 / ön uç 9040), ağaç / CRUD / ana-ayrıntı / salt okunur / yazdırma senaryolarını kapsar ve doğrulama için bağımsız çalışır.
 - Her iki depo da Gitee üzerinde barındırılır: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

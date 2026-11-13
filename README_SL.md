@@ -143,7 +143,7 @@ Backend privzeto zažene vrata **8120**; frontend **9530**. Privzeti račun `adm
 
 ## 11. Stanje projekta
 
-- Trenutno načrtovana različica dosega **V7.3**.
+- Trenutno načrtovana različica dosega **V9.0**.
 - Oba repozitorija gostujeta na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Avtor

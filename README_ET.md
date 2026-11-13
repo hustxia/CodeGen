@@ -126,7 +126,7 @@ Tagakülg vaikimisi pordile **8120**, esikülg pordile **9530**. Vaikimisi konto
 
 ## 11. Projekti olek
 
-- Praegune planeeritud versioonirida on jõudnud **V7.3**-ni.
+- Praegune planeeritud versioonirida on jõudnud **V9.0**-ni.
 - Mõlemad repositooriumid hostitakse Gitees: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Autor

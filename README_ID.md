@@ -260,7 +260,11 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 | V7.1 | Peningkatan data-bibit AI (AI memiliki semantik, aturan memiliki struktur) | V7.1 (42 baris), 5ca6e72 |
 | V7.2 | Hasil SQL ditulis ke `db/` setelah pipeline berhasil | eebff88 |
 | **V7.3** | **Keandalan pengiriman: pengujian artefak terkompilasi pemeriksaan-mandiri / saluran pengiriman SQL terpadu / rekomendasi AI per tabel** | **V7.3 (138 baris)** |
-| **V7.4** | Pengiriman yang dapat diulang: dapat diterapkan dari basis data kosong, setiap commit terjamin dapat dijalankan | **Versi saat ini** |
+| **V7.4** | Pengiriman yang dapat diulang: dapat diterapkan dari basis data kosong, setiap commit terjamin dapat dijalankan | c306e29 |
+| **V7.5** | Konfigurasi bahasa proyek: daftar 206 bahasa / bahasa default / bahasa yang diaktifkan, injeksi lang & dir ke hasil yang dibuat | 7a9afa0 + abac56d |
+| **V8.0** | i18n halaman penuh: framework 206 bahasa (8 diterjemahkan profesional), i18n jalur ganda dengan kontrak zero-diff saat OFF | 9e5dd57 → 7d57aea |
+| **V8.1** | Penguatan kualitas: harness kontrak offline (9 mode, zero-diff OFF) + unit test i18n-core + gate CI + pembagian README yang jujur (framework 206 / diterjemahkan 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | Artefak yang dihasilkan dimodernisasi ke Vue 3 + Element Plus + Vite; terverifikasi saat runtime (40/40 assertion, vite build sukses, 14 tangkapan layar incl. ar-SA RTL); 3 defect runtime diperbaiki | 93a12d5 + e49330b, **Versi saat ini** |
 
 ---
 
@@ -268,7 +272,7 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 
 ## 13. Status Proyek
 
-- Garis versi yang direncanakan saat ini telah mencapai **V7.3** (kapabilitas terus beriterasi: pemodelan AI, peningkatan data-bibit, sistem paket-kapabilitas, dll.).
+- Garis versi yang direncanakan saat ini telah mencapai **V9.0** (kapabilitas terus beriterasi: pemodelan AI, peningkatan data-bibit, sistem paket-kapabilitas, dll.).
 - Proyek demo pendamping `demo_admin` (back-end 8140 / front-end 9040) mencakup skenario pohon / CRUD / master-detail / hanya-baca / cetak dan berjalan mandiri untuk verifikasi.
 - Kedua repositori dihosting di Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

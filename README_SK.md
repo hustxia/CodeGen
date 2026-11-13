@@ -261,7 +261,11 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 | V7.1 | AI vylepšenie seed dát (AI vlastní sémantiku, pravidlá vlastní štruktúru) | V7.1 (42 riadkov), 5ca6e72 |
 | V7.2 | SQL doručené objekty zapísané do `db/` po úspešnom pipeline | eebff88 |
 | **V7.3** | **Dôveryhodnosť doručenia: autokontrola kompilované testy artefaktov / jednotný SQL výstup doručenia / tabulkami riadená AI odporúčania** | **V7.3 (138 riadkov)** |
-| **V7.4** | Opakovateľné doručenie: nasaditeľné z prázdnej databázy, každý commit zaručene spustiteľný | **Aktuálna verzia** |
+| **V7.4** | Opakovateľné doručenie: nasaditeľné z prázdnej databázy, každý commit zaručene spustiteľný | c306e29 |
+| **V7.5** | Jazyková konfigurácia projektu: zoznam 206 jazykov / predvolený jazyk / povolené jazyky, vkladanie lang a dir do generovaného kódu | 7a9afa0 + abac56d |
+| **V8.0** | i18n celej stránky: rámec 206 jazykov (8 profesionálne preložených), dvojstopňová i18n s kontraktom nulového rozdielu pri OFF | 9e5dd57 → 7d57aea |
+| **V8.1** | Posilnenie kvality: offline kontraktný harness (9 režimov, nulový rozdiel OFF) + unit testy i18n-core + CI brána + úprimné rozdelenie README (rámec 206 / preložené 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | Generované artefakty modernizované na Vue 3 + Element Plus + Vite; overené za behu (40/40 assertion, úspešný vite build, 14 snímok vrátane ar-SA RTL); opravené 3 behové defekty | 93a12d5 + e49330b, **Aktuálna verzia** |
 
 ---
 
@@ -269,7 +273,7 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 
 ## 13. Stav projektu
 
-- Aktuálna plánovaná verzná línia dosiahla **V7.3** (kapacity sa neustále iterujú: AI modelovanie, vylepšenie seed dát, systém balíčkov schopností atď.).
+- Aktuálna plánovaná verzná línia dosiahla **V9.0** (kapacity sa neustále iterujú: AI modelovanie, vylepšenie seed dát, systém balíčkov schopností atď.).
 - Doprovodný demo projekt `demo_admin` (backend 8140 / frontend 9040) pokrýva scenáre strom / CRUD / master-detail / len na čítanie / tlač a beží samostatne pre overenie.
 - Oba repozitáre sú hostované na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

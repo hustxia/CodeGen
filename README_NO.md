@@ -259,7 +259,11 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 | V7.1 | Seed-data AI forbedring (AI eier semantikk, regler eier struktur) | V7.1 (42 linjer), 5ca6e72 |
 | V7.2 | SQL leverte objekter skrevet til `db/` etter vellykket pipeline | eebff88 |
 | **V7.3** | **Leveringspålitelighet: selvkontroll kompilerte artefakt tester / enhetlig SQL leveringsutgang / tabellstyrte AI anbefalinger** | **V7.3 (138 linjer)** |
-| **V7.4** | Gjennomsnittlig levering: deployerbar fra en tom database, hvert commit garantert kjørbar | **Nåværende versjon** |
+| **V7.4** | Gjennomsnittlig levering: deployerbar fra en tom database, hvert commit garantert kjørbar | c306e29 |
+| **V7.5** | Prosjektspråkkonfigurasjon: liste over 206 språk / standardspråk / aktiverte språk, injisering av lang & dir i generert kode | 7a9afa0 + abac56d |
+| **V8.0** | Fullside-i18n: rammeverk med 206 språk (8 profesjonelt oversatt), tosporet i18n med OFF zero-diff-kontrakt | 9e5dd57 → 7d57aea |
+| **V8.1** | Kvalitetsherdning: offline kontrakt-harness (9 moduser, OFF zero-diff) + i18n-core enhetstester + CI-port + ærlig README-inndeling (rammeverk 206 / oversatt 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | Genererte artefakter modernisert til Vue 3 + Element Plus + Vite; runtime-verifisert (40/40 asserts, vellykket vite build, 14 skjermbilder inkl. ar-SA RTL); 3 runtime-feil rettet | 93a12d5 + e49330b, **Nåværende versjon** |
 
 ---
 
@@ -267,7 +271,7 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 
 ## 13. Prosjektstatus
 
-- Den nåværende planlagte versjonslinjen har nådd **V7.3** (kapasiteter fortsetter å iterere: AI-modellering, seed-data forbedring, kapasitetspakke system osv.).
+- Den nåværende planlagte versjonslinjen har nådd **V9.0** (kapasiteter fortsetter å iterere: AI-modellering, seed-data forbedring, kapasitetspakke system osv.).
 - Et følgedemo-prosjekt `demo_admin` (bakre del 8140 / forreste del 9040) dekker tre / CRUD / master-detail / skrivebeskyttet / utskrift scenarier og kjører uavhengig for verifisering.
 - Begge repositorier hostes på Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

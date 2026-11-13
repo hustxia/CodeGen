@@ -261,7 +261,11 @@ O front-end usa por padrão a porta **9530**, com proxy `/dev-api` para a porta 
 | V7.1 | Aprimoramento de dados-semente por IA (IA cuida da semântica, regras cuidam da estrutura) | V7.1 (42 linhas), 5ca6e72 |
 | V7.2 | Entregáveis SQL gravados em `db/` após pipeline bem-sucedido | eebff88 |
 | **V7.3** | **Confiabilidade da entrega: testes de artefatos compilados na autoverificação / saída unificada de entrega SQL / recomendações por IA por tabela** | **V7.3 (138 linhas)** |
-| **V7.4** | Entrega repetível: implantável a partir de banco vazio, cada commit garantido executável | **Versão atual** |
+| **V7.4** | Entrega repetível: implantável a partir de banco vazio, cada commit garantido executável | c306e29 |
+| **V7.5** | Configuração de idiomas do projeto: lista de 206 idiomas / idioma padrão / idiomas habilitados, injeção de lang e dir nos gerados | 7a9afa0 + abac56d |
+| **V8.0** | i18n de página inteira: framework de 206 idiomas (8 traduzidos profissionalmente), i18n de via dupla com contrato de diff zero em OFF | 9e5dd57 → 7d57aea |
+| **V8.1** | Endurecimento de qualidade: arnês de contrato offline (9 modos, diff zero OFF) + testes unitários i18n-core + portão de CI + divisão honesta do README (framework 206 / traduzidos 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | Artefatos gerados modernizados para Vue 3 + Element Plus + Vite; verificados em execução (40/40 asserções, vite build com sucesso, 14 capturas incl. ar-SA RTL); 3 defeitos de execução corrigidos | 93a12d5 + e49330b, **Versão atual** |
 
 ---
 
@@ -269,7 +273,7 @@ O front-end usa por padrão a porta **9530**, com proxy `/dev-api` para a porta 
 
 ## 13. Estado do Projeto
 
-- A linha de versões planejadas atual chegou a **V7.3**, com evolução contínua de capacidades (modelagem por IA, aprimoramento de dados-semente, sistema de pacotes de capacidade etc.).
+- A linha de versões planejadas atual chegou a **V9.0**, com evolução contínua de capacidades (modelagem por IA, aprimoramento de dados-semente, sistema de pacotes de capacidade etc.).
 - Há um projeto de demonstração `demo_admin` (back-end 8140 / front-end 9040) cobrindo os cenários de árvore / CRUD / mestre-detalhe / somente leitura / impressão, executável de forma independente para verificação.
 - Ambos os repositórios estão hospedados no Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

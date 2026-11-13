@@ -258,7 +258,11 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 | V7.1 | Wzbogacanie danych nasiennych przez AI (AI posiada semantykę, reguły strukturę) | V7.1 (42 linie), 5ca6e72 |
 | V7.2 | Deliverable SQL zapisywane do `db/` po udanym potoku | eebff88 |
 | **V7.3** | **Wiarygodność dostarczania: testy artefaktów skompilowanych przez samokontrolę / ujednolicony wyjście deliverable SQL / rekomendacje AI na poziomie tabeli** | **V7.3 (138 linii)** |
-| **V7.4** | Powtarzalne dostarczanie: wdrażalne z pustej bazy danych, każdy commit gwarantowanie uruchamialny | **Bieżąca wersja** |
+| **V7.4** | Powtarzalne dostarczanie: wdrażalne z pustej bazy danych, każdy commit gwarantowanie uruchamialny | c306e29 |
+| **V7.5** | Konfiguracja językowa projektu: lista 206 języków / język domyślny / włączone języki, wstrzykiwanie lang i dir do generowanych plików | 7a9afa0 + abac56d |
+| **V8.0** | i18n całej strony: framework 206 języków (8 przetłumaczonych profesjonalnie), dwutorowa i18n z kontraktem zerowej różnicy przy OFF | 9e5dd57 → 7d57aea |
+| **V8.1** | Hardening jakości: offline harness kontraktu (9 trybów, zerowa różnica OFF) + testy jednostkowe i18n-core + bramka CI + uczciwy podział README (framework 206 / przetłumaczone 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | Generowane artefakty zmodernizowane do Vue 3 + Element Plus + Vite; zweryfikowane w czasie działania (40/40 asercji, udany vite build, 14 zrzutów ekranu incl. ar-SA RTL); naprawiono 3 defekty runtime | 93a12d5 + e49330b, **Bieżąca wersja** |
 
 ---
 
@@ -266,7 +270,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 
 ## 13. Status projektu
 
-- Obecna planowana linia wersji osiągnęła **V7.3** (możliwości stale iterują: modelowanie AI, wzbogacanie danych nasiennych, system pakietów możliwości itp.).
+- Obecna planowana linia wersji osiągnęła **V9.0** (możliwości stale iterują: modelowanie AI, wzbogacanie danych nasiennych, system pakietów możliwości itp.).
 - Towarzyszący projekt demo `demo_admin` (backend 8140 / frontend 9040) obejmuje scenariusze drzewo / CRUD / główna-szczegóły / tylko-do-odczytu / druk i działa samodzielnie do weryfikacji.
 - Oba repozytoria są hostowane na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

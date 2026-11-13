@@ -114,7 +114,7 @@ Ang back-end ay naka-port na default na **8120**, ang front-end ay naka-port na 
 
 ## 11. Kalagayan ng Proyekto
 
-- Ang kasalukuyang pinaplanong linya ng bersyon ay umabot na sa **V7.3**.
+- Ang kasalukuyang pinaplanong linya ng bersyon ay umabot na sa **V9.0**.
 - Ang dalawang repository ay naka-host sa Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. May-akda

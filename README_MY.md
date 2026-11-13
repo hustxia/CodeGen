@@ -114,7 +114,7 @@ npm run serve
 
 ## ၁၁။ ပရောဂျက် အခြေအနေ
 
-- လက်ရှိစီစဉ်ထားသော version line **V7.3** သို့ ရောက်ရှိလာပြီ.
+- လက်ရှိစီစဉ်ထားသော version line **V9.0** သို့ ရောက်ရှိလာပြီ.
 - Repository နှစ်ခုလုံး Gitee တွင် host လုပ်ထားသည်: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## ၁၂။ ရေးသားသူ
