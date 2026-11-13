@@ -262,7 +262,8 @@ npm run serve
 | **V7.5** | 專案語言設定：206 語言清單 / 預設語言 / 啟用語言，生成物 lang 與 dir 注入 | 7a9afa0 + abac56d |
 | **V8.0** | 全頁面國際化：206 語言框架（8 種精譯），雙軌制 i18n、OFF 逐位元組零 diff 契約 | 9e5dd57 → 7d57aea |
 | **V8.1** | 品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | 生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷 | 93a12d5 + e49330b, **目前版本** |
+| **V9.0** | 生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷 | 93a12d5 + e49330b  |
+| **V9.1** | **可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9** | 654b8e0 → b0d081e, **目前版本** |
 
 ---
 
@@ -270,7 +271,7 @@ npm run serve
 
 ## 13. 專案狀態
 
-- 目前規劃的版本線已抵達 **V9.0**（能力持續迭代：AI 建模、種子資料增強、能力包系統等）。
+- 目前規劃的版本線已抵達 **V9.1**（能力持續迭代：AI 建模、種子資料增強、能力包系統等）。
 - 配套示範專案 `demo_admin`（後端 8140 / 前端 9040）涵蓋樹狀 / CRUD / 主從 / 唯讀 / 列印場景，可獨立執行驗證。
 - 兩個倉庫皆託管於 Gitee：`https://gitee.com/hustxiayuhong/CodeGen.git`
 

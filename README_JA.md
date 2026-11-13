@@ -264,7 +264,8 @@ npm run serve
 | **V7.5** | プロジェクト言語設定：206 言語リスト / デフォルト / 有効言語、生成物への lang・dir 注入 | 7a9afa0 + abac56d |
 | **V8.0** | 全ページ i18n：206 言語フレームワーク（8 言語は精訳）、OFF ゼロ diff 契約のデュアルトラック i18n | 9e5dd57 → 7d57aea |
 | **V8.1** | 品質強化：オフライン契約ハーネス（9 モード OFF ゼロ diff）+ i18n-core 単体テスト + CI ゲート + README の正直な分割（フレームワーク 206 / 精訳 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | 生成物を Vue 3 + Element Plus + Vite に近代化；ランタイム検証済み（40/40 アサーション、vite build 成功、ar-SA RTL 含む 14 スクリーンショット）；ランタイムで発見した 3 件の欠陥を修正 | 93a12d5 + e49330b, **現行バージョン** |
+| **V9.0** | 生成物を Vue 3 + Element Plus + Vite に近代化；ランタイム検証済み（40/40 アサーション、vite build 成功、ar-SA RTL 含む 14 スクリーンショット）；ランタイムで発見した 3 件の欠陥を修正 | 93a12d5 + e49330b  |
+| **V9.1** | **保守性リファクタリング · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **現行バージョン** |
 
 ---
 
@@ -272,7 +273,7 @@ npm run serve
 
 ## 13. プロジェクトの現状
 
-- 現在の計画バージョン ラインは **V9.0** に達しており、能力は継続的に反復中（AI モデリング、シードデータ強化、能力パック体系など）。
+- 現在の計画バージョン ラインは **V9.1** に達しており、能力は継続的に反復中（AI モデリング、シードデータ強化、能力パック体系など）。
 - 付属デモ プロジェクト `demo_admin`（バックエンド 8140／フロントエンド 9040）が、ツリー／CRUD／マスター・ディテール／参照専用／印刷の全シナリオをカバーし、単独実行で検証可能。
 - 両リポジトリは Gitee でホスト：`https://gitee.com/hustxiayuhong/CodeGen.git`
 

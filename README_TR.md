@@ -262,7 +262,8 @@ npm run serve
 | **V7.5** | Proje dil yapılandırması: 206 dillik liste / varsayılan dil / etkin diller, üretilen koda lang ve dir enjeksiyonu | 7a9afa0 + abac56d |
 | **V8.0** | Tam sayfa i18n: 206 dilli çerçeve (8'i profesyonelce çevrildi), OFF sıfır fark sözleşmeli çift hatlı i18n | 9e5dd57 → 7d57aea |
 | **V8.1** | Kalite sertleştirme: çevrimdışı sözleşme düzeneği (9 mod, OFF sıfır fark) + i18n-core birim testleri + CI kapısı + dürüst README ayrımı (çerçeve 206 / çevrili 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | Üretilen artefaktlar Vue 3 + Element Plus + Vite'a modernize edildi; çalışma zamanında doğrulandı (40/40 iddia, başarılı vite build, ar-SA RTL dahil 14 ekran görüntüsü); 3 çalışma zamanı hatası giderildi | 93a12d5 + e49330b, **Mevcut sürüm** |
+| **V9.0** | Üretilen artefaktlar Vue 3 + Element Plus + Vite'a modernize edildi; çalışma zamanında doğrulandı (40/40 iddia, başarılı vite build, ar-SA RTL dahil 14 ekran görüntüsü); 3 çalışma zamanı hatası giderildi | 93a12d5 + e49330b  |
+| **V9.1** | **Bakım yapılabilirlik refaktörü · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **mevcut sürüm** |
 
 ---
 
@@ -270,7 +271,7 @@ npm run serve
 
 ## 13. Proje Durumu
 
-- Mevcut planlanan sürüm hattı **V9.0** seviyesine ulaştı (yetenekler sürekli yinelemede: yapay zeka modelleme, tohum-veri geliştirmesi, yetenek-paketi sistemi vb.).
+- Mevcut planlanan sürüm hattı **V9.1** seviyesine ulaştı (yetenekler sürekli yinelemede: yapay zeka modelleme, tohum-veri geliştirmesi, yetenek-paketi sistemi vb.).
 - Eşlik eden demo projesi `demo_admin` (arka uç 8140 / ön uç 9040), ağaç / CRUD / ana-ayrıntı / salt okunur / yazdırma senaryolarını kapsar ve doğrulama için bağımsız çalışır.
 - Her iki depo da Gitee üzerinde barındırılır: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

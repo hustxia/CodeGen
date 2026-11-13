@@ -121,7 +121,8 @@ npm run serve
 
 ## 11. திட்ட நிலை
 
-- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V9.0** ஐ அடைந்தது.
+- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V9.1** ஐ அடைந்தது.
+- **V9.1** · பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - இரண்டு களஞ்சியங்களும் Gitee இல் ஹோஸ்ட் செய்யப்படுகின்றன: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. ஆசிரியர்

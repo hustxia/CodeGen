@@ -263,7 +263,8 @@ Frontenden kører som standard på port **9530**, proxyer `/dev-api` til backend
 | **V7.5** | Projekt-sprogkonfiguration: liste over 206 sprog / standardsprog / aktiverede sprog, injektion af lang & dir i genereret kode | 7a9afa0 + abac56d |
 | **V8.0** | Fuldside-i18n: framework med 206 sprog (8 professionelt oversat), tosporet i18n med OFF zero-diff-kontrakt | 9e5dd57 → 7d57aea |
 | **V8.1** | Kvalitetshærdning: offline kontrakt-harness (9 tilstande, OFF zero-diff) + i18n-core enhedstests + CI-port + ærlig README-opdeling (framework 206 / oversat 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | Genererede artefakter moderniseret til Vue 3 + Element Plus + Vite; runtime-verificeret (40/40 assertions, vellykket vite build, 14 skærmbilleder inkl. ar-SA RTL); 3 runtime-fejl rettet | 93a12d5 + e49330b, **Nuværende version** |
+| **V9.0** | Genererede artefakter moderniseret til Vue 3 + Element Plus + Vite; runtime-verificeret (40/40 assertions, vellykket vite build, 14 skærmbilleder inkl. ar-SA RTL); 3 runtime-fejl rettet | 93a12d5 + e49330b  |
+| **V9.1** | **Vedligeholdelsesrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **nuværende version** |
 
 ---
 
@@ -271,7 +272,7 @@ Frontenden kører som standard på port **9530**, proxyer `/dev-api` til backend
 
 ## 13. Projektstatus
 
-- Den nuværende planerede versionlinje har nået **V9.0** (kapaciteter fortsætter iterere: AI-modellering, seed-data forbedring, kapacitetspakkessystem osv.).
+- Den nuværende planerede versionlinje har nået **V9.1** (kapaciteter fortsætter iterere: AI-modellering, seed-data forbedring, kapacitetspakkessystem osv.).
 - Et ledsagende demo-projekt `demo_admin` (backend 8140 / frontend 9040) dækker træ / CRUD / master-detail / skrivebeskyttet / udskrivningsscenarier og kører standalone til verifikation.
 - Begge repositorier hostes på Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

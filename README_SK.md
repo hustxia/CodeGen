@@ -265,7 +265,8 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 | **V7.5** | Jazyková konfigurácia projektu: zoznam 206 jazykov / predvolený jazyk / povolené jazyky, vkladanie lang a dir do generovaného kódu | 7a9afa0 + abac56d |
 | **V8.0** | i18n celej stránky: rámec 206 jazykov (8 profesionálne preložených), dvojstopňová i18n s kontraktom nulového rozdielu pri OFF | 9e5dd57 → 7d57aea |
 | **V8.1** | Posilnenie kvality: offline kontraktný harness (9 režimov, nulový rozdiel OFF) + unit testy i18n-core + CI brána + úprimné rozdelenie README (rámec 206 / preložené 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | Generované artefakty modernizované na Vue 3 + Element Plus + Vite; overené za behu (40/40 assertion, úspešný vite build, 14 snímok vrátane ar-SA RTL); opravené 3 behové defekty | 93a12d5 + e49330b, **Aktuálna verzia** |
+| **V9.0** | Generované artefakty modernizované na Vue 3 + Element Plus + Vite; overené za behu (40/40 assertion, úspešný vite build, 14 snímok vrátane ar-SA RTL); opravené 3 behové defekty | 93a12d5 + e49330b  |
+| **V9.1** | **Refaktoring pre udržateľnosť · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **aktuálna verzia** |
 
 ---
 
@@ -273,7 +274,7 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 
 ## 13. Stav projektu
 
-- Aktuálna plánovaná verzná línia dosiahla **V9.0** (kapacity sa neustále iterujú: AI modelovanie, vylepšenie seed dát, systém balíčkov schopností atď.).
+- Aktuálna plánovaná verzná línia dosiahla **V9.1** (kapacity sa neustále iterujú: AI modelovanie, vylepšenie seed dát, systém balíčkov schopností atď.).
 - Doprovodný demo projekt `demo_admin` (backend 8140 / frontend 9040) pokrýva scenáre strom / CRUD / master-detail / len na čítanie / tlač a beží samostatne pre overenie.
 - Oba repozitáre sú hostované na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

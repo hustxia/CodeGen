@@ -114,7 +114,8 @@ Ang back-end ay naka-port na default na **8120**, ang front-end ay naka-port na 
 
 ## 11. Kalagayan ng Proyekto
 
-- Ang kasalukuyang pinaplanong linya ng bersyon ay umabot na sa **V9.0**.
+- Ang kasalukuyang pinaplanong linya ng bersyon ay umabot na sa **V9.1**.
+- **V9.1** · Refactoring para sa maintainability · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - Ang dalawang repository ay naka-host sa Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. May-akda

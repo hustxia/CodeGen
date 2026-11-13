@@ -114,7 +114,8 @@ Back-end դեֆոլտ պորտ **8120**, front-end պորտ **9530**. Դեֆոլ
 
 ## 11. Նախագծի կարգավիճակ
 
-- Ընթացիկ պլանավորված տարբերակի գիծը հասել է **V9.0**.
+- Ընթացիկ պլանավորված տարբերակի գիծը հասել է **V9.1**.
+- **V9.1** · Սպասարկելիության ռեֆակտորինգ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - Երկու պահեստներն էլ հոսթվում են Gitee-ում: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Հեղինակ
