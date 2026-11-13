@@ -1,0 +1,160 @@
+# Majiang · ကုဒ်ဂျင်နရေတာ (CodeGen) — ပရောဂျက် မိတ်ဆက်
+
+> ဘာသာစကားများ: [简体中文](README_ZH.md) · [繁體中文](README_ZH_TW.md) · [English](README.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · **မြန်မာ** · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
+
+---
+
+> **Spring Boot + Vue** အတွက် ပရောဂျက်မျိုးစုံ ကုဒ်ဂျင်နရေတာ: ဒေတာဘေ့စ်ဇယားဖွဲ့စည်းပုံများမှ စတင်ပြီး **ကုဒ်ပြုစုနိုင်သော၊ လုပ်ဆောင်နိုင်သော** မီနူးများနှင့် ခွင့်ပြုချက်များပါရှိသော ရှေ့ပိုင်းနှင့် နောက်ပိုင်း လုပ်ငန်းကုဒ်ကို ထုတ်လုပ်ပြီး ဒစ်ခ်သို့ရေးသားခြင်း၊ ဘက်အပူဆွေးခြင်း၊ စာရင်းစာအုပ် (ledger) နှင့် ပြန်လည်ပြင်ဆင်ခြင်းတို့၏ ပြီးပြည့်စုံသော ပေးပို့မှုစက်ဝန်းကို ကိုင်တွယ်သည်။
+
+GitHub: https://github.com/hustxia/CodeGen
+
+## ၁။ ဤသည်မှာ ဘာလဲ
+
+CodeGen သည် "ဇယားဖြင့်မောင်းနှင်သော" ကုဒ်စက်ရုံဖြစ်သည်။ သင့်လုပ်ငန်းဇယားများကို ယူဆောင်လာပါ (ဒေတာဘေ့စ်မှတင်သွင်းခြင်း သို့မဟုတ် DDL ကိုကူးထည့်ခြင်းဖြင့်)၊ ဖယ်ဒ်များနှင့် ဂျင်နရေတာခလုတ်များကို ပြင်ဆင်ပြီး "Generate" ကိုနှိပ်ပါ — ထို့နောက် နောက်ပိုင်း Entity/Mapper/Service/Controller/DTO/VO၊ ရှေ့ပိုင်း `api.js` နှင့် Vue စာမျက်နှာများ၊ မီနူးများနှင့် ရောက်ကြောင်းများ၊ A4 ပုံနှိပ်စာမျက်နှာများနှင့် ပေါင်းစပ်စမ်းသပ်ခေါင်းရိုးများပင် ထုတ်လုပ်ပြီး အားလုံးကို သင့်ပစ်မှတ်ပရောဂျက်ထဲသို့ လုံခြုံစွာရေးသားပေးသည်။
+
+၎င်းသည် "ကုဒ်ကို ပစ်ပေးရုံ" မဟုတ်ဘဲ **အရည်အသွေးတံခါးများနှင့် ပြန်လည်ပြင်ဆင်နိုင်စွမ်းရှိသော ပေးပို့မှုပိုက်လိုင်း** ဖြစ်သည်။
+
+## ၂။ အသုံးပြုသူများသည် မည်သူများနည်း၊ မည်သို့အသုံးပြုကြမည်နည်း
+
+| အသုံးပြုသူ | ပုံမှန် လိုအပ်ချက် | ပလက်ဖောင်းမှ ပေးသော လမ်းကြောင်း |
+| --- | --- | --- |
+| နောက်ပိုင်း ပရိုဂရမ်မာ | လက်ထဲတွင် ဇယားအစုအဝေးတစ်ခု (သို့မဟုတ် DDL) ရှိပြီး CRUD ကို မြန်မြန်ဆန်ဆန် စတင်လိုသည် | ဇယား ပြင်ဆင်မှု စာမျက်နှာ: ထည့်သွင်းခြင်း → ဖယ်ဒ်များကို ပြင်ဆင်ခြင်း → တစ်ချက်နှိပ်ရုံ generate |
+| အပြည့်အဝ ပလက်ဖောင်း / လွတ်လပ်သော ပရိုဂရမ်မာ | သုညမှ အပြည့်အစုံ စနစ်တစ်ခု (ဝင်ရောက်မှု၊ ခွင့်ပြုချက်၊ အဘိဓာန် ပါ) ကို တည်ဆောက်လိုသည် | ပိုက်လိုင်း စာမျက်နှာ: စာကြောင်းတစ်ကြောင်းဖြင့် စနစ်တည်ဆောက် |
+| အဖွဲ့ခေါင်းဆောင် | ကုဒ်စတိုင်၊ ကုဒ်စည်းမျဉ်း နှင့် ဖိုင်ဖွဲ့စည်းပုံကို ညီညွတ်စေလိုသည် | စနစ်စီမံခန့်ခွဲမှု: စနစ်တစ်ခု = ထုတ်လုပ်မှု ပြင်ဆင်ချက် တစ်ခု၊ အမြောက်အမြားဖြင့် အကျိုးသက်ရောက်သည် |
+| ပလက်ဖောင်း ထိန်းသိမ်းသူ | ကုဒ်ကို မပြင်ဘဲ template များကို ပြောင်းလဲလိုသည် | Template များ စီမံခန့်ခွဲမှု: အွန်လိုင်း ပြင်ဆင်ခြင်း၊ သိမ်းဆည်းသည်နှင့် ချက်ချင်း အကျိုးသက်ရောက်သည်၊ ဗားရှင်း ပြန်လည်ပြင်ဆင်ခြင်းကို ပံ့ပိုးသည် |
+
+## ၃။ မည်သည့်ပြဿနာများကို ဖြေရှင်းပေးသလဲ
+
+| နာကျင်ရမည့်အချက် | CodeGen လုပ်ဆောင်ချက် |
+| --- | --- |
+| ထပ်ခါတလဲလဲ CRUD ငရဲ — ဇယားတိုင်းအတွက် boilerplate ပုံပေါင်း | ဇယားအဆင့်ခလုတ်များက တစ်ချက်နှိပ်ရုံဖြင့် ပြီးပြည့်စုံသော ရှေ့ပိုင်းနှင့် နောက်ပိုင်းကို ထုတ်လုပ်ပေးသည် |
+| ရှေ့/နောက် ဖယ်ဒ်နှင့် API ကိုက်ညီမှုမရှိခြင်း | တူညီသောဇယား မက်တာဒေတာက နောက်ပိုင်း API များနှင့် ရှေ့ပိုင်းစာမျက်နှာများ နှစ်ခုလုံးကို မောင်းနှင်ပေးသည် — သုည semantic အနှောင့်အယှက် |
+| အဖွဲ့ကွန်ဗင်းရှင်းများ ညီညွတ်ရန်ခက်ခဲ; လူတိုင်း ကိုယ့်စတိုင်နှင့် ရေးကြသည် | Template များသည် ကွန်ဗင်းရှင်းဖြစ်သည်: 22 FreeMarker template များ ကြီးမားစွာ စီမံထားပြီး အွန်လိုင်း ပြင်ဆင်နိုင်ပြီး ဗားရှင်း ပြန်လည်ပြင်ဆင်ခြင်းရှိသည် |
+| ဂျင်နရေတာများသည် "ဖျောက်ပြီးဆုံးရှုံးသည်" လက်ဖြင့်ရေးထားသော လော့ဂျစ် | Marker-block ယူဒေါင်း စက်ပြင်: လက်ဖြင့်ရေးထားသော ကုဒ်ကို ထိန်းသိမ်းပေးပြီး ထုတ်လုပ်ထားသော ဒေသများကိုသာ အစားထိုးသည် |
+| ထုတ်လုပ်ထားသော ကုဒ်သည် compile လုပ်ချိန်အထိ မယုံကြည်ရ | မှတ်ဉာဏ်တွင် compile ကိုယ်တိုင်စမ်းသပ်မှု (တကယ့် `javac`), ဖွဲ့စည်းပုံ ကန်ထရိုက် စစ်ဆေးမှုများ, ဒစ်ခ်ပေါ်တွင် diff အကြိုကြည့်ရှုမှု — compile မဖြစ်မချင်း မည်သည့်အရာကမျှ ဒစ်ခ်ပေါ် မဆင်းပါ |
+| စနစ်အသစ်ကို သုညမှ တည်ဆောက်ရန် အချိန်ကြာသည် | ပိုက်လိုင်း "စာကြောင်းတစ်ကြောင်းဖြင့် စနစ်တည်ဆောက်": DB → scaffolding → generate → pack → မီနူးများ မှတ်ပုံတင်, လုံးဝ အလိုအလျောက် |
+
+## ၄။ စွမ်းရည်များ ခြုံငုံသုံးသပ်ချက်
+
+- **ဇယား ထည့်သွင်းခြင်း**: DDL parsing, တိုက်ရိုက် ဒေတာဘေ့စ်တင်သွင်းခြင်း, batch ထည့်သွင်းမှု wizard, အလိုအလျောက် ဆင်းသက်လာသော ကော်လံ ပြင်ဆင်မှု (ထိန်းချုပ်မှု / စမ်းသပ်မှု / အဘိဓာန်များ / ဆက်ဆံမှုများ).
+- **ဇယားပုံစံများ**: တစ်ခုတည်းသော ဇယား, သစ်ပင်ဇယား (tree API + tree grid), master-detail (တူညီသော transaction တွင် သိမ်းဆည်းမှု + အသေးစိတ် တက်ဘ်များ), many-to-many ချိတ်ဆက်ဇယားများ.
+- **ထုတ်လုပ်ထားသော artifact များ**: Entity / Mapper / Service / Controller / DTO / VO + `api.js` + Vue စာမျက်နှာများ + A4 ပုံနှိပ်စာမျက်နှာများ + ပေါင်းစပ်စမ်းသပ်ခေါင်းရိုးများ.
+- **လုပ်ငန်းတိုးတက်မှုများ**: ဆက်ဆံမှု dropdown များ, အဘိဓာန်ဘာသာပြန်ခြင်း, ဒေတာ ဖုံးကွယ်ခြင်း, ထူးခြားမှု စစ်ဆေးမှုများ, ဖောင် ချိတ်ဆက်ခြင်း, ဒေတာ စကုပ် ခွင့်ပြုချက်, Excel import/export, အတည်ပြုချက် workflow, ငွေပေးချေမှု / ဖိုင် / မိုဘိုင်း စွမ်းရည် packs များ.
+- **အရည်အသွေးတံခါးများ**: မှတ်ဉာဏ်တွင် compile ကိုယ်တိုင်စမ်းသပ်မှု (တကယ့် `javac`), ဖွဲ့စည်းပုံ ကန်ထရိုက် စစ်ဆေးမှုများ, ခွင့်ပြုချက် ကိုက်ညီမှု စစ်ဆေးမှုများ, ဒစ်ခ်ပေါ်တွင် diff အကြိုကြည့်ရှုမှု, ရှေ့ပိုင်း artifact များ၏ တကယ့်စမ်းသပ်မှု.
+- **လုံခြုံစွာဆင်းသက်ခြင်း**: ဒစ်ခ်သို့ရေးသားခြင်း + `.gen-backup` batch ဘက်အပူဆွေးမှုများ, လက်ဖြင့်ရေးထားသော ကုဒ်ကို ထိန်းသိမ်းရန် marker-block ယူဒေါင်း, `gen_output` လေးခုအခြေအနေ စာရင်းစာအုပ် (ဖန်တီးထားသည် / ပေါင်းထည့်ထားသည် / ကျော်သွားသည် / မအောင်မြင်ပါ), သမိုင်းပြန်လည်ပြင်ဆင်ခြင်း.
+- **စနစ်များစွာ အထီးကျန်ခြင်း**: ပစ်မှတ်ပရောဂျက်တိုင်းသည် "စနစ်ပြင်ဆင်ခြင်း" (ရှေ့/နောက် လမ်းကြောင်းများ, package အမည်များ, gateway prefix, dependency classpath, ဂျင်နရေတာခလုတ် ပုံသေတန်ဖိုးများ) — ပရောဂျက်များစွာကို တစ်ပြိုင်နက် ဆောင်ရွက်ပေးသည်.
+- **AI တိုးတက်မှုများ**: စာကြောင်းတစ်ကြောင်းဖြင့် စနစ်တည်ဆောက် (AI မော်ဒယ်လ်), seed data AI တိုးတက်မှု, ဇယားအဆင့် AI အကြံပြုထားသော ပြင်ဆင်မှု.
+
+## ၅။ ပုံမှန် စက်ရပ်စွာ
+
+| စက်ရပ်စွာ | ဖော်ပြချက် |
+| --- | --- |
+| သစ်ပင်ဇယား | ထုတ်ကုန်အမျိုးအစားများကဲ့သို့ အဆင့်ဆင့်ဒေတာ — tree API, tree grid နှင့် parent ရွေးချယ်မှု dropdown ကို အလိုအလျောက် ထုတ်လုပ်ပေးသည် |
+| တစ်ခုတည်းသော ဇယား CRUD | ဖောက်သည်များ, ထုတ်ကုန်များ စသည်တို့ — FK dropdown များ + အဘိဓာန်ဘာသာပြန်ခြင်း + import/export ပြင်ပမှ ပြင်ဆင်ထားသည် |
+| master-detail | အရောင်းအော်ဒါများ + အော်ဒါပစ္စည်းများ — တူညီသော transaction တွင် သိမ်းဆည်းမှု, အသေးစိတ် drawer dual tabs နှင့် (အချက်အလက် / အသေးစိတ်များ) |
+| ဖတ်ရန်သာ / စာရင်းအင်း | စတော့ခ်စီးဆင်းမှု စသည်တို့ — ရေးသားခလုတ်များ ပိတ်ထားသည်, query နှင့် export သာ |
+| ပုံနှိပ်စာရွက်စာတမ်းများ | "ပုံနှိပ်" ခလုတ်ကို အမှတ်အသားပြု၍ A4 ပုံနှိပ်စာမျက်နှာနှင့် route ထုတ်လုပ်ပါ |
+| စာကြောင်းတစ်ကြောင်းဖြင့် စနစ်တည်ဆောက် | လုပ်ငန်းဒိုမိန်းကို ဖော်ပြပါ — AI DB & ဇယားများ + scaffolding + ပြီးပြည့်စုံသော generate + မီနူး မှတ်ပုံတင်ကို တစ်ပြိုင်နက် ဖန်တီးသည် |
+
+## ၆။ အခြေခံလုပ်ဆောင်ချက်စီးဆင်းမှု
+
+```
+ဇယား ထည့်သွင်းခြင်း → ဖယ်ဒ်/ခလုတ် ပြင်ဆင်မှု → တစ်ချက်နှိပ်ရုံ generate → စာရင်းစာအုပ် · ပြန်လည်ပြင်ဆင်ခြင်း
+DB import/DDL         ထိန်းချုပ်မှု/စမ်းသပ်မှု   အရည်အသွေးတံခါးများအားလုံးပြီးသောမှ ဒစ်ခ်ပေါ်မှ ဆင်းသည်
+                     /အဘိဓာန်များ            လက်ဖြင့်ရေးထားသော ကုဒ် ထိန်းသိမ်းသည်
+```
+
+## ၇။ စာကြောင်းတစ်ကြောင်းဖြင့် စနစ်တည်ဆောက် (ပိုက်လိုင်း)
+
+| အဆင့် | အဓိပ္ပါယ် |
+| --- | --- |
+| `CHECK` | ပစ်မှတ်ပရောဂျက် ပြင်ဆင်ခြင်းနှင့် dependency classpath ကို စစ်ဆေးသည် |
+| `WRITE` | ဒေတာဘေ့စ် & ဇယားများကို ဖန်တီးသည်, scaffolding နှင့် ထုတ်လုပ်ထားသော artifact များကို ရေးသားသည် |
+| `COMPILE` | နောက်ပိုင်း `mvn package` / ရှေ့ပိုင်း build, မှတ်ဉာဏ်တွင် compile ကိုယ်တိုင်စမ်းသပ်မှု |
+| `MENU` | မီနူးခွင့်ပြုချက်များကို ထုတ်လုပ်ပြီး မှတ်ပုံတင်သည် (ထွက်ပေါက်နှစ်ခု: artifact SQL / internal direct write) |
+| `ROUTE` | ရှေ့ပိုင်း route fragment များကို ပြန်လည်တည်ဆောက်သည် |
+
+## ၈။ စနစ်ဗိသုကာ
+
+| Repository | အခန်းကဏ္ဍ | Stack |
+| --- | --- | --- |
+| `codegen-server` | နောက်ပိုင်း: ဂျင်နရေတာ အင်ဂျင်, template များ, စမ်းသပ်မှု, စာရင်းစာအုပ်, ပိုက်လိုင်း | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
+| `codegen-web` | ရှေ့ပိုင်း: console (ဇယား ပြင်ဆင်မှု / template များ / စာရင်းစာအုပ် / စနစ်စီမံခန့်ခွဲမှု) | Vue 2.7 · Element UI · axios · Vue Router (history mode) |
+
+## ၉။ နည်းပညာ Stack
+
+| အတိုင်းအတာ | ရွေးချယ်မှု |
+| --- | --- |
+| နောက်ပိုင်း ဘာသာစကား / framework | Java 21 / Spring Boot 3.2.5 |
+| Persistence | MyBatis-Plus 3.5.5 |
+| Template အင်ဂျင် | FreeMarker (22 seed template များ, အွန်လိုင်း တည်းဖြတ်ခြင်း + version ပြန်လည်ပြင်ဆင်ခြင်း) |
+| လုံခြုံရေး | JWT authentication |
+| ဒေတာဘေ့စ် | MySQL 8 |
+| ရှေ့ပိုင်း | Vue 2.7 + Element UI |
+| Local AI | qwen2.5-coder:7b |
+| API စာရွက်စာတမ်း | springdoc-openapi (Swagger UI) |
+
+## ၁၀။ အမြန်စတင်ရန်
+
+```bash
+mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
+mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
+
+cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
+
+mvn package -DskipTests
+java -jar target/codegen-server.jar
+
+cd ../codegen-web
+npm install
+npm run serve
+```
+
+နောက်ပိုင်း ပုံသေ port **8120**, ရှေ့ပိုင်း port **9530**. ပုံသေအကောင့် `admin / admin123`.
+
+## ၁၁။ ပရောဂျက် အခြေအနေ
+
+- လက်ရှိစီစဉ်ထားသော version line **V9.0** သို့ ရောက်ရှိလာပြီ.
+- Repository နှစ်ခုလုံး Gitee တွင် host လုပ်ထားသည်: `https://gitee.com/hustxiayuhong/CodeGen.git`
+
+## ၁၂။ ရေးသားသူ
+
+- **ရေးသားသူ**: တရုတ်ပရိုဂရမ်မာတစ်ယောက် (လွတ်လပ်သော developer)
+- **အီးမေးလ်**: `hustxiayuhong@126.com`
+- **နည်းပညာပံ့ပိုးမှု**: ကျေးဇူးပြု၍ သင့်အီးမေးလ်ကို **တရုတ်ဘာသာဖြင့်** ရေးသားပါ, ပြဿနာဖော်ပြချက်, runtime ပတ်ဝန်းကျင် (JDK / MySQL / version) နှင့် ပြန်ထုတ်ပြန်နိုင်သော အဆင့်များ ပါဝင်စေပါ.
+
+---
+
+## 13. Perbandingan dengan Alat Serupa
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.
