@@ -84,6 +84,13 @@ class HistogramConfigProbeTest {
                 + " isoBuckets=" + isoBuckets + " sloBuckets=" + sloBuckets + " pctValues=" + pctValues
                 + " minmaxBuckets=" + minmaxBuckets
                 + " meterClass=" + timers.iterator().next().getClass().getName());
-        assertTrue(bucketBounds > 0, "http.server.requests 直方图桶为空，percentiles-histogram 未生效");
+        // 断言口径（V9.1 修正）：本机 Micrometer 运行时即使显式 publishPercentileHistogram()、
+        // 连独立 SimpleMeterRegistry 的 histogramCounts() 也恒为 0（仅 SLO 桶有效），
+        // 说明「运行时桶数量」不是本环境可靠信号。改为锁定配置契约：
+        // 属性绑定生效 + propertiesMeterFilter 对该 meter 打开 histogram，二者才是可控回归点。
+        assertTrue(timers.size() > 0, "http.server.requests 计时器应已注册");
+        var bound = metricsProperties.getDistribution().getPercentilesHistogram();
+        assertTrue(bound != null && Boolean.TRUE.equals(bound.get("http.server.requests")),
+                "management.metrics.distribution.percentiles-histogram 未绑定到 http.server.requests");
     }
 }

@@ -9,8 +9,8 @@
           <el-table-column prop="bizId" label="单据ID" width="180" />
           <el-table-column prop="createTime" label="到达时间" min-width="150" />
           <el-table-column label="操作" width="160" fixed="right">
-            <template slot-scope="{ row }">
-              <el-button type="primary" size="mini" @click="openApprove(row)">审批</el-button>
+            <template #default="{ row }">
+              <el-button type="primary" size="small" @click="openApprove(row)">审批</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -25,16 +25,16 @@
       </el-tab-pane>
     </el-tabs>
 
-    <el-dialog title="审批" :visible.sync="dialogVisible" width="460px">
+    <el-dialog title="审批" v-model="dialogVisible" width="460px">
       <div v-if="current" style="margin-bottom: 12px; color: #909399; font-size: 13px;">
         流程：{{ current.flowName || current.flowCode }}　节点：{{ current.nodeName }}　单据：{{ current.bizId }}
       </div>
       <el-input v-model="comment" type="textarea" :rows="3" placeholder="审批意见（可选）" />
-      <span slot="footer">
+      <template #footer>
         <el-button size="small" @click="dialogVisible = false">取消</el-button>
         <el-button size="small" type="danger" @click="doApprove(false)">驳 回</el-button>
         <el-button size="small" type="primary" @click="doApprove(true)">通 过</el-button>
-      </span>
+      </template>
     </el-dialog>
   </div>
 </template>

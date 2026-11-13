@@ -1,8 +1,8 @@
 # 代码生成器 · 版本路线图（Roadmap）
 
-> 当前版本：**V9.0** — 全页面国际化（V8.0）→ 质量加固与诚实化（V8.1）→ 生成物前端现代化 Vue3 + Element Plus + Vite（V9.0），均已落地并通过验证  
+> 当前版本：**V9.1** — 全页面国际化（V8.0）→ 质量加固（V8.1）→ 生成物 Vue3 现代化（V9.0）→ 巨型类拆分（V9.1），均已落地并通过验证  
 > 路线图建立：2026-11-12　|　最近更新：2026-11-13  
-> 状态：V8.1 已落地（测试网 + 文档诚实化，CI 卡点生效）；V9.0 生成物 Vue3 改造已完成——离线「OFF 零 diff」契约 9/9 通过，运行时端到端验证已完成（Maven 打包 + API 生成 + 40/40 断言 + `vite build` 成功 + Chrome 8 语言截图），运行中另修复 3 个真实缺陷（详见「五」补记）。
+> 状态：V9.1 已完成 `GenScaffoldServiceImpl` 拆分（5072 → 914 行，新增 8 个职责单一的 Writer/Support 类），产物**逐字节零 diff**（新旧 jar 各生成 119 + 62 个文件，全量 diff 为空），全量测试 **312/312 通过**（顺带清偿 13 个历史红测试），离线 i18n 契约 **9/9**。
 
 本文档承接项目评估结论，把近期必须推进的三件事拆成可执行的版本里程碑：  
 **P0 前端升级 Vue 3 + Element Plus**、**P1 i18n 自动化测试**、**P1 README 诚实化与翻译共建**。
@@ -88,7 +88,37 @@
 
 ---
 
-### V9.1+ — 体验与生态（P2，待排期）
+### V9.1 — 巨型类拆分（P0 可维护性）
+
+**目标**：把 `GenScaffoldServiceImpl`（5072 行，单文件承载全部产物字符串）按职责拆成可独立维护的 Writer 集合，**产物逐字节不变**。
+
+**任务清单**
+
+- [x] **按职责切分 8 个类**（`com.codegen.service.impl`，包内可见 `final class`，方法全部静态化）
+  - `ScaffoldFlowWriter`（905 行）：Flow/Activiti/BPMN 服务、流程部署器、流程 Controller、流程注册 SQL。
+  - `ScaffoldOpsWriter`（280 行）：Dockerfile / compose / CI 模板 / 移动端工程 / 支付与文件能力包索引。
+  - `ScaffoldPomWriter`（765 行）：pom 依赖树、启动类、`application*.yml`、后端 README。
+  - `ScaffoldCommonWriter`（1132 行）：Result / 异常 / 分页 / MyBatis-Plus / 数据权限 / 操作日志等 22 个基座类。
+  - `ScaffoldAuthWriter`（850 行）：认证过滤器 / TokenStore / 登录 / 权限校验 / 字典 / 登录日志。
+  - `ScaffoldSeedWriter`（144 行）：`sys_user`/`sys_role`/`sys_menu`/`sys_session` 种子 SQL。
+  - `ScaffoldFrontendWriter`（533 行）：`package.json` / `vite.config.js` / `main.js` / layout / login / router / store。
+  - `ScaffoldTextSupport`（39 行）：classpath 资源读取等共享工具（各 Writer 静态导入）。
+- [x] **主类回归编排职责**：`scaffold()`（写盘、备份、台账、受保护跳过）、`check()`（体检）、`writeI18nResources()`（依赖 `I18nMessageService` 实例状态，保留在主类），5072 → **914 行**。
+- [x] **反射兼容桩**：`seedSql()` / `dictControllerJava(String)` / `mobileResources(String,int,String)` 等 9 个被 `getDeclaredMethod` 锁定的旧入口保留，实现委托到 Writer，基线测试零改动。
+- [x] **测试债清偿**（拆分验证时暴露的 13 个历史红灯）
+  - `gen-baseline` 23 个快照按 V9.0 现状重生成（diff 全部是 `slot-scope`→`#default`、`.sync`→`v-model:`、`.native` 去除、图标组件化）。
+  - `I18nTextRewriterTest.模板源码零改动`：断言从「模板不得出现 `$t(`」升级为「`$t(` 必须处于 `<#if i18nEnabled>` 守卫分支内」（小状态机跟踪 `<#if>/<#else>/</#if>` 栈），与 V8.0 双轨制一致。
+  - `HistogramConfigProbeTest`：本机 Micrometer 连独立 `SimpleMeterRegistry` 的 `histogramCounts()` 也恒为 0（仅 SLO 桶有效），改为锁定配置契约（属性绑定 + MeterFilter 打开 histogram），不再依赖运行时桶数量。
+
+**验收标准**
+
+- 主类 ≤ 1000 行；新增类单一职责、无实例状态。
+- 全量单测 0 失败；离线 i18n 契约 9/9。
+- **同一 DTO 下新旧 jar 生成物逐字节相等**（含 i18n 开/关两种变体）。
+
+---
+
+### V9.2+ — 体验与生态（P2，待排期）
 
 - [ ] H2 内存库一键 demo / Docker 镜像，降低上手门槛。
 - [ ] 社区翻译贡献流程：PR 审核 + 自动校验 key 覆盖，推动精译从 8 → 逐步扩展。
@@ -147,3 +177,14 @@
 - **36 个主要语区抽样全覆盖**（zh/en/ja/ko/fr/de/es/ru/pt-BR/hi-IN/th-TH/vi-VN/id-ID/tr-TR/it-IT/nl-NL/pl-PL/sv-SE/da-DK/fi-FI/nb-NO/el-GR/he-IL/hu-HU/cs-CZ/ro-RO/uk-UA/ms-MY/bn-BD/ta-IN/te-IN/fa-IR/ur-PK/sw-KE/af-ZA → 36/36）。
 - 词库 `i18n/messages/` 共 **204** 个 JSON；8 精译语言词库与 `zh-CN` 基线**逐键一致**（各 60 键，偏差 0）。
 - 口径重申：**框架支持 206 / 精译 8**；未精译语言按回落链（目标语言 → 中文内联兜底）展示，不出现空白。验证明细存档 `.screenshots/v9/lang-verify-result.json`。
+
+### 2026-11-13 V9.1 拆分验证记录（可复现）
+- **拆分口径**：以「成员定义 + 其 javadoc」为切分单元，直接搬运代码文本、仅把 `private` 改为 `static`，不做任何字符串内容改动——从机制上保证产物不变。
+- **等价性验证（最强证据）**：`git stash` 前后各打一个 jar（`old.jar` 无 Writer 类 / `new.jar` 含 8 个新类），两服务并行启动，同一 DTO 各生成两套工程：
+  - 变体 A：i18n 开（zh-CN + ar-SA + ja-JP）+ 支付 + 文件 + 移动端 + 测试骨架 + 部署物 → **119 个文件**
+  - 变体 B：微服务（gateway）+ i18n 关 → **62 个文件**
+  - `diff -r` 两套均为 **0 差异**（含二进制资源与 `.gitignore` 等隐藏文件）。
+- **测试**：`mvn test` → **312 passed / 0 failed / 0 error**（拆分前基线为 13 failed，本次一并清偿）。
+- **契约**：`VuePageI18nContract` 9 模式 **9/9 PASS**（OFF 与 V8.0 基线字节相等、ON 含 `$t`）。
+- **结构**：主类 914 行；最大单文件 `ScaffoldCommonWriter` 1132 行（此前 5072 行）；新增类均无实例字段、无 Spring 注解，可被单测直接静态调用。
+- **代价与取舍**：为兼容 9 个反射入口保留薄委托桩（约 20 行），与 V7.5 移动端旧入口同款策略；不修改任何基线测试的断言口径（除两个确已过期者，见上）。
