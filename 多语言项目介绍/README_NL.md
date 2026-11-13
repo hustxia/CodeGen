@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **huidige versie V9.0 · Gegenereerde artefacten gemoderniseerd naar Vue 3 + Element Plus + Vite; runtime geverifieerd (40/40 asserts, geslaagde vite build, 14 screenshots incl. ar-SA RTL); 3 runtimefouten gevonden & opgelost**
+> **V8.1** · Kwaliteitsverharding: offline contract-harness (9 modi, OFF zero-diff) + i18n-core unittests + CI-poort + eerlijke README-splitsing (framework 206 / vertaald 8) + check-locale-keys.mjs
+> **V8.0** · Volledige pagina-i18n: framework van 206 talen (8 professioneel vertaald), tweespoors i18n met OFF zero-diff contract
 
 ## 1. Wat is dit
 
@@ -230,10 +225,10 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 
 | Document | Inhoud |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (Chinees) | Inzet, 5-minuten start, tabelconfig, batch-opname, templatebeheer, grootboek, API-catalogus, volledige pijplijn (met screenshots) |
-| `docs/典型场景操作指南-演示后台demo.md` (Chinees) | 6 tabellen die 5 typische scenario's dekken, met uitvoerbare demo en echte screenshots |
-| `docs/项目介绍.md` | Projectintroductiedocument, dezelfde bron als dit bestand |
-| `docs/代码生成器-Vx.x-规划.md` | Versieplannen en functie-inventarissen van V3.1 → V7.3 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (Chinees) | Inzet, 5-minuten start, tabelconfig, batch-opname, templatebeheer, grootboek, API-catalogus, volledige pijplijn (met screenshots) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinees) | 6 tabellen die 5 typische scenario's dekken, met uitvoerbare demo en echte screenshots |
+| `项目介绍.md` | Projectintroductiedocument, dezelfde bron als dit bestand |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versieplannen en functie-inventarissen van V3.1 → V9.0 |
 | `codegen-web/README.md` | Frontend console snelle start verwijzing |
 
 ---
@@ -267,9 +262,12 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 | V7.0 | AI pagina & menu-aanbevelingen (preview / apply) | V7.0 (94 regels), 45f2670 |
 | V7.1 | Seed-data AI-verbetering (AI bezit semantiek, regels bezitten structuur) | V7.1 (42 regels), 5ca6e72 |
 | V7.2 | SQL-leverbare objecten geschreven naar `db/` na succesvolle pijplijn | eebff88 |
-| **V7.3** | **Leveringbetrouwbaarheid: zelftest gecompileerde artefacttests / uniforme SQL-leveringsuitlaat / tabelgebonden AI-aanbevelingen** | **V7.3 (138 regels)** |
-| **V7.4** | Herhaalbare levering: deployeerbaar vanuit een lege database, elke commit gegarandeerd uitvoerbaar | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Huidige versie** |
+| **V7.3** | **Leveringbetrouwbaarheid: zelftest gecompileerde artefacttests / uniforme SQL-leveringsuitlaat / tabelgebonden AI-aanbevelingen** | **V7.3 (138 regels), 696765b** |
+| **V7.4** | Herhaalbare levering: deployeerbaar vanuit een lege database, elke commit gegarandeerd uitvoerbaar | c306e29 |
+| **V7.5** | **Projecttaalconfiguratie: lijst van 206 talen / standaardtaal / ingeschakelde talen, injectie van lang & dir in gegenereerde code** | 7a9afa0 + abac56d |
+| **V8.0** | **Volledige pagina-i18n: framework van 206 talen (8 professioneel vertaald), tweespoors i18n met OFF zero-diff contract** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Kwaliteitsverharding: offline contract-harness (9 modi, OFF zero-diff) + i18n-core unittests + CI-poort + eerlijke README-splitsing (framework 206 / vertaald 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Gegenereerde artefacten gemoderniseerd naar Vue 3 + Element Plus + Vite; runtime geverifieerd (40/40 asserts, geslaagde vite build, 14 screenshots incl. ar-SA RTL); 3 runtimefouten gevonden & opgelost** | 93a12d5 + e49330b, **Huidige versie** |
 
 ---
 
@@ -277,7 +275,7 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 
 ## 13. Projectstatus
 
-- De huidige geplande versielijn heeft **V8.0** bereikt (capaciteiten blijven itereren: AI-modellering, seed-data verbetering, capaciteitspakket-systeem, enz.).
+- De huidige geplande versielijn heeft **V9.0** bereikt (capaciteiten blijven itereren: AI-modellering, seed-data verbetering, capaciteitspakket-systeem, enz.).
 - Een begeleidend demo-project `demo_admin` (backend 8140 / frontend 9040) dekt boom / CRUD / master-detail / alleen-lezen / afdruk scenario's en draait standalone voor verificatie.
 - Beide repositories worden gehost op Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **aktuálna verzia V9.0 · Generované artefakty modernizované na Vue 3 + Element Plus + Vite; overené za behu (40/40 assertion, úspešný vite build, 14 snímok vrátane ar-SA RTL); opravené 3 behové defekty**
+> **V8.1** · Posilnenie kvality: offline kontraktný harness (9 režimov, nulový rozdiel OFF) + unit testy i18n-core + CI brána + úprimné rozdelenie README (rámec 206 / preložené 8) + check-locale-keys.mjs
+> **V8.0** · i18n celej stránky: rámec 206 jazykov (8 profesionálne preložených), dvojstopňová i18n s kontraktom nulového rozdielu pri OFF
 
 ## 1. Čo to je
 
@@ -232,10 +227,10 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 
 | Dokument | Obsah |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (čínština) | Nasadenie, 5-minútový štart, konfigurácia tabuliek, dávkový prijem, správa šablón, účtovníctvo, API katalóg, celý pipeline (s screenshotmi) |
-| `docs/典型场景操作指南-演示后台demo.md` (čínština) | 6 tabuliek pokrývajúcich 5 typických scénárov, so spustiteľným demom a skutočnými screenshotmi |
-| `docs/项目介绍.md` | Dokument s predstavením projektu, rovnaký zdroj ako tento súbor |
-| `docs/代码生成器-Vx.x-规划.md` | Verzné plány a inventáre funkcií od V3.1 → V7.3 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (čínština) | Nasadenie, 5-minútový štart, konfigurácia tabuliek, dávkový prijem, správa šablón, účtovníctvo, API katalóg, celý pipeline (s screenshotmi) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (čínština) | 6 tabuliek pokrývajúcich 5 typických scénárov, so spustiteľným demom a skutočnými screenshotmi |
+| `项目介绍.md` | Dokument s predstavením projektu, rovnaký zdroj ako tento súbor |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verzné plány a inventáre funkcií od V3.1 → V9.0 |
 | `codegen-web/README.md` | Rýchla referenčná príručka pre frontend konzolu |
 
 ---
@@ -269,9 +264,12 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 | V7.0 | AI odporúčania strán a menu (preview / apply) | V7.0 (94 riadkov), 45f2670 |
 | V7.1 | AI vylepšenie seed dát (AI vlastní sémantiku, pravidlá vlastní štruktúru) | V7.1 (42 riadkov), 5ca6e72 |
 | V7.2 | SQL doručené objekty zapísané do `db/` po úspešnom pipeline | eebff88 |
-| **V7.3** | **Dôveryhodnosť doručenia: autokontrola kompilované testy artefaktov / jednotný SQL výstup doručenia / tabulkami riadená AI odporúčania** | **V7.3 (138 riadkov)** |
-| **V7.4** | Opakovateľné doručenie: nasaditeľné z prázdnej databázy, každý commit zaručene spustiteľný | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Aktuálna verzia** |
+| **V7.3** | **Dôveryhodnosť doručenia: autokontrola kompilované testy artefaktov / jednotný SQL výstup doručenia / tabulkami riadená AI odporúčania** | **V7.3 (138 riadkov), 696765b** |
+| **V7.4** | Opakovateľné doručenie: nasaditeľné z prázdnej databázy, každý commit zaručene spustiteľný | c306e29 |
+| **V7.5** | **Jazyková konfigurácia projektu: zoznam 206 jazykov / predvolený jazyk / povolené jazyky, vkladanie lang a dir do generovaného kódu** | 7a9afa0 + abac56d |
+| **V8.0** | **i18n celej stránky: rámec 206 jazykov (8 profesionálne preložených), dvojstopňová i18n s kontraktom nulového rozdielu pri OFF** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Posilnenie kvality: offline kontraktný harness (9 režimov, nulový rozdiel OFF) + unit testy i18n-core + CI brána + úprimné rozdelenie README (rámec 206 / preložené 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Generované artefakty modernizované na Vue 3 + Element Plus + Vite; overené za behu (40/40 assertion, úspešný vite build, 14 snímok vrátane ar-SA RTL); opravené 3 behové defekty** | 93a12d5 + e49330b, **Aktuálna verzia** |
 
 ---
 
@@ -279,7 +277,7 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 
 ## 13. Stav projektu
 
-- Aktuálna plánovaná verzná línia dosiahla **V8.0** (kapacity sa neustále iterujú: AI modelovanie, vylepšenie seed dát, systém balíčkov schopností atď.).
+- Aktuálna plánovaná verzná línia dosiahla **V9.0** (kapacity sa neustále iterujú: AI modelovanie, vylepšenie seed dát, systém balíčkov schopností atď.).
 - Doprovodný demo projekt `demo_admin` (backend 8140 / frontend 9040) pokrýva scenáre strom / CRUD / master-detail / len na čítanie / tlač a beží samostatne pre overenie.
 - Oba repozitáre sú hostované na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

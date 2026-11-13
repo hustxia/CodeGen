@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **aktualna wersja V9.0 · Generowane artefakty zmodernizowane do Vue 3 + Element Plus + Vite; zweryfikowane w czasie działania (40/40 asercji, udany vite build, 14 zrzutów ekranu incl. ar-SA RTL); naprawiono 3 defekty runtime**
+> **V8.1** · Hardening jakości: offline harness kontraktu (9 trybów, zerowa różnica OFF) + testy jednostkowe i18n-core + bramka CI + uczciwy podział README (framework 206 / przetłumaczone 8) + check-locale-keys.mjs
+> **V8.0** · i18n całej strony: framework 206 języków (8 przetłumaczonych profesjonalnie), dwutorowa i18n z kontraktem zerowej różnicy przy OFF
 
 ## 1. Czym to jest
 
@@ -229,10 +224,10 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 
 | Dokument | Zawartość |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (chiński) | Wdrożenie, start w 5 minut, konfiguracja tabel, wsadowe pobieranie, zarządzanie szablonami, księga, katalog API, pełny potok (ze zrzutami ekranu) |
-| `docs/典型场景操作指南-演示后台demo.md` (chiński) | 6 tabel pokrywających 5 typowych scenariuszy, z uruchamialnym demo i zrzutami rzeczywistego działania |
-| `docs/项目介绍.md` | Dokument wprowadzający do projektu, to samo źródło co ten plik |
-| `docs/代码生成器-Vx.x-规划.md` | Plany wersji i inwentarze funkcji od V3.1 → V7.3 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (chiński) | Wdrożenie, start w 5 minut, konfiguracja tabel, wsadowe pobieranie, zarządzanie szablonami, księga, katalog API, pełny potok (ze zrzutami ekranu) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (chiński) | 6 tabel pokrywających 5 typowych scenariuszy, z uruchamialnym demo i zrzutami rzeczywistego działania |
+| `项目介绍.md` | Dokument wprowadzający do projektu, to samo źródło co ten plik |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Plany wersji i inwentarze funkcji od V3.1 → V9.0 |
 | `codegen-web/README.md` | Referencyjny szybki start konsoli frontendu |
 
 ---
@@ -266,9 +261,12 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 | V7.0 | Rekomendacje stron i menu przez AI (podgląd / zastosowanie) | V7.0 (94 linie), 45f2670 |
 | V7.1 | Wzbogacanie danych nasiennych przez AI (AI posiada semantykę, reguły strukturę) | V7.1 (42 linie), 5ca6e72 |
 | V7.2 | Deliverable SQL zapisywane do `db/` po udanym potoku | eebff88 |
-| **V7.3** | **Wiarygodność dostarczania: testy artefaktów skompilowanych przez samokontrolę / ujednolicony wyjście deliverable SQL / rekomendacje AI na poziomie tabeli** | **V7.3 (138 linii)** |
-| **V7.4** | Powtarzalne dostarczanie: wdrażalne z pustej bazy danych, każdy commit gwarantowanie uruchamialny | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Bieżąca wersja** |
+| **V7.3** | **Wiarygodność dostarczania: testy artefaktów skompilowanych przez samokontrolę / ujednolicony wyjście deliverable SQL / rekomendacje AI na poziomie tabeli** | **V7.3 (138 linii), 696765b** |
+| **V7.4** | Powtarzalne dostarczanie: wdrażalne z pustej bazy danych, każdy commit gwarantowanie uruchamialny | c306e29 |
+| **V7.5** | **Konfiguracja językowa projektu: lista 206 języków / język domyślny / włączone języki, wstrzykiwanie lang i dir do generowanych plików** | 7a9afa0 + abac56d |
+| **V8.0** | **i18n całej strony: framework 206 języków (8 przetłumaczonych profesjonalnie), dwutorowa i18n z kontraktem zerowej różnicy przy OFF** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Hardening jakości: offline harness kontraktu (9 trybów, zerowa różnica OFF) + testy jednostkowe i18n-core + bramka CI + uczciwy podział README (framework 206 / przetłumaczone 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Generowane artefakty zmodernizowane do Vue 3 + Element Plus + Vite; zweryfikowane w czasie działania (40/40 asercji, udany vite build, 14 zrzutów ekranu incl. ar-SA RTL); naprawiono 3 defekty runtime** | 93a12d5 + e49330b, **Bieżąca wersja** |
 
 ---
 
@@ -276,7 +274,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 
 ## 13. Status projektu
 
-- Obecna planowana linia wersji osiągnęła **V8.0** (możliwości stale iterują: modelowanie AI, wzbogacanie danych nasiennych, system pakietów możliwości itp.).
+- Obecna planowana linia wersji osiągnęła **V9.0** (możliwości stale iterują: modelowanie AI, wzbogacanie danych nasiennych, system pakietów możliwości itp.).
 - Towarzyszący projekt demo `demo_admin` (backend 8140 / frontend 9040) obejmuje scenariusze drzewo / CRUD / główna-szczegóły / tylko-do-odczytu / druk i działa samodzielnie do weryfikacji.
 - Oba repozytoria są hostowane na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

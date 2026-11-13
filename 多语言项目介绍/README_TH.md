@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **เวอร์ชันปัจจุบัน V9.0 · สิ่งที่สร้างได้รับการปรับให้ทันสมัยเป็น Vue 3 + Element Plus + Vite; ตรวจสอบขณะรันจริง (40/40 assertions, vite build สำเร็จ, ภาพหน้าจอ 14 รูป รวม ar-SA RTL); แก้ไขข้อบกพร่อง runtime 3 จุด**
+> **V8.1** · เสริมความแข็งแกร่งด้านคุณภาพ: offline contract harness (9 โหมด, OFF zero-diff) + unit test i18n-core + CI gate + แบ่ง README อย่างตรงไปตรงมา (เฟรมเวิร์ก 206 / แปลแล้ว 8) + check-locale-keys.mjs
+> **V8.0** · i18n ทั้งหน้า: เฟรมเวิร์ก 206 ภาษา (แปลมืออาชีพ 8 ภาษา), i18n สองแทร็กพร้อมสัญญา zero-diff เมื่อ OFF
 
 ## 1. นี่คืออะไร
 
@@ -231,10 +226,10 @@ npm run serve
 
 | เอกสาร | เนื้อหา |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (จีน) | การ deploy เริ่มต้น 5 นาที ตั้งค่าตาราง นำเข้าแบบกลุ่ม จัดการเทมเพลต บัญชี แคตตาล็อก API ท่อเต็ม (มีภาพ) |
-| `docs/典型场景操作指南-演示后台demo.md` (จีน) | ตาราง 6 ตารางครอบคลุม 5 สถานการณ์ typical พร้อมเดโมรันได้และภาพหน้าจอจริง |
-| `docs/项目介绍.md` | เอกสารแนะนำโปรเจกต์ แหล่งเดียวกับไฟล์นี้ |
-| `docs/代码生成器-Vx.x-规划.md` | แผนเวอร์ชันและรายการฟีเจอร์จาก V3.1 → V7.3 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (จีน) | การ deploy เริ่มต้น 5 นาที ตั้งค่าตาราง นำเข้าแบบกลุ่ม จัดการเทมเพลต บัญชี แคตตาล็อก API ท่อเต็ม (มีภาพ) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (จีน) | ตาราง 6 ตารางครอบคลุม 5 สถานการณ์ typical พร้อมเดโมรันได้และภาพหน้าจอจริง |
+| `项目介绍.md` | เอกสารแนะนำโปรเจกต์ แหล่งเดียวกับไฟล์นี้ |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | แผนเวอร์ชันและรายการฟีเจอร์จาก V3.1 → V9.0 |
 | `codegen-web/README.md` | อ้างอิงเริ่มต้นด่วนคอนโซลฝั่งหน้า |
 
 ---
@@ -268,9 +263,12 @@ npm run serve
 | V7.0 | คำแนะนำหน้าและเมนู AI (ดูตัวอย่าง / ใช้) | V7.0 (94 บรรทัด), 45f2670 |
 | V7.1 | เสริมข้อมูลเมล็ดพันธุ์ด้วย AI (AI ถือความหมาย กฎถือโครงสร้าง) | V7.1 (42 บรรทัด), 5ca6e72 |
 | V7.2 | ผลลัพธ์ SQL ถูกเขียนลง `db/` หลังท่อสำเร็จ | eebff88 |
-| **V7.3** | **ความน่าเชื่อถือการส่งมอบ: ทดสอบ artifact ที่คอมไพล์แล้วแบบตรวจสอบตนเอง / ทางออก SQL แบบรวม / คำแนะนำ AI รายตาราง** | **V7.3 (138 บรรทัด)** |
-| **V7.4** | ส่งมอบที่ทำซ้ำได้: deploy จากฐานข้อมูลว่างได้ ทุก commit การันตีว่ารันได้ | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **เวอร์ชันปัจจุบัน** |
+| **V7.3** | **ความน่าเชื่อถือการส่งมอบ: ทดสอบ artifact ที่คอมไพล์แล้วแบบตรวจสอบตนเอง / ทางออก SQL แบบรวม / คำแนะนำ AI รายตาราง** | **V7.3 (138 บรรทัด), 696765b** |
+| **V7.4** | ส่งมอบที่ทำซ้ำได้: deploy จากฐานข้อมูลว่างได้ ทุก commit การันตีว่ารันได้ | c306e29 |
+| **V7.5** | **การตั้งค่าภาษาของโปรเจกต์: รายการ 206 ภาษา / ภาษาเริ่มต้น / ภาษาที่เปิดใช้, ฉีด lang และ dir ลงในโค้ดที่สร้าง** | 7a9afa0 + abac56d |
+| **V8.0** | **i18n ทั้งหน้า: เฟรมเวิร์ก 206 ภาษา (แปลมืออาชีพ 8 ภาษา), i18n สองแทร็กพร้อมสัญญา zero-diff เมื่อ OFF** | 9e5dd57 → 7d57aea |
+| **V8.1** | **เสริมความแข็งแกร่งด้านคุณภาพ: offline contract harness (9 โหมด, OFF zero-diff) + unit test i18n-core + CI gate + แบ่ง README อย่างตรงไปตรงมา (เฟรมเวิร์ก 206 / แปลแล้ว 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **สิ่งที่สร้างได้รับการปรับให้ทันสมัยเป็น Vue 3 + Element Plus + Vite; ตรวจสอบขณะรันจริง (40/40 assertions, vite build สำเร็จ, ภาพหน้าจอ 14 รูป รวม ar-SA RTL); แก้ไขข้อบกพร่อง runtime 3 จุด** | 93a12d5 + e49330b, **เวอร์ชันปัจจุบัน** |
 
 ---
 
@@ -278,7 +276,7 @@ npm run serve
 
 ## 13. สถานะโปรเจกต์
 
-- สายเวอร์ชันที่วางแผนปัจจุบันถึง **V8.0** แล้ว (ความสามารถยังคงiterate: สร้างโมเดล AI เสริมข้อมูลเมล็ดพันธุ์ ระบบแพ็กเกจความสามารถ ฯลฯ)
+- สายเวอร์ชันที่วางแผนปัจจุบันถึง **V9.0** แล้ว (ความสามารถยังคงiterate: สร้างโมเดล AI เสริมข้อมูลเมล็ดพันธุ์ ระบบแพ็กเกจความสามารถ ฯลฯ)
 - โปรเจกต์เดโมตัวอย่าง `demo_admin` (แบ็กเอนด์ 8140 / ฝั่งหน้า 9040) ครอบคลุมสถานการณ์ต้นไม้ / CRUD / แม่-ลูก / อ่านอย่างเดียว / พิมพ์ และรันได้เองเพื่อตรวจสอบ
 - ทั้งสองคลังโฮสต์บน Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

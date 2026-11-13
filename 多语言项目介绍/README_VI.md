@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **phiên bản hiện tại V9.0 · Artifact được tạo hiện đại hóa lên Vue 3 + Element Plus + Vite; đã xác minh lúc runtime (40/40 assertion, vite build thành công, 14 ảnh chụp incl. ar-SA RTL); sửa 3 lỗi runtime**
+> **V8.1** · Tăng cường chất lượng: harness hợp đồng offline (9 chế độ, zero-diff OFF) + unit test i18n-core + cổng CI + phân tách README trung thực (khung 206 / đã dịch 8) + check-locale-keys.mjs
+> **V8.0** · i18n toàn trang: khung 206 ngôn ngữ (8 bản dịch chuyên nghiệp), i18n hai luồng với hợp đồng zero-diff khi OFF
 
 ## 1. Đây là gì
 
@@ -229,10 +224,10 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 
 | Tài liệu | Nội dung |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (tiếng Trung) | Triển khai, bắt đầu 5 phút, cấu hình bảng, nhập hàng loạt, quản lý template, sổ, danh mục API, pipeline đầy đủ (có ảnh) |
-| `docs/典型场景操作指南-演示后台demo.md` (tiếng Trung) | 6 bảng bao phủ 5 kịch bản điển hình, kèm demo chạy được và ảnh chụp thực tế |
-| `docs/项目介绍.md` | Tài liệu giới thiệu dự án, cùng nguồn với tệp này |
-| `docs/代码生成器-Vx.x-规划.md` | Kế hoạch phiên bản và danh mục tính năng từ V3.1 → V7.3 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (tiếng Trung) | Triển khai, bắt đầu 5 phút, cấu hình bảng, nhập hàng loạt, quản lý template, sổ, danh mục API, pipeline đầy đủ (có ảnh) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (tiếng Trung) | 6 bảng bao phủ 5 kịch bản điển hình, kèm demo chạy được và ảnh chụp thực tế |
+| `项目介绍.md` | Tài liệu giới thiệu dự án, cùng nguồn với tệp này |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Kế hoạch phiên bản và danh mục tính năng từ V3.1 → V9.0 |
 | `codegen-web/README.md` | Tham khảo khởi động nhanh bảng điều khiển front-end |
 
 ---
@@ -266,9 +261,12 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 | V7.0 | Đề xuất trang & menu AI (xem trước / áp dụng) | V7.0 (94 dòng), 45f2670 |
 | V7.1 | Tăng cường dữ liệu hạt giống bằng AI (AI nắm ngữ nghĩa, quy tắc nắm cấu trúc) | V7.1 (42 dòng), 5ca6e72 |
 | V7.2 | Sản phẩm SQL được ghi vào `db/` sau khi pipeline thành công | eebff88 |
-| **V7.3** | **Độ tin cậy giao hàng: test artifact đã biên dịch tự kiểm / đầu ra SQL thống nhất / đề xuất AI từng bảng** | **V7.3 (138 dòng)** |
-| **V7.4** | Giao hàng có thể lặp lại: triển khai từ CSDL rỗng, mọi commit đảm bảo chạy được | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Phiên bản hiện tại** |
+| **V7.3** | **Độ tin cậy giao hàng: test artifact đã biên dịch tự kiểm / đầu ra SQL thống nhất / đề xuất AI từng bảng** | **V7.3 (138 dòng), 696765b** |
+| **V7.4** | Giao hàng có thể lặp lại: triển khai từ CSDL rỗng, mọi commit đảm bảo chạy được | c306e29 |
+| **V7.5** | **Cấu hình ngôn ngữ dự án: danh sách 206 ngôn ngữ / ngôn ngữ mặc định / các ngôn ngữ bật, chèn lang & dir vào mã được tạo** | 7a9afa0 + abac56d |
+| **V8.0** | **i18n toàn trang: khung 206 ngôn ngữ (8 bản dịch chuyên nghiệp), i18n hai luồng với hợp đồng zero-diff khi OFF** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Tăng cường chất lượng: harness hợp đồng offline (9 chế độ, zero-diff OFF) + unit test i18n-core + cổng CI + phân tách README trung thực (khung 206 / đã dịch 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Artifact được tạo hiện đại hóa lên Vue 3 + Element Plus + Vite; đã xác minh lúc runtime (40/40 assertion, vite build thành công, 14 ảnh chụp incl. ar-SA RTL); sửa 3 lỗi runtime** | 93a12d5 + e49330b, **Phiên bản hiện tại** |
 
 ---
 
@@ -276,7 +274,7 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 
 ## 13. Trạng thái dự án
 
-- Dòng phiên bản đã lên kế hoạch hiện tại đã đạt **V8.0** (năng lực tiếp tục lặp: mô hình hóa AI, tăng cường dữ liệu hạt giống, hệ thống gói năng lực,...).
+- Dòng phiên bản đã lên kế hoạch hiện tại đã đạt **V9.0** (năng lực tiếp tục lặp: mô hình hóa AI, tăng cường dữ liệu hạt giống, hệ thống gói năng lực,...).
 - Dự án demo đi kèm `demo_admin` (back-end 8140 / front-end 9040) bao phủ các kịch bản cây / CRUD / cha-con / chỉ đọc / in, chạy độc lập để xác minh.
 - Cả hai kho đều được host trên Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **gjeldende versjon V9.0 · Genererte artefakter modernisert til Vue 3 + Element Plus + Vite; runtime-verifisert (40/40 asserts, vellykket vite build, 14 skjermbilder inkl. ar-SA RTL); 3 runtime-feil rettet**
+> **V8.1** · Kvalitetsherdning: offline kontrakt-harness (9 moduser, OFF zero-diff) + i18n-core enhetstester + CI-port + ærlig README-inndeling (rammeverk 206 / oversatt 8) + check-locale-keys.mjs
+> **V8.0** · Fullside-i18n: rammeverk med 206 språk (8 profesjonelt oversatt), tosporet i18n med OFF zero-diff-kontrakt
 
 ## 1. Hva er dette
 
@@ -230,10 +225,10 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 
 | Dokument | Innhold |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (kinesisk) | Utplassering, 5 minutters start, tabellkonfig, batch-inntak, malhåndtering, hovedbok, API-katalog, fullstendig pipeline (med skjermbilder) |
-| `docs/典型场景操作指南-演示后台demo.md` (kinesisk) | 6 tabeller som dekker 5 typiske scenarier, med kjørbar demo og virkelige skjermbilder |
-| `docs/项目介绍.md` | Prosjektintroduksjonsdokument, samme kilde som denne filen |
-| `docs/代码生成器-Vx.x-规划.md` | Versjonsplaner og funksjonsinventarer fra V3.1 → V7.3 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (kinesisk) | Utplassering, 5 minutters start, tabellkonfig, batch-inntak, malhåndtering, hovedbok, API-katalog, fullstendig pipeline (med skjermbilder) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kinesisk) | 6 tabeller som dekker 5 typiske scenarier, med kjørbar demo og virkelige skjermbilder |
+| `项目介绍.md` | Prosjektintroduksjonsdokument, samme kilde som denne filen |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versjonsplaner og funksjonsinventarer fra V3.1 → V9.0 |
 | `codegen-web/README.md` | Forreste del konsoll rask start referanse |
 
 ---
@@ -267,9 +262,12 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 | V7.0 | AI side & meny anbefalinger (preview / apply) | V7.0 (94 linjer), 45f2670 |
 | V7.1 | Seed-data AI forbedring (AI eier semantikk, regler eier struktur) | V7.1 (42 linjer), 5ca6e72 |
 | V7.2 | SQL leverte objekter skrevet til `db/` etter vellykket pipeline | eebff88 |
-| **V7.3** | **Leveringspålitelighet: selvkontroll kompilerte artefakt tester / enhetlig SQL leveringsutgang / tabellstyrte AI anbefalinger** | **V7.3 (138 linjer)** |
-| **V7.4** | Gjennomsnittlig levering: deployerbar fra en tom database, hvert commit garantert kjørbar | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Nåværende versjon** |
+| **V7.3** | **Leveringspålitelighet: selvkontroll kompilerte artefakt tester / enhetlig SQL leveringsutgang / tabellstyrte AI anbefalinger** | **V7.3 (138 linjer), 696765b** |
+| **V7.4** | Gjennomsnittlig levering: deployerbar fra en tom database, hvert commit garantert kjørbar | c306e29 |
+| **V7.5** | **Prosjektspråkkonfigurasjon: liste over 206 språk / standardspråk / aktiverte språk, injisering av lang & dir i generert kode** | 7a9afa0 + abac56d |
+| **V8.0** | **Fullside-i18n: rammeverk med 206 språk (8 profesjonelt oversatt), tosporet i18n med OFF zero-diff-kontrakt** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Kvalitetsherdning: offline kontrakt-harness (9 moduser, OFF zero-diff) + i18n-core enhetstester + CI-port + ærlig README-inndeling (rammeverk 206 / oversatt 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Genererte artefakter modernisert til Vue 3 + Element Plus + Vite; runtime-verifisert (40/40 asserts, vellykket vite build, 14 skjermbilder inkl. ar-SA RTL); 3 runtime-feil rettet** | 93a12d5 + e49330b, **Nåværende versjon** |
 
 ---
 
@@ -277,7 +275,7 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 
 ## 13. Prosjektstatus
 
-- Den nåværende planlagte versjonslinjen har nådd **V8.0** (kapasiteter fortsetter å iterere: AI-modellering, seed-data forbedring, kapasitetspakke system osv.).
+- Den nåværende planlagte versjonslinjen har nådd **V9.0** (kapasiteter fortsetter å iterere: AI-modellering, seed-data forbedring, kapasitetspakke system osv.).
 - Et følgedemo-prosjekt `demo_admin` (bakre del 8140 / forreste del 9040) dekker tre / CRUD / master-detail / skrivebeskyttet / utskrift scenarier og kjører uavhengig for verifisering.
 - Begge repositorier hostes på Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **praegune versioon V9.0 · **
+> **V8.1** · 
+> **V8.0** · 
 
 ## 1. Mis see on
 
@@ -135,10 +130,10 @@ Tagakülg vaikimisi pordile **8120**, esikülg pordile **9530**. Vaikimisi konto
 
 ## 11. Projekti olek
 
-> **Version History · V8.0**
-> Full i18n for generated applications (including menus), 206 languages — `7d57aea`.
+> **Version History · V9.0**
+>  — `93a12d5 + e49330b`.
 
-- Praegune planeeritud versioonirida on jõudnud **V8.0**-ni.
+- Praegune planeeritud versioonirida on jõudnud **V9.0**-ni.
 - Mõlemad repositooriumid hostitakse Gitees: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Autor

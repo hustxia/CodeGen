@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **trenutna verzija V9.0 · Generirani artefakti modernizirani na Vue 3 + Element Plus + Vite; provjereno u izvođenju (40/40 tvrdnji, uspješan vite build, 14 snimki zaslona incl. ar-SA RTL); popravljene 3 izvedbene greške**
+> **V8.1** · Očvršćivanje kvalitete: offline ugovorni harness (9 načina, nulta razlika OFF) + jedinični testovi i18n-core + CI kapija + poštena podjela README (okvir 206 / prevedenih 8) + check-locale-keys.mjs
+> **V8.0** · i18n cijele stranice: okvir 206 jezika (8 stručno prevedenih), dvokolosiječna i18n s ugovorom nulte razlike u OFF
 
 ## 1. Što je ovo
 
@@ -232,10 +227,10 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 
 | Dokument | Sadržaj |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (kineski) | Postavljanje, 5-minutni početak, konfiguracija tablica, prijem u serijama, upravljanje predlošcima, knjigovodstvo, API katalog, cijeli proces (sa snimkama zaslona) |
-| `docs/典型场景操作指南-演示后台demo.md` (kineski) | 6 tablica koje pokrivaju 5 tipičnih scenarija, s pokretnim demo primjerom i stvarnim snimkama zaslona |
-| `docs/项目介绍.md` | Dokument s predstavljanjem projekta, isti izvor kao ova datoteka |
-| `docs/代码生成器-Vx.x-规划.md` | Verzijski planovi i popisi funkcionalnosti od V3.1 → V7.3 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (kineski) | Postavljanje, 5-minutni početak, konfiguracija tablica, prijem u serijama, upravljanje predlošcima, knjigovodstvo, API katalog, cijeli proces (sa snimkama zaslona) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kineski) | 6 tablica koje pokrivaju 5 tipičnih scenarija, s pokretnim demo primjerom i stvarnim snimkama zaslona |
+| `项目介绍.md` | Dokument s predstavljanjem projekta, isti izvor kao ova datoteka |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verzijski planovi i popisi funkcionalnosti od V3.1 → V9.0 |
 | `codegen-web/README.md` | Referenca za brzi početak na front-end konzoli |
 
 ---
@@ -269,9 +264,12 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 | V7.0 | AI preporuke stranica i izbornika (preview / apply) | V7.0 (94 redaka), 45f2670 |
 | V7.1 | AI poboljšanje seed podataka (AI posjeduje semantiku, pravila posjeduju strukturu) | V7.1 (42 redaka), 5ca6e72 |
 | V7.2 | SQL isporučeni objekti upisani u `db/` nakon uspješnog procesa | eebff88 |
-| **V7.3** | **Pouzdanost isporuke: samoprovjera kompilirani testovi artefakata / jedinstveni SQL izlaz isporuke / AI preporuke na razini tablice** | **V7.3 (138 redaka)** |
-| **V7.4** | Ponovljiva isporuka: postavljiva iz prazne baze podataka, svaki commit jamčivo pokretan | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Trenutna verzija** |
+| **V7.3** | **Pouzdanost isporuke: samoprovjera kompilirani testovi artefakata / jedinstveni SQL izlaz isporuke / AI preporuke na razini tablice** | **V7.3 (138 redaka), 696765b** |
+| **V7.4** | Ponovljiva isporuka: postavljiva iz prazne baze podataka, svaki commit jamčivo pokretan | c306e29 |
+| **V7.5** | **Jezična konfiguracija projekta: popis 206 jezika / zadani jezik / omogućeni jezici, ubacivanje lang i dir u generirani kod** | 7a9afa0 + abac56d |
+| **V8.0** | **i18n cijele stranice: okvir 206 jezika (8 stručno prevedenih), dvokolosiječna i18n s ugovorom nulte razlike u OFF** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Očvršćivanje kvalitete: offline ugovorni harness (9 načina, nulta razlika OFF) + jedinični testovi i18n-core + CI kapija + poštena podjela README (okvir 206 / prevedenih 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Generirani artefakti modernizirani na Vue 3 + Element Plus + Vite; provjereno u izvođenju (40/40 tvrdnji, uspješan vite build, 14 snimki zaslona incl. ar-SA RTL); popravljene 3 izvedbene greške** | 93a12d5 + e49330b, **Trenutna verzija** |
 
 ---
 

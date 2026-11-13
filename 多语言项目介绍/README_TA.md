@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **தற்போதைய பதிப்பு V9.0 · உருவாக்கப்பட்ட ஆர்டிஃபேக்ட்கள் Vue 3 + Element Plus + Vite ஆக நவீனமாக்கப்பட்டன; இயக்க நேரத்தில் சரிபார்க்கப்பட்டது (40/40 உறுதிப்பாடுகள், வெற்றிகரமான vite build, ar-SA RTL உட்பட 14 ஸ்கிரீன்ஷாட்கள்); 3 இயக்க குறைபாடுகள் சரிசெய்யப்பட்டன**
+> **V8.1** · தர வலுவூட்டல்: ஆஃப்லைன் ஒப்பந்த ஹார்னஸ் (9 முறைகள், OFF பூஜ்ஜிய-வேறுபாடு) + i18n-core யூனிட் சோதனைகள் + CI கேட் + நேர்மையான README பிரிவு (கட்டமைப்பு 206 / மொழிபெயர்ப்பு 8) + check-locale-keys.mjs
+> **V8.0** · முழு பக்க i18n: 206 மொழி கட்டமைப்பு (8 தொழில்முறை மொழிபெயர்ப்பு), OFF பூஜ்ஜிய-வேறுபாடு ஒப்பந்தத்துடன் இருவழி i18n
 
 ## 1. இது என்ன
 
@@ -130,10 +125,10 @@ npm run serve
 
 ## 11. திட்ட நிலை
 
-> **Version History · V8.0**
-> Full i18n for generated applications (including menus), 206 languages — `7d57aea`.
+> **Version History · V9.0**
+> உருவாக்கப்பட்ட ஆர்டிஃபேக்ட்கள் Vue 3 + Element Plus + Vite ஆக நவீனமாக்கப்பட்டன; இயக்க நேரத்தில் சரிபார்க்கப்பட்டது (40/40 உறுதிப்பாடுகள், வெற்றிகரமான vite build, ar-SA RTL உட்பட 14 ஸ்கிரீன்ஷாட்கள்); 3 இயக்க குறைபாடுகள் சரிசெய்யப்பட்டன — `93a12d5 + e49330b`.
 
-- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V8.0** ஐ அடைந்தது.
+- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V9.0** ஐ அடைந்தது.
 - இரண்டு களஞ்சியங்களும் Gitee இல் ஹோஸ்ட் செய்யப்படுகின்றன: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. ஆசிரியர்

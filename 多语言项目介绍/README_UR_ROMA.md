@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **maujooda version V9.0 · Generated artifacts ko Vue 3 + Element Plus + Vite par modernize kiya; runtime par verify shuda (40/40 assertions, kamyab vite build, 14 screenshots incl. ar-SA RTL); 3 runtime defects theek kiye**
+> **V8.1** · Quality hardening: offline contract harness (9 modes, OFF zero-diff) + i18n-core unit tests + CI gate + imandaar README taqseem (framework 206 / tarjuma 8) + check-locale-keys.mjs
+> **V8.0** · Full-page i18n: 206 zabanoon ka framework (8 professional tarjuma shuda), OFF zero-diff contract ke saath dual-track i18n
 
 ## 1. Ye kya hai
 
@@ -230,10 +225,10 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 
 | Document | Content |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (Chinese) | Deployment, 5-minute start, table config, batch intake, template management, ledger, API catalog, full pipeline (with screenshots) |
-| `docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
-| `docs/项目介绍.md` | Project introduction document, same source as this file |
-| `docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V7.3 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (Chinese) | Deployment, 5-minute start, table config, batch intake, template management, ledger, API catalog, full pipeline (with screenshots) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
+| `项目介绍.md` | Project introduction document, same source as this file |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V9.0 |
 | `codegen-web/README.md` | Frontend console quick-start reference |
 
 ---
@@ -267,9 +262,12 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 | V7.0 | AI page & menu recommendations (preview / apply) | V7.0 (94 lines), 45f2670 |
 | V7.1 | Seed-data AI enhancement (AI owns semantics, rules own structure) | V7.1 (42 lines), 5ca6e72 |
 | V7.2 | SQL deliverables written to `db/` after successful pipeline | eebff88 |
-| **V7.3** | **Delivery trustworthiness: self-check compiled artifact tests / unified SQL delivery outlet / per-table AI recommendations** | **V7.3 (138 lines)** |
-| **V7.4** | Repeatable delivery: deployable from an empty database, every commit guaranteed runnable | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Current version** |
+| **V7.3** | **Delivery trustworthiness: self-check compiled artifact tests / unified SQL delivery outlet / per-table AI recommendations** | **V7.3 (138 lines), 696765b** |
+| **V7.4** | Repeatable delivery: deployable from an empty database, every commit guaranteed runnable | c306e29 |
+| **V7.5** | **Project ki zubaan configuration: 206 zabanoon ki list / default zubaan / enabled zabanein, generated code mein lang aur dir injection** | 7a9afa0 + abac56d |
+| **V8.0** | **Full-page i18n: 206 zabanoon ka framework (8 professional tarjuma shuda), OFF zero-diff contract ke saath dual-track i18n** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Quality hardening: offline contract harness (9 modes, OFF zero-diff) + i18n-core unit tests + CI gate + imandaar README taqseem (framework 206 / tarjuma 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Generated artifacts ko Vue 3 + Element Plus + Vite par modernize kiya; runtime par verify shuda (40/40 assertions, kamyab vite build, 14 screenshots incl. ar-SA RTL); 3 runtime defects theek kiye** | 93a12d5 + e49330b, **Current version** |
 
 ---
 
@@ -277,7 +275,7 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 
 ## 13. Project Status
 
-- Mazkoor planned version line **V8.0** tak pahunch chuki hai (capabilities iterate hoti rahtin hain: AI modeling, seed-data enhancement, capability-pack system, waghaira).
+- Mazkoor planned version line **V9.0** tak pahunch chuki hai (capabilities iterate hoti rahtin hain: AI modeling, seed-data enhancement, capability-pack system, waghaira).
 - Ek companion demo project `demo_admin` (backend 8140 / frontend 9040) tree / CRUD / master-detail / read-only / print scenarios cover karta hai aur verification ke liye standalone run hota hai.
 - Dono repositories Gitee par host hain: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

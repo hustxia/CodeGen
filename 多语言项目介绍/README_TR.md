@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **mevcut sürüm V9.0 · Üretilen artefaktlar Vue 3 + Element Plus + Vite'a modernize edildi; çalışma zamanında doğrulandı (40/40 iddia, başarılı vite build, ar-SA RTL dahil 14 ekran görüntüsü); 3 çalışma zamanı hatası giderildi**
+> **V8.1** · Kalite sertleştirme: çevrimdışı sözleşme düzeneği (9 mod, OFF sıfır fark) + i18n-core birim testleri + CI kapısı + dürüst README ayrımı (çerçeve 206 / çevrili 8) + check-locale-keys.mjs
+> **V8.0** · Tam sayfa i18n: 206 dilli çerçeve (8'i profesyonelce çevrildi), OFF sıfır fark sözleşmeli çift hatlı i18n
 
 ## 1. Bu Nedir
 
@@ -229,10 +224,10 @@ npm run serve
 
 | Belge | İçerik |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (Çince) | Dağıtım, 5 dakikalık başlangıç, tablo yapılandırma, toplu alım, şablon yönetimi, defter, API kataloğu, tam hat (ekran görüntüleriyle) |
-| `docs/典型场景操作指南-演示后台demo.md` (Çince) | 5 tipik senaryoyu kapsayan 6 tablo, çalıştırılabilir demo ve gerçek çalışma ekran görüntüleriyle |
-| `docs/项目介绍.md` | Proje tanıtım belgesi, bu dosyayla aynı kaynak |
-| `docs/代码生成器-Vx.x-规划.md` | V3.1 → V7.3 arasındaki sürüm planları ve özellik envanterleri |
+| `../codegen-server/docs/代码生成器-操作手册.md` (Çince) | Dağıtım, 5 dakikalık başlangıç, tablo yapılandırma, toplu alım, şablon yönetimi, defter, API kataloğu, tam hat (ekran görüntüleriyle) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Çince) | 5 tipik senaryoyu kapsayan 6 tablo, çalıştırılabilir demo ve gerçek çalışma ekran görüntüleriyle |
+| `项目介绍.md` | Proje tanıtım belgesi, bu dosyayla aynı kaynak |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.0 arasındaki sürüm planları ve özellik envanterleri |
 | `codegen-web/README.md` | Ön yüz konsol hızlı başlangıç referansı |
 
 ---
@@ -266,9 +261,12 @@ npm run serve
 | V7.0 | Yapay zeka sayfa ve menü önerileri (önizleme / uygulama) | V7.0 (94 satır), 45f2670 |
 | V7.1 | Tohum-veri yapay zeka geliştirmesi (yapay zeka semantiğe sahip, kurallar yapıya) | V7.1 (42 satır), 5ca6e72 |
 | V7.2 | Başarılı hatın ardından SQL teslimatları `db/` dizinine yazılır | eebff88 |
-| **V7.3** | **Teslimat güvenilirliği: öz denetimli derlenen artefakt testleri / birleşik SQL teslimat çıkışı / tablo başına yapay zeka önerileri** | **V7.3 (138 satır)** |
-| **V7.4** | Tekrarlanabilir teslimat: boş bir veritabanından dağıtılabilir, her commit çalıştırılabilir garanti edilir | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Mevcut sürüm** |
+| **V7.3** | **Teslimat güvenilirliği: öz denetimli derlenen artefakt testleri / birleşik SQL teslimat çıkışı / tablo başına yapay zeka önerileri** | **V7.3 (138 satır), 696765b** |
+| **V7.4** | Tekrarlanabilir teslimat: boş bir veritabanından dağıtılabilir, her commit çalıştırılabilir garanti edilir | c306e29 |
+| **V7.5** | **Proje dil yapılandırması: 206 dillik liste / varsayılan dil / etkin diller, üretilen koda lang ve dir enjeksiyonu** | 7a9afa0 + abac56d |
+| **V8.0** | **Tam sayfa i18n: 206 dilli çerçeve (8'i profesyonelce çevrildi), OFF sıfır fark sözleşmeli çift hatlı i18n** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Kalite sertleştirme: çevrimdışı sözleşme düzeneği (9 mod, OFF sıfır fark) + i18n-core birim testleri + CI kapısı + dürüst README ayrımı (çerçeve 206 / çevrili 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Üretilen artefaktlar Vue 3 + Element Plus + Vite'a modernize edildi; çalışma zamanında doğrulandı (40/40 iddia, başarılı vite build, ar-SA RTL dahil 14 ekran görüntüsü); 3 çalışma zamanı hatası giderildi** | 93a12d5 + e49330b, **Mevcut sürüm** |
 
 ---
 
@@ -276,7 +274,7 @@ npm run serve
 
 ## 13. Proje Durumu
 
-- Mevcut planlanan sürüm hattı **V8.0** seviyesine ulaştı (yetenekler sürekli yinelemede: yapay zeka modelleme, tohum-veri geliştirmesi, yetenek-paketi sistemi vb.).
+- Mevcut planlanan sürüm hattı **V9.0** seviyesine ulaştı (yetenekler sürekli yinelemede: yapay zeka modelleme, tohum-veri geliştirmesi, yetenek-paketi sistemi vb.).
 - Eşlik eden demo projesi `demo_admin` (arka uç 8140 / ön uç 9040), ağaç / CRUD / ana-ayrıntı / salt okunur / yazdırma senaryolarını kapsar ve doğrulama için bağımsız çalışır.
 - Her iki depo da Gitee üzerinde barındırılır: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

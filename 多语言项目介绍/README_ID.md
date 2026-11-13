@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **versi saat ini V9.0 · Artefak yang dihasilkan dimodernisasi ke Vue 3 + Element Plus + Vite; terverifikasi saat runtime (40/40 assertion, vite build sukses, 14 tangkapan layar incl. ar-SA RTL); 3 defect runtime diperbaiki**
+> **V8.1** · Penguatan kualitas: harness kontrak offline (9 mode, zero-diff OFF) + unit test i18n-core + gate CI + pembagian README yang jujur (framework 206 / diterjemahkan 8) + check-locale-keys.mjs
+> **V8.0** · i18n halaman penuh: framework 206 bahasa (8 diterjemahkan profesional), i18n jalur ganda dengan kontrak zero-diff saat OFF
 
 ## 1. Apa Ini
 
@@ -231,10 +226,10 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 
 | Dokumen | Konten |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (dalam bahasa Mandarin) | Penyebaran, mulai 5 menit, konfigurasi tabel, masukan batch, manajemen template, buku besar, katalog API, pipeline penuh (dengan tangkapan layar) |
-| `docs/典型场景操作指南-演示后台demo.md` (dalam bahasa Mandarin) | 6 tabel mencakup 5 skenario tipikal, dengan demo yang dapat dijalankan dan tangkapan layar jalan nyata |
-| `docs/项目介绍.md` | Dokumen pengantar proyek, sumber yang sama dengan file ini |
-| `docs/代码生成器-Vx.x-规划.md` | Rencana versi dan inventaris fitur dari V3.1 → V7.3 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (dalam bahasa Mandarin) | Penyebaran, mulai 5 menit, konfigurasi tabel, masukan batch, manajemen template, buku besar, katalog API, pipeline penuh (dengan tangkapan layar) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (dalam bahasa Mandarin) | 6 tabel mencakup 5 skenario tipikal, dengan demo yang dapat dijalankan dan tangkapan layar jalan nyata |
+| `项目介绍.md` | Dokumen pengantar proyek, sumber yang sama dengan file ini |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Rencana versi dan inventaris fitur dari V3.1 → V9.0 |
 | `codegen-web/README.md` | Referensi mulai cepat konsol front-end |
 
 ---
@@ -268,9 +263,12 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 | V7.0 | Rekomendasi halaman & menu AI (pratinjau / terapkan) | V7.0 (94 baris), 45f2670 |
 | V7.1 | Peningkatan data-bibit AI (AI memiliki semantik, aturan memiliki struktur) | V7.1 (42 baris), 5ca6e72 |
 | V7.2 | Hasil SQL ditulis ke `db/` setelah pipeline berhasil | eebff88 |
-| **V7.3** | **Keandalan pengiriman: pengujian artefak terkompilasi pemeriksaan-mandiri / saluran pengiriman SQL terpadu / rekomendasi AI per tabel** | **V7.3 (138 baris)** |
-| **V7.4** | Pengiriman yang dapat diulang: dapat diterapkan dari basis data kosong, setiap commit terjamin dapat dijalankan | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Versi saat ini** |
+| **V7.3** | **Keandalan pengiriman: pengujian artefak terkompilasi pemeriksaan-mandiri / saluran pengiriman SQL terpadu / rekomendasi AI per tabel** | **V7.3 (138 baris), 696765b** |
+| **V7.4** | Pengiriman yang dapat diulang: dapat diterapkan dari basis data kosong, setiap commit terjamin dapat dijalankan | c306e29 |
+| **V7.5** | **Konfigurasi bahasa proyek: daftar 206 bahasa / bahasa default / bahasa yang diaktifkan, injeksi lang & dir ke hasil yang dibuat** | 7a9afa0 + abac56d |
+| **V8.0** | **i18n halaman penuh: framework 206 bahasa (8 diterjemahkan profesional), i18n jalur ganda dengan kontrak zero-diff saat OFF** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Penguatan kualitas: harness kontrak offline (9 mode, zero-diff OFF) + unit test i18n-core + gate CI + pembagian README yang jujur (framework 206 / diterjemahkan 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Artefak yang dihasilkan dimodernisasi ke Vue 3 + Element Plus + Vite; terverifikasi saat runtime (40/40 assertion, vite build sukses, 14 tangkapan layar incl. ar-SA RTL); 3 defect runtime diperbaiki** | 93a12d5 + e49330b, **Versi saat ini** |
 
 ---
 
@@ -278,7 +276,7 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 
 ## 13. Status Proyek
 
-- Garis versi yang direncanakan saat ini telah mencapai **V8.0** (kapabilitas terus beriterasi: pemodelan AI, peningkatan data-bibit, sistem paket-kapabilitas, dll.).
+- Garis versi yang direncanakan saat ini telah mencapai **V9.0** (kapabilitas terus beriterasi: pemodelan AI, peningkatan data-bibit, sistem paket-kapabilitas, dll.).
 - Proyek demo pendamping `demo_admin` (back-end 8140 / front-end 9040) mencakup skenario pohon / CRUD / master-detail / hanya-baca / cetak dan berjalan mandiri untuk verifikasi.
 - Kedua repositori dihosting di Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

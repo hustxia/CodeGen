@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **versiunea curentă V9.0 · Artefactele generate modernizate la Vue 3 + Element Plus + Vite; verificate la runtime (40/40 aserțiuni, vite build reușit, 14 capturi incl. ar-SA RTL); 3 defecte de runtime reparate**
+> **V8.1** · Întărirea calității: harness offline de contract (9 moduri, diferență zero OFF) + teste unitare i18n-core + poartă CI + împărțire onestă în README (cadru 206 / traduse 8) + check-locale-keys.mjs
+> **V8.0** · i18n pe pagina întreagă: cadru cu 206 limbi (8 traduse profesional), i18n pe două căi cu contract de diferență zero în OFF
 
 ## 1. Ce este acesta
 
@@ -229,10 +224,10 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 
 | Document | Conținut |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (chineză) | Deployment, start în 5 minute, config tabel, preluare în lot, management șabloane, ledger, catalog API, pipeline complet (cu capturi de ecran) |
-| `docs/典型场景操作指南-演示后台demo.md` (chineză) | 6 tabele acoperind 5 scenarii tipice, cu demo rulabil și capturi de ecran din rulare reală |
-| `docs/项目介绍.md` | Document de introducere în proiect, aceeași sursă ca acest fișier |
-| `docs/代码生成器-Vx.x-规划.md` | Planuri de versiune și inventare de funcționalități de la V3.1 → V7.3 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (chineză) | Deployment, start în 5 minute, config tabel, preluare în lot, management șabloane, ledger, catalog API, pipeline complet (cu capturi de ecran) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (chineză) | 6 tabele acoperind 5 scenarii tipice, cu demo rulabil și capturi de ecran din rulare reală |
+| `项目介绍.md` | Document de introducere în proiect, aceeași sursă ca acest fișier |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Planuri de versiune și inventare de funcționalități de la V3.1 → V9.0 |
 | `codegen-web/README.md` | Referință rapidă de pornire pentru consola frontend |
 
 ---
@@ -266,9 +261,12 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 | V7.0 | Recomandări pagini & meniuri AI (previzualizare / aplicare) | V7.0 (94 linii), 45f2670 |
 | V7.1 | Îmbunătățire seed-data AI (AI deține semantica, regulile dețin structura) | V7.1 (42 linii), 5ca6e72 |
 | V7.2 | Livrabile SQL scrise în `db/` după pipeline reușit | eebff88 |
-| **V7.3** | **Încredere livrare: teste artefacte compilate auto-verificate / ieșire unică livrare SQL / recomandări AI per tabel** | **V7.3 (138 linii)** |
-| **V7.4** | Livrare repetabilă: implementabil dintr-o bază de date goală, fiecare commit garantat rulabil | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Versiunea curentă** |
+| **V7.3** | **Încredere livrare: teste artefacte compilate auto-verificate / ieșire unică livrare SQL / recomandări AI per tabel** | **V7.3 (138 linii), 696765b** |
+| **V7.4** | Livrare repetabilă: implementabil dintr-o bază de date goală, fiecare commit garantat rulabil | c306e29 |
+| **V7.5** | **Configurarea lingvistică a proiectului: lista de 206 limbi / limba implicită / limbile activate, injectarea lang și dir în codul generat** | 7a9afa0 + abac56d |
+| **V8.0** | **i18n pe pagina întreagă: cadru cu 206 limbi (8 traduse profesional), i18n pe două căi cu contract de diferență zero în OFF** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Întărirea calității: harness offline de contract (9 moduri, diferență zero OFF) + teste unitare i18n-core + poartă CI + împărțire onestă în README (cadru 206 / traduse 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Artefactele generate modernizate la Vue 3 + Element Plus + Vite; verificate la runtime (40/40 aserțiuni, vite build reușit, 14 capturi incl. ar-SA RTL); 3 defecte de runtime reparate** | 93a12d5 + e49330b, **Versiunea curentă** |
 
 ---
 
@@ -276,7 +274,7 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 
 ## 13. Starea proiectului
 
-- Linia de versiune planificată curentă a ajuns la **V8.0** (capacitățile continuă să evolueze: modelare AI, îmbunătățire seed-data, sistem de pachete de capacități etc.).
+- Linia de versiune planificată curentă a ajuns la **V9.0** (capacitățile continuă să evolueze: modelare AI, îmbunătățire seed-data, sistem de pachete de capacități etc.).
 - Un proiect demo însoțitor `demo_admin` (backend 8140 / frontend 9040) acoperă scenariile arbore / CRUD / stăpân-detail / doar-citire / tipărire și rulează independent pentru verificare.
 - Ambele depozite sunt găzduite pe Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

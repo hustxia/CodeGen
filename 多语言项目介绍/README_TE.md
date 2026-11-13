@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **ప్రస్తుత వెర్షన్ V9.0 · జనరేట్ చేసిన ఆర్టిఫ్యాక్ట్‌లు Vue 3 + Element Plus + Vite కు ఆధునీకరించబడ్డాయి; రన్‌టైమ్‌లో ధృవీకరించబడింది (40/40 అసర్షన్లు, విజయవంతమైన vite build, ar-SA RTL తో సహా 14 స్క్రీన్‌షాట్‌లు); 3 రన్‌టైమ్ లోపాలు సరిచేయబడ్డాయి**
+> **V8.1** · నాణ్యత సుధారణ: ఆఫ్‌లైన్ ఒప్పంద హార్నెస్ (9 మోడ్‌లు, OFF జీరో-డిఫ్) + i18n-core యూనిట్ టెస్ట్‌లు + CI గేట్ + నిజాయితీ README విభజన (ఫ్రేమ్‌వర్క్ 206 / అనువదించిన 8) + check-locale-keys.mjs
+> **V8.0** · పూర్తి పేజీ i18n: 206 భాషల ఫ్రేమ్‌వర్క్ (8 వృత్తిపరంగా అనువదించబడింది), OFF జీరో-డిఫ్ ఒప్పందంతో ద్విమార్గ i18n
 
 ## 1. ఇది ఏమిటి
 
@@ -130,10 +125,10 @@ npm run serve
 
 ## 11. ప్రాజెక్ట్ స్థితి
 
-> **Version History · V8.0**
-> Full i18n for generated applications (including menus), 206 languages — `7d57aea`.
+> **Version History · V9.0**
+> జనరేట్ చేసిన ఆర్టిఫ్యాక్ట్‌లు Vue 3 + Element Plus + Vite కు ఆధునీకరించబడ్డాయి; రన్‌టైమ్‌లో ధృవీకరించబడింది (40/40 అసర్షన్లు, విజయవంతమైన vite build, ar-SA RTL తో సహా 14 స్క్రీన్‌షాట్‌లు); 3 రన్‌టైమ్ లోపాలు సరిచేయబడ్డాయి — `93a12d5 + e49330b`.
 
-- ప్రస్తుతం ప్రణాళిక చేయబడిన వెర్షన్ లైన్ **V8.0** ను చేరుకుంది.
+- ప్రస్తుతం ప్రణాళిక చేయబడిన వెర్షన్ లైన్ **V9.0** ను చేరుకుంది.
 - రెండు రిపోజిటరీలు Gitee లో హోస్ట్ చేయబడ్డాయి: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. రచయిత

@@ -8,14 +8,9 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
+> **nykyinen versio V9.0 · Generoidut artefaktit päivitetty Vue 3 + Element Plus + Viteen; ajonaikaisesti todennettu (40/40 assertiota, onnistunut vite build, 14 kuvakaappausta incl. ar-SA RTL); 3 ajonaikaista virhettä korjattu**
+> **V8.1** · Laadun vahvistus: offline-sopimustesti (9 tilaa, OFF zero-diff) + i18n-core-yksikkötestit + CI-portti + rehellinen README-jako (kehys 206 / käännetty 8) + check-locale-keys.mjs
+> **V8.0** · Koko sivun i18n: 206 kielen kehys (8 ammattimaisesti käännetty), kaksiraiteinen i18n OFF zero-diff-sopimuksella
 
 ## 1. Mikä tämä on
 
@@ -230,10 +225,10 @@ Etupää käyttää oletusarvoisesti porttia **9530**, välittää `/dev-api` ta
 
 | Asiakirja | Sisältö |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (kiina) | Asennus, 5 minuutin aloitus, taulukkonfig, erätulonti, mallinhallinta, kirjanpito, API-luettelo, täysi putki (kuvakaappauksilla) |
-| `docs/典型场景操作指南-演示后台demo.md` (kiina) | 6 taulua jotka kattavat 5 tyypillistä skenaariota, ajettava demo ja todelliset kuvakaappaukset |
-| `docs/项目介绍.md` | Projektin esittely asiakirja, sama lähde kuin tämä tiedosto |
-| `docs/代码生成器-Vx.x-规划.md` | Versiosuunnitelmat ja omaisuusinventaariot V3.1 → V7.3 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (kiina) | Asennus, 5 minuutin aloitus, taulukkonfig, erätulonti, mallinhallinta, kirjanpito, API-luettelo, täysi putki (kuvakaappauksilla) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kiina) | 6 taulua jotka kattavat 5 tyypillistä skenaariota, ajettava demo ja todelliset kuvakaappaukset |
+| `项目介绍.md` | Projektin esittely asiakirja, sama lähde kuin tämä tiedosto |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versiosuunnitelmat ja omaisuusinventaariot V3.1 → V9.0 |
 | `codegen-web/README.md` | Etupääkonsolin nopea aloitusviite |
 
 ---
@@ -267,9 +262,12 @@ Etupää käyttää oletusarvoisesti porttia **9530**, välittää `/dev-api` ta
 | V7.0 | AI sivu & valikkosuositukset (preview / apply) | V7.0 (94 riviä), 45f2670 |
 | V7.1 | Siemendatan AI-parannus (AI hallitsee semantiikkaa, säännöt hallitsevat rakennetta) | V7.1 (42 riviä), 5ca6e72 |
 | V7.2 | SQL-toimitusobjektit kirjoitettu kohteeseen `db/` putken onnistuneen jälkeen | eebff88 |
-| **V7.3** | **Toimitusluotettavuus: itsetarkistus käännetyt artefaktitestit / yhtenäinen SQL-toimitusulostulo / taulukohtaiset AI-suositukset** | **V7.3 (138 riviä)** |
-| **V7.4** | Toistettava toimitus: deployoitavissa tyhjästä tietokannasta, jokainen commit taattu ajettavaksi | — |
-| **V8.0** | Full i18n for generated apps (incl. menus), 206 languages | **Nykyinen versio** |
+| **V7.3** | **Toimitusluotettavuus: itsetarkistus käännetyt artefaktitestit / yhtenäinen SQL-toimitusulostulo / taulukohtaiset AI-suositukset** | **V7.3 (138 riviä), 696765b** |
+| **V7.4** | Toistettava toimitus: deployoitavissa tyhjästä tietokannasta, jokainen commit taattu ajettavaksi | c306e29 |
+| **V7.5** | **Projektin kieliasetukset: 206 kielen luettelo / oletuskieli / käytössä olevat kielet, lang- ja dir-kenttien lisäys generoituihin tiedostoihin** | 7a9afa0 + abac56d |
+| **V8.0** | **Koko sivun i18n: 206 kielen kehys (8 ammattimaisesti käännetty), kaksiraiteinen i18n OFF zero-diff-sopimuksella** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Laadun vahvistus: offline-sopimustesti (9 tilaa, OFF zero-diff) + i18n-core-yksikkötestit + CI-portti + rehellinen README-jako (kehys 206 / käännetty 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Generoidut artefaktit päivitetty Vue 3 + Element Plus + Viteen; ajonaikaisesti todennettu (40/40 assertiota, onnistunut vite build, 14 kuvakaappausta incl. ar-SA RTL); 3 ajonaikaista virhettä korjattu** | 93a12d5 + e49330b, **Nykyinen versio** |
 
 ---
 
@@ -277,7 +275,7 @@ Etupää käyttää oletusarvoisesti porttia **9530**, välittää `/dev-api` ta
 
 ## 13. Projektin tila
 
-- Nykyinen suunniteltu versiolinja on saavuttanut **V8.0** (ominaisuudet jatkavat iterointia: AI-mallinnus, siemendatan parannus, ominaisuuspakettijärjestelmä jne.).
+- Nykyinen suunniteltu versiolinja on saavuttanut **V9.0** (ominaisuudet jatkavat iterointia: AI-mallinnus, siemendatan parannus, ominaisuuspakettijärjestelmä jne.).
 - Mukana oleva demo-projekti `demo_admin` (takapää 8140 / etupää 9040) kattaa puun / CRUD:n / master-detail:n / vain luku / tulostus skenaariot ja toimii itsenäisesti verifiointia varten.
 - Molemmat säilöt isännöidään Giteessä: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
