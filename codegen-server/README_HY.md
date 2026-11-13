@@ -1,0 +1,160 @@
+# Majiang · Կոդ Գեներատոր (CodeGen) — Նախագծի Նկատարություն
+
+> Լեզուներ: [简体中文](README_ZH.md) · [繁體中文](README_ZH_TW.md) · [English](README.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · **Հայերեն** · [ქართული](README_KA.md)
+
+---
+
+> **Spring Boot + Vue**-ի համար նախատեսված բազմապրոյեկտ կոդ գեներատոր: սկսվելով տվյալների բազայի աղյուսակների կառույցներից, այն ստեղծում է **կոմպիլյացվող, գործարկելի** բիզնես կոդ front-end և back-end համար մենյուներով և իրավունքներով, և կառավարում է ամբողջ մատակարարման ցիկլը՝ սկավառակին գրելով, պահուստային պատճենով, գլխավոր գրքով (ledger) և հետադարձումով։
+
+GitHub: https://github.com/hustxia/CodeGen
+
+## 1. Ինչ է սա
+
+CodeGen-ը "աղյուսակներով ղեկավարվող" կոդ գործարան է։ Բերեք ձեր բիզնես աղյուսակները (տվյալների բազայից ներմուծմամբ կամ DDL տեղադրելով), կարգավորեք դաշտերը և գեներացիայի անջատիչները, ապա սեղմեք "Գեներացնել" — այնուհետև ստեղծում է back-end Entity/Mapper/Service/Controller/DTO/VO, front-end `api.js` և Vue էջեր, մենյուներ և երթուղիներ, նույնիսկ A4 տպագրության էջեր և ինտեգրացիոն թեստի կմախքներ, և ամեն ինչ անվտանգ գրում է ձեր նպատակային նախագծի մեջ։
+
+Դա միայն "կոդի դուրս մղում" չէ — դա **մատակարարման խողովակ է որակի դարպասներով և հետադարձման հնարավորությամբ**։
+
+## 2. Ովքեր են օգտատերերը, և ինչպես կօգտվեն
+
+| Օգտատեր | Տիպիկ պահանջ | Ուղին, որը տալիս է պլատֆորմը |
+| --- | --- | --- |
+| Back-end ծրագրավորող | Ձեռքում կան մի քանի աղյուսակներ (կամ DDL), ցանկանում է արագ սկսել CRUD | Աղյուսակի կարգավորման էջ. ներմուծում → դաշտերի կարգավորում → մեկ սեղմումով գեներացնել |
+| Լիարժեք սթեք / անկախ ծրագրավորող | Ցանկանում է զրոյից կառուցել ամբողջական համակարգ (մուտք, իրավունքներ, բառարան) | Խողովակի էջ. մեկ նախադասությամբ համակարգ կառուցել |
+| Թիմի ղեկավար | Ցանկանում է միավորել կոդի ոճը, կոդի ստանդարտները, պանակի կառուցվածքը | Համակարգի կառավարում. մեկ համակարգ = մեկ ելքի կարգավորում, խմբաքանակով ուժի մեջ |
+| Պլատֆորմի սպասարկող | Ցանկանում է փոխել կաղապարները առանց կոդը փոխելու | Կաղապարների կառավորում. առցանց խմբագրելի, պահպանելիս անմիջապես ուժի մեջ, ապահովում է պատմական հետադարձում |
+
+## 3. Ինչ խնդիրներ է լուծում
+
+| Ցավային կետ | Ինչ է անում CodeGen |
+| --- | --- |
+| Կրկնվող CRUD դժոխք — boilerplate կույտ յուրաքանչյուր աղյուսակի համար | Աղյուսակի մակարդակի անջատիչները մեկ սեղմումով ստեղծում են լիարժեք front-end և back-end, ներառյալ CRUD, պարբերականացում, վավերացում, ներմուծում/արտահանում |
+| Front/back դաշտ և API անհամապատասխանությունները | Նույն աղյուսակի մետատվյալները կառավարում են ինչպես back-end API-ները, այնպես էլ front-end էջերը — զրոյական իմաստային շեղում |
+| Թիմային կոնվենցիաները դժվար է միավորել | Կաղապարները կոնվենցիա են. 22 FreeMarker կաղապար կենտրոնացված կառավարչությամբ, առցանց խմբագրելի՝ տարբերակի հետադարձումով |
+| Գեներատորները "վերագրում են և կորցնում" ձեռքով գրված լոգիկան | Marker-block միացման մեխանիզմ. ձեռքով գրված կոդը պահպանվում է, միայն գեներացված տարածքներն են փոխարինվում |
+| Գեներացված կոդը անվստահ է մինչև կոմպիլյացիայի պահը | Հիշողության մեջ կոմպիլյացիայի ինքնաստուգում (իսկական `javac`), կառուցվածքային պայմանագրի ստուգումներ, diff նախադիտում սկավառակում — ոչինչ չի կարողանում սկավառակում մինչև չկոմպիլյացիա |
+| Նոր համակարգ ստեղծել զրոյից ժամանակատար է | Խողովակ "մեկ նախադասությամբ համակարգ կառուցել". ստեղծել DB → կմախք → գեներացնել → փաթեթավորել → գրանցել մենյուներ, լիովին ավտոմատ |
+
+## 4. Հնարավորությունների ակնարկ
+
+- **Աղյուսակի ընդունում**. DDL վերլուծություն, ուղղակի ներմուծում տվյալների բազայից, խմբաքանակի ընդունման չէջ, ավտոմատ ստացված սյունակի կարգավորում (կառավարում / վավերացում / բառարաններ / հարաբերություններ).
+- **Աղյուսակի ձևերը**. մեկ աղյուսակ, ծառի աղյուսակ (tree API + ծառի ցանց), master-detail (նույն գործարքում պահպանում + մանրամասների կարծիքներ), շատ-շատ կապող աղյուսակներ.
+- **Գեներացված արտեֆակտներ**. Entity / Mapper / Service / Controller / DTO / VO + `api.js` + Vue էջեր + A4 տպագրության էջեր + ինտեգրացիոն թեստի կմախքներ.
+- **Բիզնես բարելավումներ**. հարաբերությունների բացվող ընտրացանկեր, բառարանով թարգմանություն, տվյալների դիմակավորում, եզակիության ստուգումներ, ձևի կապակցում, տվյալների իրավունքներ, Excel ներմուծում/արտահանում, հաստատման workflow, վճարում / ֆայլ / բջջային հնարավորությունների փաթեթներ.
+- **Որակի դարպասներ**. հիշողության մեջ կոմպիլյացիայի ինքնաստուգում (իսկական `javac`), կառուցվածքային պայմանագրի ստուգումներ, իրավունքների համապատասխանության ստուգումներ, diff նախադիտում սկավառակում, front-end արտեֆակտների իրական վավերացում.
+- **Անվտանգ վայրէջք**. սկավառակին գրել + `.gen-backup` խմբաքանակի պահուստային պատճեններ, marker-block միացում ձեռքով գրված կոդը պահպանելու համար, `gen_output` չորս վիճակի գլխավոր գիրք (ստեղծված / միացված / բացակայված / չհաջողված), պատմական հետադարձում.
+- **Բազմահամակարգ մեկնաբանություն**. յուրաքանչյուր նպատակային նախագիծ "համակարգի կարգավորում" է (front/back ուղիներ, փաթեթների անուններ, gateway նախածանց, կախվածության classpath, գեներացիայի անջատիչի լռելյայններ).
+- **AI բարելավումներ**. մեկ նախադասությամբ համակարգ կառուցել (AI մոդելավորում), սերմի տվյալների AI բարելավում, աղյուսակի մակարդակի AI առաջարկվող կարգավորում.
+
+## 5. Տիպիկ սցենարներ
+
+| Սցենար | Նկատարություն |
+| --- | --- |
+| Ծառի աղյուսակ | Հիերարխիկ տվյալներ ինչպիսիք են արտադրանքի կատեգորիաներ — ավտոմատ ստեղծում է tree API, ծառի ցանց և ծնողի ընտրության բացվող ընտրացանկ |
+| Մեկ աղյուսակ CRUD | Հաճախորդներ, արտադրանքներ և այլն — FK բացվող ընտրացանկեր + բառարանով թարգմանություն + ներմուծում/արտահանում պատրաստ |
+| Master-detail | Վաճառքի պատվերներ + պատվերի տարրեր — նույն գործարքում պահպանում, մանրամասների դարակ երկու կարծիքներով |
+| Միայն կարդալ / վիճակագրություն | Պահեստային հոսքեր և այլն — գրելու անջատիչներ անջատված, միայն հարցում և արտահանում |
+| Տպագրական փաստաթղթեր | Նշեք "տպագրություն" անջատիչը A4 տպագրության էջ և երթուղի ստեղծելու համար |
+| Մեկ նախադասությամբ համակարգ կառուցել | Նկարագրեք բիզնես տիրույթը — AI ստեղծում է DB և աղյուսակներ + կմախք + ամբողջ գեներացիա + մենյուի գրանցում մեկ քայլով |
+
+## 6. Հիմնական աշխատանքային հոսք
+
+```
+Աղյուսակի ընդունում → Դաշտի/անջատիչի կարգավորում → Մեկ սեղմում գեներացնել → Գլխավոր գիրք · Հետադարձում
+DB ներմուծում/DDL   Կառավարում/վավերացում   Սկավառակում միայն բոլոր որակի դարպասներից հետո;
+                  /բառարաններ                ձեռքով գրված կոդը պահպանվում է
+```
+
+## 7. Մեկ նախադասությամբ համակարգ կառուցել (Խողովակ)
+
+| Փուլ | Իմաստ |
+| --- | --- |
+| `CHECK` | Ստուգում է նպատակային նախագծի կարգավորումը և կախվածության classpath-ը |
+| `WRITE` | Ստեղծում է տվյալների բազա և աղյուսակներ, գրում է կմախքը և գեներացված արտեֆակտները |
+| `COMPILE` | Back-end `mvn package` / front-end կառուցում, հիշողության մեջ կոմպիլյացիայի ինքնաստուգում |
+| `MENU` | Ստեղծում և գրանցում է մենյուի իրավունքները (երկու ելք. արտեֆակտ SQL / ներքին ուղղակի գրում) |
+| `ROUTE` | Վերակառուցում է front-end երթուղու բեկորները |
+
+## 8. Համակարգի ճարտարապետություն
+
+| Պահեստ | Դեր | Տեխնոլոգիական կույտ |
+| --- | --- | --- |
+| `codegen-server` | Back-end: գեներացիայի շարժիչ, կաղապարներ, վավերացում, գլխավոր գիրք, խողովակ | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
+| `codegen-web` | Front-end: կոնսոլ (աղյուսակի կարգավորում / կաղապարներ / գլխավոր գիրք / համակարգի կառավարում) | Vue 2.7 · Element UI · axios · Vue Router (history ռեժիմ) |
+
+## 9. Տեխնոլոգիական կույտ
+
+| Չափում | Ընտրություն |
+| --- | --- |
+| Back-end լեզու / կարգավորիչ | Java 21 / Spring Boot 3.2.5 |
+| Պահպանում | MyBatis-Plus 3.5.5 |
+| Կաղապարի շարժիչ | FreeMarker (22 սերմի կաղապար, առցանց խմբագրում + տարբերակի հետադարձում) |
+| Անվտանգություն | JWT նույնականացում |
+| Տվյալների բազա | MySQL 8 |
+| Front-end | Vue 2.7 + Element UI |
+| Տեղական AI | qwen2.5-coder:7b |
+| API փաստաթղթեր | springdoc-openapi (Swagger UI) |
+
+## 10. Արագ սկիզբ
+
+```bash
+mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
+mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
+
+cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
+
+mvn package -DskipTests
+java -jar target/codegen-server.jar
+
+cd ../codegen-web
+npm install
+npm run serve
+```
+
+Back-end դեֆոլտ պորտ **8120**, front-end պորտ **9530**. Դեֆոլտ հաշիվ `admin / admin123`.
+
+## 11. Նախագծի կարգավիճակ
+
+- Ընթացիկ պլանավորված տարբերակի գիծը հասել է **V9.0**.
+- Երկու պահեստներն էլ հոսթվում են Gitee-ում: `https://gitee.com/hustxiayuhong/CodeGen.git`
+
+## 12. Հեղինակ
+
+- **Հեղինակ**: չինական ծրագրավորող (անկախ մշակող)
+- **Էլ. փոստ**: `hustxiayuhong@126.com`
+- **Տեխնիկական աջակցություն**: խնդրում եմ գրեք ձեր էլ. փոստը **չինարենով**, ներառելով խնդրի նկատարումը, runtime միջավայրը (JDK / MySQL / տարբերակ) և վերարտադրման քայլերը։
+
+---
+
+## 13. Համեմատություն նման գործիքների հետ
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.

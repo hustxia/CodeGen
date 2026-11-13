@@ -1,0 +1,324 @@
+# মাজিয়াং · কোড জেনারেটর (CodeGen) — প্রকল্প পরিচিতি
+
+> Languages: [简体中文](README_ZH.md) · [繁體中文](README_ZH_TW.md) · [English](README.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · **বাংলা** · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
+
+> ভাষাসমূহ: [中文](README_ZH.md) · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · [Español](README_ES.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [हिन्दी](README_HI.md) · [العربية](README_AR.md) · **বাংলা** · [Русский](README_RU.md) · [اردو](README_UR.md)
+
+---
+
+> **Spring Boot + Vue**-এর জন্য একটি মাল্টি-প্রজেক্ট কোড জেনারেটর: ডেটাবেস টেবিল স্ট্রাকচার থেকে শুরু করে এটি **কম্পাইলযোগ্য, চালানো-যায়-এমন, মেনু-ও-পারমিশনসহ** ফ্রন্ট-এন্ড ও ব্যাক-এন্ড বিজনেস কোড তৈরি করে, এবং ডিস্কে লেখা, ব্যাকআপ, লেজার হিসাব ও রোলব্যাকের সম্পূর্ণ ডেলিভারি লুপটি পরিচালনা করে।
+
+GitHub: https://github.com/hustxia/CodeGen
+
+## ১. এটি কী
+
+CodeGen হলো একটি "টেবিল-ভিত্তিক" কোড কারখানা। আপনার বিজনেস টেবিলগুলো আনুন (ডেটাবেস ইমপোর্ট বা DDL পেস্ট করার মাধ্যমে), ফিল্ড ও জেনারেশন সুইচ কনফিগার করুন, তারপর "Generate" ক্লিক করুন — এটি ব্যাক-এন্ড Entity/Mapper/Service/Controller/DTO/VO, ফ্রন্ট-এন্ড `api.js` ও Vue পেজ, মেনু ও রাউট, এমনকি A4 প্রিন্ট পেজ ও ইন্টিগ্রেশন-টেস্ট স্কেলিটনও তৈরি করে এবং নিরাপদে আপনার টার্গেট প্রজেক্টে লিখে দেয়।
+
+এটি শুধু "কোড ফেলে দেয়" না — এটি একটি **গুণমান গেট ও রোলব্যাক ক্ষমতাসম্পন্ন ডেলিভারি পাইপলাইন**:
+
+```
+টেবিল ইনটেক (DB ইমপোর্ট / DDL)
+   → ফিল্ড ও সুইচ কনফিগারেশন (AI সুপারিশসহ)
+      → এক-ক্লিক জেনারেশন: সেলফ-চেক → ব্যাকআপ → ডিস্কে লেখা → কম্পাইল/ভ্যালিডেশন → মেনু রেজিস্ট্রেশন → রাউট রিবিল্ড
+         → লেজার হিসাব → রোলব্যাক-সক্ষম
+```
+
+---
+
+## ২. ব্যবহারকারী কারা এবং তারা কীভাবে এটি ব্যবহার করবে
+
+| ব্যবহারকারী | সাধারণ চাহিদা | প্ল্যাটফর্মের দেওয়া পথ |
+| --- | --- | --- |
+| ব্যাক-এন্ড ডেভেলপার | হাতে কিছু টেবিল (বা DDL) আছে, দ্রুত CRUD দাঁড় করাতে চায় | টেবল কনফিগ পেজ: ইমপোর্ট → ফিল্ড কনফিগার → এক-ক্লিক জেনারেশন |
+| ফুল-স্ট্যাক / স্বাধীন ডেভেলপার | শূন্য থেকে একটি সম্পূর্ণ সিস্টেম (লগইন, অনুমতি, অভিধান সহ) দাঁড় করাতে চায় | পাইপলাইন পেজ: এক বাক্যে সিস্টেম তৈরি |
+| টিম লিড | কোড স্টাইল, কোড স্ট্যান্ডার্ড এবং ডিরেক্টরি স্ট্রাকচার ঐক্যবদ্ধ করতে চায় | সিস্টেম ম্যানেজমেন্ট: একটি সিস্টেম = একটি আউটপুট কনফিগারেশন, ব্যাচে কার্যকর |
+| প্ল্যাটফর্ম রক্ষণাবেক্ষণকারী | কোড পরিবর্তন না করে টেমপ্লেট পরিবর্তন করতে চায় | টেমপ্লেট ম্যানেজমেন্ট: অনলাইন সম্পাদনা, সেভ করলে তৎক্ষণাৎ কার্যকর, ভার্সন রোলব্যাক সমর্থিত |
+
+## 3. এটি কোন সমস্যাগুলো সমাধান করে
+
+| সমস্যা | CodeGen-এর পন্থা |
+| --- | --- |
+| পুনরাবৃত্ত CRUD নরক — প্রতিটি টেবিলের জন্য পাহাড়সমান বয়লারপ্লেট কোড | টেবিল-ভিত্তিক সুইচ দিয়ে এক ক্লিকে সম্পূর্ণ ফ্রন্ট ও ব্যাক এন্ড তৈরি, যার মধ্যে CRUD, পেজিনেশন, ভ্যালিডেশন, ইমপোর্ট/এক্সপোর্ট অন্তর্ভুক্ত |
+| ফ্রন্ট/ব্যাক ফিল্ড ও API অমিলের কারণে অবিরাম ইন্টিগ্রেশন সংশোধন | একই টেবিল মেটাডেটা ব্যাক-এন্ড API ও ফ্রন্ট-এন্ড পেজ উভয়কেই চালায় — শূন্য সিমান্টিক বিচ্যুতি |
+| টিমের কনভেনশন ঐক্যবদ্ধ করা কঠিন; প্রত্যেকের স্টাইল আলাদা | টেমপ্লেটই কনভেনশন: ২২টি FreeMarker টেমপ্লেট কেন্দ্রীয়ভাবে পরিচালিত, অনলাইন সম্পাদনাযোগ্য এবং ভার্সন রোলব্যাক সমর্থিত |
+| জেনারেটর "ওভাররাইট করে হারিয়ে ফেলে" হাতে-লেখা লজিক | মার্কার-ব্লক মার্জ মেকানিজম: হাতে-লেখা কোড সংরক্ষিত থাকে, শুধু জেনারেটেড অঞ্চল প্রতিস্থাপিত হয় |
+| কম্পাইল না হওয়া পর্যন্ত জেনারেটেড কোড অবিশ্বস্ত | ইন-মেমরি কম্পাইল সেলফ-চেক (প্রকৃত `javac`), স্ট্রাকচারাল কনট্রাক্ট চেক, ডিস্কে diff প্রিভিউ — কম্পাইল না হলে ডিস্কে কিছুই লেখা হয় না |
+| শূন্য থেকে নতুন সিস্টেমের স্ক্যাফোল্ডিং সময়সাপেক্ষ | পাইপলাইন "এক বাক্যে সিস্টেম তৈরি": DB তৈরি → স্ক্যাফোল্ড → জেনারেশন → প্যাকেজ → মেনু রেজিস্ট্রেশন, সম্পূর্ণ স্বয়ংক্রিয় |
+
+---
+
+## 4. সক্ষমতার সমগ্র চিত্র
+
+- **টেবিল ইনটেক**: DDL পার্সিং, সরাসরি ডেটাবেস ইমপোর্ট, ব্যাচ ইনটেক উইজার্ড, স্বয়ংক্রিয়ভাবে প্রাপ্ত কলাম কনফিগারেশন (কন্ট্রোল / ভ্যালিডেশন / ডিকশনারি / রিলেশন)।
+- **টেবিলের ধরন**: সিঙ্গেল টেবিল, ট্রি টেবিল (tree API + ট্রি গ্রিড), মাস্টার-ডিটেইল (একই ট্রানজেকশনে সেভ + ডিটেইল ট্যাব), ম্যানি-টু-ম্যানি জাংশন টেবিল।
+- **জেনারেটেড আর্টিফ্যাক্ট**: Entity / Mapper / Service / Controller / DTO / VO + `api.js` + Vue পেজ + A4 প্রিন্ট পেজ + ইন্টিগ্রেশন-টেস্ট স্কেলিটন।
+- **বিজনেস এনহ্যান্সমেন্ট**: রিলেশন ড্রপডাউন, ডিকশনারি ট্রান্সলেশন, ডেটা মাস্কিং, ইউনিকনেস চেক, ফর্ম লিংকেজ, ডেটা-স্কোপ পারমিশন, Excel ইমপোর্ট/এক্সপোর্ট, অ্যাপ্রুভাল ওয়ার্কফ্লো, পেমেন্ট / ফাইল / মোবাইল ক্যাপাবিলিটি প্যাক।
+- **গুণমান গেট**: ইন-মেমরি কম্পাইল সেলফ-চেক (প্রকৃত `javac`), স্ট্রাকচারাল কনট্রাক্ট চেক, পারমিশন-কনসিস্টেন্সি চেক, ডিস্কে diff প্রিভিউ, ফ্রন্ট-এন্ড আর্টিফ্যাক্টের প্রকৃত ভ্যালিডেশন।
+- **নিরাপদ ল্যান্ডিং**: ডিস্কে লেখা + `.gen-backup` ব্যাচ ব্যাকআপ, হাতে-লেখা কোড সংরক্ষণে মার্কার-ব্লক মার্জ, `gen_output` চার-স্টেট লেজার (তৈরি হয়েছে / মার্জ হয়েছে / স্কিপ হয়েছে / ব্যর্থ), ঐতিহাসিক রোলব্যাক।
+- **মাল্টি-সিস্টেম আইসোলেশন**: প্রতিটি টার্গেট প্রজেক্ট একটি "সিস্টেম কনফিগারেশন" (ফ্রন্ট/ব্যাক পাথ, প্যাকেজ নাম, গেটওয়ে প্রিফিক্স, ডিপেন্ডেন্সি ক্লাসপাথ, জেনারেশন-সুইচ ডিফল্ট) — একাধিক প্রজেক্ট সমান্তরালে পরিবেশন করা যায়।
+- **AI এনহ্যান্সমেন্ট**: এক বাক্যে সিস্টেম তৈরি (AI মডেলিং), সিড-ডেটা AI এনহ্যান্সমেন্ট, টেবিল-ভিত্তিক AI সুপারিশকৃত কনফিগারেশন (diff প্রিভিউ + চেক করে অ্যাপ্লাই)।
+
+---
+
+## 5. সাধারণ দৃশ্যপট
+
+| দৃশ্যপট | বর্ণনা |
+| --- | --- |
+| ট্রি টেবিল | পণ্যের ক্যাটাগরির মতো হায়ারার্কিক্যাল ডেটা — স্বয়ংক্রিয়ভাবে তৈরি tree API, ট্রি গ্রিড ও প্যারেন্ট-নির্বাচন ড্রপডাউন |
+| সিঙ্গেল-টেবিল CRUD | কাস্টমার, পণ্য ইত্যাদি — FK ড্রপডাউন + ডিকশনারি ট্রান্সলেশন + ইমপোর্ট/এক্সপোর্ট বক্সের বাইরে প্রস্তুত |
+| মাস্টার-ডিটেইল | সেলস অর্ডার + অর্ডার আইটেম — একই ট্রানজেকশনে সেভ, ডুয়াল ট্যাবসহ ডিটেইল ড্রয়ার (মাস্টার তথ্য / ডিটেইলস) |
+| রিড-ওনলি / স্ট্যাটস | ইনভেন্টরি ফ্লো ইত্যাদি — রাইট সুইচ বন্ধ, শুধু কোয়েরি ও এক্সপোর্ট |
+| প্রিন্ট ডকুমেন্ট | "প্রিন্ট" সুইচ টিক দিলে A4 প্রিন্ট পেজ ও রাউট তৈরি হয়, হেডার + ডিটেইল টেবিলসহ |
+| এক-বাক্যে সিস্টেম তৈরি | বিজনেস ডোমেইন বর্ণনা করুন — AI এক নিঃশ্বাসে DB ও টেবিল তৈরি + স্ক্যাফোল্ড + সম্পূর্ণ জেনারেশন + মেনু রেজিস্ট্রেশন করে |
+
+> সব দৃশ্যপটের জন্য চালানো-যায়-এমন ডেমো (`demo_admin` প্রজেক্ট) ও স্ক্রিনশট রয়েছে — বিস্তারিত `docs/典型场景操作指南-演示后台demo.md` (চীনা) দেখুন।
+
+---
+
+## 6. মূল ওয়ার্কফ্লো
+
+```
+┌──────────────────┐   ┌──────────────────────────────┐   ┌──────────────────────────────────────────────────────────┐
+│ টেবিল ইনটেক      │ → │ ফিল্ড/সুইচ কনফিগারেশন         │ → │ এক-ক্লিক জেনারেশন (সেলফ-চেক→ব্যাকআপ→ডিস্কে লেখা→           │ → │ লেজার · রোলব্যাক │
+│                  │   │                              │   │ কম্পাইল→মেনু→রাউট)                                        │   │                  │
+└──────────────────┘   └──────────────────────────────┘   └──────────────────────────────────────────────────────────┘
+  DB ইমপোর্ট/DDL          কন্ট্রোল/ভ্যালিডেশন/ডিকশনারি       সব গুণমান গেট পাস করলেই ডিস্কে লেখা হয়;                      ব্যাচ-স্তরের ট্রেসেবিলিটি
+                                                            হাতে-লেখা কোড সংরক্ষিত থাকে
+```
+
+- **Diff প্রিভিউ**: জেনারেটেড আর্টিফ্যাক্ট বর্তমান ডিস্ক অবস্থার সাথে ফাইল-প্রতি-ফাইল diff করা হয়; কিছু লেখার আগে আপনি নিশ্চিত করেন, যাতে ভুলে ওভাররাইট না হয়।
+- **জেনারেশন লেজার**: প্রতিটি ফাইলের অ্যাকশন, বাইট সংখ্যা, MD5 ও ব্যাকআপ অবস্থান রেকর্ড করা হয়; একটি সম্পূর্ণ ব্যাচ রোলব্যাক করা যায়।
+
+---
+
+## 7. এক বাক্যে সিস্টেম তৈরি (পাইপলাইন)
+
+"শূন্য থেকে ব্যাক-এন্ড স্ক্যাফোল্ডিং"-কে লক্ষ্য করে একটি উচ্চ-স্তরের সক্ষমতা। আপনি বিজনেস ডোমেইন বর্ণনা করার পর পাইপলাইনটি ৫টি পর্যায়ে স্বয়ংক্রিয়ভাবে অগ্রসর হয়:
+
+| পর্যায় | অর্থ |
+| --- | --- |
+| `CHECK` | টার্গেট প্রজেক্ট কনফিগারেশন ও ডিপেন্ডেন্সি ক্লাসপাথ যাচাই |
+| `WRITE` | ডেটাবেস ও টেবিল তৈরি, স্ক্যাফোল্ড ও জেনারেটেড আর্টিফ্যাক্ট লেখা |
+| `COMPILE` | ব্যাক-এন্ড `mvn package` / ফ্রন্ট-এন্ড বিল্ড, ইন-মেমরি কম্পাইল সেলফ-চেক |
+| `MENU` | মেনু পারমিশন তৈরি ও রেজিস্ট্রেশন (ডুয়াল আউটলেট: artifact SQL / internal সরাসরি লেখা) |
+| `ROUTE` | ফ্রন্ট-এন্ড রাউট ফ্র্যাগমেন্ট রিবিল্ড |
+
+যেকোনো পর্যায় ব্যর্থ হলে সঙ্গে সঙ্গে বাতিল হয় এবং সহজে শনাক্ত করার জন্য পাঠযোগ্য ত্রুটি দেয়।
+
+---
+
+## 8. সিস্টেম আর্কিটেকচার
+
+ফ্রন্ট-এন্ড ও ব্যাক-এন্ড আলাদা, দুটি রিপোজিটরি একসাথে কাজ করে:
+
+| রিপোজিটরি | ভূমিকা | স্ট্যাক |
+| --- | --- | --- |
+| `codegen-server` | ব্যাক-এন্ড: জেনারেশন ইঞ্জিন, টেমপ্লেট, ভ্যালিডেশন, লেজার, পাইপলাইন | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
+| `codegen-web` | ফ্রন্ট-এন্ড: কনসোল (টেবিল কনফিগ / টেমপ্লেট / লেজার / সিস্টেম ম্যানেজমেন্ট) | Vue 2.7 · Element UI · axios · Vue Router (history মোড) |
+
+ব্যাক-এন্ড স্তরবিন্যাস:
+
+```
+controller/    API স্তর (Gen* জেনারেশন চেইন / Sys* সিস্টেম ম্যানেজমেন্ট / পাইপলাইন)
+service/impl/  মূল বাস্তবায়ন (জেনারেশন চেইন, টেমপ্লেট ইঞ্জিন, মার্জ, ভ্যালিডেশন, পাইপলাইন এক্সিকিউশন)
+util/          টেমপ্লেট ইঞ্জিন, মডেল অ্যাসেম্বলি, মার্কার-ব্লক মার্জ, সেলফ-চেক কম্পাইলেশন
+config/        আউটপুট কনফিগ, সেলফ-চেক কনফিগ, টেমপ্লেট সিডার
+common/        Result / BaseEntity / এক্সেপশন / অডিট
+resources/gen-templates/   ২২টি FreeMarker টেমপ্লেট (backend / frontend / shared / test গ্রুপ)
+```
+
+**টার্গেট প্রজেক্টকে অবশ্যই যে ফাউন্ডেশন সক্ষমতা সরবরাহ করতে হবে** (জেনারেটর শুধু বিজনেস কোড তৈরি করে; ফাউন্ডেশন অনুপস্থিত থাকলে নীরবে ব্যর্থ হয়):
+
+1. MyBatis-Plus পেজিনেশন প্লাগইন (`PaginationInnerInterceptor`)
+2. `Result` / `BaseEntity` / `PageQuery`-র মতো ফাউন্ডেশন ক্লাস (প্যাকেজ প্রিফিক্স অবশ্যই `root-package`-এর সাথে মিলবে)
+3. `toPageData`-সহ ফ্রন্ট-এন্ড `utils/request.js` (`Page{records,total}`-কে `{list,total}`-এ রূপান্তর করে)
+4. ডিপেন্ডেন্সি `springdoc-openapi-starter-webmvc-ui` (জেনারেটেড কোড `@Operation` ব্যবহার করে) এবং `poi-ooxml` (Excel)
+
+---
+
+## 9. টেক স্ট্যাক এক নজরে
+
+| মাত্রা | নির্বাচন |
+| --- | --- |
+| ব্যাক-এন্ড ভাষা / ফ্রেমওয়ার্ক | Java 21 / Spring Boot 3.2.5 |
+| পারসিস্টেন্স | MyBatis-Plus 3.5.5 |
+| টেমপ্লেট ইঞ্জিন | FreeMarker (২২টি সিড টেমপ্লেট, অনলাইন সম্পাদনা + ভার্সন রোলব্যাক) |
+| নিরাপত্তা | JWT অথেনটিকেশন |
+| ডেটাবেস | MySQL 8 |
+| ফ্রন্ট-এন্ড | Vue 2.7 + Element UI |
+| লোকাল AI | qwen2.5-coder:7b (মডেলিং / সুপারিশকৃত কনফিগ / সিড-ডেটা এনহ্যান্সমেন্ট) |
+| API ডকুমেন্টেশন | springdoc-openapi (Swagger UI) |
+
+---
+
+## 10. কুইক স্টার্ট
+
+### ১. ডেটাবেস তৈরি (১৩টি প্ল্যাটফর্ম টেবিল + ডিফল্ট অ্যাকাউন্ট admin/admin123)
+
+```bash
+mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
+mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
+```
+
+### ২. টার্গেট প্রজেক্ট কনফিগার করুন
+
+কনফিগ টেমপ্লেট কপি করে আপনার লোকাল পাথ অনুযায়ী সমন্বয় করুন:
+
+```bash
+cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
+```
+
+`application-local.yml` `.gitignore`-এ বাদ দেওয়া আছে এবং কমিট হবে না। মূল সেটিংস:
+
+```yaml
+gen:
+  output:
+    backend-root: /path/to/your-target-project      # আর্টিফ্যাক্ট ডিস্কে লেখার বেস
+    frontend-root: /path/to/your-target-project
+    frontend-path: demo-web                          # মনোরিপো হলে ফ্রন্ট-এন্ড সাবডিরেক্টরি
+    backend-path: demo-server/src/main/java/com/demo
+    package-name: com.demo
+    root-package: com.demo                           # আর্টিফ্যাক্টে ফাউন্ডেশন-ক্লাস ইমপোর্টের প্রিফিক্স
+  selfcheck:
+    classpath: /path/to/your-target-project/demo-lib/*
+```
+
+সেলফ-চেক ডিপেন্ডেন্সি ডিরেক্টরি এভাবে এক্সপোর্ট করুন:
+
+```bash
+cd your-target/demo-server
+mvn dependency:copy-dependencies -DoutputDirectory=../demo-lib
+```
+
+### ৩. ব্যাক-এন্ড চালু করুন
+
+```bash
+mvn package -DskipTests
+java -jar target/codegen-server.jar
+```
+
+সার্ভিসের ডিফল্ট পোর্ট **8120**; API ডকুমেন্টেশন `/swagger-ui/index.html`।
+
+### ৪. ফ্রন্ট-এন্ড চালু করুন
+
+```bash
+cd ../codegen-web
+npm install
+npm run serve
+```
+
+ফ্রন্ট-এন্ডের ডিফল্ট পোর্ট **9530**, `/dev-api` ব্যাক-এন্ড পোর্ট 8120-এ প্রক্সি করা হয়। ডিফল্ট অ্যাকাউন্ট `admin / admin123`।
+
+### ৫. মূল কনফিগারেশন আইটেম
+
+| সেটিং | বর্ণনা |
+| --- | --- |
+| `gen.output.*` | আর্টিফ্যাক্ট লেখার পাথ, প্যাকেজ নাম, মডিউল ম্যাপিং |
+| `gen.selfcheck.classpath` | ইন-মেমরি কম্পাইল সেলফ-চেকের ডিপেন্ডেন্সি ক্লাসপাথ, `dir/*` সমর্থিত |
+| `gen.menu.outlet` | `artifact` শুধু মেনু SQL ও রাউট ফ্র্যাগমেন্ট তৈরি করে; `internal` প্ল্যাটফর্মের নিজস্ব `sys_menu`-এও লেখে |
+
+---
+
+## 11. ডকুমেন্টেশন ম্যাপ
+
+| ডকুমেন্ট | বিষয়বস্তু |
+| --- | --- |
+| `docs/代码生成器-操作手册.md` (চীনা) | ডিপ্লয়মেন্ট, ৫ মিনিটে শুরু, টেবিল কনফিগ, ব্যাচ ইনটেক, টেমপ্লেট ম্যানেজমেন্ট, লেজার, API ক্যাটালগ, সম্পূর্ণ পাইপলাইন (স্ক্রিনশটসহ) |
+| `docs/典型场景操作指南-演示后台demo.md` (চীনা) | ৬টি টেবিল দিয়ে ৫ ধরনের সাধারণ দৃশ্যপট কভার, চালানো-যায়-এমন ডেমো ও প্রকৃত রানের স্ক্রিনশটসহ |
+| `docs/项目介绍.md` (চীনা) | এই ফাইলের সম-উৎসস্থ প্রজেক্ট পরিচিতি ডকুমেন্ট |
+| `docs/代码生成器-Vx.x-规划.md` (চীনা) | V3.1 → V7.3 পর্যন্ত ভার্সন পরিকল্পনা ও ফিচার ইনভেন্টরি |
+| `codegen-web/README.md` | ফ্রন্ট-এন্ড কনসোল কুইক-স্টার্ট রেফারেন্স |
+
+---
+
+## 12. ভার্সন ইতিহাস
+
+| ভার্সন | থিম / পরিকল্পনা ডকুমেন্ট | ল্যান্ডিং কমিট |
+| --- | --- | --- |
+| V1.2 / V1.3 | এক-ক্লিক জেনারেশন / ব্যাচ / রোলব্যাক; diff প্রিভিউ ও স্ট্রাকচার সিঙ্ক | — (শুধু `src/api/gen.js` কমেন্টে দেখা যায়) |
+| V2.0 | ডাইনামিক রাউট (ব্যাক-এন্ড থেকে পাঠানো মেনু ট্রি) | — |
+| V3.0 / V3.1 | মাল্টি-সিস্টেম লেজার; মাল্টি-সিস্টেম লুপ + প্রথম অটোমেটেড টেস্ট | V3.1 (174 লাইন) |
+| V4.2 | ট্রেসেবল, রোলব্যাকযোগ্য জেনারেশন ফলাফল (রাইট লেজার) | V4.2 (292 লাইন) |
+| V4.3 | টেমপ্লেট রিগ্রেশন ও গুণমান গার্ডরেল | V4.3 (200 লাইন) |
+| V4.4 | এক-মাস্টার-বহু-ডিটেইল, ক্যাসকেড-রাইট সম্পূর্ণতা, টেমপ্লেট লেন | V4.4 (154 লাইন) |
+| V4.5 | A4 প্রিন্ট ডকুমেন্ট (শূন্য থার্ড-পার্টি ডিপেন্ডেন্সি) | V4.5 (127 লাইন) |
+| V5.0 | এক-বাক্যে সিস্টেম তৈরি: পাইপলাইন + AI মডেলিং + স্ক্যাফোল্ড বেস | — |
+| V5.1 | DDL অডিট কলাম স্বয়ংক্রিয় সম্পূরণ | V5.1 (100 লাইন) |
+| V5.2 | পাইপলাইন সিড-ডেটা ইনিশিয়ালাইজেশন ধাপ | V5.2 (107 লাইন), 84ec8dd |
+| V5.5 | মাল্টি-মডিউল প্রজেক্ট জেনারেশন সমাপ্তি | af73dd3 |
+| V6.0 | মাইক্রোসার্ভিস অবকাঠামো (Nacos / Gateway / Feign, তৃতীয় মোড "micro") | V6.0 (111 লাইন), 1deecbd |
+| V6.1 | Activiti ওয়ার্কফ্লো ডুয়াল ইঞ্জিন | V6.1 (100 লাইন), 02b671e |
+| V6.2 | আর্টিফ্যাক্ট ডেলিভারি সারফেস (CLI / ডিপ্লয়মেন্ট আর্টিফ্যাক্ট / কনফিগ নিরাপত্তা) | V6.2 (114 লাইন), 02b671e |
+| V6.3 | পেমেন্ট ক্যাপাবিলিটি প্যাক (WeChat / Alipay + Mock) | V6.3 (104 লাইন), 1c4ee6a, 22eede5 |
+| V6.4 | পারমিশন ও নিরাপত্তা বেসলাইন (টোকেন পারসিস্টেন্স / BCrypt / API পারমিশন / লগইন সুরক্ষা) | V6.4 (107 লাইন), 007a202 |
+| V6.5 | মোবাইল uni-app (H5 + WeChat মিনি প্রোগ্রাম) | V6.5 (105 লাইন), 779ac41 |
+| V6.6 | ফাইল ক্যাপাবিলিটি প্যাক | 98f3c09 |
+| V6.7 | আর্টিফ্যাক্ট টেস্ট ফ্যাক্টরি অ্যাকসেপটেন্স (test_enabled ট্রাই-স্টেট + H2 স্কেলিটন) | V6.7 (134 লাইন), 4e7d318 |
+| V6.8 | আর্টিফ্যাক্ট মেইনটেইনেবিলিটি (dryRun / প্রোটেক্টেড স্কিপ / ব্র্যান্ড প্যারামিটারাইজেশন) | V6.8 (141 লাইন), be6f858 |
+| V6.9 | প্ল্যাটফর্ম ডকুমেন্টেশন সেন্টার (ব্যাক-এন্ড বেস, একই ব্যাচে ফ্রন্ট-এন্ড সমাপ্ত) | — |
+| V6.10 | প্ল্যাটফর্ম অবজারভেবিলিটি: Actuator + ইন-মেমরি মেট্রিক উইন্ডো + এমবেডেড মনিটর পেজ | — |
+| V7.0 | AI পেজ ও মেনু সুপারিশ (preview / apply) | V7.0 (94 লাইন), 45f2670 |
+| V7.1 | সিড-ডেটা AI এনহ্যান্সমেন্ট (সিমান্টিক AI-এর, স্ট্রাকচার নিয়মের অধীন) | V7.1 (42 লাইন), 5ca6e72 |
+| V7.2 | সফল পাইপলাইনের পর SQL ডেলিভারেবল `db/`-তে লেখা | eebff88 |
+| **V7.3** | **ডেলিভারির বিশ্বাসযোগ্যতা: সেলফ-চেক কম্পাইল করা আর্টিফ্যাক্ট টেস্ট / ঐক্যবদ্ধ SQL ডেলিভারি আউটলেট / টেবিল-ভিত্তিক AI সুপারিশ** | **V7.3 (138 লাইন)** |
+| **V7.4** | পুনরাবৃত্তযোগ্য ডেলিভারি: খালি ডেটাবেস থেকে ডিপ্লয়যোগ্য, প্রতিটি কমিট চালানোর নিশ্চয়তা | c306e29 |
+| **V7.5** | প্রজেক্ট ভাষা কনফিগারেশন: ২০৬টি ভাষার তালিকা / ডিফল্ট ভাষা / সক্রিয় ভাষা, জেনারেট করা কোডে lang ও dir ইনজেকশন | 7a9afa0 + abac56d |
+| **V8.0** | সম্পূর্ণ পেজ i18n: ২০৬ ভাষার ফ্রেমওয়ার্ক (৮টি পেশাদারভাবে অনূদিত), OFF শূন্য-ডিফ চুক্তিসহ দ্বৈত-ট্র্যাক i18n | 9e5dd57 → 7d57aea |
+| **V8.1** | মানোন্নয়ন: অফলাইন চুক্তি হার্নেস (৯ মোড, OFF শূন্য-ডিফ) + i18n-core ইউনিট টেস্ট + CI গেট + সৎ README বিভাজন (ফ্রেমওয়ার্ক ২০৬ / অনূদিত ৮) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | জেনারেট করা আর্টিফ্যাক্ট Vue 3 + Element Plus + Vite-এ আধুনিকীকৃত; রানটাইমে যাচাইকৃত (৪০/৪০ অ্যাসারশন, সফল vite build, ar-SA RTL সহ ১৪টি স্ক্রিনশট); ৩টি রানটাইম ত্রুটি সংশোধিত | 93a12d5 + e49330b, **বর্তমান ভার্সন** |
+
+---
+
+> **V6.10 প্ল্যাটফর্ম অবজারভেবিলিটি**: Actuator + Micrometer ইন্টিগ্রেট করে, ৫ সেকেন্ড অন্তর ইন-মেমরি রিং বাফারে (৩০ মিনিটের উইন্ডো) স্যাম্পলিং লেখা হয়, সাথে নতুন একটি এমবেডেড "সিস্টেম মনিটর" পেজ — ব্যাক-এন্ড `/monitor/*` অ্যাগ্রিগেশন API + ফ্রন্ট-এন্ড ECharts প্যানেল। শুধু `health/info/metrics` এন্ডপয়েন্ট হোয়াইটলিস্টে; `/actuator/health` টোকেন-মুক্ত, আর `metrics` ইত্যাদিতে অথ প্রয়োজন; `env/beans/heapdump/threaddump/loggers` কখনোই এক্সপোজ করা হয় না। স্যাম্পলিং উইন্ডো শুধু প্রসেস-ভিত্তিক, রিস্টার্টে হারিয়ে যায়, একাধিক ইনস্ট্যান্সে শেয়ার হয় না। বিস্তারিত `docs/可观测性说明.md` (চীনা) দেখুন।
+
+## 13. প্রজেক্ট অবস্থা
+
+- বর্তমান পরিকল্পিত ভার্সন লাইন **V9.0**-এ পৌঁছেছে (সক্ষমতা ধারাবাহিকভাবে উন্নত হচ্ছে: AI মডেলিং, সিড-ডেটা এনহ্যান্সমেন্ট, ক্যাপাবিলিটি-প্যাক সিস্টেম ইত্যাদি)।
+- সঙ্গী ডেমো প্রজেক্ট `demo_admin` (ব্যাক-এন্ড 8140 / ফ্রন্ট-এন্ড 9040) ট্রি / CRUD / মাস্টার-ডিটেইল / রিড-ওনলি / প্রিন্ট — সব দৃশ্যপট কভার করে এবং স্বতন্ত্রভাবে চালিয়ে যাচাই করা যায়।
+- উভয় রিপোজিটরি Gitee-তে হোস্ট করা: `https://gitee.com/hustxiayuhong/CodeGen.git`
+
+---
+
+## 14. লেখক ও কারিগরি সহায়তা
+
+- **লেখক**: চীনা প্রোগ্রামার (স্বাধীন ডেভেলপার)
+- **ইমেইল**: `hustxiayuhong@126.com`
+- **কারিগরি সহায়তা**: অনুগ্রহ করে ইমেইলটি **চীনা ভাষায়** লিখুন এবং সমস্যার বিবরণ, পরিবেশ (JDK / MySQL / সংস্করণ) ও পুনরুৎপাদনের ধাপ সংযুক্ত করুন
+
+> আমি প্রতিটি ইমেইল পড়ি এবং উত্তর দিই। বাগ রিপোর্ট, পরামর্শ ও সহযোগিতার প্রস্তাব সবই স্বাগত।
+
+---
+
+## ১৫. অনুরূপ সরঞ্জামের সাথে তুলনা
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.

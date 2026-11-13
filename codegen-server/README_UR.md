@@ -1,0 +1,320 @@
+# ماجیانگ · کوڈ جنریٹر (CodeGen) — منصوبے کا تعارف
+
+> Languages: [简体中文](README_ZH.md) · [繁體中文](README_ZH_TW.md) · [English](README.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · **اردو** · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
+
+> زبانیں: [中文](README_ZH.md) · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · [Español](README_ES.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [हिन्दी](README_HI.md) · [العربية](README_AR.md) · [বাংলা](README_BN.md) · [Русский](README_RU.md) · **اردو**
+
+---
+
+> **Spring Boot + Vue** کے لیے ایک کثیر المنصوبہ کوڈ جنریٹر: ڈیٹابیس ٹیبل کے ڈھانچے سے آغاز کرتے ہوئے ایسا فرنٹ اینڈ و بیک اینڈ بزنس کوڈ تیار کرتا ہے جو **کمپائل ہو سکے، چل سکے اور مینو و اجازتوں کے ساتھ آئے**، اور ڈسک پر تحریر، بیک اپ، لیجر اور رول بیک کا مکمل ترسیلی چکر سنبھالتا ہے۔
+
+GitHub: https://github.com/hustxia/CodeGen
+
+## 1. یہ کیا ہے؟
+
+CodeGen ایک "ٹیبل کو بنیاد بنا کر چلنے والی" کوڈ فیکٹری ہے۔ آپ صرف اپنے بزنس ٹیبل منسلک کریں (ڈیٹابیس سے امپورٹ کریں یا DDL کا ایک ٹکڑا چسپاں کریں)، فیلڈز اور جنریشن سوئچز ترتیب دیں، اور "جنریٹ" پر کلک کریں — پھر یہ آپ کے لیے بیک اینڈ کا Entity/Mapper/Service/Controller/DTO/VO، فرنٹ اینڈ کا `api.js` اور Vue صفحات، مینو اور روٹس، حتیٰ کہ A4 پرنٹ صفحہ اور انٹیگریشن ٹیسٹ کا ڈھانچہ سب تیار کر کے محفوظ طریقے سے آپ کے ہدف منصوبے میں لکھ دیتا ہے۔
+
+یہ محض "کوڈ اُگلنے" تک محدود نہیں، بلکہ ایک **کوالٹی گیٹس اور رول بیک کی صلاحیت رکھنے والی ترسیلی پائپ لائن** ہے:
+
+```
+ٹیبل منسلک کریں (ڈیٹابیس امپورٹ / DDL)
+   → فیلڈ اور جنریشن سوئچ کی ترتیب (AI تجاویز کے ساتھ)
+      → ایک کلک جنریشن: سیلف چیک → بیک اپ → ڈسک پر تحریر → کمپائل/توثیق → مینو رجسٹر → روٹ دوبارہ تعمیر
+         → لیجر میں اندراج → قابلِ رول بیک
+```
+
+---
+
+## 2. صارفین کون ہیں اور کیسے استعمال کریں گے
+
+| صارف | عام ضرورت | پلیٹ فارم کا راستہ |
+| --- | --- | --- |
+| بیک اینڈ ڈویلپر | اس کے پاس کچھ ٹیبلز (یا DDL) ہیں اور وہ جلد CRUD کھڑا کرنا چاہتا ہے | ٹیبل کنفیگریشن: امپورٹ → فیلڈز کنفیگر → ایک کلک جنریشن |
+| فل اسٹیک / آزاد ڈویلپر | وہ شروع سے ایک مکمل سسٹم (لاگ ان، اجازتیں، ڈکشنریز سمیت) بنانا چاہتا ہے | پائپ لائن صفحہ: ایک جملے میں سسٹم بنائیں |
+| ٹیم لیڈ | وہ کوڈ کا انداز، کوڈ کنونشنز اور ڈائریکٹری ڈھانچہ متحد کرنا چاہتا ہے | سسٹم مینجمنٹ: ایک سسٹم = ایک آؤٹ پٹ کنفیگریشن، بیچ میں نافذ |
+| پلیٹ فارم مینٹینر | وہ کوڈ تبدیل کیے بغیر ٹیمپلیٹس تبدیل کرنا چاہتا ہے | ٹیمپلیٹ مینجمنٹ: آن لائن ترمیم، محفوظ کرتے ہی نافذ، ورژن رول بیک کی سہولت |
+
+## 3. یہ کون سے مسائل حل کرتا ہے؟
+
+| دردِ سر | CodeGen کا طریقہ |
+| --- | --- |
+| بار بار CRUD کی تکرار، ہر ٹیبل کے لیے ڈھیر سارا بوائلر پلیٹ کوڈ ہاتھ سے لکھنا | ٹیبل سطح کے سوئچ سے ایک کلک میں مکمل فرنٹ اینڈ و بیک اینڈ، بشمول اضافہ/حذف/ترمیم/تلاش، صفحات بندی، توثیق، امپورٹ و ایکسپورٹ |
+| فرنٹ اینڈ و بیک اینڈ کے فیلڈز اور انٹرفیس کا میل نہ کھانا، بار بار انٹیگریشن میں تبدیلیاں | ایک ہی ٹیبل میٹاڈیٹا بیک اینڈ انٹرفیس اور فرنٹ اینڈ صفحے دونوں کو چلاتا ہے — فیلڈ کے معانی میں ذرہ برابر فرق نہیں |
+| ٹیم کے معیارات کا متحد کرنا مشکل، ہر فرد کا انداز جدا | ٹیمپلیٹ ہی معیار ہے: 22 FreeMarker ٹیمپلیٹس مرکزی طور پر کنٹرول، آن لائن ترمیم اور ورژن رول بیک کے ساتھ |
+| جنریٹر "اوور رائٹ کرتے ہی سب ضائع"، ہاتھ سے لکھی منطق مٹ جاتی ہے | مارکر بلاک انضمام کا طریقہ: ہاتھ سے لکھا کوڈ محفوظ رہتا ہے، صرف جنریٹ شدہ حصہ تبدیل ہوتا ہے |
+| جنریٹ شدہ کوڈ پر اعتبار نہیں، مسئلہ کمپائل کے وقت کھلتا ہے | میموری میں کمپائل سیلف چیک (اصلی `javac`)، ساختی کنٹریکٹ جانچ، ڈسک ڈف پیش منظر — کمپائل نہ ہو تو ڈسک پر نہیں اترتا |
+| نئے سسٹم کا اسکیفولڈنگ شروع سے کرنا وقت طلب | پائپ لائن کا "ایک جملے میں سسٹم بنائیں": ڈیٹابیس بنانا → اسکیفولڈ → جنریشن → پیکجنگ → مینو رجسٹریشن، سب خودکار |
+
+---
+
+## 4. بنیادی صلاحیتوں کا مکمل منظرنامہ
+
+- **ٹیبل منسلک کرنا**: DDL کی تجزیہ گری، ڈیٹابیس ٹیبل کی براہِ راست امپورٹ، بیچ انٹیک وزرڈ، کالم ترتیب کی خودکار اخذ کردہ ترتیب (کنٹرول / توثیق / ڈکشنری / تعلق)۔
+- **ٹیبل کی اقسام**: سنگل ٹیبل، ٹری ٹیبل (tree انٹرفیس + ٹری گرڈ)، ماسٹر-ڈیٹیل (ایک ہی ٹرانزیکشن میں محفوظ کرنا + ڈیٹیل ٹیبز)، کثیر الجہتی (many-to-many) لنک ٹیبل۔
+- **جنریٹ شدہ مصنوعات**: Entity / Mapper / Service / Controller / DTO / VO + `api.js` + Vue صفحات + A4 پرنٹ صفحہ + انٹیگریشن ٹیسٹ کا ڈھانچہ۔
+- **بزنس میں اضافے**: متعلقہ ڈراپ ڈاؤن، ڈکشنری ترجمہ، ڈیٹا ماسکنگ، یکتائی کی جانچ، فارم کا باہمی تعلق، ڈیٹا اسکوپ اجازتیں، Excel امپورٹ و ایکسپورٹ، اپروول ورک فلو، پیمنٹ / فائل / موبائل کیپابیلیٹی پیک۔
+- **کوالٹی گیٹس**: میموری میں کمپائل سیلف چیک (اصلی `javac`)، ساختی کنٹریکٹ جانچ، اجازتوں کی ہم آہنگی کی جانچ، ڈسک ڈف پیش منظر، فرنٹ اینڈ مصنوعات کی حقیقی توثیق۔
+- **محفوظ ترسیل**: ڈسک پر تحریر + `.gen-backup` بیچ بیک اپ، مارکر بلاک انضمام سے ہاتھ سے لکھا کوڈ محفوظ، `gen_output` کی چار حالتوں والا لیجر (نیا بنایا / ضم کیا / چھوڑا / ناکام)، تاریخی رول بیک۔
+- **کثیر السسٹم علیحدگی**: ہر ہدف منصوبہ ایک "سسٹم کنفیگریشن" ہے (فرنٹ اینڈ و بیک اینڈ کے راستے، پیکج نام، گیٹ وے پری فکس، انحصار کی classpath، جنریشن سوئچز کی طے شدہ قدریں) — کئی منصوبے بیک وقت خدمت لیے جا سکتے ہیں۔
+- **AI میں اضافے**: ایک جملے میں سسٹم بنائیں (AI ماڈلنگ)، سیڈ ڈیٹا کی AI افزودگی، ٹیبل سطح کی AI تجویز کردہ ترتیب (ڈف پیش منظر + نشان زد کر کے اطلاق)۔
+
+---
+
+## 5. مخصوص منظرنامے
+
+| منظرنامہ | وضاحت |
+| --- | --- |
+| ٹری ٹیبل | مصنوعات کی اقسام جیسے درجہ بندی والے ڈیٹا کے لیے خودکار tree انٹرفیس، ٹری گرڈ اور والد منتخب کرنے کا ڈراپ ڈاؤن |
+| سنگل ٹیبل CRUD | صارفین، مصنوعات وغیرہ — فارن کی ڈراپ ڈاؤن + ڈکشنری ترجمہ + امپورٹ و ایکسپورٹ، فوراً استعمال کے قابل |
+| ماسٹر-ڈیٹیل | سیلز آرڈر + آرڈر کی تفصیلات، ایک ہی ٹرانزیکشن میں محفوظ، تفصیل ڈرائر میں دو ٹیبز (ماسٹر معلومات / تفصیلات) |
+| صرف پڑھنے / اعداد و شمار | انوینٹری کی حرکات وغیرہ — اضافہ/حذف/ترمیم کے سوئچ بند، صرف تلاش اور ایکسپورٹ باقی |
+| پرنٹ دستاویزات | "پرنٹ" سوئچ پر نشان لگائیں تو A4 پرنٹ صفحہ اور روٹ تیار ہوتا ہے، سرورق + تفصیلاتی جدول کی سہولت کے ساتھ |
+| ایک جملے میں سسٹم بنانا | بزنس ڈومین بیان کریں — AI ڈیٹابیس و ٹیبل بنانا + اسکیفولڈ + مکمل جنریشن + مینو رجسٹریشن، سب ایک ہی سانس میں |
+
+> مذکورہ بالا تمام منظرناموں کے قابلِ عمل ڈیمو (`demo_admin` منصوبہ) اور متعلقہ اسکرین شاٹس موجود ہیں، تفصیل کے لیے دیکھیں `docs/典型场景操作指南-演示后台demo.md` (چینی)۔
+
+---
+
+## 6. بنیادی ورک فلو
+
+```
+ٹیبل منسلک کریں  →  فیلڈ/سوئچ ترتیب  →  ایک کلک جنریشن (سیلف چیک → بیک اپ → تحریر → کمپائل → مینو → روٹ)  →  لیجر · رول بیک
+ڈیٹابیس امپورٹ/DDL     کنٹرول/توثیق/ڈکشنری    تمام کوالٹی گیٹس پاس ہونے پر ہی ڈسک پر، ہاتھ سے لکھا کوڈ محفوظ    بیچ سطح پر سراغ لگانا
+```
+
+- **ڈف پیش منظر**: جنریٹ شدہ مصنوعات کا ڈسک کی موجودہ حالت سے فائل بہ فائل موازنہ، تصدیق کے بعد ہی تحریر، تاکہ غلطی سے اوور رائٹ نہ ہو۔
+- **جنریشن لیجر**: ہر فائل کا عمل، بائٹس کی تعداد، MD5 اور بیک اپ کا مقام درج ہوتا ہے؛ پورا بیچ ایک ساتھ رول بیک ہو سکتا ہے۔
+
+---
+
+## 7. ایک جملے میں سسٹم بنائیں (Pipeline)
+
+یہ "شروع سے ایک بیک اینڈ کھڑا کرنے" کے لیے اعلیٰ درجے کی صلاحیت ہے۔ بزنس ڈومین بیان کرنے کے بعد، پائپ لائن 5 مراحل میں مکمل خودکاری سے آگے بڑھتی ہے:
+
+| مرحلہ | مفہوم |
+| --- | --- |
+| `CHECK` | ہدف منصوبے کی کنفیگریشن اور انحصار کی classpath کی جانچ |
+| `WRITE` | ڈیٹابیس بنانا، ٹیبل بنانا، اسکیفولڈ اور جنریٹ شدہ مصنوعات لکھنا |
+| `COMPILE` | بیک اینڈ `mvn package` / فرنٹ اینڈ بلڈ، میموری میں کمپائل سیلف چیک |
+| `MENU` | مینو اجازتیں تیار اور رجسٹر کرنا (دو اخراجی راستے: artifact SQL / internal براہِ راست تحریر) |
+| `ROUTE` | فرنٹ اینڈ روٹ کے ٹکڑوں کی دوبارہ تعمیر |
+
+کسی بھی مرحلے کی ناکامی فوراً عمل روک دیتی ہے اور قابلِ فہم خرابی پیش کرتی ہے، تاکہ مسئلہ آسانی سے تلاش ہو سکے۔
+
+---
+
+## 8. سسٹم آرکیٹیکچر
+
+فرنٹ اینڈ اور بیک اینڈ الگ الگ، دو ریپوزٹریاں مل کر کام کرتی ہیں:
+
+| ریپوزٹری | کردار | ٹیک اسٹیک |
+| --- | --- | --- |
+| `codegen-server` | بیک اینڈ: جنریشن انجن، ٹیمپلیٹس، توثیق، لیجر، پائپ لائن | Java 21 · Spring Boot 3.2.5 · MyBatis-Plus 3.5.5 · FreeMarker · JWT · MySQL 8 · springdoc-openapi |
+| `codegen-web` | فرنٹ اینڈ: کنسول (ٹیبل کنفیگریشن / ٹیمپلیٹس / لیجر / سسٹم مینجمنٹ) | Vue 2.7 · Element UI · axios · Vue Router(history) |
+
+بیک اینڈ کی تہیں:
+
+```
+controller/    انٹرفیس تہہ (Gen* جنریشن چین / Sys* سسٹم مینجمنٹ / پائپ لائن)
+service/impl/  بنیادی عمل درآمد (جنریشن چین، ٹیمپلیٹ انجن، انضمام، توثیق، پائپ لائن کا اجرا)
+util/          ٹیمپلیٹ انجن، ماڈل کی ترتیب، مارکر بلاک انضمام، سیلف چیک کمپائلیشن
+config/        آؤٹ پٹ کنفیگریشن، سیلف چیک کنفیگریشن، ٹیمپلیٹ سیڈر
+common/        Result / BaseEntity / استثنائی حالات / آڈٹ
+resources/gen-templates/   22 FreeMarker ٹیمپلیٹس (گروپس: backend / frontend / shared / test)
+```
+
+**ہدف منصوبے میں لازماً موجود ہونے والی بنیادی صلاحیتیں** (جنریٹر صرف بزنس کوڈ بناتا ہے، بنیاد نہ ہو تو خاموشی سے خرابی آتی ہے):
+
+1. MyBatis-Plus کا صفحات بندی پلگ ان (`PaginationInnerInterceptor`)
+2. `Result` / `BaseEntity` / `PageQuery` جیسی بنیادی کلاسز (پیکج کا سابقہ `root-package` کے مطابق ہو)
+3. فرنٹ اینڈ `utils/request.js` میں `toPageData` (جو `Page{records,total}` کو `{list,total}` میں بدلتا ہے)
+4. انحصارات `springdoc-openapi-starter-webmvc-ui` (جنریٹ شدہ کوڈ `@Operation` استعمال کرتا ہے) اور `poi-ooxml` (Excel)
+
+---
+
+## 9. ٹیک اسٹیک ایک نظر میں
+
+| پہلو | انتخاب |
+| --- | --- |
+| بیک اینڈ زبان / فریم ورک | Java 21 / Spring Boot 3.2.5 |
+| پرسسٹینس تہہ | MyBatis-Plus 3.5.5 |
+| ٹیمپلیٹ انجن | FreeMarker (22 سیڈ ٹیمپلیٹس، آن لائن ترمیم + ورژن رول بیک) |
+| سیکیورٹی | JWT کی تصدیق |
+| ڈیٹابیس | MySQL 8 |
+| فرنٹ اینڈ | Vue 2.7 + Element UI |
+| مقامی AI | qwen2.5-coder:7b (ماڈلنگ / تجویز کردہ ترتیب / سیڈ ڈیٹا کی افزودگی) |
+| API دستاویزات | springdoc-openapi (Swagger UI) |
+
+---
+
+## 10. فوری آغاز
+
+### 1. ڈیٹابیس بنائیں (13 پلیٹ فارم ٹیبلز + طے شدہ اکاؤنٹ admin/admin123)
+
+```bash
+mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
+mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
+```
+
+### 2. ہدف منصوبہ ترتیب دیں
+
+کنفیگریشن ٹیمپلیٹ کاپی کریں اور اپنی مشین کے راستوں کے مطابق تبدیل کریں:
+
+```bash
+cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
+```
+
+`application-local.yml` پہلے ہی `.gitignore` میں خارج شدہ ہے، کمیٹ نہیں ہوگا۔ اہم کنفیگریشن items:
+
+```yaml
+gen:
+  output:
+    backend-root: /path/to/your-target-project      # جنریٹ شدہ مصنوعات کی تحریر کی بنیاد
+    frontend-root: /path/to/your-target-project
+    frontend-path: demo-web                          # monorepo کی صورت میں فرنٹ اینڈ ذیلی ڈائریکٹری
+    backend-path: demo-server/src/main/java/com/demo
+    package-name: com.demo
+    root-package: com.demo                           # مصنوعات میں بنیادی کلاسز کی import کا سابقہ
+  selfcheck:
+    classpath: /path/to/your-target-project/demo-lib/*
+```
+
+سیلف چیک کے انحصار کی ڈائریکٹری اس طرح ایکسپورٹ کریں:
+
+```bash
+cd your-target/demo-server
+mvn dependency:copy-dependencies -DoutputDirectory=../demo-lib
+```
+
+### 3. بیک اینڈ شروع کریں
+
+```bash
+mvn package -DskipTests
+java -jar target/codegen-server.jar
+```
+
+سروس کا طے شدہ پورٹ **8120** ہے، API دستاویزات `/swagger-ui/index.html` پر۔
+
+### 4. فرنٹ اینڈ شروع کریں
+
+```bash
+cd ../codegen-web
+npm install
+npm run serve
+```
+
+فرنٹ اینڈ کا طے شدہ پورٹ **9530** ہے، `/dev-api` کو بیک اینڈ 8120 پر پراکسی کیا جاتا ہے۔ طے شدہ اکاؤنٹ `admin / admin123`۔
+
+### 5. اہم کنفیگریشن آئٹمز
+
+| کنفیگریشن | وضاحت |
+| --- | --- |
+| `gen.output.*` | مصنوعات کی تحریر کے راستے، پیکج نام، ماڈیول میپنگ |
+| `gen.selfcheck.classpath` | میموری کمپائل سیلف چیک کے لیے انحصار کی classpath، `dir/*` کی حمایت |
+| `gen.menu.outlet` | `artifact` صرف مینو SQL اور روٹ کے ٹکڑے بناتا ہے؛ `internal` پلیٹ فارم کے اپنے `sys_menu` میں بھی لکھتا ہے |
+
+---
+
+## 11. دستاویزات کی رہنمائی
+
+| دستاویز | مواد |
+| --- | --- |
+| `docs/代码生成器-操作手册.md` (چینی) | تعیناتی، پانچ منٹ میں آغاز، ٹیبل کنفیگریشن، بیچ انٹیک، ٹیمپلیٹ مینجمنٹ، لیجر، API کیٹلاگ، پائپ لائن کا مکمل عمل (حقیقی اسکرین شاٹس کے ساتھ) |
+| `docs/典型场景操作指南-演示后台demo.md` (چینی) | 6 ٹیبلز جو 5 اقسام کے مخصوص منظرناموں کا احاطہ کرتے ہیں، قابلِ عمل ڈیمو اور حقیقی اجرا کے اسکرین شاٹس کے ساتھ |
+| `docs/项目介绍.md` (چینی) | منصوبے کا تعارفی دستاویز، اسی ماخذ سے |
+| `docs/代码生成器-Vx.x-规划.md` (چینی) | V3.1 → V7.3 کے مختلف ورژنز کی منصوبہ بندی اور خصوصیات کا جائزہ |
+| `codegen-web/README.md` | فرنٹ اینڈ کنسول کے فوری آغاز کا حوالہ |
+
+---
+
+## 12. ورژنز کی تاریخی ارتقا
+
+| ورژن | ورژن کا موضوع / منصوبہ بندی دستاویز | لینڈنگ کمیٹ |
+| --- | --- | --- |
+| V1.2 / V1.3 | ایک کلک جنریشن / بیچ / رول بیک؛ ڈف پیش منظر اور ساختی ہم آہنگی | — (صرف `src/api/gen.js` کے تبصروں میں) |
+| V2.0 | متحرک روٹس (بیک اینڈ کا بھیجا ہوا مینو ٹری) | — |
+| V3.0 / V3.1 | کثیر السسٹم لیجر؛ کثیر السسٹم کا مکمل چکر + پہلے خودکار ٹیسٹس | V3.1 (174 سطریں) |
+| V4.2 | جنریشن کے نتائج قابلِ سراغ اور قابلِ رول بیک (تحریر کا لیجر) | V4.2 (292 سطریں) |
+| V4.3 | ٹیمپلیٹ ریگریشن اور کوالٹی گارڈ ریلز | V4.3 (200 سطریں) |
+| V4.4 | ایک ماسٹر کئی ڈیٹیل، کاسکیڈ تحریر کی تکمیل، ٹیمپلیٹ کی لینیں | V4.4 (154 سطریں) |
+| V4.5 | A4 پرنٹ دستاویزات (کسی تیسرے فریق پر انحصار نہیں) | V4.5 (127 سطریں) |
+| V5.0 | ایک جملے میں سسٹم بنائیں: پائپ لائن + AI ماڈلنگ + اسکیفولڈ بنیاد | — |
+| V5.1 | DDL آڈٹ کالمز کی خودکار تکمیل | V5.1 (100 سطریں) |
+| V5.2 | پائپ لائن میں سیڈ ڈیٹا کی ابتدائی مرحلہ | V5.2 (107 سطریں)، 84ec8dd |
+| V5.5 | کثیر ماڈیول منصوبے کی جنریشن کی تکمیل | af73dd3 |
+| V6.0 | مائیکرو سروسز کی سہولیات (Nacos / Gateway / Feign، تیسری حالت micro) | V6.0 (111 سطریں)، 1deecbd |
+| V6.1 | Activiti ورک فلو کا دوہرا انجن | V6.1 (100 سطریں)، 02b671e |
+| V6.2 | مصنوعات کی ترسیل کا رخ (CLI / تعیناتی مصنوعات / کنفیگریشن سیکیورٹی) | V6.2 (114 سطریں)، 02b671e |
+| V6.3 | پیمنٹ کیپابیلیٹی پیک (WeChat / Alipay + Mock) | V6.3 (104 سطریں)، 1c4ee6a، 22eede5 |
+| V6.4 | اجازت و سیکیورٹی کی بنیاد (token کی مستقل مزاجی / BCrypt / API اجازتیں / لاگ ان کا تحفظ) | V6.4 (107 سطریں)، 007a202 |
+| V6.5 | موبائل uni-app (H5 + WeChat Mini Program) | V6.5 (105 سطریں)، 779ac41 |
+| V6.6 | فائل کیپابیلیٹی پیک | 98f3c09 |
+| V6.7 | مصنوعات کے ٹیسٹ کی فیکٹری قبولیت (test_enabled کی تین حالتیں + H2 ڈھانچہ) | V6.7 (134 سطریں)، 4e7d318 |
+| V6.8 | مصنوعات کی دیکھ بھال کی صلاحیت (dryRun / محفوظ چھوڑنا / برانڈ کی پیرامیٹرائزیشن) | V6.8 (141 سطریں)، be6f858 |
+| V6.9 | پلیٹ فارم دستاویزات کا مرکز (بیک اینڈ بنیاد، فرنٹ اینڈ اسی بیچ میں مکمل) | — |
+| V6.10 | پلیٹ فارم کی مشاہدہ پذیری: Actuator + میموری میٹرک ونڈو + ایمبیڈڈ مانیٹرنگ صفحہ | — |
+| V7.0 | AI صفحہ اور مینو کی تجاویز (preview / apply) | V7.0 (94 سطریں)، 45f2670 |
+| V7.1 | سیڈ ڈیٹا کی AI افزودگی (معانی AI کے ذمے، ساخت قواعد کے ذمے) | V7.1 (42 سطریں)، 5ca6e72 |
+| V7.2 | پائپ لائن کی کامیابی کے بعد SQL مصنوعات کا `db/` میں محفوظ ہونا | eebff88 |
+| **V7.3** | **ترسیل کا اعتبار: سیلف چیک کمپائل شدہ مصنوعات کے ٹیسٹ / SQL ترسیل کا متحد اخراجی راستہ / ٹیبل سطح کی AI تجاویز** | **V7.3 (138 سطریں)** |
+| **V7.4** | قابلِ تکرار ترسیل: خالی ڈیٹابیس سے تعیناتی ممکن، ہر کمیٹ کے چلنے کی ضمانت | c306e29 |
+| **V7.5** | پروجیکٹ کی زبان کنفیگریشن: ۲۰۶ زبانوں کی فہرست / ڈیفالٹ زبان / فعال زبانیں، تیار شدہ کوڈ میں lang اور dir کا داخلہ | 7a9afa0 + abac56d |
+| **V8.0** | مکمل صفحہ i18n: ۲۰۶ زبانوں کا فریم ورک (۸ پیشہ ورانہ ترجمہ شدہ)، OFF صفر فرق معاہدے کے ساتھ دوہرا i18n | 9e5dd57 → 7d57aea |
+| **V8.1** | معیار کی مضبوطی: آف لائن معاہدہ ہارنس (۹ موڈ، OFF صفر فرق) + i18n-core یونٹ ٹیسٹ + CI گیٹ + ایماندار README تقسیم (فریم ورک ۲۰۶ / ترجمہ شدہ ۸) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | تیار شدہ artifacts کو Vue 3 + Element Plus + Vite پر جدید بنایا گیا؛ رن ٹائم پر تصدیق شدہ (۴۰/۴۰، کامیاب vite build، ۱۴ اسکرین شاٹس بشمول ar-SA RTL)؛ ۳ رن ٹائم خرابیاں درست کی گئیں | 93a12d5 + e49330b, **موجودہ ورژن** |
+
+---
+
+> **V6.10 پلیٹ فارم کی مشاہدہ پذیری**: Actuator + Micrometer شامل، ہر 5 سیکنڈ پر نمونہ لے کر میموری کے رنگ بفر میں لکھا جاتا ہے (30 منٹ کی ونڈو محفوظ)، نیز نیا ایمبیڈڈ «سسٹم مانیٹرنگ» صفحہ — بیک اینڈ `/monitor/*` ایگریگیشن انٹرفیس + فرنٹ اینڈ ECharts پینل۔ صرف وائٹ لسٹ شدہ `health/info/metrics` اینڈ پوائنٹس کی اجازت ہے، `/actuator/health` بغیر token ہے، جبکہ `metrics` وغیرہ کے لیے تصدیق ضروری ہے؛ `env/beans/heapdump/threaddump/loggers` کبھی ظاہر نہیں کیے جاتے۔ نمونہ لینے کی ونڈو صرف عمل (process) کے اندر ہے، دوبارہ آغاز پر ختم ہو جاتی ہے اور متعدد مثالوں میں مشترک نہیں۔ تفصیل کے لیے دیکھیں `docs/可观测性说明.md` (چینی)۔
+
+## 13. منصوبے کی موجودہ حیثیت
+
+- موجودہ منصوبہ بندی کی ورژن لائن **V9.0** تک پہنچ چکی ہے، صلاحیتیں مسلسل بڑھ رہی ہیں (AI ماڈلنگ، سیڈ ڈیٹا کی افزودگی، کیپابیلیٹی پیک کا نظام وغیرہ)۔
+- ساتھ ساتھ ڈیمو منصوبہ `demo_admin` (بیک اینڈ 8140 / فرنٹ اینڈ 9040) تیار ہے، جو ٹری / CRUD / ماسٹر-ڈیٹیل / صرف پڑھنے / پرنٹ کے تمام منظرناموں کا احاطہ کرتا ہے اور آزادانہ چل کر تصدیق ہو سکتا ہے۔
+- دونوں ریپوزٹریاں Gitee پر میزبانی شدہ ہیں: `https://gitee.com/hustxiayuhong/CodeGen.git`
+
+---
+
+## 14. مصنف اور تکنیکی معاونت
+
+- **مصنف**: چینی پروگرامر (آزاد ڈویلپر)
+- **ای میل**: `hustxiayuhong@126.com`
+- **تکنیکی معاونت**: براہِ کرم ای میل **چینی زبان** میں لکھیں اور مسئلے کی تفصیل، ماحول (JDK / MySQL / ورژن) اور دوبارہ پیدا کرنے کے مراحل شامل کریں
+
+> میں ہر ای میل پڑھتا ہوں اور جواب دیتا ہوں۔ بگ رپورٹس، تجاویز اور تعاون کی درخواستیں خوش آئند ہیں۔
+
+---
+
+## 15. اسی طرح کے ٹولز کے ساتھ موازنہ
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.
