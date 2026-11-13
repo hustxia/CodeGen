@@ -261,9 +261,9 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | V7.2 | SQL deliverables written to `db/` after successful pipeline | eebff88 |
 | **V7.3** | **Delivery trustworthiness: self-check compiled artifact tests / unified SQL delivery outlet / per-table AI recommendations** | **V7.3 (138 lines)** |
 | **V7.4** | Repeatable delivery: deployable from an empty database, every commit guaranteed runnable | — |
-| **V8.0** | **Full-page i18n: 206-language framework (8 professionally translated), dual-track i18n with OFF zero-diff contract** | current |
-| **V8.1** | Quality hardening: `vuePage.ftl` snapshot tests + `i18n` unit tests + CI gate + honest README split | in dev |
-| **V9.0** | Frontend modernization: Vue 3 + Element Plus + Vite migration | planned |
+| **V8.0** | **Full-page i18n: 206-language framework (8 professionally translated), dual-track i18n with OFF zero-diff contract** | V8.0, 9b51dcc |
+| **V8.1** | **Quality hardening: offline Freemarker contract harness (9 modes, OFF byte-zero-diff / ON emits `$t`) + `i18n-core` unit tests (vitest) + CI gate (`i18n-contract.yml`) + honest README split (framework 206 / translated 8) + `check-locale-keys.mjs` shipped in generated projects + translation contribution guide** | V8.1, 9b51dcc + e49330b |
+| **V9.0** | **Generated-artifact modernization: Vue 3 + Element Plus + Vite (package.json / vite.config.js / main.js / router / store / request.js; template mechanics: `.sync`→`v-model`, `slot=`→`#`, `slot-scope`→`#default`, `.native` removed, font icons→component icons, `size="mini"`→`small`). Runtime-verified: Maven build + API-driven generation + 40/40 script assertions + `vite build` success + 14 Chrome screenshots incl. ar-SA RTL. 3 real defects found & fixed at runtime (`.native` leftovers, `index.html` entry location, missing `@` alias)** | V9.0, 93a12d5 + e49330b, current |
 
 ---
 
@@ -271,7 +271,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ## 13. Project Status
 
-- The current released version is **V8.0** (full-page internationalization, 206-language framework). **V8.1** (quality hardening) is in development; **V9.0** (Vue 3 + Element Plus + Vite) is planned.
+- The current released version is **V9.0** (generated artifacts on Vue 3 + Element Plus + Vite, runtime-verified). It builds on **V8.1** quality hardening (offline contract harness + unit tests + CI gate) and **V8.0** full-page i18n (206-language framework, 8 professionally translated). Language support verified on 2026-11-13: 206/206 locales complete in `/language/list`, 12 RTL languages, 8 translated word banks key-identical to the zh-CN baseline (60 keys each). See `ROADMAP.md` for the full verification record.
 - A companion demo project `demo_admin` (backend 8140 / frontend 9040) covers tree / CRUD / master-detail / read-only / print scenarios and runs standalone for verification.
 - Both repositories are hosted on Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
