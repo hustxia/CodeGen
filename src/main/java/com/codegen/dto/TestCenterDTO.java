@@ -98,4 +98,26 @@ public final class TestCenterDTO {
         private Integer pageNum = 1;
         private Integer pageSize = 20;
     }
+
+    /** 定时回归任务：新增/编辑共用 */
+    @Data
+    public static class ScheduleSave {
+        private Long id;
+        private Long projectId;
+        private String name;
+        private Long envId;
+        private String suiteIds;
+        private String cron;
+        private Integer enabled = 1;
+        private String notifyType;
+        private String notifyTarget;
+    }
+
+    @Data
+    public static class SchedulePage {
+        private Long projectId;
+        private String name;
+        private Integer pageNum = 1;
+        private Integer pageSize = 20;
+    }
 }

@@ -16,8 +16,9 @@ import com.codegen.monitor.MonitorMetrics;
 import com.codegen.service.GenCodeService;
 import com.codegen.service.GenDriftService;
 import com.codegen.service.GenSqlDeliverService;
-import com.codegen.service.I18nTextRewriter;
 import com.codegen.service.GenTableColumnService;
+import com.codegen.service.TestSuiteGenService;
+import com.codegen.service.I18nTextRewriter;
 import com.codegen.support.GenPathResolver;
 import com.codegen.util.GenDigestUtils;
 import com.codegen.util.GenMergeUtils;
@@ -27,6 +28,7 @@ import com.codegen.vo.GenDiffVO;
 import com.codegen.vo.GenFileVO;
 import com.codegen.vo.GenSqlDeliverVO;
 import com.codegen.vo.GenWriteVO;
+import com.codegen.vo.TestVO;
 import com.codegen.common.context.UserContext;
 import com.codegen.common.exception.BusinessException;
 import org.slf4j.Logger;
@@ -110,6 +112,14 @@ public class GenCodeServiceImpl implements GenCodeService {
 
     @Autowired
     private GenDriftService genDriftService;
+
+    /** V9.2 F-15：生成完成自动注册/刷新测试套件（复用 TestSuiteGenServiceImpl 的指纹比对逻辑）。 */
+    @Autowired
+    private TestSuiteGenService testSuiteGenService;
+
+    /** V7.3 P0-2 同款隔离：本次写盘为各表自动注册测试套件的结果，供 UI 展示。 */
+    private static final ThreadLocal<List<TestVO.GenResult>> TEST_GEN_RESULTS =
+            ThreadLocal.withInitial(ArrayList::new);
 
     /** V6.10：可观测性指标采集器（写盘耗时 / 各状态文件数 / 管线步骤耗时）。 */
     @Autowired
@@ -214,6 +224,7 @@ public class GenCodeServiceImpl implements GenCodeService {
         try {
             LEDGER_ERRORS.set(0);
             SQL_DELIVERIES.set(new ArrayList<>());
+            TEST_GEN_RESULTS.set(new ArrayList<>());
             // 与 renderTables 同口径：写盘前清一次系统配置缓存，
             // 否则管理页改完 sys_project（root/path 语义修正）后直调写盘仍用旧配置（坑 51）
             clearProjectCache();
@@ -242,6 +253,13 @@ public class GenCodeServiceImpl implements GenCodeService {
                 if (wrote) {
                     jdbcTemplate.update("UPDATE gen_table SET last_gen_time = NOW(), last_gen_by = ? WHERE id = ?",
                             UserContext.getUserId(), table.getId());
+                    // V9.2 F-15：生成完成自动为这张表登记/刷新测试套件（指纹比对决定覆盖或保留手工用例）。
+                    // 套件注册失败不应让代码写盘回滚，故只记录不抛出。
+                    try {
+                        TEST_GEN_RESULTS.get().add(testSuiteGenService.generate(table.getId()));
+                    } catch (Exception e) {
+                        log.warn("生成完成自动注册测试套件失败 tableId={}: {}", table.getId(), e.getMessage());
+                    }
                 }
             }
             if (results.isEmpty()) {
@@ -268,6 +286,12 @@ public class GenCodeServiceImpl implements GenCodeService {
     @Override
     public List<GenSqlDeliverVO> lastSqlDeliveries() {
         return new ArrayList<>(SQL_DELIVERIES.get());
+    }
+
+    /** V9.2 F-15：本次写盘为各表自动注册测试套件的结果（供 UI 展示「已为 N 张表生成冒烟用例」）。 */
+    @Override
+    public List<TestVO.GenResult> lastTestGenResults() {
+        return new ArrayList<>(TEST_GEN_RESULTS.get());
     }
 
     /**
