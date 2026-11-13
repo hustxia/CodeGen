@@ -115,8 +115,9 @@ Nyuma default kwenye bandari **8120**, mbele kwenye bandari **9530**. Akaunti ya
 
 ## 11. Hali ya Mradi
 
-- Mstari wa matoleo uliopangwa sasa umefikia **V9.1**.
-- **V9.1** · Urekebishaji kwa matengenezo rahisi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
+- Mstari wa matoleo uliopangwa sasa umefikia **V9.2**.
+- **V9.2** · Kituo cha majaribio & uthibitishaji · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical
+- **V9.2** · Urekebishaji kwa matengenezo rahisi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - Hifadhi zote mbili zinapatikana kwenye Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Mwandishi

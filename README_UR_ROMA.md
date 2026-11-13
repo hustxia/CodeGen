@@ -265,7 +265,8 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 | **V8.0** | Full-page i18n: 206 zabanoon ka framework (8 professional tarjuma shuda), OFF zero-diff contract ke saath dual-track i18n | 9e5dd57 → 7d57aea |
 | **V8.1** | Quality hardening: offline contract harness (9 modes, OFF zero-diff) + i18n-core unit tests + CI gate + imandaar README taqseem (framework 206 / tarjuma 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | Generated artifacts ko Vue 3 + Element Plus + Vite par modernize kiya; runtime par verify shuda (40/40 assertions, kamyab vite build, 14 screenshots incl. ar-SA RTL); 3 runtime defects theek kiye | 93a12d5 + e49330b  |
-| **V9.1** | **Dekh bhaal ke liye refactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **maujooda version** |
+| **V9.1** | **Dekh bhaal ke liye refactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
+| **V9.2** | **Test Center aur tasdeeqi markaz · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **maujooda version** |
 
 ---
 
@@ -273,7 +274,7 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 
 ## 13. Project Status
 
-- Mazkoor planned version line **V9.1** tak pahunch chuki hai (capabilities iterate hoti rahtin hain: AI modeling, seed-data enhancement, capability-pack system, waghaira).
+- Mazkoor planned version line **V9.2** tak pahunch chuki hai (capabilities iterate hoti rahtin hain: AI modeling, seed-data enhancement, capability-pack system, waghaira).
 - Ek companion demo project `demo_admin` (backend 8140 / frontend 9040) tree / CRUD / master-detail / read-only / print scenarios cover karta hai aur verification ke liye standalone run hota hai.
 - Dono repositories Gitee par host hain: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

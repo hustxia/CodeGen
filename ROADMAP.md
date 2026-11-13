@@ -191,25 +191,30 @@
 
 ---
 
-## V9.2 — 测试中心（需求阶段，未实现，2026-11-13）
+## V9.2 — 测试中心 + 验证中心（已实现，2026-11-13）
 
-> 状态：**需求基线 / 待评审**；完整需求见 `docs/代码生成器-V9.2-规划.md`。
-> 延续「一版只做一件事」：V9.2 只做测试中心，不新增生成能力；产物零 diff 契约继续有效。
+> 用户拍板「两套合并」：工作区既有的接口/UI 用例中心（`test_*` 七表、`/test/*`）与本轮新增的
+> 验证资产收拢（`tc_*` 三表、`/tc/center`）作为同一版本的两个子模块交付，路由与菜单 id 互不冲突。
+> 完整需求基线见 `docs/代码生成器-V9.2-规划.md`；设计文档见 `docs/design/V9.2测试中心-设计.md`。
 
-**要解决的问题**：`scripts/verify.sh` 仍是 V7.4 的门禁定义，V8.0 / V8.1 / V9.0 / V9.1 新增的 6 类验证
-（i18n 快照契约 9 模式、206 语言键覆盖、Vue3 产物 40/40 断言、`vite build`、14 张截图、新旧 jar 产物 diff）
-全部在门外；结果只写 `/tmp/verify-*.log`，无历史、无结构化结果、无可归档报告；`MIN_TESTS` 仍是 240（实际 312）。
+**交付**
+- 用例中心：`docs/sql/V9.2__test_center.sql`（7 张表 + 菜单 5000–5040）、Controller/Service/执行器/断言引擎、前端 `views/test/index.vue`。
+- 验证中心：`docs/sql/V9.2__verification_center.sql`（tc_run / tc_case_result / tc_artifact + 菜单 3040–3043）、
+  `TcSuite` 注册表 S1–S9、`TestCenterExecutor`（CAS 单运行锁 / 串行 / 超时 kill / 取消 / 失败不短路）、
+  `TestCenterService` + `/tc/*` REST、前端 `views/verification/index.vue`、`codegen.testcenter/v1` 摘要契约。
+- 门禁对齐：`scripts/verify.sh` 升到 7 步（`MIN_TESTS` 240 → 312、新增 i18n 快照契约与 206 语言键），
+  日志改落 `logs/testcenter/`（不再写 `/tmp`），末尾由 `scripts/testcenter-summary.mjs` 输出同一份 JSON 摘要。
+- 驱动脚本：`scripts/testcenter-suites.mjs`（9 套件，Windows `.cmd` / NODE_OPTIONS / JAVA_HOME 差异收敛）、
+  `scripts/check-all-locales.mjs`（206/206 键覆盖 + 8 精译 + 12 RTL）。
 
-**范围**：把已有验证资产产品化——统一套件注册表、单运行锁执行器、run/case/artifact 三层落库、REST API、
-控制台 `/tc/center` 页面、与 CI 共用的 `codegen.testcenter/v1` JSON 摘要、报告导出。
-首批 S1–S7 为 P0，S8（截图/构建）与 S9（双 jar diff）为 P1 且默认不勾选（本机内存约束）。
+**验证**
+- `mvn -o test` **373/373 全绿**（V9.2 新增 50 个单测：注册表 / 摘要契约 / 请求安全 / 路径白名单 / 执行器状态机 / 报告 / 存储 / 服务层）。
+- i18n 快照契约 **9/9**、i18n-core vitest **9 passed**、206 语言键 **206/206**、生成物 JS 1024 组合 0 坏、控制台 `npm run build` 成功。
+- 端到端：本机 MySQL 落两套 DDL（幂等重跑 2 次）、服务 8125 启动、登录 → `/tc/suites` 9 个 → `POST /tc/runs` 跑通 S4
+  → run/case/artifact 三层落库 → 并发第二次触发 **HTTP 409** → 夹带 `command` 字段 **HTTP 403**。
+- 修掉两个真问题：`ReentrantLock` 同线程可重入导致 409 失效（改 CAS）；`overview.activeRunId` 用 JSON number
+  下发 19 位雪花 ID 导致前端精度丢失、取消 404（改字符串，与 `BaseEntity` 口径一致）。
+- 产物零 diff：本版未改 `gen-templates` 与 8 个 Writer，新旧 jar 生成物对比沿用 V9.1 结论。
 
-**不含**：模板字符串与生成链路改动（产物零 diff）、平台控制台 Vue3 升级、分布式调度、206 语言自动翻译、合并阻断门禁。
-
-**验收要点**：312/312 单测、9/9 契约、206/206 语言键、1024 组合 0 坏、结果落库率 100%、
-产物 `diff -r` 为空、新增单测 ≥ 20。
-
-**开放问题**：可触发执行 vs 只读看板、截图是否持久化、6 类散落验证是否全入 P0、是否接阻断门禁、
-多语言文档同步时机——见规划文档第 12 节。
-
-> 版本标记：V9.2 未实现，README 版本历史表与各语言 README 的「当前版本」标记维持 V9.1 不动。
+**未做（按需求基线留到后续版本）**：S8 截图/构建自动化、S9 新旧 jar `diff -r` 自动化（P1，默认不勾选）、
+相邻 run 基线 diff、定时执行、把结果接成合并阻断门禁。

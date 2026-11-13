@@ -122,8 +122,9 @@ npm run serve
 
 ## 11. ప్రాజెక్ట్ స్థితి
 
-- ప్రస్తుతం ప్రణాళిక చేయబడిన వెర్షన్ లైన్ **V9.1** ను చేరుకుంది.
-- **V9.1** · నిర్వహణ సౌలభ్య పునర్నిర్మాణం · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
+- ప్రస్తుతం ప్రణాళిక చేయబడిన వెర్షన్ లైన్ **V9.2** ను చేరుకుంది.
+- **V9.2** · పరీక్షా కేంద్రం & ధృవీకరణ కేంద్రం · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical
+- **V9.2** · నిర్వహణ సౌలభ్య పునర్నిర్మాణం · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - రెండు రిపోజిటరీలు Gitee లో హోస్ట్ చేయబడ్డాయి: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. రచయిత
