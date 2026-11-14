@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **ప్రస్తుత వెర్షన్ V9.1 · నిర్వహణ సౌలభ్య పునర్నిర్మాణం · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **ప్రస్తుత వెర్షన్ V9.2 · పరీక్షా కేంద్రం & ధృవీకరణ కేంద్రం · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **V9.1 · నిర్వహణ సౌలభ్య పునర్నిర్మాణం · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · జనరేట్ చేసిన ఆర్టిఫ్యాక్ట్‌లు Vue 3 + Element Plus + Vite కు ఆధునీకరించబడ్డాయి; రన్‌టైమ్‌లో ధృవీకరించబడింది (40/40 అసర్షన్లు, విజయవంతమైన vite build, ar-SA RTL తో సహా 14 స్క్రీన్‌షాట్‌లు); 3 రన్‌టైమ్ లోపాలు సరిచేయబడ్డాయి**
 > **V8.1** · నాణ్యత సుధారణ: ఆఫ్‌లైన్ ఒప్పంద హార్నెస్ (9 మోడ్‌లు, OFF జీరో-డిఫ్) + i18n-core యూనిట్ టెస్ట్‌లు + CI గేట్ + నిజాయితీ README విభజన (ఫ్రేమ్‌వర్క్ 206 / అనువదించిన 8) + check-locale-keys.mjs
 > **V8.0** · పూర్తి పేజీ i18n: 206 భాషల ఫ్రేమ్‌వర్క్ (8 వృత్తిపరంగా అనువదించబడింది), OFF జీరో-డిఫ్ ఒప్పందంతో ద్విమార్గ i18n
@@ -127,11 +128,12 @@ npm run serve
 
 ## 11. ప్రాజెక్ట్ స్థితి
 
-> **Version History · V9.1**
+> **Version History · V9.2**
+> **V9.2** · పరీక్షా కేంద్రం & ధృవీకరణ కేంద్రం · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical — `V9.2 release`.
 > **V9.1** · నిర్వహణ సౌలభ్య పునర్నిర్మాణం · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9 — `654b8e0 → b0d081e`.
 > జనరేట్ చేసిన ఆర్టిఫ్యాక్ట్‌లు Vue 3 + Element Plus + Vite కు ఆధునీకరించబడ్డాయి; రన్‌టైమ్‌లో ధృవీకరించబడింది (40/40 అసర్షన్లు, విజయవంతమైన vite build, ar-SA RTL తో సహా 14 స్క్రీన్‌షాట్‌లు); 3 రన్‌టైమ్ లోపాలు సరిచేయబడ్డాయి — `93a12d5 + e49330b`.
 
-- ప్రస్తుతం ప్రణాళిక చేయబడిన వెర్షన్ లైన్ **V9.1** ను చేరుకుంది.
+- ప్రస్తుతం ప్రణాళిక చేయబడిన వెర్షన్ లైన్ **V9.2** ను చేరుకుంది.
 - రెండు రిపోజిటరీలు Gitee లో హోస్ట్ చేయబడ్డాయి: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. రచయిత

@@ -385,9 +385,15 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         // 共用一份会出现「依赖明明在却报 cannot find symbol」，比不配还难排查。
         String classpath = baseClasspath(projectClasspath);
         if (selfCheckProperties.classpathLooksNested() && !StringUtils.hasText(projectClasspath)) {
+            // V9.2 修正（核心风险 #5）：肥 jar 启动且未配置 gen.selfcheck.classpath 时，
+            // 嵌套依赖无法被 java.class.path 覆盖，编译必满屏 cannot find symbol——
+            // 这会产生「环境性误报」把门禁判成失败，反而让正常产物过不了自检。
+            // 不再硬跑注定失败的编译，改为诚实跳过并明确告警，由 operator 配置 classpath 启用完整自检。
+            result.setCompilerAvailable(false);
             result.addIssue("javac", 0L, "WARNING",
-                    "当前进程以单个肥 jar 启动，java.class.path 无法覆盖嵌套依赖，编译检查可能满屏 cannot find symbol；"
-                            + "建议配置 gen.selfcheck.classpath 指向依赖目录（支持 lib/*）");
+                    "当前进程以肥 jar 启动且未配置 gen.selfcheck.classpath，无法解析嵌套依赖，"
+                            + "已跳过编译检查（仅做结构与权限检查）。建议配置 gen.selfcheck.classpath 指向依赖目录（支持 lib/*）以启用完整自检");
+            return;
         }
 
         // 所属系统的根目录/根包：产物源码根与基座类都按系统解析，不再回落全局

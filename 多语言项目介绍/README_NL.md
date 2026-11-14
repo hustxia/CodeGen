@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **huidige versie V9.1 · Onderhoudbaarheidsrefactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **huidige versie V9.2 · Testcentrum & verificatiehub · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **V9.1 · Onderhoudbaarheidsrefactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · Gegenereerde artefacten gemoderniseerd naar Vue 3 + Element Plus + Vite; runtime geverifieerd (40/40 asserts, geslaagde vite build, 14 screenshots incl. ar-SA RTL); 3 runtimefouten gevonden & opgelost**
 > **V8.1** · Kwaliteitsverharding: offline contract-harness (9 modi, OFF zero-diff) + i18n-core unittests + CI-poort + eerlijke README-splitsing (framework 206 / vertaald 8) + check-locale-keys.mjs
 > **V8.0** · Volledige pagina-i18n: framework van 206 talen (8 professioneel vertaald), tweespoors i18n met OFF zero-diff contract
@@ -230,7 +231,7 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 | `../codegen-server/docs/代码生成器-操作手册.md` (Chinees) | Inzet, 5-minuten start, tabelconfig, batch-opname, templatebeheer, grootboek, API-catalogus, volledige pijplijn (met screenshots) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinees) | 6 tabellen die 5 typische scenario's dekken, met uitvoerbare demo en echte screenshots |
 | `项目介绍.md` | Projectintroductiedocument, dezelfde bron als dit bestand |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versieplannen en functie-inventarissen van V3.1 → V9.1 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versieplannen en functie-inventarissen van V3.1 → V9.2 |
 | `../codegen-web/README.md` | Frontend console snelle start verwijzing |
 
 ---
@@ -270,7 +271,8 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 | **V8.0** | **Volledige pagina-i18n: framework van 206 talen (8 professioneel vertaald), tweespoors i18n met OFF zero-diff contract** | 9e5dd57 → 7d57aea |
 | **V8.1** | **Kwaliteitsverharding: offline contract-harness (9 modi, OFF zero-diff) + i18n-core unittests + CI-poort + eerlijke README-splitsing (framework 206 / vertaald 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **Gegenereerde artefacten gemoderniseerd naar Vue 3 + Element Plus + Vite; runtime geverifieerd (40/40 asserts, geslaagde vite build, 14 screenshots incl. ar-SA RTL); 3 runtimefouten gevonden & opgelost** | 93a12d5 + e49330b  |
-| **V9.1** | **Onderhoudbaarheidsrefactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **huidige versie** |
+| **V9.1** | **Onderhoudbaarheidsrefactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
+| **V9.2** | **Testcentrum & verificatiehub · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **huidige versie** |
 
 ---
 
@@ -278,7 +280,7 @@ De frontend draait standaard op poort **9530**, proxyt `/dev-api` naar backend p
 
 ## 13. Projectstatus
 
-- De huidige geplande versielijn heeft **V9.1** bereikt (capaciteiten blijven itereren: AI-modellering, seed-data verbetering, capaciteitspakket-systeem, enz.).
+- De huidige geplande versielijn heeft **V9.2** bereikt (capaciteiten blijven itereren: AI-modellering, seed-data verbetering, capaciteitspakket-systeem, enz.).
 - Een begeleidend demo-project `demo_admin` (backend 8140 / frontend 9040) dekt boom / CRUD / master-detail / alleen-lezen / afdruk scenario's en draait standalone voor verificatie.
 - Beide repositories worden gehost op Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

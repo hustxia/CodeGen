@@ -267,7 +267,8 @@ npm run serve
 | **V8.0** | पूर्ण पेज i18n: 206 भाषाओं का फ्रेमवर्क (8 पेशेवर रूप से अनूदित), OFF शून्य-डिफ़ संधि वाली दोहरी-ट्रैक i18n | 9e5dd57 → 7d57aea |
 | **V8.1** | गुणवत्ता सुदृढ़ीकरण: ऑफ़लाइन अनुबंध हार्नेस (9 मोड, OFF शून्य-डिफ़) + i18n-core यूनिट टेस्ट + CI गेट + ईमानदार README विभाजन (फ्रेमवर्क 206 / अनूदित 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | जनरेट किए गए आर्टिफैक्ट्स Vue 3 + Element Plus + Vite पर आधुनिक किए गए; रनटाइम पर सत्यापित (40/40 अभिकथन, सफल vite build, ar-SA RTL सहित 14 स्क्रीनशॉट); 3 रनटाइम दोष ठीक किए गए | 93a12d5 + e49330b  |
-| **V9.1** | **रखरखाव-योग्यता हेतु रीफ़ैक्टरिंग · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **वर्तमान संस्करण** |
+| **V9.1** | **रखरखाव-योग्यता हेतु रीफ़ैक्टरिंग · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
+| **V9.2** | **परीक्षण केंद्र एवं सत्यापन केंद्र · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **वर्तमान संस्करण** |
 
 ---
 
@@ -275,7 +276,7 @@ npm run serve
 
 ## 13. परियोजना की स्थिति
 
-- वर्तमान योजना संस्करण लाइन **V9.1** तक पहुँच चुकी है (क्षमताएँ निरंतर विकसित हो रही हैं: AI मॉडलिंग, सीड-डेटा एन्हांसमेंट, कैपेबिलिटी-पैक सिस्टम आदि)।
+- वर्तमान योजना संस्करण लाइन **V9.2** तक पहुँच चुकी है (क्षमताएँ निरंतर विकसित हो रही हैं: AI मॉडलिंग, सीड-डेटा एन्हांसमेंट, कैपेबिलिटी-पैक सिस्टम आदि)।
 - साथ में एक डेमो प्रोजेक्ट `demo_admin` (बैक-एंड 8140 / फ्रंट-एंड 9040) है, जो ट्री / CRUD / मास्टर-डिटेल / केवल-पढ़ने योग्य / प्रिंट — सभी परिदृश्यों को कवर करता है और स्वतंत्र रूप से चलाकर सत्यापित किया जा सकता है।
 - दोनों रिपॉज़िटरी Gitee पर होस्ट हैं: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

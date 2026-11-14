@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **mevcut sürüm V9.1 · Bakım yapılabilirlik refaktörü · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **mevcut sürüm V9.2 · Test merkezi & doğrulama merkezi · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **V9.1 · Bakım yapılabilirlik refaktörü · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · Üretilen artefaktlar Vue 3 + Element Plus + Vite'a modernize edildi; çalışma zamanında doğrulandı (40/40 iddia, başarılı vite build, ar-SA RTL dahil 14 ekran görüntüsü); 3 çalışma zamanı hatası giderildi**
 > **V8.1** · Kalite sertleştirme: çevrimdışı sözleşme düzeneği (9 mod, OFF sıfır fark) + i18n-core birim testleri + CI kapısı + dürüst README ayrımı (çerçeve 206 / çevrili 8) + check-locale-keys.mjs
 > **V8.0** · Tam sayfa i18n: 206 dilli çerçeve (8'i profesyonelce çevrildi), OFF sıfır fark sözleşmeli çift hatlı i18n
@@ -229,7 +230,7 @@ npm run serve
 | `../codegen-server/docs/代码生成器-操作手册.md` (Çince) | Dağıtım, 5 dakikalık başlangıç, tablo yapılandırma, toplu alım, şablon yönetimi, defter, API kataloğu, tam hat (ekran görüntüleriyle) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Çince) | 5 tipik senaryoyu kapsayan 6 tablo, çalıştırılabilir demo ve gerçek çalışma ekran görüntüleriyle |
 | `项目介绍.md` | Proje tanıtım belgesi, bu dosyayla aynı kaynak |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.1 arasındaki sürüm planları ve özellik envanterleri |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.2 arasındaki sürüm planları ve özellik envanterleri |
 | `../codegen-web/README.md` | Ön yüz konsol hızlı başlangıç referansı |
 
 ---
@@ -269,7 +270,8 @@ npm run serve
 | **V8.0** | **Tam sayfa i18n: 206 dilli çerçeve (8'i profesyonelce çevrildi), OFF sıfır fark sözleşmeli çift hatlı i18n** | 9e5dd57 → 7d57aea |
 | **V8.1** | **Kalite sertleştirme: çevrimdışı sözleşme düzeneği (9 mod, OFF sıfır fark) + i18n-core birim testleri + CI kapısı + dürüst README ayrımı (çerçeve 206 / çevrili 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **Üretilen artefaktlar Vue 3 + Element Plus + Vite'a modernize edildi; çalışma zamanında doğrulandı (40/40 iddia, başarılı vite build, ar-SA RTL dahil 14 ekran görüntüsü); 3 çalışma zamanı hatası giderildi** | 93a12d5 + e49330b  |
-| **V9.1** | **Bakım yapılabilirlik refaktörü · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **mevcut sürüm** |
+| **V9.1** | **Bakım yapılabilirlik refaktörü · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
+| **V9.2** | **Test merkezi & doğrulama merkezi · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **mevcut sürüm** |
 
 ---
 
@@ -277,7 +279,7 @@ npm run serve
 
 ## 13. Proje Durumu
 
-- Mevcut planlanan sürüm hattı **V9.1** seviyesine ulaştı (yetenekler sürekli yinelemede: yapay zeka modelleme, tohum-veri geliştirmesi, yetenek-paketi sistemi vb.).
+- Mevcut planlanan sürüm hattı **V9.2** seviyesine ulaştı (yetenekler sürekli yinelemede: yapay zeka modelleme, tohum-veri geliştirmesi, yetenek-paketi sistemi vb.).
 - Eşlik eden demo projesi `demo_admin` (arka uç 8140 / ön uç 9040), ağaç / CRUD / ana-ayrıntı / salt okunur / yazdırma senaryolarını kapsar ve doğrulama için bağımsız çalışır.
 - Her iki depo da Gitee üzerinde barındırılır: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

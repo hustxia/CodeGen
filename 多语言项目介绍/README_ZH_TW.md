@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **目前版本 V9.1 · 可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9**
+> **目前版本 V9.2 · 測試中心與驗證中心：把介面/UI 用例資產（7 張表）與平台驗證資產（S1–S9 套件、三層落庫、統一 JSON 摘要）合併為一個版本；產物零差異，373/373 單測，206/206 語言鍵**
+> **V9.1 · 可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9**
 > **V9.0 · 生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷**
 > **V8.1** · 品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs
 > **V8.0** · 全頁面國際化：206 語言框架（8 種精譯），雙軌制 i18n、OFF 逐位元組零 diff 契約
@@ -229,7 +230,7 @@ npm run serve
 | `../codegen-server/docs/代码生成器-操作手册.md` (中文) | 部署、5 分鐘上手、表設定、批次匯入、模板管理、記帳、API 目錄、完整管線（含截圖） |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (中文) | 6 張表涵蓋 5 個典型場景，含可執行示範與實際執行截圖 |
 | `项目介绍.md` | 專案介紹文件，與本文件同源 |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.1 的版本規劃與功能清單 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.2 的版本規劃與功能清單 |
 | `../codegen-web/README.md` | 前端控制台快速上手參考 |
 
 ---
@@ -269,7 +270,8 @@ npm run serve
 | **V8.0** | **全頁面國際化：206 語言框架（8 種精譯），雙軌制 i18n、OFF 逐位元組零 diff 契約** | 9e5dd57 → 7d57aea |
 | **V8.1** | **品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷** | 93a12d5 + e49330b  |
-| **V9.1** | **可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9** | 654b8e0 → b0d081e, **目前版本** |
+| **V9.1** | **可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9** | 654b8e0 → b0d081e  |
+| **V9.2** | **測試中心與驗證中心：把介面/UI 用例資產（7 張表）與平台驗證資產（S1–S9 套件、三層落庫、統一 JSON 摘要）合併為一個版本；產物零差異，373/373 單測，206/206 語言鍵** | V9.2 release, **目前版本** |
 
 ---
 
@@ -277,7 +279,7 @@ npm run serve
 
 ## 13. 專案狀態
 
-- 目前規劃的版本線已抵達 **V9.1**（能力持續迭代：AI 建模、種子資料增強、能力包系統等）。
+- 目前規劃的版本線已抵達 **V9.2**（能力持續迭代：AI 建模、種子資料增強、能力包系統等）。
 - 配套示範專案 `demo_admin`（後端 8140 / 前端 9040）涵蓋樹狀 / CRUD / 主從 / 唯讀 / 列印場景，可獨立執行驗證。
 - 兩個倉庫皆託管於 Gitee：`https://gitee.com/hustxiayuhong/CodeGen.git`
 

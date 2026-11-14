@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **aktualna wersja V9.1 · Refaktoryzacja pod kątem utrzymywalności · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **aktualna wersja V9.2 · Centrum testów i centrum weryfikacji · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **V9.1 · Refaktoryzacja pod kątem utrzymywalności · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · Generowane artefakty zmodernizowane do Vue 3 + Element Plus + Vite; zweryfikowane w czasie działania (40/40 asercji, udany vite build, 14 zrzutów ekranu incl. ar-SA RTL); naprawiono 3 defekty runtime**
 > **V8.1** · Hardening jakości: offline harness kontraktu (9 trybów, zerowa różnica OFF) + testy jednostkowe i18n-core + bramka CI + uczciwy podział README (framework 206 / przetłumaczone 8) + check-locale-keys.mjs
 > **V8.0** · i18n całej strony: framework 206 języków (8 przetłumaczonych profesjonalnie), dwutorowa i18n z kontraktem zerowej różnicy przy OFF
@@ -229,7 +230,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 | `../codegen-server/docs/代码生成器-操作手册.md` (chiński) | Wdrożenie, start w 5 minut, konfiguracja tabel, wsadowe pobieranie, zarządzanie szablonami, księga, katalog API, pełny potok (ze zrzutami ekranu) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (chiński) | 6 tabel pokrywających 5 typowych scenariuszy, z uruchamialnym demo i zrzutami rzeczywistego działania |
 | `项目介绍.md` | Dokument wprowadzający do projektu, to samo źródło co ten plik |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Plany wersji i inwentarze funkcji od V3.1 → V9.1 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Plany wersji i inwentarze funkcji od V3.1 → V9.2 |
 | `../codegen-web/README.md` | Referencyjny szybki start konsoli frontendu |
 
 ---
@@ -269,7 +270,8 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 | **V8.0** | **i18n całej strony: framework 206 języków (8 przetłumaczonych profesjonalnie), dwutorowa i18n z kontraktem zerowej różnicy przy OFF** | 9e5dd57 → 7d57aea |
 | **V8.1** | **Hardening jakości: offline harness kontraktu (9 trybów, zerowa różnica OFF) + testy jednostkowe i18n-core + bramka CI + uczciwy podział README (framework 206 / przetłumaczone 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **Generowane artefakty zmodernizowane do Vue 3 + Element Plus + Vite; zweryfikowane w czasie działania (40/40 asercji, udany vite build, 14 zrzutów ekranu incl. ar-SA RTL); naprawiono 3 defekty runtime** | 93a12d5 + e49330b  |
-| **V9.1** | **Refaktoryzacja pod kątem utrzymywalności · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **aktualna wersja** |
+| **V9.1** | **Refaktoryzacja pod kątem utrzymywalności · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
+| **V9.2** | **Centrum testów i centrum weryfikacji · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **aktualna wersja** |
 
 ---
 
@@ -277,7 +279,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 
 ## 13. Status projektu
 
-- Obecna planowana linia wersji osiągnęła **V9.1** (możliwości stale iterują: modelowanie AI, wzbogacanie danych nasiennych, system pakietów możliwości itp.).
+- Obecna planowana linia wersji osiągnęła **V9.2** (możliwości stale iterują: modelowanie AI, wzbogacanie danych nasiennych, system pakietów możliwości itp.).
 - Towarzyszący projekt demo `demo_admin` (backend 8140 / frontend 9040) obejmuje scenariusze drzewo / CRUD / główna-szczegóły / tylko-do-odczytu / druk i działa samodzielnie do weryfikacji.
 - Oba repozytoria są hostowane na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

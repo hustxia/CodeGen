@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **τρέχουσα έκδοση V9.1 · Αναδιάρθρωση συντηρησιμότητας · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **τρέχουσα έκδοση V9.2 · Κέντρο δοκιμών & επαλήθευσης · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **V9.1 · Αναδιάρθρωση συντηρησιμότητας · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · Τα παραγόμενα τεχνουργήματα εκσυγχρονίστηκαν σε Vue 3 + Element Plus + Vite; επαληθευμένα κατά την εκτέλεση (40/40 ισχυρισμοί, επιτυχές vite build, 14 στιγμιότυπα incl. ar-SA RTL); διορθώθηκαν 3 σφάλματα εκτέλεσης**
 > **V8.1** · Ενίσχυση ποιότητας: offline harness συμβολαίου (9 λειτουργίες, μηδενική διαφορά OFF) + unit tests i18n-core + πύλη CI + ειλικρινής διαίρεση README (πλαίσιο 206 / μεταφρασμένες 8) + check-locale-keys.mjs
 > **V8.0** · i18n πλήρους σελίδας: πλαίσιο 206 γλωσσών (8 επαγγελματικά μεταφρασμένες), i18n δύο τροχιών με σύμβαση μηδενικής διαφοράς σε OFF
@@ -230,7 +231,7 @@ npm run serve
 | `../codegen-server/docs/代码生成器-操作手册.md` (κινεζικά) | Ανάπτυξη, έναρξη σε 5 λεπτά, ρύθμιση πινάκων, μαζική εισαγωγή, διαχείριση προτύπων, καθολικό, κατάλογος API, πλήρης pipeline (με στιγμιότυπα) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (κινεζικά) | 6 πίνακες που καλύπτουν 5 τυπικά σενάρια, με εκτελέσιμο demo και πραγματικά στιγμιότυπα |
 | `项目介绍.md` | Έγγραφο εισαγωγής έργου, ίδια πηγή με αυτό το αρχείο |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Σχέδια εκδόσεων και καταγραφές δυνατοτήτων από V3.1 → V9.1 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Σχέδια εκδόσεων και καταγραφές δυνατοτήτων από V3.1 → V9.2 |
 | `../codegen-web/README.md` | Σύντομη αναφορά έναρξης κονσόλας front-end |
 
 ---
@@ -270,7 +271,8 @@ npm run serve
 | **V8.0** | **i18n πλήρους σελίδας: πλαίσιο 206 γλωσσών (8 επαγγελματικά μεταφρασμένες), i18n δύο τροχιών με σύμβαση μηδενικής διαφοράς σε OFF** | 9e5dd57 → 7d57aea |
 | **V8.1** | **Ενίσχυση ποιότητας: offline harness συμβολαίου (9 λειτουργίες, μηδενική διαφορά OFF) + unit tests i18n-core + πύλη CI + ειλικρινής διαίρεση README (πλαίσιο 206 / μεταφρασμένες 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **Τα παραγόμενα τεχνουργήματα εκσυγχρονίστηκαν σε Vue 3 + Element Plus + Vite; επαληθευμένα κατά την εκτέλεση (40/40 ισχυρισμοί, επιτυχές vite build, 14 στιγμιότυπα incl. ar-SA RTL); διορθώθηκαν 3 σφάλματα εκτέλεσης** | 93a12d5 + e49330b  |
-| **V9.1** | **Αναδιάρθρωση συντηρησιμότητας · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **τρέχουσα έκδοση** |
+| **V9.1** | **Αναδιάρθρωση συντηρησιμότητας · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
+| **V9.2** | **Κέντρο δοκιμών & επαλήθευσης · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **τρέχουσα έκδοση** |
 
 ---
 
@@ -278,7 +280,7 @@ npm run serve
 
 ## 13. Κατάσταση έργου
 
-- Η τρέχουσα προγραμματισμένη γραμμή εκδόσεων έχει φτάσει την **V9.1** (οι δυνατότητες συνεχίζουν να επαναλαμβάνονται: μοντελοποίηση AI, βελτίωση seed-data, σύστημα πακέτων δυνατοτήτων κ.λπ.).
+- Η τρέχουσα προγραμματισμένη γραμμή εκδόσεων έχει φτάσει την **V9.2** (οι δυνατότητες συνεχίζουν να επαναλαμβάνονται: μοντελοποίηση AI, βελτίωση seed-data, σύστημα πακέτων δυνατοτήτων κ.λπ.).
 - Ένα συνοδευτικό έργο demo `demo_admin` (back-end 8140 / front-end 9040) καλύπτει σενάρια δέντρου / CRUD / master-detail / μόνο-ανάγνωση / εκτύπωσης και τρέχει αυτόνομα για επαλήθευση.
 - Και τα δύο αποθετήρια φιλοξενούνται στο Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

@@ -267,7 +267,8 @@ npm run serve
 | **V8.0** | 全页面国际化：206 语言框架（8 种精译），双轨制 i18n、OFF 逐字节零 diff 契约 | 9e5dd57 → 7d57aea |
 | **V8.1** | 质量加固：离线契约 harness（9 模式 OFF 零 diff）+ i18n-core 单测 + CI 卡点 + README 诚实拆分（框架 206 / 精译 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | 生成物现代化：Vue 3 + Element Plus + Vite；运行时验证（40/40 断言、vite build 成功、14 张截图含 ar-SA RTL）；修复 3 个运行时缺陷 | 93a12d5 + e49330b  |
-| **V9.1** | **可维护性重构：GenScaffoldServiceImpl 5072 → 931 行拆为 8 个 Writer；产物逐字节零差异（新旧 jar 共 119 + 62 文件 diff -r 为空）；312/312 单测；离线 i18n 契约 9/9** | 654b8e0 → b0d081e, **当前版本** |
+| **V9.1** | **可维护性重构：GenScaffoldServiceImpl 5072 → 931 行拆为 8 个 Writer；产物逐字节零差异（新旧 jar 共 119 + 62 文件 diff -r 为空）；312/312 单测；离线 i18n 契约 9/9** | 654b8e0 → b0d081e  |
+| **V9.2** | **测试中心与验证中心：把接口/UI 用例资产（7 张表）与平台验证资产（S1–S9 套件、三层落库、统一 JSON 摘要）合并为一个版本；产物零 diff，373/373 单测，206/206 语言键** | V9.2 release, **当前版本** |
 
 ---
 
@@ -275,7 +276,7 @@ npm run serve
 
 ## 十三、项目状态
 
-- 当前规划版本线已达 **V9.1**，能力持续迭代（AI 建模、种子数据增强、能力包体系等）。
+- 当前规划版本线已达 **V9.2**，能力持续迭代（AI 建模、种子数据增强、能力包体系等）。
 - 已沉淀配套演示工程 `demo_admin`（后端 8140 / 前端 9040），覆盖树形 / CRUD / 主子表 / 只读 / 打印全场景，可独立运行验证。
 - 两仓库均托管于 Gitee：`https://gitee.com/hustxiayuhong/CodeGen.git`
 

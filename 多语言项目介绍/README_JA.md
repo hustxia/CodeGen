@@ -10,7 +10,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **現行バージョン V9.1 · 保守性リファクタリング · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **現行バージョン V9.2 · テストセンターと検証ハブ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **V9.1 · 保守性リファクタリング · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · 生成物を Vue 3 + Element Plus + Vite に近代化；ランタイム検証済み（40/40 アサーション、vite build 成功、ar-SA RTL 含む 14 スクリーンショット）；ランタイムで発見した 3 件の欠陥を修正**
 > **V8.1** · 品質強化：オフライン契約ハーネス（9 モード OFF ゼロ diff）+ i18n-core 単体テスト + CI ゲート + README の正直な分割（フレームワーク 206 / 精訳 8）+ check-locale-keys.mjs
 > **V8.0** · 全ページ i18n：206 言語フレームワーク（8 言語は精訳）、OFF ゼロ diff 契約のデュアルトラック i18n
@@ -231,7 +232,7 @@ npm run serve
 | `../codegen-server/docs/代码生成器-操作手册.md`（中国語） | デプロイ、5 分で開始、テーブル設定、一括取込、テンプレート管理、台帳、API 目録、パイプライン全フロー（実写スクリーンショット付き） |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md`（中国語） | 6 テーブルで 5 種類の典型シナリオをカバー、実行可能デモと実跑スクリーンショット付き |
 | `项目介绍.md` | 本文と同源のプロジェクト紹介ドキュメント |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.1 の各バージョン計画と機能棚卸し |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.2 の各バージョン計画と機能棚卸し |
 | `../codegen-web/README.md` | フロントエンド コンソールのクイック スタート参考 |
 
 ---
@@ -271,7 +272,8 @@ npm run serve
 | **V8.0** | **全ページ i18n：206 言語フレームワーク（8 言語は精訳）、OFF ゼロ diff 契約のデュアルトラック i18n** | 9e5dd57 → 7d57aea |
 | **V8.1** | **品質強化：オフライン契約ハーネス（9 モード OFF ゼロ diff）+ i18n-core 単体テスト + CI ゲート + README の正直な分割（フレームワーク 206 / 精訳 8）+ check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **生成物を Vue 3 + Element Plus + Vite に近代化；ランタイム検証済み（40/40 アサーション、vite build 成功、ar-SA RTL 含む 14 スクリーンショット）；ランタイムで発見した 3 件の欠陥を修正** | 93a12d5 + e49330b  |
-| **V9.1** | **保守性リファクタリング · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **現行バージョン** |
+| **V9.1** | **保守性リファクタリング · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
+| **V9.2** | **テストセンターと検証ハブ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **現行バージョン** |
 
 ---
 
@@ -279,7 +281,7 @@ npm run serve
 
 ## 13. プロジェクトの現状
 
-- 現在の計画バージョン ラインは **V9.1** に達しており、能力は継続的に反復中（AI モデリング、シードデータ強化、能力パック体系など）。
+- 現在の計画バージョン ラインは **V9.2** に達しており、能力は継続的に反復中（AI モデリング、シードデータ強化、能力パック体系など）。
 - 付属デモ プロジェクト `demo_admin`（バックエンド 8140／フロントエンド 9040）が、ツリー／CRUD／マスター・ディテール／参照専用／印刷の全シナリオをカバーし、単独実行で検証可能。
 - 両リポジトリは Gitee でホスト：`https://gitee.com/hustxiayuhong/CodeGen.git`
 

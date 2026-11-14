@@ -43,9 +43,10 @@ export const constantRoutes = [
     hidden: true
   },
   // 根路径直接跳代码生成首页（业务路由全部由 /auth/routers 动态注册）
-  { path: '/', redirect: HOME_PATH, hidden: true },
-  // 兜底放最后：动态路由未匹配时落到 404，而不是白屏
-  { path: '*', component: () => import('@/views/error-page/404.vue'), hidden: true }
+  { path: '/', redirect: HOME_PATH, hidden: true }
+  // 注：全量兜底 404 不在此注册。登录后动态路由由 permission.js 的 generateRoutes
+  // 在「业务路由之后」追加唯一的 { path: '*' }（见 store/modules/permission.js），
+  // 保证它最后注册、且由守卫区分 404 / 403，避免双 catch-all 因注册顺序导致的脆弱假设。
 ]
 
 export { HOME_PATH }

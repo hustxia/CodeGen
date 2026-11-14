@@ -51,7 +51,7 @@ jobs:
         with:
           name: verify-logs
           path: |
-            /tmp/verify-*.log
+            logs/testcenter/
             target/surefire-reports/
             target/gen-matrix/manifest.json
           retention-days: 7

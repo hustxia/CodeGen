@@ -122,8 +122,9 @@ npm run serve
 
 ## 11. திட்ட நிலை
 
-- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V9.1** ஐ அடைந்தது.
-- **V9.1** · பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
+- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V9.2** ஐ அடைந்தது.
+- **V9.2** · சோதனை மையம் & சரிபார்ப்பு மையம் · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical
+- **V9.2** · பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - இரண்டு களஞ்சியங்களும் Gitee இல் ஹோஸ்ட் செய்யப்படுகின்றன: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. ஆசிரியர்

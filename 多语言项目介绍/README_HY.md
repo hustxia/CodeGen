@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **Current version V9.1 · Սպասարկելիության ռեֆակտորինգ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **Current version V9.2 · Թեստավորման կենտրոն & ստուգման կենտրոն · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **V9.1 · Սպասարկելիության ռեֆակտորինգ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > ** V9.0 · **
 > **V8.1** · 
 > **V8.0** · 
@@ -120,11 +121,12 @@ Back-end դեֆոլտ պորտ **8120**, front-end պորտ **9530**. Դեֆոլ
 
 ## 11. Նախագծի կարգավիճակ
 
-> **Version History · V9.1**
+> **Version History · V9.2**
+> **V9.2** · Թեստավորման կենտրոն & ստուգման կենտրոն · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical — `V9.2 release`.
 > **V9.1** · Սպասարկելիության ռեֆակտորինգ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9 — `654b8e0 → b0d081e`.
 >  — `93a12d5 + e49330b`.
 
-- Ընթացիկ պլանավորված տարբերակի գիծը հասել է **V9.1**.
+- Ընթացիկ պլանավորված տարբերակի գիծը հասել է **V9.2**.
 - Երկու պահեստներն էլ հոսթվում են Gitee-ում: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. Հեղինակ

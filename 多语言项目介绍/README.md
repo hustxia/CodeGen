@@ -244,7 +244,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | `../codegen-server/docs/代码生成器-操作手册.md` (Chinese) | Deployment, 5-minute start, table config, batch intake, template management, ledger, API catalog, full pipeline (with screenshots) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
 | `项目介绍.md` | Project introduction document, same source as this file |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V9.1 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V9.2 |
 | `../codegen-web/README.md` | Frontend console quick-start reference |
 
 ---
@@ -285,6 +285,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | **V8.1** | **Quality hardening: offline Freemarker contract harness (9 modes, OFF byte-zero-diff) + `i18n-core` unit tests + CI gate + honest README split (framework 206 / translated 8) + `check-locale-keys.mjs`** | 93a12d5 + e49330b |
 | **V9.0** | **Generated-artifact modernization: Vue 3 + Element Plus + Vite; runtime-verified (40/40 assertions, `vite build` success, 14 Chrome screenshots incl. ar-SA RTL); 3 runtime defects found & fixed** | 93a12d5 + e49330b  |
 | **V9.1** | **Maintainability refactor · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **Current version** |
+| **V9.2** | **Test Center & Verification Hub: merged `/test` case center (7 tables: env/suite/case/dataset/run/result/schedule) + `/tc/center` verification center (`tc_run` / `tc_case_result` / `tc_artifact`, 9 registered suites S1-S9, global single-run 409 lock, `codegen.testcenter/v1` JSON summary shared with CI). 373/373 tests (50 new), 206/206 locale keys, i18n contract 9/9, front-end build passed; `verify.sh` gate aligned (MIN_TESTS 312 + i18n + locales); generated output byte-identical** | V9.2 release, **current** |
 
 ---
 

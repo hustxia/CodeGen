@@ -7,6 +7,7 @@ import com.codegen.vo.GenDiffVO;
 import com.codegen.vo.GenFileVO;
 import com.codegen.vo.GenSqlDeliverVO;
 import com.codegen.vo.GenWriteVO;
+import com.codegen.vo.TestVO;
 
 import java.util.List;
 
@@ -64,6 +65,11 @@ public interface GenCodeService {
      * @return 正常为空列表
      */
     List<GenSqlDeliverVO> lastSqlDeliveries();
+
+    /**
+     * V9.2 F-15：本次写盘为各表自动注册测试套件的结果（指纹比对后的新建/覆盖/跳过统计）。
+     */
+    List<TestVO.GenResult> lastTestGenResults();
 
     /**
      * 差异预览：渲染结果 vs 磁盘现状，逐文件行级 diff（不落盘）
