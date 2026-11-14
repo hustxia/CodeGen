@@ -1399,21 +1399,21 @@ export default {
   margin-bottom: 16px;
 }
 
-.filter-card >>> .el-card__body {
+.filter-card :deep(.el-card__body) {
   padding: 18px 18px 4px;
 }
 
-.filter-card >>> .el-form-item {
+.filter-card :deep(.el-form-item) {
   margin-right: 16px;
   margin-bottom: 14px;
 }
 
-.filter-card >>> .el-form-item__label {
+.filter-card :deep(.el-form-item__label) {
   color: #5a6478;
   font-size: 13px;
 }
 
-.table-card >>> .el-card__header {
+.table-card :deep(.el-card__header) {
   padding: 16px 18px;
   border-bottom: 1px solid #eef1f7;
 }
@@ -1441,26 +1441,26 @@ export default {
   color: #909399;
 }
 
-.card-actions >>> .el-button + .el-button {
+.card-actions :deep(.el-button + .el-button) {
   margin-left: 8px;
 }
 
 /* ===== 表格 ===== */
-.data-table >>> .table-head-cell {
+.data-table :deep(.table-head-cell) {
   background: #f7f9fc !important;
   color: #5c6270;
   font-weight: 600;
 }
 
-.data-table >>> td {
+.data-table :deep(td) {
   padding: 11px 0;
 }
 
-.data-table >>> .el-table__row:hover > td {
+.data-table :deep(.el-table__row:hover > td) {
   background: #f5f9ff;
 }
 
-.data-table >>> .el-button--text {
+.data-table :deep(.el-button--text) {
   padding: 4px 6px;
 }
 
@@ -1596,4 +1596,4 @@ export default {
 }
 </#if>
 </style>
-/* <gen:end key="vue-style"> */
+<!-- <gen:end key="vue-style"> -->
