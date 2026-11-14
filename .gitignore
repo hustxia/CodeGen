@@ -14,6 +14,8 @@ derby.log
 
 # 运行时目录与本机私有配置
 uploads/
+# 一句话建系统生成的目标工程（流水线产物，不入库）
+codegen-demo-target/
 application-local.yml
 .env.local
 .env.*.local
@@ -21,6 +23,7 @@ application-local.yml
 # 本机工具配置与诊断产物
 .trae/
 .claude/
+.workbuddy/
 .workflow/
 diag-ai/
 diag-ai-rec.js

@@ -522,7 +522,7 @@ final class ScaffoldFrontendWriter {
                 + "## 快速开始\n\n"
                 + "```bash\n"
                 + "npm install\n"
-                + "npm run serve\n"
+                + "npm run dev\n"
                 + "```\n\n"
                 + "访问 `http://127.0.0.1:" + webPort + "`，`/dev-api` 已代理到后端 `http://127.0.0.1:" + serverPort + "`。\n\n"
                 + "## 已内置\n\n"

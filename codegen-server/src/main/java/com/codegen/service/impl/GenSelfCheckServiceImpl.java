@@ -624,6 +624,19 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         if (Boolean.FALSE.equals(selfCheckProperties.getCompileEnabled())) {
             return;
         }
+        // V9.3 修正（核心风险 #5 补漏）：主编译 compile() 有「肥 jar 且未配 classpath 就诚实跳过」保护，
+        // 产物测试编译此前漏了同一判断。空 classpath 下 spring-beans 等【主依赖】缺失会被当成 ERROR，
+        // 且不属于 TEST_SCOPE_HINTS 降级白名单，导致自检误报满屏假错、误判门禁失败并阻断写盘
+        //（2026-11-14 一句话建系统流水线实测：72 错误，首条 AssetCategoryControllerTest
+        //  package org.springframework.beans.factory.annotation does not exist）。
+        // 与 compile() 保持一致：环境性缺依赖时跳过测试编译并降级为 WARNING，主编译结果不受影响。
+        if (selfCheckProperties.classpathLooksNested() && !StringUtils.hasText(projectClasspath)
+                && !StringUtils.hasText(selfCheckProperties.resolveTestClasspath())) {
+            result.addIssue("产物测试", 0L, "WARNING",
+                    "当前进程以肥 jar 启动且未配置 gen.selfcheck.classpath / test-classpath，无法解析嵌套依赖，"
+                            + "已跳过产物测试编译检查（主编译结果不受影响）。建议配置依赖目录（支持 lib/*）以启用完整自检");
+            return;
+        }
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         if (compiler == null) {
             // compile() 已就「无 JDK」给出一次 WARNING，这里不重复
@@ -679,6 +692,13 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
                 units.add(new StringSource(className, source.content()));
                 classToPath.put(className, source.path());
             }
+            // V9.3 修正：产物测试类继承脚手架基座类 LoginStateTestSupport —— 它由 scaffold 步骤
+            // 落盘到目标工程 src/test/java，但不在本次【预览生成】的 testSources 里。
+            // 只编译本次预览文件会让 javac 看不到基类 → cannot find symbol，误判门禁失败并阻断写盘
+            //（2026-11-14 完整系统流程实测 4 错，首条 AssetCategoryControllerTest）。
+            // 显式把磁盘上已存在的基座测试源码加入编译单元：坑库 spring-boot-3 坑 28 的教训是
+            // 参与编译的单元必须显式列出，别依赖 classpath 隐式编译（注解处理黑洞）。
+            addScaffoldTestSources(units, classToPath, testSources, backendRootOverride, result);
             if (units.isEmpty()) {
                 return;
             }
@@ -716,6 +736,43 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
                 // 忽略关闭异常
             }
             deleteQuietly(outDir);
+        }
+    }
+
+    /**
+     * V9.3：把目标工程磁盘上已存在的脚手架测试源码（如 {@code LoginStateTestSupport}）
+     * 显式加入 javac 编译单元。按全限定类名去重，本次预览生成的同名类优先。
+     */
+    private void addScaffoldTestSources(List<JavaFileObject> units, Map<String, String> classToPath,
+                                        List<JavaSource> testSources, String backendRootOverride,
+                                        GenSelfCheckVO result) {
+        String base = effectiveBackendRoot(backendRootOverride);
+        Set<Path> roots = new LinkedHashSet<>();
+        for (JavaSource s : testSources) {
+            String rel = s.path().replace('\\', '/');
+            int start = srcTestJavaStart(rel);
+            if (start < 0) {
+                continue;
+            }
+            roots.add(Path.of(base, rel.substring(0, start), "src", "test", "java"));
+        }
+        for (Path root : roots) {
+            if (!Files.isDirectory(root)) {
+                continue;
+            }
+            try (var walk = Files.walk(root)) {
+                for (Path p : walk.filter(x -> x.toString().endsWith(".java")).toList()) {
+                    String content = Files.readString(p, StandardCharsets.UTF_8);
+                    String className = classNameOfTestSource(content);
+                    if (className == null || classToPath.containsKey(className)) {
+                        continue;
+                    }
+                    units.add(new StringSource(className, content));
+                    classToPath.put(className, p.toString());
+                }
+            } catch (Exception e) {
+                result.addIssue("产物测试", 0L, "WARNING", "读取脚手架测试源码失败（已降级）：" + e.getMessage());
+            }
         }
     }
 

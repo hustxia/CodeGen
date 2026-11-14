@@ -1,6 +1,7 @@
 package com.codegen.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.codegen.config.GenOutputProperties;
 import com.codegen.config.GenPipelineProperties;
 import com.codegen.dto.GenApplyDTO;
@@ -145,25 +146,32 @@ public class PipelineExecutor {
         if (pipeline == null) {
             return;
         }
-        // 重跑：全部步骤重置为 pending（所有落盘动作幂等，整线重跑安全）。
-        // failed 也要重置——否则上一次的失败消息会一直挂在进度条上误导人
+        // 坑 #34：MyBatis-Plus updateById 默认 NOT_NULL 策略，setXxx(null) 根本不进 SQL。
+        // 只靠实体置 null 重跑，上一次的失败消息/日志摘要/时间戳会一直挂在进度条上误导人，
+        // 必须用 UpdateWrapper 显式 set 列值为 null。
         List<GenPipelineStep> steps = stepsOf(pipelineId);
+        stepMapper.update(null, new LambdaUpdateWrapper<GenPipelineStep>()
+                .eq(GenPipelineStep::getPipelineId, pipelineId)
+                .set(GenPipelineStep::getMessage, null)
+                .set(GenPipelineStep::getLogExcerpt, null)
+                .set(GenPipelineStep::getStartedAt, null)
+                .set(GenPipelineStep::getFinishedAt, null));
         for (GenPipelineStep s : steps) {
             if ("pending".equals(s.getStatus())) {
                 continue;
             }
             s.setStatus("pending");
-            s.setMessage(null);
-            s.setLogExcerpt(null);
-            s.setStartedAt(null);
-            s.setFinishedAt(null);
             stepMapper.updateById(s);
         }
 
         pipeline.setStatus("running");
-        pipeline.setFailReason(null);
         pipeline.setCurrentStep("model");
         pipelineMapper.updateById(pipeline);
+        // 同上：整线重跑成功后 detail 仍显示上一次的 failReason（成功却带失败原因）
+        pipelineMapper.update(null, new LambdaUpdateWrapper<GenPipeline>()
+                .eq(GenPipeline::getId, pipelineId)
+                .set(GenPipeline::getFailReason, null));
+        pipeline.setFailReason(null);
         push(pipeline);
 
         try {
@@ -669,8 +677,13 @@ public class PipelineExecutor {
                     + "（请检查脚手架/代码生成步骤是否成功，以及系统台账的 backend_root 配置）");
         }
         String mvn = resolveMaven();
+        // V9.3 修正：backendDir 常是相对路径（如 ../codegen-demo-target/xxx-server），而 runCommand
+        // 已把子进程 cwd 设为 backendDir。命令参数里再传相对的 -f 会被子进程二次解析，
+        // 变成 backendDir/../codegen-demo-target/... → "POM file ... does not exist"。
+        // 凡出现在命令参数里的路径一律转绝对；pb.directory() 用相对路径则相对 user.dir，二者语义不同。
+        String pom = backendDir.toAbsolutePath().normalize().resolve("pom.xml").toString();
         CommandResult r = runCommand(pipeline, "package_backend", backendDir.toFile(),
-                mvn, "-f", backendDir.resolve("pom.xml").toString(), "-DskipTests", "package");
+                mvn, "-f", pom, "-DskipTests", "package");
         if (r.exitCode != 0) {
             throw new IllegalStateException("mvn package 退出码 " + r.exitCode + "，详见日志 " + r.logFile);
         }
@@ -686,10 +699,15 @@ public class PipelineExecutor {
         }
         Path jar = findJar(target);
         String java = resolveJava();
+        // 整线重跑：先停上一次的子进程树。否则旧进程仍占着端口，新 java -jar 会因端口占用秒退，
+        // 但 awaitPort() 探到旧进程的端口照样返回成功 —— 一次典型的「假成功」。
+        stopPrevious(pipeline.getBackendPid(), "后端");
 
         Path log = logFile(pipeline, "deploy_backend");
         try {
-            ProcessBuilder pb = new ProcessBuilder(java, "-jar", jar.toString(),
+            // 同 stepPackageBackend：jar 路径必须绝对，否则会被子进程相对 cwd(target) 二次解析
+            ProcessBuilder pb = new ProcessBuilder(java, "-jar",
+                    jar.toAbsolutePath().normalize().toString(),
                     "--server.port=" + pipeline.getBackendPort());
             pb.directory(target.toFile());
             // 坑 #5：残留的 SERVER__PORT 优先级高于命令行，必须清掉
@@ -761,17 +779,49 @@ public class PipelineExecutor {
         return "移动端出包完成：H5 静态包 + mp-weixin 目录（" + (h5.durationSeconds + mp.durationSeconds) + "s）";
     }
 
-    /** deploy_frontend：npm run serve -- --port X，dev server 常驻 */
+    /**
+     * deploy_frontend：按生成前端 package.json 的 scripts 选启动脚本，dev server 常驻。
+     *
+     * <p>坑（V9.3 完整系统流程实测）：V9.1 起生成产物前端已换成 Vue3 + Vite，
+     * scripts 只有 dev/build/preview；这里若仍硬编码 Vue2 vue-cli 的 {@code npm run serve}，
+     * 会直接报 {@code npm error Missing script: "serve"}，子进程秒退，最终对外表现却是
+     * 「前端端口 9040 在 120s 内未就绪」——真正根因在启动脚本名，不在端口/网络。
+     * 另：Vite 默认只绑 localhost(IPv6 ::1)，而 portOpen() 探的是 127.0.0.1，
+     * 必须显式 --host 127.0.0.1 才能让端口探测与后续 HTTP 健康检查都走同一栈。
+     */
     private String stepDeployFrontend(GenPipeline pipeline) {
         var project = projectService.getById(pipeline.getProjectId());
         Path webDir = Paths.get(project.getFrontendRoot(), project.getProjectCode() + "-web");
-        if (!Files.exists(webDir.resolve("package.json"))) {
+        Path packageJson = webDir.resolve("package.json");
+        if (!Files.exists(packageJson)) {
             throw new IllegalStateException("前端工程不存在：" + webDir + "（请检查脚手架步骤是否成功）");
         }
+        String script;
+        boolean vite;
+        try {
+            var scripts = objectMapper.readTree(packageJson.toFile()).path("scripts");
+            if (scripts.has("dev")) {
+                script = "dev";
+                vite = true;                         // Vue3 + Vite
+            } else if (scripts.has("serve")) {
+                script = "serve";
+                vite = false;                        // Vue2 + vue-cli
+            } else {
+                throw new IllegalStateException("package.json 既无 dev 也无 serve 启动脚本：" + packageJson);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("读取前端 package.json 失败：" + packageJson + " - " + e.getMessage(), e);
+        }
+        List<String> args = new ArrayList<>(List.of("cmd", "/c", props.getNpm(),
+                "run", script, "--", "--port", String.valueOf(pipeline.getFrontendPort())));
+        if (vite) {
+            args.add("--host");
+            args.add("127.0.0.1");
+        }
+        stopPrevious(pipeline.getFrontendPid(), "前端");
         Path log = logFile(pipeline, "deploy_frontend");
         try {
-            ProcessBuilder pb = new ProcessBuilder("cmd", "/c", props.getNpm(),
-                    "run", "serve", "--", "--port", String.valueOf(pipeline.getFrontendPort()));
+            ProcessBuilder pb = new ProcessBuilder(args);
             pb.directory(webDir.toFile());
             pb.environment().remove("SERVER__PORT");
             pb.redirectErrorStream(true);
@@ -783,7 +833,8 @@ public class PipelineExecutor {
             throw new IllegalStateException("前端进程启动失败：" + e.getMessage(), e);
         }
         awaitPort("前端", pipeline.getFrontendPort());
-        return "pid=" + pipeline.getFrontendPid() + " :" + pipeline.getFrontendPort();
+        return "pid=" + pipeline.getFrontendPid() + " :" + pipeline.getFrontendPort()
+                + " (" + script + (vite ? "/vite" : "/vue-cli") + ")";
     }
 
     /** health：双端端口就绪 + 前端 HTTP 可访问 */
@@ -799,7 +850,7 @@ public class PipelineExecutor {
                 .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(5)).build();
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:" + pipeline.getFrontendPort()))
+                .uri(URI.create("http://127.0.0.1:" + pipeline.getFrontendPort()))
                 .timeout(Duration.ofSeconds(20))
                 .GET().build();
         // dev server 首次请求会触发 webpack 全量编译（实测 2.5min+），
@@ -891,6 +942,19 @@ public class PipelineExecutor {
         } catch (Exception e) {
             throw new IllegalStateException("命令执行失败：" + String.join(" ", command) + " - " + e.getMessage(), e);
         }
+    }
+
+    /** 整线重跑：先停掉上一次启动的进程树，避免旧进程占端口让 awaitPort() 假成功 */
+    private void stopPrevious(Long pid, String label) {
+        if (pid == null || pid <= 0) {
+            return;
+        }
+        ProcessHandle.of(pid).ifPresent(handle -> {
+            // Windows 下 cmd/npm 会再拉起 node 子进程，只 destroy 父进程端口仍被占
+            handle.descendants().forEach(ProcessHandle::destroy);
+            handle.destroy();
+            log.info("已停止上一次{}进程树 pid={}", label, pid);
+        });
     }
 
     private void awaitPort(String label, int port) {
