@@ -268,7 +268,8 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 | **V8.1** | Minőségszilárdítás: offline szerződéses harness (9 mód, OFF zero-diff) + i18n-core egységtesztek + CI kapu + őszinte README felosztás (keretrendszer 206 / lefordítva 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | A generált artefaktok modernizálva Vue 3 + Element Plus + Vite-re; futásidőben ellenőrizve (40/40 assertion, sikeres vite build, 14 képernyőkép incl. ar-SA RTL); 3 futásidejű hiba javítva | 93a12d5 + e49330b  |
 | **V9.1** | **Karbantarthatósági refaktorálás · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Tesztközpont & ellenőrzési központ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **Jelenlegi verzió** |
+| **V9.2** | **Tesztközpont & ellenőrzési központ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Generált artefaktumok automatizált tesztelése · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **Jelenlegi verzió** |
 
 ---
 

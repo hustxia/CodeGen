@@ -268,7 +268,8 @@ Front-end radi prema zadanim postavkama na portu **9530**, prosljeđuje `/dev-ap
 | **V8.1** | Očvršćivanje kvalitete: offline ugovorni harness (9 načina, nulta razlika OFF) + jedinični testovi i18n-core + CI kapija + poštena podjela README (okvir 206 / prevedenih 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | Generirani artefakti modernizirani na Vue 3 + Element Plus + Vite; provjereno u izvođenju (40/40 tvrdnji, uspješan vite build, 14 snimki zaslona incl. ar-SA RTL); popravljene 3 izvedbene greške | 93a12d5 + e49330b  |
 | **V9.1** | **Refaktoriranje održivosti · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Testni centar & centar za provjeru · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **trenutna verzija** |
+| **V9.2** | **Testni centar & centar za provjeru · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Automatizirano testiranje generiranih artefakata · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **trenutna verzija** |
 
 ---
 

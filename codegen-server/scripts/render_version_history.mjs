@@ -75,7 +75,7 @@ function renderFile(file) {
   for (const v of data.versions) {
     let theme, commit
     if (lang === 'en') { theme = v.theme.en; commit = v.commit.en }
-    else if (lang === 'zh') { theme = v.theme.zh; commit = v.commit.zh }
+    else if (lang.toLowerCase() === 'zh') { theme = v.theme.zh; commit = v.commit.zh }
     else {
       const ex = existing.get(v.version)
       theme = (data.i18n[lang] && data.i18n[lang][v.version]) || (ex ? unbold(ex.theme) : v.theme.en)

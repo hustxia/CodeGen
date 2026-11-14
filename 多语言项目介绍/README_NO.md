@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **gjeldende versjon V9.2 · Testsenter & verifikasjonssenter · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **gjeldende versjon V9.3 · Automatiserte tester av genererte artefakter · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
+> **V9.2 release · Testsenter & verifikasjonssenter · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
 > **V9.1 · Vedlikeholdsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · Genererte artefakter modernisert til Vue 3 + Element Plus + Vite; runtime-verifisert (40/40 asserts, vellykket vite build, 14 skjermbilder inkl. ar-SA RTL); 3 runtime-feil rettet**
 > **V8.1** · Kvalitetsherdning: offline kontrakt-harness (9 moduser, OFF zero-diff) + i18n-core enhetstester + CI-port + ærlig README-inndeling (rammeverk 206 / oversatt 8) + check-locale-keys.mjs
@@ -231,7 +232,7 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 | `../codegen-server/docs/代码生成器-操作手册.md` (kinesisk) | Utplassering, 5 minutters start, tabellkonfig, batch-inntak, malhåndtering, hovedbok, API-katalog, fullstendig pipeline (med skjermbilder) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kinesisk) | 6 tabeller som dekker 5 typiske scenarier, med kjørbar demo og virkelige skjermbilder |
 | `项目介绍.md` | Prosjektintroduksjonsdokument, samme kilde som denne filen |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versjonsplaner og funksjonsinventarer fra V3.1 → V9.2 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versjonsplaner og funksjonsinventarer fra V3.1 → V9.3 |
 | `../codegen-web/README.md` | Forreste del konsoll rask start referanse |
 
 ---
@@ -272,7 +273,8 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 | **V8.1** | **Kvalitetsherdning: offline kontrakt-harness (9 moduser, OFF zero-diff) + i18n-core enhetstester + CI-port + ærlig README-inndeling (rammeverk 206 / oversatt 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **Genererte artefakter modernisert til Vue 3 + Element Plus + Vite; runtime-verifisert (40/40 asserts, vellykket vite build, 14 skjermbilder inkl. ar-SA RTL); 3 runtime-feil rettet** | 93a12d5 + e49330b  |
 | **V9.1** | **Vedlikeholdsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Testsenter & verifikasjonssenter · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **gjeldende versjon** |
+| **V9.2** | **Testsenter & verifikasjonssenter · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Automatiserte tester av genererte artefakter · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **gjeldende versjon** |
 
 ---
 
@@ -280,7 +282,7 @@ Forreste del kjører som standard på port **9530**, proxyer `/dev-api` til bakr
 
 ## 13. Prosjektstatus
 
-- Den nåværende planlagte versjonslinjen har nådd **V9.2** (kapasiteter fortsetter å iterere: AI-modellering, seed-data forbedring, kapasitetspakke system osv.).
+- Den nåværende planlagte versjonslinjen har nådd **V9.3** (kapasiteter fortsetter å iterere: AI-modellering, seed-data forbedring, kapasitetspakke system osv.).
 - Et følgedemo-prosjekt `demo_admin` (bakre del 8140 / forreste del 9040) dekker tre / CRUD / master-detail / skrivebeskyttet / utskrift scenarier og kjører uavhengig for verifisering.
 - Begge repositorier hostes på Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

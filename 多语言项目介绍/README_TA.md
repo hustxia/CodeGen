@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **தற்போதைய பதிப்பு V9.2 · சோதனை மையம் & சரிபார்ப்பு மையம் · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **தற்போதைய பதிப்பு V9.3 · உருவாக்கப்பட்ட ஆர்ட்டிஃபாக்ட்களின் தானியங்கி சோதனை · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
+> **V9.2 release · சோதனை மையம் & சரிபார்ப்பு மையம் · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
 > **V9.1 · பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · உருவாக்கப்பட்ட ஆர்டிஃபேக்ட்கள் Vue 3 + Element Plus + Vite ஆக நவீனமாக்கப்பட்டன; இயக்க நேரத்தில் சரிபார்க்கப்பட்டது (40/40 உறுதிப்பாடுகள், வெற்றிகரமான vite build, ar-SA RTL உட்பட 14 ஸ்கிரீன்ஷாட்கள்); 3 இயக்க குறைபாடுகள் சரிசெய்யப்பட்டன**
 > **V8.1** · தர வலுவூட்டல்: ஆஃப்லைன் ஒப்பந்த ஹார்னஸ் (9 முறைகள், OFF பூஜ்ஜிய-வேறுபாடு) + i18n-core யூனிட் சோதனைகள் + CI கேட் + நேர்மையான README பிரிவு (கட்டமைப்பு 206 / மொழிபெயர்ப்பு 8) + check-locale-keys.mjs
@@ -128,12 +129,13 @@ npm run serve
 
 ## 11. திட்ட நிலை
 
-> **Version History · V9.2**
+> **Version History · V9.3**
+> **V9.3** · உருவாக்கப்பட்ட ஆர்ட்டிஃபாக்ட்களின் தானியங்கி சோதனை · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted — `V9.3 release`.
 > **V9.2** · சோதனை மையம் & சரிபார்ப்பு மையம் · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical — `V9.2 release`.
 > **V9.1** · பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9 — `654b8e0 → b0d081e`.
 > உருவாக்கப்பட்ட ஆர்டிஃபேக்ட்கள் Vue 3 + Element Plus + Vite ஆக நவீனமாக்கப்பட்டன; இயக்க நேரத்தில் சரிபார்க்கப்பட்டது (40/40 உறுதிப்பாடுகள், வெற்றிகரமான vite build, ar-SA RTL உட்பட 14 ஸ்கிரீன்ஷாட்கள்); 3 இயக்க குறைபாடுகள் சரிசெய்யப்பட்டன — `93a12d5 + e49330b`.
 
-- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V9.2** ஐ அடைந்தது.
+- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V9.3** ஐ அடைந்தது.
 - இரண்டு களஞ்சியங்களும் Gitee இல் ஹோஸ்ட் செய்யப்படுகின்றன: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. ஆசிரியர்

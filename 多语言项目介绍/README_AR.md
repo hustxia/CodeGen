@@ -10,7 +10,8 @@
 
 عنوان GitHub: https://github.com/hustxia/CodeGen
 
-> **الإصدار الحالي V9.2 · مركز الاختبارات ومركز التحقق · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **الإصدار الحالي V9.3 · الاختبار الآلي للمخرجات المُولّدة · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
+> **V9.2 release · مركز الاختبارات ومركز التحقق · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
 > **V9.1 · إعادة هيكلة لقابلية الصيانة · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · تحديث المخرجات المولدة إلى Vue 3 + Element Plus + Vite؛ تم التحقق وقت التشغيل (40/40 تأكيدات، vite build ناجح، 14 لقطة شاشة تشمل ar-SA RTL)؛ إصلاح 3 عيوب تشغيل**
 > **V8.1** · تحصين الجودة: حزام عقد offline (9 أوضاع، فرق صفري OFF) + اختبارات وحدة i18n-core + بوابة CI + تقسيم صادق في README (إطار 206 / مترجمة 8) + check-locale-keys.mjs
@@ -233,7 +234,7 @@ npm run serve
 | `../codegen-server/docs/代码生成器-操作手册.md` (الصينية) | النشر، البدء في خمس دقائق، إعداد الجداول، الاستقبال الدفعي، إدارة القوالب، السجل، دليل الواجهات، مسار خط الأنابيب الكامل (مع لقطات شاشة فعلية) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (الصينية) | 6 جداول تغطي 5 سيناريوهات نموذجية، مع عرض توضيحي قابل للتشغيل ولقطات من تشغيل حقيقي |
 | `项目介绍.md` (الصينية) | مستند مقدمة المشروع، من المصدر نفسه الذي صدر عنه هذا الملف |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` (الصينية) | خطط الإصدارات وجرد الميزات من V3.1 إلى V9.2 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` (الصينية) | خطط الإصدارات وجرد الميزات من V3.1 إلى V9.3 |
 | `../codegen-web/README.md` | مرجع البدء السريع للوحة تحكم الواجهة الأمامية |
 
 ---
@@ -274,7 +275,8 @@ npm run serve
 | **V8.1** | **تحصين الجودة: حزام عقد offline (9 أوضاع، فرق صفري OFF) + اختبارات وحدة i18n-core + بوابة CI + تقسيم صادق في README (إطار 206 / مترجمة 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **تحديث المخرجات المولدة إلى Vue 3 + Element Plus + Vite؛ تم التحقق وقت التشغيل (40/40 تأكيدات، vite build ناجح، 14 لقطة شاشة تشمل ar-SA RTL)؛ إصلاح 3 عيوب تشغيل** | 93a12d5 + e49330b  |
 | **V9.1** | **إعادة هيكلة لقابلية الصيانة · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **مركز الاختبارات ومركز التحقق · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **الإصدار الحالي** |
+| **V9.2** | **مركز الاختبارات ومركز التحقق · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **الاختبار الآلي للمخرجات المُولّدة · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **الإصدار الحالي** |
 
 ---
 
@@ -282,7 +284,7 @@ npm run serve
 
 ## 13. حالة المشروع
 
-- وصل خط الإصدارات المخطط حاليًا إلى **V9.2**، وتواصل الميزات في التحديث المستمر (النمذجة بالذكاء الاصطناعي، تعزيز بيانات البذر، منظومة حزم القدرات وغيرها).
+- وصل خط الإصدارات المخطط حاليًا إلى **V9.3**، وتواصل الميزات في التحديث المستمر (النمذجة بالذكاء الاصطناعي، تعزيز بيانات البذر، منظومة حزم القدرات وغيرها).
 - أُنشئ مشروع عرض توضيحي مرافق `demo_admin` (خلفية على المنفذ 8140 / واجهة أمامية على 9040)، يغطي سيناريوهات الشجرة / CRUD / الرئيسي-الفرعي / القراءة فقط / الطباعة كلها، ويمكن تشغيله والتحقق منه بشكل مستقل.
 - كلا المستودعين مستضافان على Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

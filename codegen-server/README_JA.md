@@ -267,7 +267,8 @@ npm run serve
 | **V8.1** | 品質強化：オフライン契約ハーネス（9 モード OFF ゼロ diff）+ i18n-core 単体テスト + CI ゲート + README の正直な分割（フレームワーク 206 / 精訳 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | 生成物を Vue 3 + Element Plus + Vite に近代化；ランタイム検証済み（40/40 アサーション、vite build 成功、ar-SA RTL 含む 14 スクリーンショット）；ランタイムで発見した 3 件の欠陥を修正 | 93a12d5 + e49330b  |
 | **V9.1** | **保守性リファクタリング · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **テストセンターと検証ハブ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **現行バージョン** |
+| **V9.2** | **テストセンターと検証ハブ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **生成成果物の自動テスト · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **現行バージョン** |
 
 ---
 
@@ -275,7 +276,7 @@ npm run serve
 
 ## 13. プロジェクトの現状
 
-- 現在の計画バージョン ラインは **V9.2** に達しており、能力は継続的に反復中（AI モデリング、シードデータ強化、能力パック体系など）。
+- 現在の計画バージョン ラインは **V9.3** に達しており、能力は継続的に反復中（AI モデリング、シードデータ強化、能力パック体系など）。
 - 付属デモ プロジェクト `demo_admin`（バックエンド 8140／フロントエンド 9040）が、ツリー／CRUD／マスター・ディテール／参照専用／印刷の全シナリオをカバーし、単独実行で検証可能。
 - 両リポジトリは Gitee でホスト：`https://gitee.com/hustxiayuhong/CodeGen.git`
 

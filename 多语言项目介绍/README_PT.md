@@ -10,7 +10,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **Versão atual V9.2 · Central de testes e centro de verificação · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **Versão atual V9.3 · Testes automatizados de artefatos gerados · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
+> **V9.2 release · Central de testes e centro de verificação · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
 > **V9.1 · Refatoração de manutenibilidade · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · Artefatos gerados modernizados para Vue 3 + Element Plus + Vite; verificados em execução (40/40 asserções, vite build com sucesso, 14 capturas incl. ar-SA RTL); 3 defeitos de execução corrigidos**
 > **V8.1** · Endurecimento de qualidade: arnês de contrato offline (9 modos, diff zero OFF) + testes unitários i18n-core + portão de CI + divisão honesta do README (framework 206 / traduzidos 8) + check-locale-keys.mjs
@@ -233,7 +234,7 @@ O front-end usa por padrão a porta **9530**, com proxy `/dev-api` para a porta 
 | `../codegen-server/docs/代码生成器-操作手册.md` (chinês) | Implantação, início em 5 minutos, configuração de tabelas, entrada em lote, gestão de templates, livro-razão, catálogo de APIs, pipeline completo (com capturas de tela) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (chinês) | 6 tabelas cobrindo 5 cenários típicos, com demo executável e capturas reais |
 | `项目介绍.md` | Documento de apresentação, mesma origem deste arquivo |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Planos de versão e inventários de funcionalidades de V3.1 → V9.2 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Planos de versão e inventários de funcionalidades de V3.1 → V9.3 |
 | `../codegen-web/README.md` | Referência rápida do console de front-end |
 
 ---
@@ -274,7 +275,8 @@ O front-end usa por padrão a porta **9530**, com proxy `/dev-api` para a porta 
 | **V8.1** | **Endurecimento de qualidade: arnês de contrato offline (9 modos, diff zero OFF) + testes unitários i18n-core + portão de CI + divisão honesta do README (framework 206 / traduzidos 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **Artefatos gerados modernizados para Vue 3 + Element Plus + Vite; verificados em execução (40/40 asserções, vite build com sucesso, 14 capturas incl. ar-SA RTL); 3 defeitos de execução corrigidos** | 93a12d5 + e49330b  |
 | **V9.1** | **Refatoração de manutenibilidade · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Central de testes e centro de verificação · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **Versão atual** |
+| **V9.2** | **Central de testes e centro de verificação · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Testes automatizados de artefatos gerados · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **Versão atual** |
 
 ---
 
@@ -282,7 +284,7 @@ O front-end usa por padrão a porta **9530**, com proxy `/dev-api` para a porta 
 
 ## 13. Estado do Projeto
 
-- A linha de versões planejadas atual chegou a **V9.2**, com evolução contínua de capacidades (modelagem por IA, aprimoramento de dados-semente, sistema de pacotes de capacidade etc.).
+- A linha de versões planejadas atual chegou a **V9.3**, com evolução contínua de capacidades (modelagem por IA, aprimoramento de dados-semente, sistema de pacotes de capacidade etc.).
 - Há um projeto de demonstração `demo_admin` (back-end 8140 / front-end 9040) cobrindo os cenários de árvore / CRUD / mestre-detalhe / somente leitura / impressão, executável de forma independente para verificação.
 - Ambos os repositórios estão hospedados no Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

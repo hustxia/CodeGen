@@ -265,7 +265,8 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 | **V8.1** | Hardening jakości: offline harness kontraktu (9 trybów, zerowa różnica OFF) + testy jednostkowe i18n-core + bramka CI + uczciwy podział README (framework 206 / przetłumaczone 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | Generowane artefakty zmodernizowane do Vue 3 + Element Plus + Vite; zweryfikowane w czasie działania (40/40 asercji, udany vite build, 14 zrzutów ekranu incl. ar-SA RTL); naprawiono 3 defekty runtime | 93a12d5 + e49330b  |
 | **V9.1** | **Refaktoryzacja pod kątem utrzymywalności · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Centrum testów i centrum weryfikacji · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **aktualna wersja** |
+| **V9.2** | **Centrum testów i centrum weryfikacji · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Automatyczne testy generowanych artefaktów · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **aktualna wersja** |
 
 ---
 
@@ -273,7 +274,7 @@ Frontend domyślnie używa portu **9530**, proxyfikując `/dev-api` do backendow
 
 ## 13. Status projektu
 
-- Obecna planowana linia wersji osiągnęła **V9.2** (możliwości stale iterują: modelowanie AI, wzbogacanie danych nasiennych, system pakietów możliwości itp.).
+- Obecna planowana linia wersji osiągnęła **V9.3** (możliwości stale iterują: modelowanie AI, wzbogacanie danych nasiennych, system pakietów możliwości itp.).
 - Towarzyszący projekt demo `demo_admin` (backend 8140 / frontend 9040) obejmuje scenariusze drzewo / CRUD / główna-szczegóły / tylko-do-odczytu / druk i działa samodzielnie do weryfikacji.
 - Oba repozytoria są hostowane na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

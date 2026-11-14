@@ -9,7 +9,8 @@
 ---
 GitHub 주소: https://github.com/hustxia/CodeGen
 
-> **현재 버전 V9.2 · 테스트 센터 및 검증 허브 · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **현재 버전 V9.3 · 생성 산출물 자동화 테스트 · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
+> **V9.2 release · 테스트 센터 및 검증 허브 · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
 > **V9.1 · 유지보수성 리팩터링 · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · 생성물을 Vue 3 + Element Plus + Vite로 현대화; 런타임 검증 완료(40/40 어설션, vite build 성공, ar-SA RTL 포함 14장 스크린샷); 런타임 결함 3건 수정**
 > **V8.1** · 품질 강화: 오프라인 계약 하네스(9 모드 OFF 제로 diff) + i18n-core 단위 테스트 + CI 게이트 + README 정직 분할(프레임워크 206 / 정밀 8) + check-locale-keys.mjs
@@ -230,7 +231,7 @@ npm run serve
 | `../codegen-server/docs/代码生成器-操作手册.md` (중국어) | 배포, 5분 시작, 테이블 설정, 일괄 인수, 템플릿 관리, 대장, API 카탈로그, 파이프라인 전 과정 (실제 스크린샷 포함) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (중국어) | 6개 테이블로 5가지 대표 시나리오 커버, 실행 가능한 데모와 실제 실행 스크린샷 포함 |
 | `项目介绍.md` (중국어) | 본 문서와 동일한 원문의 프로젝트 소개 문서 |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` (중국어) | V3.1 → V9.2 각 버전 계획 및 기능 목록 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` (중국어) | V3.1 → V9.3 각 버전 계획 및 기능 목록 |
 | `../codegen-web/README.md` | 프론트엔드 콘솔 빠른 시작 참고 |
 
 ---
@@ -271,7 +272,8 @@ npm run serve
 | **V8.1** | **품질 강화: 오프라인 계약 하네스(9 모드 OFF 제로 diff) + i18n-core 단위 테스트 + CI 게이트 + README 정직 분할(프레임워크 206 / 정밀 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **생성물을 Vue 3 + Element Plus + Vite로 현대화; 런타임 검증 완료(40/40 어설션, vite build 성공, ar-SA RTL 포함 14장 스크린샷); 런타임 결함 3건 수정** | 93a12d5 + e49330b  |
 | **V9.1** | **유지보수성 리팩터링 · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **테스트 센터 및 검증 허브 · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **현재 버전** |
+| **V9.2** | **테스트 센터 및 검증 허브 · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **생성 산출물 자동화 테스트 · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **현재 버전** |
 
 ---
 
@@ -279,7 +281,7 @@ npm run serve
 
 ## 13. 프로젝트 현황
 
-- 현재 계획 버전 라인은 **V9.2**에 도달했으며, 기능은 지속적으로 반복 개선 중입니다 (AI 모델링, 시드 데이터 강화, 기능 팩 체계 등).
+- 현재 계획 버전 라인은 **V9.3**에 도달했으며, 기능은 지속적으로 반복 개선 중입니다 (AI 모델링, 시드 데이터 강화, 기능 팩 체계 등).
 - 동반 데모 프로젝트 `demo_admin`(백엔드 8140 / 프론트엔드 9040)이 준비되어 있으며, 트리 / CRUD / 마스터-디테일 / 읽기 전용 / 인쇄 전 시나리오를 커버하고 독립적으로 실행·검증할 수 있습니다.
 - 두 리포지토리 모두 Gitee에 호스팅되어 있습니다: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

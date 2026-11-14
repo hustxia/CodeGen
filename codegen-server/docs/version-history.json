@@ -1,9 +1,9 @@
 {
   "meta": {
-    "currentVersion": "V9.1",
-    "updated": "2026-11-13",
-    "source": "README.md(en) + README_ZH.md(zh) 为权威源；sync-version-rows*.mjs 仅 harvest 其余语言的 V7.5~V9.1 译本",
-    "note": "改动版本表只需编辑本文件，再运行 node scripts/render_version_history.mjs"
+    "currentVersion": "V9.3",
+    "updated": "2026-11-14",
+    "source": "README.md(en) + README_ZH.md(zh) 为权威源；sync-version-rows*.mjs harvest 其余语言的 V7.5~V9.3 译本",
+    "note": "改动版本表只需编辑本文件，再运行 node scripts/render_version_history.mjs（英文 README.md）与 --all（其余语言）"
   },
   "columns": {
     "en": [
@@ -398,8 +398,32 @@
         "zh": "可维护性重构：GenScaffoldServiceImpl 5072 → 931 行拆为 8 个 Writer；产物逐字节零差异（新旧 jar 共 119 + 62 文件 diff -r 为空）；312/312 单测；离线 i18n 契约 9/9"
       },
       "commit": {
-        "en": "V9.1, **current**",
-        "zh": "654b8e0 → b0d081e, **当前版本**"
+        "en": "654b8e0",
+        "zh": "654b8e0 → b0d081e"
+      }
+    },
+    {
+      "version": "V9.2",
+      "highlight": true,
+      "theme": {
+        "en": "Test Center & Verification Hub: merged `/test` case center (7 tables: env/suite/case/dataset/run/result/schedule) + `/tc/center` verification center (`tc_run` / `tc_case_result` / `tc_artifact`, 9 registered suites S1-S9, global single-run 409 lock, `codegen.testcenter/v1` JSON summary shared with CI). 373/373 tests (50 new), 206/206 locale keys, i18n contract 9/9, front-end build passed; `verify.sh` gate aligned (MIN_TESTS 312 + i18n + locales); generated output byte-identical",
+        "zh": "测试中心与验证中心：把接口/UI 用例资产（7 张表）与平台验证资产（S1–S9 套件、三层落库、统一 JSON 摘要）合并为一个版本；产物零 diff，373/373 单测，206/206 语言键"
+      },
+      "commit": {
+        "en": "V9.2 release",
+        "zh": "V9.2 release"
+      }
+    },
+    {
+      "version": "V9.3",
+      "highlight": true,
+      "theme": {
+        "en": "Generated-artifact automated testing: extends the V9.2 Verification Center with S10 (real `mvn test` on generated projects + Surefire parsing), S11 (artifact API tests, Docker/TestContainers, honestly SKIPPED when unavailable) and S12 (artifact E2E, Playwright, SKIPPED when unavailable); adds the GEN trigger, `TC_GEN_ROOT` env injection, `POST /tc/runs/gen` manual entry point, `autoVerifyGen` write-hook (default off) and a front-end \"Verify Generated Artifacts\" action. End-to-end: a freshly built complete system (device asset management, 4 tables) ran the 12-step pipeline to `success`, and its real artifact GEN run was PASSED with 20/20 S10 cases and three-layer run/case/artifact persistence. Full-flow testing also fixed 4 pipeline defects (fat-jar self-check classpath, subprocess relative paths, Vite vs vue-cli startup, NOT_NULL stale fail_reason) and 3 Vue 2 leftovers in generated Vue 3 pages",
+        "zh": "生成产物自动化测试：在 V9.2 验证中心扩展 S10（对真实产物跑 `mvn test` + Surefire 解析）、S11（产物接口测试，需 Docker/TestContainers，缺失如实 SKIP）、S12（产物 E2E，需 Playwright，缺失如实 SKIP）；新增 GEN 触发器、`TC_GEN_ROOT` 注入、`POST /tc/runs/gen` 手动入口、`autoVerifyGen` 写盘钩子（默认关闭）与前端「验证生成产物」操作区。端到端实测：新建「设备资产管理系统」（4 张表）跑完 12 步流水线 status=success，用真实产物触发 GEN 验证 PASSED，S10 20/20 用例全过，run/case/artifact 三层落库。全流程实测顺带修掉 4 个流水线缺陷（肥 jar 自检 classpath、子进程相对路径、Vite/vue-cli 启动串台、NOT_NULL 残留 fail_reason）与生成产物 Vue3 页面的 3 处 Vue2 遗留"
+      },
+      "commit": {
+        "en": "V9.3 release, **current**",
+        "zh": "V9.3 release, **当前版本**"
       }
     }
   ],
@@ -409,282 +433,374 @@
       "V8.0": "全頁面國際化：206 語言框架（8 種精譯），雙軌制 i18n、OFF 逐位元組零 diff 契約",
       "V8.1": "品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs",
       "V9.0": "生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷",
-      "V9.1": "可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9"
+      "V9.1": "可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9",
+      "V9.2": "測試中心與驗證中心：把介面/UI 用例資產（7 張表）與平台驗證資產（S1–S9 套件、三層落庫、統一 JSON 摘要）合併為一個版本；產物零差異，373/373 單測，206/206 語言鍵",
+      "V9.3": "生成產物自動化測試 · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "JA": {
       "V7.5": "プロジェクト言語設定：206 言語リスト / デフォルト / 有効言語、生成物への lang・dir 注入",
       "V8.0": "全ページ i18n：206 言語フレームワーク（8 言語は精訳）、OFF ゼロ diff 契約のデュアルトラック i18n",
       "V8.1": "品質強化：オフライン契約ハーネス（9 モード OFF ゼロ diff）+ i18n-core 単体テスト + CI ゲート + README の正直な分割（フレームワーク 206 / 精訳 8）+ check-locale-keys.mjs",
       "V9.0": "生成物を Vue 3 + Element Plus + Vite に近代化；ランタイム検証済み（40/40 アサーション、vite build 成功、ar-SA RTL 含む 14 スクリーンショット）；ランタイムで発見した 3 件の欠陥を修正",
-      "V9.1": "保守性リファクタリング · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "保守性リファクタリング · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "テストセンターと検証ハブ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "生成成果物の自動テスト · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "KO": {
       "V7.5": "프로젝트 언어 설정: 206개 언어 목록 / 기본 언어 / 사용 언어, 생성물에 lang·dir 주입",
       "V8.0": "전 페이지 i18n: 206개 언어 프레임워크(8개 정밀 번역), OFF 제로 diff 계약의 듀얼 트랙 i18n",
       "V8.1": "품질 강화: 오프라인 계약 하네스(9 모드 OFF 제로 diff) + i18n-core 단위 테스트 + CI 게이트 + README 정직 분할(프레임워크 206 / 정밀 8) + check-locale-keys.mjs",
       "V9.0": "생성물을 Vue 3 + Element Plus + Vite로 현대화; 런타임 검증 완료(40/40 어설션, vite build 성공, ar-SA RTL 포함 14장 스크린샷); 런타임 결함 3건 수정",
-      "V9.1": "유지보수성 리팩터링 · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "유지보수성 리팩터링 · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "테스트 센터 및 검증 허브 · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "생성 산출물 자동화 테스트 · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "DE": {
       "V7.5": "Projekt-Sprachkonfiguration: 206-Sprachenliste / Standardsprache / aktivierte Sprachen, Injektion von lang & dir in die generierten Artefakte",
       "V8.0": "Vollseiten-i18n: 206-Sprachen-Framework (8 professionell übersetzt), Zwei-Track-i18n mit OFF Zero-Diff-Vertrag",
       "V8.1": "Qualitätshärtung: Offline-Contract-Harness (9 Modi, OFF Zero-Diff) + i18n-Core-Unit-Tests + CI-Gate + ehrliche README-Aufteilung (Framework 206 / übersetzt 8) + check-locale-keys.mjs",
       "V9.0": "Generierte Artefakte auf Vue 3 + Element Plus + Vite modernisiert; zur Laufzeit verifiziert (40/40 Assertions, erfolgreicher vite build, 14 Screenshots inkl. ar-SA RTL); 3 Laufzeitfehler gefunden & behoben",
-      "V9.1": "Wartbarkeits-Refactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Wartbarkeits-Refactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Testzentrum & Verifizierungs-Hub · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Automatisierte Tests generierter Artefakte · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "FR": {
       "V7.5": "Configuration linguistique du projet : liste de 206 langues / langue par défaut / langues activées, injection de lang & dir dans les artefacts générés",
       "V8.0": "i18n pleine page : framework 206 langues (8 traduites professionnellement), i18n à double voie avec contrat zéro diff en mode OFF",
       "V8.1": "Durcissement qualité : harnais de contrat hors ligne (9 modes, zéro diff OFF) + tests unitaires i18n-core + porte CI + lecture honnête du README (framework 206 / traduites 8) + check-locale-keys.mjs",
       "V9.0": "Artefacts générés modernisés vers Vue 3 + Element Plus + Vite ; vérifiés à l'exécution (40/40 assertions, vite build réussi, 14 captures dont ar-SA RTL) ; 3 défauts d'exécution corrigés",
-      "V9.1": "Refactorisation de maintenabilité · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refactorisation de maintenabilité · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Centre de tests et hub de vérification · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Tests automatisés des artefacts générés · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "ES": {
       "V7.5": "Configuración de idiomas del proyecto: lista de 206 idiomas / idioma predeterminado / idiomas habilitados, inyección de lang y dir en los generados",
       "V8.0": "i18n de página completa: marco de 206 idiomas (8 traducidos profesionalmente), i18n de doble vía con contrato de dif cero en OFF",
       "V8.1": "Reforzamiento de calidad: arnés de contrato fuera de línea (9 modos, dif cero en OFF) + pruebas unitarias i18n-core + compuerta CI + división honesta del README (marco 206 / traducidos 8) + check-locale-keys.mjs",
       "V9.0": "Artefactos generados modernizados a Vue 3 + Element Plus + Vite; verificados en tiempo de ejecución (40/40 aserciones, vite build exitoso, 14 capturas incl. ar-SA RTL); 3 defectos de ejecución corregidos",
-      "V9.1": "Refactorización de mantenibilidad · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refactorización de mantenibilidad · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Centro de pruebas y centro de verificación · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Pruebas automatizadas de artefactos generados · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "RU": {
       "V7.5": "Языковая конфигурация проекта: список 206 языков / язык по умолчанию / включённые языки, вставка lang и dir в генерируемые файлы",
       "V8.0": "Полностраничная i18n: каркас на 206 языков (8 переведены профессионально), двухконтурная i18n с контрактом нулевой разницы при OFF",
       "V8.1": "Укрепление качества: офлайн-стенд контракта (9 режимов, нулевая разница OFF) + юнит-тесты i18n-core + CI-шлюз + честное разделение в README (каркас 206 / переведено 8) + check-locale-keys.mjs",
       "V9.0": "Генерируемые артефакты переведены на Vue 3 + Element Plus + Vite; проверено в рантайме (40/40 проверок, успешный vite build, 14 скриншотов вкл. ar-SA RTL); исправлены 3 рантайм-дефекта",
-      "V9.1": "Рефакторинг ради удобства сопровождения · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Рефакторинг ради удобства сопровождения · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Центр тестирования и центр проверок · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Автоматизированное тестирование сгенерированных артефактов · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "PT": {
       "V7.5": "Configuração de idiomas do projeto: lista de 206 idiomas / idioma padrão / idiomas habilitados, injeção de lang e dir nos gerados",
       "V8.0": "i18n de página inteira: framework de 206 idiomas (8 traduzidos profissionalmente), i18n de via dupla com contrato de diff zero em OFF",
       "V8.1": "Endurecimento de qualidade: arnês de contrato offline (9 modos, diff zero OFF) + testes unitários i18n-core + portão de CI + divisão honesta do README (framework 206 / traduzidos 8) + check-locale-keys.mjs",
       "V9.0": "Artefatos gerados modernizados para Vue 3 + Element Plus + Vite; verificados em execução (40/40 asserções, vite build com sucesso, 14 capturas incl. ar-SA RTL); 3 defeitos de execução corrigidos",
-      "V9.1": "Refatoração de manutenibilidade · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refatoração de manutenibilidade · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Central de testes e centro de verificação · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Testes automatizados de artefatos gerados · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "IT": {
       "V7.5": "Configurazione lingua del progetto: elenco di 206 lingue / lingua predefinita / lingue abilitate, iniezione di lang e dir nei generati",
       "V8.0": "i18n a pagina intera: framework di 206 lingue (8 tradotte professionalmente), i18n a doppia via con contratto zero-diff in OFF",
       "V8.1": "Rafforzamento qualità: harness di contratto offline (9 modalità, zero-diff OFF) + test unitari i18n-core + gate CI + suddivisione onesta del README (framework 206 / tradotte 8) + check-locale-keys.mjs",
       "V9.0": "Artefatti generati modernizzati a Vue 3 + Element Plus + Vite; verificati a runtime (40/40 asserzioni, vite build riuscita, 14 screenshot incl. ar-SA RTL); 3 difetti runtime corretti",
-      "V9.1": "Refactoring per manutenibilità · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refactoring per manutenibilità · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Centro di test e centro di verifica · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Test automatici degli artefatti generati · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "NL": {
       "V7.5": "Projecttaalconfiguratie: lijst van 206 talen / standaardtaal / ingeschakelde talen, injectie van lang & dir in gegenereerde code",
       "V8.0": "Volledige pagina-i18n: framework van 206 talen (8 professioneel vertaald), tweespoors i18n met OFF zero-diff contract",
       "V8.1": "Kwaliteitsverharding: offline contract-harness (9 modi, OFF zero-diff) + i18n-core unittests + CI-poort + eerlijke README-splitsing (framework 206 / vertaald 8) + check-locale-keys.mjs",
       "V9.0": "Gegenereerde artefacten gemoderniseerd naar Vue 3 + Element Plus + Vite; runtime geverifieerd (40/40 asserts, geslaagde vite build, 14 screenshots incl. ar-SA RTL); 3 runtimefouten gevonden & opgelost",
-      "V9.1": "Onderhoudbaarheidsrefactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Onderhoudbaarheidsrefactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Testcentrum & verificatiehub · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Geautomatiseerde tests van gegenereerde artefacten · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "PL": {
       "V7.5": "Konfiguracja językowa projektu: lista 206 języków / język domyślny / włączone języki, wstrzykiwanie lang i dir do generowanych plików",
       "V8.0": "i18n całej strony: framework 206 języków (8 przetłumaczonych profesjonalnie), dwutorowa i18n z kontraktem zerowej różnicy przy OFF",
       "V8.1": "Hardening jakości: offline harness kontraktu (9 trybów, zerowa różnica OFF) + testy jednostkowe i18n-core + bramka CI + uczciwy podział README (framework 206 / przetłumaczone 8) + check-locale-keys.mjs",
       "V9.0": "Generowane artefakty zmodernizowane do Vue 3 + Element Plus + Vite; zweryfikowane w czasie działania (40/40 asercji, udany vite build, 14 zrzutów ekranu incl. ar-SA RTL); naprawiono 3 defekty runtime",
-      "V9.1": "Refaktoryzacja pod kątem utrzymywalności · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktoryzacja pod kątem utrzymywalności · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Centrum testów i centrum weryfikacji · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Automatyczne testy generowanych artefaktów · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "SV": {
       "V7.5": "Projektspråkskonfiguration: lista över 206 språk / standardspråk / aktiverade språk, injicering av lang och dir i genererad kod",
       "V8.0": "Helsides-i18n: ramverk med 206 språk (8 professionellt översatta), tvåspårig i18n med OFF zero-diff-kontrakt",
       "V8.1": "Kvalitetshärdning: offline kontrakts-harness (9 lägen, OFF zero-diff) + i18n-core enhetstester + CI-grind + ärlig README-fördelning (ramverk 206 / översatta 8) + check-locale-keys.mjs",
       "V9.0": "Genererade artefakter moderniserade till Vue 3 + Element Plus + Vite; verifierade i drift (40/40 asserteringar, lyckad vite build, 14 skärmbilder inkl. ar-SA RTL); 3 runtime-fel åtgärdade",
-      "V9.1": "Underhållsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Underhållsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Testcenter & verifieringshubb · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Automatiserade tester av genererade artefakter · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "DA": {
       "V7.5": "Projekt-sprogkonfiguration: liste over 206 sprog / standardsprog / aktiverede sprog, injektion af lang & dir i genereret kode",
       "V8.0": "Fuldside-i18n: framework med 206 sprog (8 professionelt oversat), tosporet i18n med OFF zero-diff-kontrakt",
       "V8.1": "Kvalitetshærdning: offline kontrakt-harness (9 tilstande, OFF zero-diff) + i18n-core enhedstests + CI-port + ærlig README-opdeling (framework 206 / oversat 8) + check-locale-keys.mjs",
       "V9.0": "Genererede artefakter moderniseret til Vue 3 + Element Plus + Vite; runtime-verificeret (40/40 assertions, vellykket vite build, 14 skærmbilleder inkl. ar-SA RTL); 3 runtime-fejl rettet",
-      "V9.1": "Vedligeholdelsesrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Vedligeholdelsesrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Testcenter & verifikationshub · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Automatiserede tests af genererede artefakter · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "NO": {
       "V7.5": "Prosjektspråkkonfigurasjon: liste over 206 språk / standardspråk / aktiverte språk, injisering av lang & dir i generert kode",
       "V8.0": "Fullside-i18n: rammeverk med 206 språk (8 profesjonelt oversatt), tosporet i18n med OFF zero-diff-kontrakt",
       "V8.1": "Kvalitetsherdning: offline kontrakt-harness (9 moduser, OFF zero-diff) + i18n-core enhetstester + CI-port + ærlig README-inndeling (rammeverk 206 / oversatt 8) + check-locale-keys.mjs",
       "V9.0": "Genererte artefakter modernisert til Vue 3 + Element Plus + Vite; runtime-verifisert (40/40 asserts, vellykket vite build, 14 skjermbilder inkl. ar-SA RTL); 3 runtime-feil rettet",
-      "V9.1": "Vedlikeholdsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Vedlikeholdsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Testsenter & verifikasjonssenter · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Automatiserte tester av genererte artefakter · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "FI": {
       "V7.5": "Projektin kieliasetukset: 206 kielen luettelo / oletuskieli / käytössä olevat kielet, lang- ja dir-kenttien lisäys generoituihin tiedostoihin",
       "V8.0": "Koko sivun i18n: 206 kielen kehys (8 ammattimaisesti käännetty), kaksiraiteinen i18n OFF zero-diff-sopimuksella",
       "V8.1": "Laadun vahvistus: offline-sopimustesti (9 tilaa, OFF zero-diff) + i18n-core-yksikkötestit + CI-portti + rehellinen README-jako (kehys 206 / käännetty 8) + check-locale-keys.mjs",
       "V9.0": "Generoidut artefaktit päivitetty Vue 3 + Element Plus + Viteen; ajonaikaisesti todennettu (40/40 assertiota, onnistunut vite build, 14 kuvakaappausta incl. ar-SA RTL); 3 ajonaikaista virhettä korjattu",
-      "V9.1": "Ylläpidettävyyden refaktorointi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Ylläpidettävyyden refaktorointi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Testikeskus & varmennuskeskus · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Generoitujen artefaktien automatisoidut testit · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "CS": {
       "V7.5": "Jazyková konfigurace projektu: seznam 206 jazyků / výchozí jazyk / povolené jazyky, vkládání lang a dir do generovaného kódu",
       "V8.0": "i18n celé stránky: rámec 206 jazyků (8 profesionálně přeloženo), dvoustopá i18n s kontraktem nulového rozdílu při OFF",
       "V8.1": "Posílení kvality: offline kontraktní harness (9 režimů, nulový rozdíl OFF) + unit testy i18n-core + CI brána + čestné rozdělení README (rámec 206 / přeloženo 8) + check-locale-keys.mjs",
       "V9.0": "Generované artefakty modernizovány na Vue 3 + Element Plus + Vite; ověřeno za běhu (40/40 assertion, úspěšný vite build, 14 snímků vč. ar-SA RTL); opraveny 3 běhové defekty",
-      "V9.1": "Refaktoring pro udržovatelnost · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktoring pro udržovatelnost · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Testovací centrum & ověřovací centrum · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Automatizované testy generovaných artefaktů · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "SK": {
       "V7.5": "Jazyková konfigurácia projektu: zoznam 206 jazykov / predvolený jazyk / povolené jazyky, vkladanie lang a dir do generovaného kódu",
       "V8.0": "i18n celej stránky: rámec 206 jazykov (8 profesionálne preložených), dvojstopňová i18n s kontraktom nulového rozdielu pri OFF",
       "V8.1": "Posilnenie kvality: offline kontraktný harness (9 režimov, nulový rozdiel OFF) + unit testy i18n-core + CI brána + úprimné rozdelenie README (rámec 206 / preložené 8) + check-locale-keys.mjs",
       "V9.0": "Generované artefakty modernizované na Vue 3 + Element Plus + Vite; overené za behu (40/40 assertion, úspešný vite build, 14 snímok vrátane ar-SA RTL); opravené 3 behové defekty",
-      "V9.1": "Refaktoring pre udržateľnosť · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktoring pre udržateľnosť · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Testovacie centrum & overovacie centrum · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Automatizované testy generovaných artefaktov · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "HR": {
       "V7.5": "Jezična konfiguracija projekta: popis 206 jezika / zadani jezik / omogućeni jezici, ubacivanje lang i dir u generirani kod",
       "V8.0": "i18n cijele stranice: okvir 206 jezika (8 stručno prevedenih), dvokolosiječna i18n s ugovorom nulte razlike u OFF",
       "V8.1": "Očvršćivanje kvalitete: offline ugovorni harness (9 načina, nulta razlika OFF) + jedinični testovi i18n-core + CI kapija + poštena podjela README (okvir 206 / prevedenih 8) + check-locale-keys.mjs",
       "V9.0": "Generirani artefakti modernizirani na Vue 3 + Element Plus + Vite; provjereno u izvođenju (40/40 tvrdnji, uspješan vite build, 14 snimki zaslona incl. ar-SA RTL); popravljene 3 izvedbene greške",
-      "V9.1": "Refaktoriranje održivosti · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktoriranje održivosti · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Testni centar & centar za provjeru · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Automatizirano testiranje generiranih artefakata · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "RO": {
       "V7.5": "Configurarea lingvistică a proiectului: lista de 206 limbi / limba implicită / limbile activate, injectarea lang și dir în codul generat",
       "V8.0": "i18n pe pagina întreagă: cadru cu 206 limbi (8 traduse profesional), i18n pe două căi cu contract de diferență zero în OFF",
       "V8.1": "Întărirea calității: harness offline de contract (9 moduri, diferență zero OFF) + teste unitare i18n-core + poartă CI + împărțire onestă în README (cadru 206 / traduse 8) + check-locale-keys.mjs",
       "V9.0": "Artefactele generate modernizate la Vue 3 + Element Plus + Vite; verificate la runtime (40/40 aserțiuni, vite build reușit, 14 capturi incl. ar-SA RTL); 3 defecte de runtime reparate",
-      "V9.1": "Refactorizare pentru mentenabilitate · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refactorizare pentru mentenabilitate · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Centru de testare & centru de verificare · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Testare automată a artefactelor generate · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "BG": {
       "V7.5": "Езикова конфигурация на проекта: списък от 206 езика / език по подразбиране / включени езици, вмъкване на lang и dir в генерирания код",
       "V8.0": "i18n на цялата страница: рамка от 206 езика (8 професионално преведени), двупътна i18n с договор за нулева разлика при OFF",
       "V8.1": "Втвърдяване на качеството: офлайн стенд за контракт (9 режима, нулева разлика OFF) + unit тестове i18n-core + CI порта + честно разделяне в README (рамка 206 / преведени 8) + check-locale-keys.mjs",
       "V9.0": "Генерираните артефакти модернизирани към Vue 3 + Element Plus + Vite; проверено по време на изпълнение (40/40 проверки, успешен vite build, 14 екранни снимки incl. ar-SA RTL); коригирани 3 runtime дефекта",
-      "V9.1": "Рефакторинг за по-лесна поддръжка · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Рефакторинг за по-лесна поддръжка · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Център за тестване и проверка · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Автоматизирано тестване на генерираните артефакти · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "UK": {
       "V7.5": "Мовна конфігурація проєкту: список 206 мов / типова мова / увімкнені мови, вставлення lang і dir у згенерований код",
       "V8.0": "Повносторінкова i18n: каркас на 206 мов (8 професійно перекладено), двоконтурна i18n з контрактом нульової різниці в режимі OFF",
       "V8.1": "Зміцнення якості: офлайн-стенд контракту (9 режимів, нульова різниця OFF) + юніт-тести i18n-core + CI-шлюз + чесний розподіл у README (каркас 206 / перекладено 8) + check-locale-keys.mjs",
       "V9.0": "Згенеровані артефакти переведено на Vue 3 + Element Plus + Vite; перевірено в рантаймі (40/40 перевірок, успішний vite build, 14 скріншотів incl. ar-SA RTL); виправлено 3 рантайм-дефекти",
-      "V9.1": "Рефакторинг для зручності супроводу · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Рефакторинг для зручності супроводу · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Центр тестування та перевірки · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Автоматизоване тестування згенерованих артефактів · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "TR": {
       "V7.5": "Proje dil yapılandırması: 206 dillik liste / varsayılan dil / etkin diller, üretilen koda lang ve dir enjeksiyonu",
       "V8.0": "Tam sayfa i18n: 206 dilli çerçeve (8'i profesyonelce çevrildi), OFF sıfır fark sözleşmeli çift hatlı i18n",
       "V8.1": "Kalite sertleştirme: çevrimdışı sözleşme düzeneği (9 mod, OFF sıfır fark) + i18n-core birim testleri + CI kapısı + dürüst README ayrımı (çerçeve 206 / çevrili 8) + check-locale-keys.mjs",
       "V9.0": "Üretilen artefaktlar Vue 3 + Element Plus + Vite'a modernize edildi; çalışma zamanında doğrulandı (40/40 iddia, başarılı vite build, ar-SA RTL dahil 14 ekran görüntüsü); 3 çalışma zamanı hatası giderildi",
-      "V9.1": "Bakım yapılabilirlik refaktörü · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Bakım yapılabilirlik refaktörü · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Test merkezi & doğrulama merkezi · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Oluşturulan artefaktların otomatik testleri · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "EL": {
       "V7.5": "Γλωσσική διαμόρφωση έργου: λίστα 206 γλωσσών / προεπιλεγμένη γλώσσα / ενεργοποιημένες γλώσσες, έγχυση lang και dir στον παραγόμενο κώδικα",
       "V8.0": "i18n πλήρους σελίδας: πλαίσιο 206 γλωσσών (8 επαγγελματικά μεταφρασμένες), i18n δύο τροχιών με σύμβαση μηδενικής διαφοράς σε OFF",
       "V8.1": "Ενίσχυση ποιότητας: offline harness συμβολαίου (9 λειτουργίες, μηδενική διαφορά OFF) + unit tests i18n-core + πύλη CI + ειλικρινής διαίρεση README (πλαίσιο 206 / μεταφρασμένες 8) + check-locale-keys.mjs",
       "V9.0": "Τα παραγόμενα τεχνουργήματα εκσυγχρονίστηκαν σε Vue 3 + Element Plus + Vite; επαληθευμένα κατά την εκτέλεση (40/40 ισχυρισμοί, επιτυχές vite build, 14 στιγμιότυπα incl. ar-SA RTL); διορθώθηκαν 3 σφάλματα εκτέλεσης",
-      "V9.1": "Αναδιάρθρωση συντηρησιμότητας · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Αναδιάρθρωση συντηρησιμότητας · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Κέντρο δοκιμών & επαλήθευσης · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Αυτοματοποιημένες δοκιμές των παραγόμενων τεχνουργημάτων · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "HE": {
       "V7.5": "תצורת שפת הפרויקט: רשימת 206 שפות / שפת ברירת מחדל / שפות מופעלות, הזרקת lang ו-dir לקוד שנוצר",
       "V8.0": "i18n לעמוד מלא: מסגרת של 206 שפות (8 מתורגמות מקצועית), i18n דו-מסלולית עם חוזה אפס הפרש ב-OFF",
       "V8.1": "חיזוק איכות: מנגנון חוזה אופליין (9 מצבים, אפס הפרש ב-OFF) + בדיקות יחידה i18n-core + שער CI + פיצול כן ב-README (מסגרת 206 / מתורגמות 8) + check-locale-keys.mjs",
       "V9.0": "ה-artifacts שנוצרו שודרגו ל-Vue 3 + Element Plus + Vite; אומתו בזמן ריצה (40/40 טענות, vite build מוצלח, 14 צילומי מסך incl. ar-SA RTL); תוקנו 3 באגים בזמן ריצה",
-      "V9.1": "רפקטור לתחזוקתיות · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "רפקטור לתחזוקתיות · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "מרכז בדיקות ומרכז אימות · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "בדיקות אוטומטיות של תוצרים שנוצרו · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "FA": {
       "V7.5": "پیکربندی زبان پروژه: فهرست ۲۰۶ زبان / زبان پیش‌فرض / زبان‌های فعال، تزریق lang و dir در خروجی تولیدی",
       "V8.0": "i18n تمام‌صفحه: چارچوب ۲۰۶ زبانه (۸ زبان ترجمه حرفه‌ای)، i18n دورخط با قرارداد صفر دیف در OFF",
       "V8.1": "سخت‌سازی کیفیت: هارنس قرارداد آفلاین (۹ حالت، صفر دیف OFF) + تست واحد i18n-core + گیت CI + تفکیک صادقانه README (چارچوب ۲۰۶ / ترجمه‌شده ۸) + check-locale-keys.mjs",
       "V9.0": "خروجی‌های تولیدی به Vue 3 + Element Plus + Vite مدرن شدند؛ در زمان اجرا راستی‌آزمایی شد (۴۰/۴۰ ادعا، vite build موفق، ۱۴ اسکرین‌شات شامل ar-SA RTL)؛ ۳ عیب زمان اجرا برطرف شد",
-      "V9.1": "بازآرایی برای نگهداریپذیری · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "بازآرایی برای نگهداریپذیری · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "مرکز آزمون و مرکز تأیید · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "آزمون خودکار خروجی‌های تولیدشده · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "UR": {
       "V7.5": "پروجیکٹ کی زبان کنفیگریشن: ۲۰۶ زبانوں کی فہرست / ڈیفالٹ زبان / فعال زبانیں، تیار شدہ کوڈ میں lang اور dir کا داخلہ",
       "V8.0": "مکمل صفحہ i18n: ۲۰۶ زبانوں کا فریم ورک (۸ پیشہ ورانہ ترجمہ شدہ)، OFF صفر فرق معاہدے کے ساتھ دوہرا i18n",
       "V8.1": "معیار کی مضبوطی: آف لائن معاہدہ ہارنس (۹ موڈ، OFF صفر فرق) + i18n-core یونٹ ٹیسٹ + CI گیٹ + ایماندار README تقسیم (فریم ورک ۲۰۶ / ترجمہ شدہ ۸) + check-locale-keys.mjs",
       "V9.0": "تیار شدہ artifacts کو Vue 3 + Element Plus + Vite پر جدید بنایا گیا؛ رن ٹائم پر تصدیق شدہ (۴۰/۴۰، کامیاب vite build، ۱۴ اسکرین شاٹس بشمول ar-SA RTL)؛ ۳ رن ٹائم خرابیاں درست کی گئیں",
-      "V9.1": "دیکھ بھال کے لیے ری فیکٹرنگ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "دیکھ بھال کے لیے ری فیکٹرنگ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "ٹیسٹ سینٹر اور تصدیقی مرکز · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "تیار کردہ مصنوعات کی خودکار جانچ · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "UR_ROMA": {
       "V7.5": "Project ki zubaan configuration: 206 zabanoon ki list / default zubaan / enabled zabanein, generated code mein lang aur dir injection",
       "V8.0": "Full-page i18n: 206 zabanoon ka framework (8 professional tarjuma shuda), OFF zero-diff contract ke saath dual-track i18n",
       "V8.1": "Quality hardening: offline contract harness (9 modes, OFF zero-diff) + i18n-core unit tests + CI gate + imandaar README taqseem (framework 206 / tarjuma 8) + check-locale-keys.mjs",
       "V9.0": "Generated artifacts ko Vue 3 + Element Plus + Vite par modernize kiya; runtime par verify shuda (40/40 assertions, kamyab vite build, 14 screenshots incl. ar-SA RTL); 3 runtime defects theek kiye",
-      "V9.1": "Dekh bhaal ke liye refactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Dekh bhaal ke liye refactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Test Center aur tasdeeqi markaz · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Generated artifacts ki automatic testing · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "HI": {
       "V7.5": "प्रोजेक्ट भाषा कॉन्फ़िगरेशन: 206 भाषाओं की सूची / डिफ़ॉल्ट भाषा / सक्षम भाषाएँ, जनरेट कोड में lang और dir इंजेक्शन",
       "V8.0": "पूर्ण पेज i18n: 206 भाषाओं का फ्रेमवर्क (8 पेशेवर रूप से अनूदित), OFF शून्य-डिफ़ संधि वाली दोहरी-ट्रैक i18n",
       "V8.1": "गुणवत्ता सुदृढ़ीकरण: ऑफ़लाइन अनुबंध हार्नेस (9 मोड, OFF शून्य-डिफ़) + i18n-core यूनिट टेस्ट + CI गेट + ईमानदार README विभाजन (फ्रेमवर्क 206 / अनूदित 8) + check-locale-keys.mjs",
       "V9.0": "जनरेट किए गए आर्टिफैक्ट्स Vue 3 + Element Plus + Vite पर आधुनिक किए गए; रनटाइम पर सत्यापित (40/40 अभिकथन, सफल vite build, ar-SA RTL सहित 14 स्क्रीनशॉट); 3 रनटाइम दोष ठीक किए गए",
-      "V9.1": "रखरखाव-योग्यता हेतु रीफ़ैक्टरिंग · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "रखरखाव-योग्यता हेतु रीफ़ैक्टरिंग · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "परीक्षण केंद्र एवं सत्यापन केंद्र · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "उत्पन्न आर्टिफैक्ट्स का स्वचालित परीक्षण · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "BN": {
       "V7.5": "প্রজেক্ট ভাষা কনফিগারেশন: ২০৬টি ভাষার তালিকা / ডিফল্ট ভাষা / সক্রিয় ভাষা, জেনারেট করা কোডে lang ও dir ইনজেকশন",
       "V8.0": "সম্পূর্ণ পেজ i18n: ২০৬ ভাষার ফ্রেমওয়ার্ক (৮টি পেশাদারভাবে অনূদিত), OFF শূন্য-ডিফ চুক্তিসহ দ্বৈত-ট্র্যাক i18n",
       "V8.1": "মানোন্নয়ন: অফলাইন চুক্তি হার্নেস (৯ মোড, OFF শূন্য-ডিফ) + i18n-core ইউনিট টেস্ট + CI গেট + সৎ README বিভাজন (ফ্রেমওয়ার্ক ২০৬ / অনূদিত ৮) + check-locale-keys.mjs",
       "V9.0": "জেনারেট করা আর্টিফ্যাক্ট Vue 3 + Element Plus + Vite-এ আধুনিকীকৃত; রানটাইমে যাচাইকৃত (৪০/৪০ অ্যাসারশন, সফল vite build, ar-SA RTL সহ ১৪টি স্ক্রিনশট); ৩টি রানটাইম ত্রুটি সংশোধিত",
-      "V9.1": "রক্ষণাবেক্ষণযোগ্যতার রিফ্যাক্টরিং · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "রক্ষণাবেক্ষণযোগ্যতার রিফ্যাক্টরিং · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "পরীক্ষা কেন্দ্র ও যাচাই কেন্দ্র · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "উৎপন্ন আর্টিফ্যাক্টের স্বয়ংক্রিয় পরীক্ষা · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "TA": {
       "V7.5": "திட்ட மொழி அமைப்பு: 206 மொழிகள் பட்டியல் / இயல்புநிலை மொழி / இயக்கப்பட்ட மொழிகள், உருவாக்கப்பட்ட குறியீட்டில் lang & dir செலுத்துதல்",
       "V8.0": "முழு பக்க i18n: 206 மொழி கட்டமைப்பு (8 தொழில்முறை மொழிபெயர்ப்பு), OFF பூஜ்ஜிய-வேறுபாடு ஒப்பந்தத்துடன் இருவழி i18n",
       "V8.1": "தர வலுவூட்டல்: ஆஃப்லைன் ஒப்பந்த ஹார்னஸ் (9 முறைகள், OFF பூஜ்ஜிய-வேறுபாடு) + i18n-core யூனிட் சோதனைகள் + CI கேட் + நேர்மையான README பிரிவு (கட்டமைப்பு 206 / மொழிபெயர்ப்பு 8) + check-locale-keys.mjs",
       "V9.0": "உருவாக்கப்பட்ட ஆர்டிஃபேக்ட்கள் Vue 3 + Element Plus + Vite ஆக நவீனமாக்கப்பட்டன; இயக்க நேரத்தில் சரிபார்க்கப்பட்டது (40/40 உறுதிப்பாடுகள், வெற்றிகரமான vite build, ar-SA RTL உட்பட 14 ஸ்கிரீன்ஷாட்கள்); 3 இயக்க குறைபாடுகள் சரிசெய்யப்பட்டன",
-      "V9.1": "பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "சோதனை மையம் & சரிபார்ப்பு மையம் · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "உருவாக்கப்பட்ட ஆர்ட்டிஃபாக்ட்களின் தானியங்கி சோதனை · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "TE": {
       "V7.5": "ప్రాజెక్ట్ భాష కాన్ఫిగరేషన్: 206 భాషల జాబితా / డిఫాల్ట్ భాష / ప్రారంభించిన భాషలు, జనరేట్ చేసిన కోడ్‌లో lang & dir ఇన్జెక్షన్",
       "V8.0": "పూర్తి పేజీ i18n: 206 భాషల ఫ్రేమ్‌వర్క్ (8 వృత్తిపరంగా అనువదించబడింది), OFF జీరో-డిఫ్ ఒప్పందంతో ద్విమార్గ i18n",
       "V8.1": "నాణ్యత సుధారణ: ఆఫ్‌లైన్ ఒప్పంద హార్నెస్ (9 మోడ్‌లు, OFF జీరో-డిఫ్) + i18n-core యూనిట్ టెస్ట్‌లు + CI గేట్ + నిజాయితీ README విభజన (ఫ్రేమ్‌వర్క్ 206 / అనువదించిన 8) + check-locale-keys.mjs",
       "V9.0": "జనరేట్ చేసిన ఆర్టిఫ్యాక్ట్‌లు Vue 3 + Element Plus + Vite కు ఆధునీకరించబడ్డాయి; రన్‌టైమ్‌లో ధృవీకరించబడింది (40/40 అసర్షన్లు, విజయవంతమైన vite build, ar-SA RTL తో సహా 14 స్క్రీన్‌షాట్‌లు); 3 రన్‌టైమ్ లోపాలు సరిచేయబడ్డాయి",
-      "V9.1": "నిర్వహణ సౌలభ్య పునర్నిర్మాణం · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "నిర్వహణ సౌలభ్య పునర్నిర్మాణం · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "పరీక్షా కేంద్రం & ధృవీకరణ కేంద్రం · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "రూపొందించిన ఆర్టిఫాక్ట్‌ల ఆటోమేటెడ్ పరీక్షలు · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "ML": {
       "V7.5": "പ്രോജക്റ്റ് ഭാഷ കോൺഫിഗറേഷൻ: 206 ഭാഷകളുടെ പട്ടിക / സ്ഥിര ഭാഷ / പ്രവർത്തനക്ഷമമാക്കിയ ഭാഷകൾ, ജനറേറ്റ് ചെയ്ത കോഡിൽ lang & dir ഇൻജക്ഷൻ",
       "V8.0": "പൂർണ്ണ പേജ് i18n: 206 ഭാഷാ ഫ്രെയിംവർക്ക് (8 പ്രൊഫഷണൽ വിവർത്തനം), OFF സീറോ-ഡിഫ് കരാറുള്ള ഇരട്ട-ട്രാക്ക് i18n",
       "V8.1": "ഗുണനിലവാര ശക്തിപ്പെടുത്തൽ: ഓഫ്‌ലൈൻ കരാർ ഹാർനസ് (9 മോഡുകൾ, OFF സീറോ-ഡിഫ്) + i18n-core യൂണിറ്റ് ടെസ്റ്റുകൾ + CI ഗേറ്റ് + സത്യസന്ധമായ README വിഭജനം (ഫ്രെയിംവർക്ക് 206 / വിവർത്തനം 8) + check-locale-keys.mjs",
       "V9.0": "ജനറേറ്റ് ചെയ്ത ആർട്ടിഫാക്ടുകൾ Vue 3 + Element Plus + Vite ലേക്ക് ആധുനികവൽക്കരിച്ചു; റൺടൈമിൽ സ്ഥിരീകരിച്ചു (40/40 അസെർഷനുകൾ, വിജയകരമായ vite build, ar-SA RTL ഉൾപ്പെടെ 14 സ്ക്രീൻഷോട്ടുകൾ); 3 റൺടൈം വൈകല്യങ്ങൾ ശരിയാക്കി",
-      "V9.1": "പരിപാലനക്ഷമത പുനഃക്രമീകരണം · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "പരിപാലനക്ഷമത പുനഃക്രമീകരണം · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "പരിശോധനാ കേന്ദ്രം & സ്ഥിരീകരണ കേന്ദ്രം · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "സൃഷ്ടിച്ച ആർട്ടിഫാക്റ്റുകളുടെ ഓട്ടോമേറ്റഡ് പരിശോധന · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "ID": {
       "V7.5": "Konfigurasi bahasa proyek: daftar 206 bahasa / bahasa default / bahasa yang diaktifkan, injeksi lang & dir ke hasil yang dibuat",
       "V8.0": "i18n halaman penuh: framework 206 bahasa (8 diterjemahkan profesional), i18n jalur ganda dengan kontrak zero-diff saat OFF",
       "V8.1": "Penguatan kualitas: harness kontrak offline (9 mode, zero-diff OFF) + unit test i18n-core + gate CI + pembagian README yang jujur (framework 206 / diterjemahkan 8) + check-locale-keys.mjs",
       "V9.0": "Artefak yang dihasilkan dimodernisasi ke Vue 3 + Element Plus + Vite; terverifikasi saat runtime (40/40 assertion, vite build sukses, 14 tangkapan layar incl. ar-SA RTL); 3 defect runtime diperbaiki",
-      "V9.1": "Refaktor untuk kemudahan pemeliharaan · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktor untuk kemudahan pemeliharaan · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Pusat pengujian & pusat verifikasi · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Pengujian otomatis artefak hasil generasi · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "TH": {
       "V7.5": "การตั้งค่าภาษาของโปรเจกต์: รายการ 206 ภาษา / ภาษาเริ่มต้น / ภาษาที่เปิดใช้, ฉีด lang และ dir ลงในโค้ดที่สร้าง",
       "V8.0": "i18n ทั้งหน้า: เฟรมเวิร์ก 206 ภาษา (แปลมืออาชีพ 8 ภาษา), i18n สองแทร็กพร้อมสัญญา zero-diff เมื่อ OFF",
       "V8.1": "เสริมความแข็งแกร่งด้านคุณภาพ: offline contract harness (9 โหมด, OFF zero-diff) + unit test i18n-core + CI gate + แบ่ง README อย่างตรงไปตรงมา (เฟรมเวิร์ก 206 / แปลแล้ว 8) + check-locale-keys.mjs",
       "V9.0": "สิ่งที่สร้างได้รับการปรับให้ทันสมัยเป็น Vue 3 + Element Plus + Vite; ตรวจสอบขณะรันจริง (40/40 assertions, vite build สำเร็จ, ภาพหน้าจอ 14 รูป รวม ar-SA RTL); แก้ไขข้อบกพร่อง runtime 3 จุด",
-      "V9.1": "การปรับโครงสร้างเพื่อความสามารถในการดูแลรักษา · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "การปรับโครงสร้างเพื่อความสามารถในการดูแลรักษา · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "ศูนย์ทดสอบและศูนย์ตรวจสอบ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "การทดสอบอัตโนมัติของผลลัพธ์ที่สร้างขึ้น · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "VI": {
       "V7.5": "Cấu hình ngôn ngữ dự án: danh sách 206 ngôn ngữ / ngôn ngữ mặc định / các ngôn ngữ bật, chèn lang & dir vào mã được tạo",
       "V8.0": "i18n toàn trang: khung 206 ngôn ngữ (8 bản dịch chuyên nghiệp), i18n hai luồng với hợp đồng zero-diff khi OFF",
       "V8.1": "Tăng cường chất lượng: harness hợp đồng offline (9 chế độ, zero-diff OFF) + unit test i18n-core + cổng CI + phân tách README trung thực (khung 206 / đã dịch 8) + check-locale-keys.mjs",
       "V9.0": "Artifact được tạo hiện đại hóa lên Vue 3 + Element Plus + Vite; đã xác minh lúc runtime (40/40 assertion, vite build thành công, 14 ảnh chụp incl. ar-SA RTL); sửa 3 lỗi runtime",
-      "V9.1": "Tái cấu trúc để dễ bảo trì · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Tái cấu trúc để dễ bảo trì · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Trung tâm kiểm thử & trung tâm xác minh · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Kiểm thử tự động sản phẩm được sinh ra · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "AR": {
       "V7.5": "إعداد لغة المشروع: قائمة 206 لغة / اللغة الافتراضية / اللغات المفعلة، حقن lang و dir في المولَّد",
       "V8.0": "تدويل كامل الصفحة: إطار 206 لغة (8 مترجمة احترافياً)، i18n ثنائي المسار مع عقد فرق صفري عند OFF",
       "V8.1": "تحصين الجودة: حزام عقد offline (9 أوضاع، فرق صفري OFF) + اختبارات وحدة i18n-core + بوابة CI + تقسيم صادق في README (إطار 206 / مترجمة 8) + check-locale-keys.mjs",
       "V9.0": "تحديث المخرجات المولدة إلى Vue 3 + Element Plus + Vite؛ تم التحقق وقت التشغيل (40/40 تأكيدات، vite build ناجح، 14 لقطة شاشة تشمل ar-SA RTL)؛ إصلاح 3 عيوب تشغيل",
-      "V9.1": "إعادة هيكلة لقابلية الصيانة · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "إعادة هيكلة لقابلية الصيانة · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "مركز الاختبارات ومركز التحقق · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "الاختبار الآلي للمخرجات المُولّدة · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "ET": {
-      "V9.1": "Hooldatavuse refaktoreerimine · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Hooldatavuse refaktoreerimine · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Testikeskus & kontrollikeskus · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Genereeritud artefaktide automatiseeritud testimine · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "HY": {
-      "V9.1": "Սպասարկելիության ռեֆակտորինգ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Սպասարկելիության ռեֆակտորինգ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Թեստավորման կենտրոն & ստուգման կենտրոն · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Գեներացված արտեֆակտների ավտոմատացված թեստավորում · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "KA": {
-      "V9.1": "მოვლადობის რეფაქტორინგი · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "მოვლადობის რეფაქტორინგი · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "ტესტირების ცენტრი & ვერიფიკაციის ცენტრი · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "გენერირებული არტეფაქტების ავტომატური ტესტირება · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "KM": {
-      "V9.1": "ការរៀបចំឡើងវិញដើម្បីងាយថែទាំ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "ការរៀបចំឡើងវិញដើម្បីងាយថែទាំ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "មជ្ឈមណ្ឌលសាកល្បង និងផ្ទៀងផ្ទាត់ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "ការធ្វើតេស្តដោយស្វ័យប្រវត្តិលើផលិតផលដែលបង្កើតឡើង · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "MY": {
-      "V9.1": "ပြုပြင်ထိန်းသိမ်းလွယ်မှု ပြန်လည်ဖွဲ့စည်းခြင်း · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "ပြုပြင်ထိန်းသိမ်းလွယ်မှု ပြန်လည်ဖွဲ့စည်းခြင်း · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "စမ်းသပ်မှုစင်တာနှင့် အတည်ပြုစင်တာ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "ထုတ်လုပ်ထားသော artifact များကို အလိုအလျောက် စမ်းသပ်ခြင်း · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "SW": {
-      "V9.1": "Urekebishaji kwa matengenezo rahisi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Urekebishaji kwa matengenezo rahisi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Kituo cha majaribio & uthibitishaji · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Majaribio ya kiotomatiki ya vitu vilivyozalishwa · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "SL": {
-      "V9.1": "Refaktoriranje za vzdrževanje · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktoriranje za vzdrževanje · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Testni center & center za preverjanje · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Avtomatizirano testiranje generiranih artefaktov · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "TL": {
-      "V9.1": "Refactoring para sa maintainability · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refactoring para sa maintainability · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Sentro ng pagsubok & sentro ng beripikasyon · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Awtomatikong pagsubok sa mga nabuong artifact · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "HU": {
-      "V9.1": "Karbantarthatósági refaktorálás · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Karbantarthatósági refaktorálás · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Tesztközpont & ellenőrzési központ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Generált artefaktumok automatizált tesztelése · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     },
     "PT_BR": {
-      "V9.1": "Refatoração de manutenibilidade · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refatoração de manutenibilidade · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.2": "Central de testes e centro de verificação · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical",
+      "V9.3": "Testes automatizados de artefatos gerados · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted"
     }
   }
 }

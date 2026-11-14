@@ -9,7 +9,8 @@
 ---
 Адрес GitHub: https://github.com/hustxia/CodeGen
 
-> **текущая версия V9.2 · Центр тестирования и центр проверок · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **текущая версия V9.3 · Автоматизированное тестирование сгенерированных артефактов · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
+> **V9.2 release · Центр тестирования и центр проверок · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
 > **V9.1 · Рефакторинг ради удобства сопровождения · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · Генерируемые артефакты переведены на Vue 3 + Element Plus + Vite; проверено в рантайме (40/40 проверок, успешный vite build, 14 скриншотов вкл. ar-SA RTL); исправлены 3 рантайм-дефекта**
 > **V8.1** · Укрепление качества: офлайн-стенд контракта (9 режимов, нулевая разница OFF) + юнит-тесты i18n-core + CI-шлюз + честное разделение в README (каркас 206 / переведено 8) + check-locale-keys.mjs
@@ -234,7 +235,7 @@ npm run serve
 | `../codegen-server/docs/代码生成器-操作手册.md` (китайский) | Развёртывание, старт за пять минут, конфигурация таблиц, пакетное подключение, управление шаблонами, реестр, каталог API, полный процесс конвейера (со скриншотами) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (китайский) | 6 таблиц, покрывающих 5 типовых сценариев, с работающей демонстрацией и скриншотами реальных прогонов |
 | `项目介绍.md` (китайский) | Документ с описанием проекта, тот же источник, что и эта статья |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` (китайский) | Планы версий и перечень функций от V3.1 → V9.2 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` (китайский) | Планы версий и перечень функций от V3.1 → V9.3 |
 | `../codegen-web/README.md` | Краткое руководство по консоли фронтенда |
 
 ---
@@ -275,7 +276,8 @@ npm run serve
 | **V8.1** | **Укрепление качества: офлайн-стенд контракта (9 режимов, нулевая разница OFF) + юнит-тесты i18n-core + CI-шлюз + честное разделение в README (каркас 206 / переведено 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **Генерируемые артефакты переведены на Vue 3 + Element Plus + Vite; проверено в рантайме (40/40 проверок, успешный vite build, 14 скриншотов вкл. ar-SA RTL); исправлены 3 рантайм-дефекта** | 93a12d5 + e49330b  |
 | **V9.1** | **Рефакторинг ради удобства сопровождения · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Центр тестирования и центр проверок · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **текущая версия** |
+| **V9.2** | **Центр тестирования и центр проверок · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Автоматизированное тестирование сгенерированных артефактов · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **текущая версия** |
 
 ---
 
@@ -283,7 +285,7 @@ npm run serve
 
 ## 13. Состояние проекта
 
-- Текущая плановая линейка версий достигла **V9.2**, возможности продолжают развиваться (AI-моделирование, обогащение seed-данных, система пакетов возможностей и т. д.).
+- Текущая плановая линейка версий достигла **V9.3**, возможности продолжают развиваться (AI-моделирование, обогащение seed-данных, система пакетов возможностей и т. д.).
 - Подготовлен сопровождающий демонстрационный проект `demo_admin` (бэкенд 8140 / фронтенд 9040), покрывающий все сценарии: дерево / CRUD / мастер-деталь / только чтение / печать; запускается автономно для проверки.
 - Оба репозитория размещены на Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

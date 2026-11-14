@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **Jelenlegi verzió V9.2 · Tesztközpont & ellenőrzési központ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **Jelenlegi verzió V9.3 · Generált artefaktumok automatizált tesztelése · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
+> **V9.2 release · Tesztközpont & ellenőrzési központ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
 > **V9.1 · Karbantarthatósági refaktorálás · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · A generált kód modernizálása Vue 3 + Element Plus + Vite alapra; futásidejű ellenőrzés (40/40 állítás, sikeres vite build, 14 képernyőkép az ar-SA RTL-lel); 3 futásidejű hiba javítva**
 > **V8.1** · Minőségi megerősítés: offline szerződés-harness (9 mód, OFF zero-diff) + i18n-core egységtesztek + CI-kapu + őszinte README-felosztás (keretrendszer 206 / fordított 8) + check-locale-keys.mjs
@@ -233,7 +234,7 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 | `../codegen-server/docs/代码生成器-操作手册.md` (kínai) | Üzembe helyezés, 5 perces kezdés, tábla konfiguráció, köteges bevitel, sablonkezelés, napló, API katalógus, teljes folyamat (képernyőképekkel) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kínai) | 6 tábla, amely 5 tipikus forgatókönyvet fed le, futtatható demóval és valódi képernyőképekkel |
 | `项目介绍.md` | Projektbemutató dokumentum, ugyanaz a forrás, mint ez a fájl |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verziótervek és funkcióleltárak V3.1 → V9.2 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verziótervek és funkcióleltárak V3.1 → V9.3 |
 | `../codegen-web/README.md` | Front-end konzol gyorskezelés referencia |
 
 ---
@@ -274,7 +275,8 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 | **V8.1** | **Minőségi megerősítés: offline szerződés-harness (9 mód, OFF zero-diff) + i18n-core egységtesztek + CI-kapu + őszinte README-felosztás (keretrendszer 206 / fordított 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **A generált kód modernizálása Vue 3 + Element Plus + Vite alapra; futásidejű ellenőrzés (40/40 állítás, sikeres vite build, 14 képernyőkép az ar-SA RTL-lel); 3 futásidejű hiba javítva** | 93a12d5 + e49330b  |
 | **V9.1** | **Karbantarthatósági refaktorálás · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Tesztközpont & ellenőrzési központ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **Jelenlegi verzió** |
+| **V9.2** | **Tesztközpont & ellenőrzési központ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Generált artefaktumok automatizált tesztelése · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **Jelenlegi verzió** |
 
 ---
 
@@ -282,7 +284,7 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 
 ## 13. Projekt állapot
 
-- A jelenlegi tervezett verzióvonal elérte a **V9.2**-at (képességek folyamatosan iterálódnak: AI modellezés, seed adat fejlesztés, képességcsomag rendszer stb.).
+- A jelenlegi tervezett verzióvonal elérte a **V9.3**-at (képességek folyamatosan iterálódnak: AI modellezés, seed adat fejlesztés, képességcsomag rendszer stb.).
 - Egy kísérő demo projekt `demo_admin` (backend 8140 / front-end 9040) lefedi a fa / CRUD / master-detail / csak olvasható / nyomtatási forgatókönyveket és önállóan futtatható ellenőrzés céljából.
 - Mindkét repozitório a Gitee-en van tárolva: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

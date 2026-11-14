@@ -8,7 +8,17 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **Current version V9.1 · Maintainability refactor · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **Current release — V9.3 (Generated-artifact Automated Testing) on top of V9.2 (Test Center & Verification Hub)**
+> Three new product suites extend the V9.2 Verification Center: **S10** runs a real `mvn test` on the generated project
+> (Surefire parsing), **S11** covers artifact API tests (Docker/TestContainers) and **S12** artifact E2E (Playwright);
+> S11/S12 report an honest SKIPPED when their toolchain is absent. A **GEN** trigger, `TC_GEN_ROOT` injection,
+> `POST /tc/runs/gen` manual entry point, an `autoVerifyGen` write-hook (default off) and a front-end action
+> "Verify Generated Artifacts" complete the loop. End-to-end verified on a freshly built **device asset management**
+> system (4 tables): 12-step pipeline `success`, real artifact GEN run **PASSED**, **20/20 S10 cases**, three-layer
+> run/case/artifact persistence. Full-flow testing also fixed 4 pipeline defects and 3 Vue 2 leftovers in Vue 3 pages.
+> **V9.2 — Test Center & Verification Hub (previous release)**
+>
+> **V9.1 — maintainability refactor (previous release)**
 > **V9.0 release (Vue 3 generated artifacts) on top of V8.1 (quality gate)**
 > Generated projects now target **Vue 3 + Element Plus + Vite**: `package.json`, `vite.config.js`,
 > `main.js`, router, store and `request.js` are emitted Vue 3-native, and template mechanics were
@@ -244,7 +254,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | `../codegen-server/docs/代码生成器-操作手册.md` (Chinese) | Deployment, 5-minute start, table config, batch intake, template management, ledger, API catalog, full pipeline (with screenshots) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
 | `项目介绍.md` | Project introduction document, same source as this file |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V9.2 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V9.3 |
 | `../codegen-web/README.md` | Frontend console quick-start reference |
 
 ---
@@ -285,7 +295,8 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | **V8.1** | **Quality hardening: offline Freemarker contract harness (9 modes, OFF byte-zero-diff) + `i18n-core` unit tests + CI gate + honest README split (framework 206 / translated 8) + `check-locale-keys.mjs`** | 93a12d5 + e49330b |
 | **V9.0** | **Generated-artifact modernization: Vue 3 + Element Plus + Vite; runtime-verified (40/40 assertions, `vite build` success, 14 Chrome screenshots incl. ar-SA RTL); 3 runtime defects found & fixed** | 93a12d5 + e49330b  |
 | **V9.1** | **Maintainability refactor · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e, **Current version** |
-| **V9.2** | **Test Center & Verification Hub: merged `/test` case center (7 tables: env/suite/case/dataset/run/result/schedule) + `/tc/center` verification center (`tc_run` / `tc_case_result` / `tc_artifact`, 9 registered suites S1-S9, global single-run 409 lock, `codegen.testcenter/v1` JSON summary shared with CI). 373/373 tests (50 new), 206/206 locale keys, i18n contract 9/9, front-end build passed; `verify.sh` gate aligned (MIN_TESTS 312 + i18n + locales); generated output byte-identical** | V9.2 release, **current** |
+| **V9.2** | **Test Center & Verification Hub: merged `/test` case center (7 tables: env/suite/case/dataset/run/result/schedule) + `/tc/center` verification center (`tc_run` / `tc_case_result` / `tc_artifact`, 9 registered suites S1-S9, global single-run 409 lock, `codegen.testcenter/v1` JSON summary shared with CI). 373/373 tests (50 new), 206/206 locale keys, i18n contract 9/9, front-end build passed; `verify.sh` gate aligned (MIN_TESTS 312 + i18n + locales); generated output byte-identical** | V9.2 release  |
+| **V9.3** | **Generated-artifact automated testing: extends the V9.2 Verification Center with S10 (real `mvn test` on generated projects + Surefire parsing), S11 (artifact API tests, Docker/TestContainers, honestly SKIPPED when unavailable) and S12 (artifact E2E, Playwright, SKIPPED when unavailable); adds the GEN trigger, `TC_GEN_ROOT` env injection, `POST /tc/runs/gen` manual entry point, `autoVerifyGen` write-hook (default off) and a front-end "Verify Generated Artifacts" action. End-to-end: a freshly built complete system (device asset management, 4 tables) ran the 12-step pipeline to `success`, and its real artifact GEN run was PASSED with 20/20 S10 cases and three-layer run/case/artifact persistence. Full-flow testing also fixed 4 pipeline defects (fat-jar self-check classpath, subprocess relative paths, Vite vs vue-cli startup, NOT_NULL stale fail_reason) and 3 Vue 2 leftovers in generated Vue 3 pages** | V9.3 release, **current** |
 
 ---
 

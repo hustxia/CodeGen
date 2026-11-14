@@ -265,7 +265,8 @@ npm run serve
 | **V8.1** | Втвърдяване на качеството: офлайн стенд за контракт (9 режима, нулева разлика OFF) + unit тестове i18n-core + CI порта + честно разделяне в README (рамка 206 / преведени 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | Генерираните артефакти модернизирани към Vue 3 + Element Plus + Vite; проверено по време на изпълнение (40/40 проверки, успешен vite build, 14 екранни снимки incl. ar-SA RTL); коригирани 3 runtime дефекта | 93a12d5 + e49330b  |
 | **V9.1** | **Рефакторинг за по-лесна поддръжка · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Център за тестване и проверка · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **текуща версия** |
+| **V9.2** | **Център за тестване и проверка · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Автоматизирано тестване на генерираните артефакти · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **текуща версия** |
 
 ---
 
@@ -273,7 +274,7 @@ npm run serve
 
 ## 13. Състояние на проекта
 
-- Текущата планирана линия на версиите е достигнала **V9.2** (възможностите продължават да се развиват: AI моделиране, подобрение на seed данни, система от пакети с възможности и т.н.).
+- Текущата планирана линия на версиите е достигнала **V9.3** (възможностите продължават да се развиват: AI моделиране, подобрение на seed данни, система от пакети с възможности и т.н.).
 - Придружаващ демо проект `demo_admin` (бек-енд 8140 / фронт-енд 9040) покрива сценариите дърво / CRUD / главен-детайл / само четене / печат и работи самостоятелно за проверка.
 - И двете хранилища са хоствани в Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

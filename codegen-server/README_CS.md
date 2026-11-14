@@ -268,7 +268,8 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 | **V8.1** | Posílení kvality: offline kontraktní harness (9 režimů, nulový rozdíl OFF) + unit testy i18n-core + CI brána + čestné rozdělení README (rámec 206 / přeloženo 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | Generované artefakty modernizovány na Vue 3 + Element Plus + Vite; ověřeno za běhu (40/40 assertion, úspěšný vite build, 14 snímků vč. ar-SA RTL); opraveny 3 běhové defekty | 93a12d5 + e49330b  |
 | **V9.1** | **Refaktoring pro udržovatelnost · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Testovací centrum & ověřovací centrum · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **aktuální verze** |
+| **V9.2** | **Testovací centrum & ověřovací centrum · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Automatizované testy generovaných artefaktů · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **aktuální verze** |
 
 ---
 
@@ -276,7 +277,7 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 
 ## 13. Stav projektu
 
-- Aktuální plánovaná verzní řada dosáhla **V9.2** (kapacity se neustále iterují: AI modelování, vylepšení seed dat, systém balíčků schopností atd.).
+- Aktuální plánovaná verzní řada dosáhla **V9.3** (kapacity se neustále iterují: AI modelování, vylepšení seed dat, systém balíčků schopností atd.).
 - Doprovodný demo projekt `demo_admin` (backend 8140 / frontend 9040) pokrývá scénáře strom / CRUD / master-detail / jen pro čtení / tisk a běží samostatně pro ověření.
 - Oba repozitáře jsou hostovány na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

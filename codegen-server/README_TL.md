@@ -115,9 +115,10 @@ Ang back-end ay naka-port na default na **8120**, ang front-end ay naka-port na 
 
 ## 11. Kalagayan ng Proyekto
 
-- Ang kasalukuyang pinaplanong linya ng bersyon ay umabot na sa **V9.2**.
+- Ang kasalukuyang pinaplanong linya ng bersyon ay umabot na sa **V9.3**.
+- **V9.3** · Awtomatikong pagsubok sa mga nabuong artifact · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted
 - **V9.2** · Sentro ng pagsubok & sentro ng beripikasyon · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical
-- **V9.2** · Refactoring para sa maintainability · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
+- **V9.1** · Refactoring para sa maintainability · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - Ang dalawang repository ay naka-host sa Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. May-akda

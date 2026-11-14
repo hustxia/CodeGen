@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **הגרסה הנוכחית V9.2 · מרכז בדיקות ומרכז אימות · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **הגרסה הנוכחית V9.3 · בדיקות אוטומטיות של תוצרים שנוצרו · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
+> **V9.2 release · מרכז בדיקות ומרכז אימות · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
 > **V9.1 · רפקטור לתחזוקתיות · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · ה-artifacts שנוצרו שודרגו ל-Vue 3 + Element Plus + Vite; אומתו בזמן ריצה (40/40 טענות, vite build מוצלח, 14 צילומי מסך incl. ar-SA RTL); תוקנו 3 באגים בזמן ריצה**
 > **V8.1** · חיזוק איכות: מנגנון חוזה אופליין (9 מצבים, אפס הפרש ב-OFF) + בדיקות יחידה i18n-core + שער CI + פיצול כן ב-README (מסגרת 206 / מתורגמות 8) + check-locale-keys.mjs
@@ -143,12 +144,13 @@ npm run serve
 
 ## 11. סטטוס פרויקט
 
-> **Version History · V9.2**
+> **Version History · V9.3**
+> **V9.3** · בדיקות אוטומטיות של תוצרים שנוצרו · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted — `V9.3 release`.
 > **V9.2** · מרכז בדיקות ומרכז אימות · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical — `V9.2 release`.
 > **V9.1** · רפקטור לתחזוקתיות · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9 — `654b8e0 → b0d081e`.
 > ה-artifacts שנוצרו שודרגו ל-Vue 3 + Element Plus + Vite; אומתו בזמן ריצה (40/40 טענות, vite build מוצלח, 14 צילומי מסך incl. ar-SA RTL); תוקנו 3 באגים בזמן ריצה — `93a12d5 + e49330b`.
 
-- קו הגרסה המתוכנן הנוכחי הגיע ל-**V9.2**.
+- קו הגרסה המתוכנן הנוכחי הגיע ל-**V9.3**.
 - שני המאגרים מתארחים ב-Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. מחבר

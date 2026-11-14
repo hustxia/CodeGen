@@ -264,7 +264,8 @@ npm run serve
 | **V8.1** | معیار کی مضبوطی: آف لائن معاہدہ ہارنس (۹ موڈ، OFF صفر فرق) + i18n-core یونٹ ٹیسٹ + CI گیٹ + ایماندار README تقسیم (فریم ورک ۲۰۶ / ترجمہ شدہ ۸) + check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | تیار شدہ artifacts کو Vue 3 + Element Plus + Vite پر جدید بنایا گیا؛ رن ٹائم پر تصدیق شدہ (۴۰/۴۰، کامیاب vite build، ۱۴ اسکرین شاٹس بشمول ar-SA RTL)؛ ۳ رن ٹائم خرابیاں درست کی گئیں | 93a12d5 + e49330b  |
 | **V9.1** | **دیکھ بھال کے لیے ری فیکٹرنگ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **ٹیسٹ سینٹر اور تصدیقی مرکز · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **موجودہ ورژن** |
+| **V9.2** | **ٹیسٹ سینٹر اور تصدیقی مرکز · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **تیار کردہ مصنوعات کی خودکار جانچ · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **موجودہ ورژن** |
 
 ---
 
@@ -272,7 +273,7 @@ npm run serve
 
 ## 13. منصوبے کی موجودہ حیثیت
 
-- موجودہ منصوبہ بندی کی ورژن لائن **V9.2** تک پہنچ چکی ہے، صلاحیتیں مسلسل بڑھ رہی ہیں (AI ماڈلنگ، سیڈ ڈیٹا کی افزودگی، کیپابیلیٹی پیک کا نظام وغیرہ)۔
+- موجودہ منصوبہ بندی کی ورژن لائن **V9.3** تک پہنچ چکی ہے، صلاحیتیں مسلسل بڑھ رہی ہیں (AI ماڈلنگ، سیڈ ڈیٹا کی افزودگی، کیپابیلیٹی پیک کا نظام وغیرہ)۔
 - ساتھ ساتھ ڈیمو منصوبہ `demo_admin` (بیک اینڈ 8140 / فرنٹ اینڈ 9040) تیار ہے، جو ٹری / CRUD / ماسٹر-ڈیٹیل / صرف پڑھنے / پرنٹ کے تمام منظرناموں کا احاطہ کرتا ہے اور آزادانہ چل کر تصدیق ہو سکتا ہے۔
 - دونوں ریپوزٹریاں Gitee پر میزبانی شدہ ہیں: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

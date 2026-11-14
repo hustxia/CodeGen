@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **aktuálna verzia V9.2 · Testovacie centrum & overovacie centrum · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **aktuálna verzia V9.3 · Automatizované testy generovaných artefaktov · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
+> **V9.2 release · Testovacie centrum & overovacie centrum · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
 > **V9.1 · Refaktoring pre udržateľnosť · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · Generované artefakty modernizované na Vue 3 + Element Plus + Vite; overené za behu (40/40 assertion, úspešný vite build, 14 snímok vrátane ar-SA RTL); opravené 3 behové defekty**
 > **V8.1** · Posilnenie kvality: offline kontraktný harness (9 režimov, nulový rozdiel OFF) + unit testy i18n-core + CI brána + úprimné rozdelenie README (rámec 206 / preložené 8) + check-locale-keys.mjs
@@ -233,7 +234,7 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 | `../codegen-server/docs/代码生成器-操作手册.md` (čínština) | Nasadenie, 5-minútový štart, konfigurácia tabuliek, dávkový prijem, správa šablón, účtovníctvo, API katalóg, celý pipeline (s screenshotmi) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (čínština) | 6 tabuliek pokrývajúcich 5 typických scénárov, so spustiteľným demom a skutočnými screenshotmi |
 | `项目介绍.md` | Dokument s predstavením projektu, rovnaký zdroj ako tento súbor |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verzné plány a inventáre funkcií od V3.1 → V9.2 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verzné plány a inventáre funkcií od V3.1 → V9.3 |
 | `../codegen-web/README.md` | Rýchla referenčná príručka pre frontend konzolu |
 
 ---
@@ -274,7 +275,8 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 | **V8.1** | **Posilnenie kvality: offline kontraktný harness (9 režimov, nulový rozdiel OFF) + unit testy i18n-core + CI brána + úprimné rozdelenie README (rámec 206 / preložené 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **Generované artefakty modernizované na Vue 3 + Element Plus + Vite; overené za behu (40/40 assertion, úspešný vite build, 14 snímok vrátane ar-SA RTL); opravené 3 behové defekty** | 93a12d5 + e49330b  |
 | **V9.1** | **Refaktoring pre udržateľnosť · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Testovacie centrum & overovacie centrum · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **aktuálna verzia** |
+| **V9.2** | **Testovacie centrum & overovacie centrum · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Automatizované testy generovaných artefaktov · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **aktuálna verzia** |
 
 ---
 
@@ -282,7 +284,7 @@ Frontend beží na predvolenom porte **9530**, proxy `/dev-api` na backend port 
 
 ## 13. Stav projektu
 
-- Aktuálna plánovaná verzná línia dosiahla **V9.2** (kapacity sa neustále iterujú: AI modelovanie, vylepšenie seed dát, systém balíčkov schopností atď.).
+- Aktuálna plánovaná verzná línia dosiahla **V9.3** (kapacity sa neustále iterujú: AI modelovanie, vylepšenie seed dát, systém balíčkov schopností atď.).
 - Doprovodný demo projekt `demo_admin` (backend 8140 / frontend 9040) pokrýva scenáre strom / CRUD / master-detail / len na čítanie / tlač a beží samostatne pre overenie.
 - Oba repozitáre sú hostované na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

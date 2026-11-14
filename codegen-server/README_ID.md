@@ -267,7 +267,8 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 | **V8.1** | Penguatan kualitas: harness kontrak offline (9 mode, zero-diff OFF) + unit test i18n-core + gate CI + pembagian README yang jujur (framework 206 / diterjemahkan 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | Artefak yang dihasilkan dimodernisasi ke Vue 3 + Element Plus + Vite; terverifikasi saat runtime (40/40 assertion, vite build sukses, 14 tangkapan layar incl. ar-SA RTL); 3 defect runtime diperbaiki | 93a12d5 + e49330b  |
 | **V9.1** | **Refaktor untuk kemudahan pemeliharaan · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Pusat pengujian & pusat verifikasi · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **versi saat ini** |
+| **V9.2** | **Pusat pengujian & pusat verifikasi · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Pengujian otomatis artefak hasil generasi · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **versi saat ini** |
 
 ---
 
@@ -275,7 +276,7 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 
 ## 13. Status Proyek
 
-- Garis versi yang direncanakan saat ini telah mencapai **V9.2** (kapabilitas terus beriterasi: pemodelan AI, peningkatan data-bibit, sistem paket-kapabilitas, dll.).
+- Garis versi yang direncanakan saat ini telah mencapai **V9.3** (kapabilitas terus beriterasi: pemodelan AI, peningkatan data-bibit, sistem paket-kapabilitas, dll.).
 - Proyek demo pendamping `demo_admin` (back-end 8140 / front-end 9040) mencakup skenario pohon / CRUD / master-detail / hanya-baca / cetak dan berjalan mandiri untuk verifikasi.
 - Kedua repositori dihosting di Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

@@ -8,7 +8,8 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **เวอร์ชันปัจจุบัน V9.2 · ศูนย์ทดสอบและศูนย์ตรวจสอบ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **เวอร์ชันปัจจุบัน V9.3 · การทดสอบอัตโนมัติของผลลัพธ์ที่สร้างขึ้น · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
+> **V9.2 release · ศูนย์ทดสอบและศูนย์ตรวจสอบ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
 > **V9.1 · การปรับโครงสร้างเพื่อความสามารถในการดูแลรักษา · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
 > **V9.0 · สิ่งที่สร้างได้รับการปรับให้ทันสมัยเป็น Vue 3 + Element Plus + Vite; ตรวจสอบขณะรันจริง (40/40 assertions, vite build สำเร็จ, ภาพหน้าจอ 14 รูป รวม ar-SA RTL); แก้ไขข้อบกพร่อง runtime 3 จุด**
 > **V8.1** · เสริมความแข็งแกร่งด้านคุณภาพ: offline contract harness (9 โหมด, OFF zero-diff) + unit test i18n-core + CI gate + แบ่ง README อย่างตรงไปตรงมา (เฟรมเวิร์ก 206 / แปลแล้ว 8) + check-locale-keys.mjs
@@ -232,7 +233,7 @@ npm run serve
 | `../codegen-server/docs/代码生成器-操作手册.md` (จีน) | การ deploy เริ่มต้น 5 นาที ตั้งค่าตาราง นำเข้าแบบกลุ่ม จัดการเทมเพลต บัญชี แคตตาล็อก API ท่อเต็ม (มีภาพ) |
 | `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (จีน) | ตาราง 6 ตารางครอบคลุม 5 สถานการณ์ typical พร้อมเดโมรันได้และภาพหน้าจอจริง |
 | `项目介绍.md` | เอกสารแนะนำโปรเจกต์ แหล่งเดียวกับไฟล์นี้ |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | แผนเวอร์ชันและรายการฟีเจอร์จาก V3.1 → V9.2 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | แผนเวอร์ชันและรายการฟีเจอร์จาก V3.1 → V9.3 |
 | `../codegen-web/README.md` | อ้างอิงเริ่มต้นด่วนคอนโซลฝั่งหน้า |
 
 ---
@@ -273,7 +274,8 @@ npm run serve
 | **V8.1** | **เสริมความแข็งแกร่งด้านคุณภาพ: offline contract harness (9 โหมด, OFF zero-diff) + unit test i18n-core + CI gate + แบ่ง README อย่างตรงไปตรงมา (เฟรมเวิร์ก 206 / แปลแล้ว 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
 | **V9.0** | **สิ่งที่สร้างได้รับการปรับให้ทันสมัยเป็น Vue 3 + Element Plus + Vite; ตรวจสอบขณะรันจริง (40/40 assertions, vite build สำเร็จ, ภาพหน้าจอ 14 รูป รวม ar-SA RTL); แก้ไขข้อบกพร่อง runtime 3 จุด** | 93a12d5 + e49330b  |
 | **V9.1** | **การปรับโครงสร้างเพื่อความสามารถในการดูแลรักษา · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **ศูนย์ทดสอบและศูนย์ตรวจสอบ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **เวอร์ชันปัจจุบัน** |
+| **V9.2** | **ศูนย์ทดสอบและศูนย์ตรวจสอบ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **การทดสอบอัตโนมัติของผลลัพธ์ที่สร้างขึ้น · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **เวอร์ชันปัจจุบัน** |
 
 ---
 
@@ -281,7 +283,7 @@ npm run serve
 
 ## 13. สถานะโปรเจกต์
 
-- สายเวอร์ชันที่วางแผนปัจจุบันถึง **V9.2** แล้ว (ความสามารถยังคงiterate: สร้างโมเดล AI เสริมข้อมูลเมล็ดพันธุ์ ระบบแพ็กเกจความสามารถ ฯลฯ)
+- สายเวอร์ชันที่วางแผนปัจจุบันถึง **V9.3** แล้ว (ความสามารถยังคงiterate: สร้างโมเดล AI เสริมข้อมูลเมล็ดพันธุ์ ระบบแพ็กเกจความสามารถ ฯลฯ)
 - โปรเจกต์เดโมตัวอย่าง `demo_admin` (แบ็กเอนด์ 8140 / ฝั่งหน้า 9040) ครอบคลุมสถานการณ์ต้นไม้ / CRUD / แม่-ลูก / อ่านอย่างเดียว / พิมพ์ และรันได้เองเพื่อตรวจสอบ
 - ทั้งสองคลังโฮสต์บน Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

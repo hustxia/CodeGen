@@ -265,7 +265,8 @@ npm run serve
 | **V8.1** | Зміцнення якості: офлайн-стенд контракту (9 режимів, нульова різниця OFF) + юніт-тести i18n-core + CI-шлюз + чесний розподіл у README (каркас 206 / перекладено 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | Згенеровані артефакти переведено на Vue 3 + Element Plus + Vite; перевірено в рантаймі (40/40 перевірок, успішний vite build, 14 скріншотів incl. ar-SA RTL); виправлено 3 рантайм-дефекти | 93a12d5 + e49330b  |
 | **V9.1** | **Рефакторинг для зручності супроводу · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Центр тестування та перевірки · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **поточна версія** |
+| **V9.2** | **Центр тестування та перевірки · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
+| **V9.3** | **Автоматизоване тестування згенерованих артефактів · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **поточна версія** |
 
 ---
 
@@ -273,7 +274,7 @@ npm run serve
 
 ## 13. Статус проєкту
 
-- Поточна запланована лінія версій досягла **V9.2** (можливості постійно ітераційні: AI-моделювання, покращення початкових даних, система пакетів можливостей тощо).
+- Поточна запланована лінія версій досягла **V9.3** (можливості постійно ітераційні: AI-моделювання, покращення початкових даних, система пакетів можливостей тощо).
 - Супутній демо-проєкт `demo_admin` (бекенд 8140 / фронтенд 9040) охоплює сценарії дерево / CRUD / головна-деталь / лише читання / друк і працює автономно для перевірки.
 - Обидва репозиторії розміщені на Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
