@@ -9,6 +9,7 @@ import com.codegen.entity.GenOutput;
 import com.codegen.entity.GenTable;
 import com.codegen.entity.GenTableColumn;
 import com.codegen.entity.SysProject;
+import com.codegen.entity.TcRun;
 import com.codegen.mapper.GenOutputMapper;
 import com.codegen.mapper.GenTableMapper;
 import com.codegen.mapper.SysProjectMapper;
@@ -18,6 +19,7 @@ import com.codegen.service.GenDriftService;
 import com.codegen.service.GenSqlDeliverService;
 import com.codegen.service.GenTableColumnService;
 import com.codegen.service.TestSuiteGenService;
+import com.codegen.testcenter.TestCenterService;
 import com.codegen.service.I18nTextRewriter;
 import com.codegen.support.GenPathResolver;
 import com.codegen.util.GenDigestUtils;
@@ -109,6 +111,10 @@ public class GenCodeServiceImpl implements GenCodeService {
 
     @Autowired
     private SysProjectMapper projectMapper;
+
+    /** V9.3：生成完成自动验证产物（S10/S11/S12，trigger=GEN）。 */
+    @Autowired
+    private TestCenterService testCenterService;
 
     @Autowired
     private GenDriftService genDriftService;
@@ -271,6 +277,26 @@ public class GenCodeServiceImpl implements GenCodeService {
                     }
                 }
             }
+
+            // V9.3：生成完成自动验证产物（S10/S11/S12，trigger=GEN）。best-effort：
+            // 开关关闭 / 测试中心停用 / 繁忙(409) 时忽略，不影响代码写盘结果。
+            try {
+                if (!idsByProject.isEmpty()) {
+                    Long projectId = idsByProject.keySet().iterator().next();
+                    SysProject project = projectMapper.selectById(projectId);
+                    String genRoot = resolveBackendRoot(project);
+                    if (genRoot != null) {
+                        TcRun genRun = testCenterService.triggerGen(genRoot);
+                        if (genRun != null) {
+                            log.info("已触发生成产物验证（GEN）projectId={} genRoot={} runNo={}",
+                                    projectId, genRoot, genRun.getRunNo());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("生成后自动验证产物触发失败（已忽略，不影响写盘）: {}", e.getMessage());
+            }
+
             if (results.isEmpty()) {
                 throw new BusinessException(404, "表配置不存在，无法写盘");
             }
@@ -301,6 +327,21 @@ public class GenCodeServiceImpl implements GenCodeService {
     @Override
     public List<TestVO.GenResult> lastTestGenResults() {
         return new ArrayList<>(TEST_GEN_RESULTS.get());
+    }
+
+    /**
+     * V9.3：由系统配置解析生成产物后端根目录。
+     * 生成物根 = backendRoot + backendPath；任一为空则回落为 null（不触发自动验证）。
+     */
+    private String resolveBackendRoot(SysProject project) {
+        if (project == null || !StringUtils.hasText(project.getBackendRoot())) {
+            return null;
+        }
+        String root = project.getBackendRoot().replace('\\', '/').replaceAll("/+$", "");
+        if (StringUtils.hasText(project.getBackendPath())) {
+            root = root + "/" + project.getBackendPath().replace('\\', '/').replaceAll("^/+", "");
+        }
+        return root;
     }
 
     /**

@@ -107,6 +107,20 @@ public class TestCenterService {
         return executor.submit(ids, request.getTrigger(), request.getGitCommit());
     }
 
+    /**
+     * V9.3：生成完成自动验证产物（S10/S11/S12）。由 GenCodeServiceImpl 在写盘后 best-effort 调用：
+     * 测试中心停用或已有运行进行中（409）时由调用方 try/catch 忽略，不影响代码写盘结果。
+     *
+     * @param genRoot 生成产物后端根目录（SysProject.backendRoot + backendPath）
+     */
+    public TcRun triggerGen(String genRoot) {
+        // 开关关闭则不开自动验证（避免日常生成产生测试运行记录）
+        if (!props.isAutoVerifyGen()) {
+            return null;
+        }
+        return executor.submit(TcSuite.genProductSuiteIds(), "GEN", null, genRoot);
+    }
+
     public Page<TcRun> runs(TcRunQuery query) {
         return store.pageRuns(query == null ? new TcRunQuery() : query);
     }

@@ -40,7 +40,7 @@ public class TestCenterExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(TestCenterExecutor.class);
     private static final DateTimeFormatter RUN_DAY = DateTimeFormatter.ofPattern("yyyyMMdd");
-    private static final Set<String> TRIGGERS = Set.of("MANUAL", "CI", "SCHEDULE", "RERUN");
+    private static final Set<String> TRIGGERS = Set.of("MANUAL", "CI", "SCHEDULE", "RERUN", "GEN");
 
     private final TcResultStore store;
     private final TcProcessLauncher launcher;
@@ -53,6 +53,8 @@ public class TestCenterExecutor {
      */
     private final AtomicBoolean busy = new AtomicBoolean(false);
     private final Map<Long, AtomicBoolean> cancelFlags = new ConcurrentHashMap<>();
+    /** V9.3：runId → 生成产物根目录（GEN 触发携带），供产物类套件注入 TC_GEN_ROOT。 */
+    private final Map<Long, String> genRoots = new ConcurrentHashMap<>();
     private final AtomicLong runSeq = new AtomicLong();
     private final ExecutorService worker = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "test-center-runner");
@@ -69,11 +71,18 @@ public class TestCenterExecutor {
         this.mapper = mapper;
     }
 
+    /** 触发一次运行（无产物根目录，等同于手动/P0 全量）。 */
+    public TcRun submit(List<String> suiteIds, String trigger, String gitCommit) {
+        return submit(suiteIds, trigger, gitCommit, null);
+    }
+
     /**
      * 触发一次运行。已有运行进行中立即抛 409，不会启动第二个子进程。
      * 锁在异步任务真正结束时才释放，而不是在提交返回时释放。
+     *
+     * @param genRoot 生成产物根目录（仅 GEN 触发需要），会通过 TC_GEN_ROOT 注入产物类套件进程环境
      */
-    public TcRun submit(List<String> suiteIds, String trigger, String gitCommit) {
+    public TcRun submit(List<String> suiteIds, String trigger, String gitCommit, String genRoot) {
         if (!props.isEnabled()) {
             throw TcException.badRequest("测试中心已停用（app.test-center.enabled=false）");
         }
@@ -85,7 +94,7 @@ public class TestCenterExecutor {
         }
         String triggerType = trigger == null || trigger.isBlank() ? "MANUAL" : trigger.trim().toUpperCase();
         if (!TRIGGERS.contains(triggerType)) {
-            throw TcException.badRequest("trigger 只能是 MANUAL/CI/SCHEDULE/RERUN");
+            throw TcException.badRequest("trigger 只能是 MANUAL/CI/SCHEDULE/RERUN/GEN");
         }
         if (!busy.compareAndSet(false, true)) {
             throw TcException.conflict("已有运行进行中（runId=" + activeRunId + "），请等待结束或先取消");
@@ -96,12 +105,16 @@ public class TestCenterExecutor {
             store.createRun(run);
             activeRunId = run.getId();
             cancelFlags.put(run.getId(), new AtomicBoolean(false));
+            if (genRoot != null && !genRoot.isBlank()) {
+                genRoots.put(run.getId(), genRoot);
+            }
             final TcRun snapshot = run;
             worker.submit(() -> {
                 try {
                     executeRun(snapshot, suites);
                 } finally {
                     cancelFlags.remove(snapshot.getId());
+                    genRoots.remove(snapshot.getId());
                     activeRunId = -1;
                     busy.set(false);
                 }
@@ -233,9 +246,17 @@ public class TestCenterExecutor {
             processResult = TcProcessLauncher.TcProcessResult.failed(TcStatus.CANCELLED, -1, 0, "运行被取消");
             appendLog(logFile, "CANCELLED");
         } else {
+            // 产物类套件（S10/S11/S12）需要 TC_GEN_ROOT 指向生成产物根目录
+            Map<String, String> extraEnv = java.util.Map.of();
+            if (suite.isGenProductSuite()) {
+                String gr = genRoots.get(run.getId());
+                if (gr != null && !gr.isBlank()) {
+                    extraEnv = java.util.Map.of("TC_GEN_ROOT", gr);
+                }
+            }
             TcProcessLauncher.TcProcessSpec spec = new TcProcessLauncher.TcProcessSpec(
                     suite, workDir, logFile,
-                    cancelFlag == null ? () -> false : () -> cancelFlag.get(), Map.of());
+                    cancelFlag == null ? () -> false : () -> cancelFlag.get(), extraEnv);
             try {
                 processResult = launcher.run(spec);
             } catch (Exception e) {

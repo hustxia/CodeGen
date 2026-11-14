@@ -10,25 +10,38 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** V9.2 注册表：9 个套件、P0 默认勾选、命令白名单、依赖闭环。 */
+/** V9.3 注册表：12 个套件（S1~S9 验证生成器自身 + S10/S11/S12 验证生成产物）、P0 默认勾选、命令白名单、依赖闭环。 */
 class TcSuiteRegistryTest {
 
     @Test
     void registersNineSuitesWithUniqueIds() {
-        assertEquals(9, TcSuite.all().size());
+        assertEquals(12, TcSuite.all().size());
         assertEquals(List.of(), TcSuite.validate());
         assertEquals("S1", TcSuite.of("S1").getId());
+        assertEquals("S10", TcSuite.of("S10").getId());
         assertEquals(null, TcSuite.of("S99"));
     }
 
     @Test
     void defaultSelectionContainsOnlyP0() {
         List<String> defaults = TcSuite.defaultSuiteIds();
-        assertEquals(7, defaults.size());
+        assertEquals(8, defaults.size());
         assertTrue(defaults.contains("S1"));
         assertTrue(defaults.contains("S7"));
+        assertTrue(defaults.contains("S10"));
         assertFalse(defaults.contains("S8"));
         assertFalse(defaults.contains("S9"));
+        assertFalse(defaults.contains("S11"));
+        assertFalse(defaults.contains("S12"));
+    }
+
+    @Test
+    void genProductSuitesAreS10S11S12() {
+        assertEquals(List.of("S10", "S11", "S12"), TcSuite.genProductSuiteIds());
+        assertTrue(TcSuite.of("S10").isGenProductSuite());
+        assertTrue(TcSuite.of("S11").isGenProductSuite());
+        assertTrue(TcSuite.of("S12").isGenProductSuite());
+        assertFalse(TcSuite.of("S1").isGenProductSuite());
     }
 
     @Test

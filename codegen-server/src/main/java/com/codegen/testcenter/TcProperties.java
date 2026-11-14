@@ -36,6 +36,11 @@ public class TcProperties {
     private int tailLines = 200;
     private int keepRuns = 10;
     private boolean enabled = true;
+    /**
+     * V9.3：生成写盘后是否自动触发产物验证（S10/S11/S12，trigger=GEN）。
+     * 默认关闭，避免日常生成产生测试运行记录；在具备 Maven/Docker/Playwright 的环境显式开启。
+     */
+    private boolean autoVerifyGen = false;
 
     public Path runsRoot() {
         return workdir == null || workdir.isBlank()

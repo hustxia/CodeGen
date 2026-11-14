@@ -93,9 +93,8 @@ function run(label, cmd, args, cwd, extraEnv = {}) {
   })
 }
 
-/** 统计 surefire XML 的用例数（与 verify.sh 的 <testcase 口径一致） */
-function surefireCounts() {
-  const dir = path.join(ROOT, 'target', 'surefire-reports')
+/** 统计 surefire XML 的用例数（与 verify.sh 的 <testcase 口径一致）。dir 可指定（产物模块用）。 */
+function surefireCounts(dir = path.join(ROOT, 'target', 'surefire-reports')) {
   if (!exists(dir)) return { tests: 0, failures: 0, errors: 0 }
   let tests = 0, failures = 0, errors = 0
   for (const f of fs.readdirSync(dir).filter(x => x.endsWith('.xml'))) {
@@ -110,6 +109,33 @@ function surefireCounts() {
 const ok = (metrics, note) => ({ status: 'PASSED', metrics, note })
 const bad = (metrics, note) => ({ status: 'FAILED', metrics, note })
 const skip = reason => ({ status: 'SKIPPED', metrics: {}, note: reason })
+
+/** V9.3：在产物根下定位 Spring Boot 后端模块（含 pom.xml 且声明 spring-boot 起步依赖） */
+function findBackendModule(root) {
+  const candidates = [root,
+    ...fs.readdirSync(root)
+      .map(n => path.join(root, n))
+      .filter(p => { try { return exists(p) && fs.statSync(p).isDirectory() } catch { return false } })]
+  for (const dir of candidates) {
+    const pom = path.join(dir, 'pom.xml')
+    if (!exists(pom)) continue
+    try {
+      const text = fs.readFileSync(pom, 'utf8')
+      if (text.includes('spring-boot') && text.includes('<artifactId>')) return dir
+    } catch { /* 读取失败跳过 */ }
+  }
+  return ''
+}
+
+/** V9.3：快速探测 Docker 守护进程是否可用（TestContainers/产物接口测试前置） */
+async function detectDocker() {
+  try {
+    const r = await run('docker info', cmdName('docker'), ['info'], ROOT)
+    return r.code === 0
+  } catch {
+    return false
+  }
+}
 
 const SUITES = {
   /** S1 后端单测：先清旧报告再跑，避免把上次的 testcase 数累加进来 */
@@ -211,6 +237,48 @@ const SUITES = {
   },
   async S9() {
     return skip('P1 未自动化：需要新旧两个 jar 并行 + 同 DTO 双变体 diff -r（V9.2 默认不勾选）')
+  },
+
+  /** S10 产物单测（V9.3）：拉起生成产物 → mvn test，解析 surefire；缺 Maven 时优雅 SKIP */
+  async S10() {
+    const root = (process.env.TC_GEN_ROOT || '').trim()
+    if (!root) return skip('未配置生成产物根目录 TC_GEN_ROOT（手动运行无产物可验，跳过）')
+    if (!exists(root)) return skip('TC_GEN_ROOT 指向的目录不存在：' + root)
+    const backend = findBackendModule(root)
+    if (!backend) return skip('未在 ' + root + ' 下找到 Spring Boot 后端模块（pom.xml）')
+    const wrapper = path.join(backend, WIN ? 'mvnw.cmd' : 'mvnw')
+    const useWrapper = exists(wrapper)
+    const mvn = useWrapper ? wrapper : mavenBin()
+    if (!useWrapper) {
+      const probe = await run('mvn -v', mvn, ['-v'], backend)
+      if (probe.code !== 0) return skip('未找到 Maven（设置 MAVEN_BIN 或产物内置 mvnw），跳过产物单测')
+    }
+    const r = await run('gen-product mvn test', mvn, ['test'], backend)
+    const c = surefireCounts(path.join(backend, 'target', 'surefire-reports'))
+    const metrics = { ...c, minTests: 0 }
+    if (r.code !== 0) return bad(metrics, `产物单测退出码 ${r.code}`)
+    if (c.failures > 0 || c.errors > 0) return bad(metrics, `产物单测失败 ${c.failures}/${c.errors}`)
+    return ok(metrics, `${c.tests} 用例通过`)
+  },
+
+  /** S11 产物接口测试（V9.3）：TestContainers 起 MySQL + 启动应用 + RestAssured 探测 */
+  async S11() {
+    const root = (process.env.TC_GEN_ROOT || '').trim()
+    if (!root) return skip('未配置 TC_GEN_ROOT，跳过产物接口测试')
+    if (!exists(root)) return skip('TC_GEN_ROOT 指向的目录不存在：' + root)
+    const docker = await detectDocker()
+    if (!docker) return skip('未检测到 Docker 守护进程（TestContainers 前置），跳过产物接口测试')
+    // 真实套件需产物内置 TestContainers 测试类，由脚手架测试骨架生成（V9.3 后续里程碑）。
+    return skip('产物接口测试套件待接入：需在产物 src/test 内置 TestContainers 套件（V9.3 后续里程碑）')
+  },
+
+  /** S12 产物 E2E（V9.3）：Playwright 端到端点检生成页面 */
+  async S12() {
+    const root = (process.env.TC_GEN_ROOT || '').trim()
+    if (!root) return skip('未配置 TC_GEN_ROOT，跳过产物 E2E')
+    const pw = path.join(root, 'node_modules', '.bin', WIN ? 'playwright.cmd' : 'playwright')
+    if (!exists(pw)) return skip('未安装 Playwright（npx playwright install chromium），跳过产物 E2E')
+    return skip('产物 E2E 套件待接入：需在产物内置 Playwright 脚本（V9.3 后续里程碑）')
   }
 }
 

@@ -30,7 +30,15 @@ public enum TcSuite {
     S6("S6", "控制台前端构建", "build success", 8, List.of(), true, "P0", "NODE_OPTIONS= npm run build", "Node / codegen-web/node_modules"),
     S7("S7", "空库冒烟", "schema 全量脚本 + 幂等重跑", 5, List.of(), true, "P0", "node scripts/smoke-fresh-db.mjs", "本机 MySQL / CG_DB_PASSWORD"),
     S8("S8", "Vue3 产物构建与断言", "40/40 + vite build + 14 张截图", 20, List.of(), false, "P1", "人工双服务链路", "两个服务端口 + Chrome/Puppeteer"),
-    S9("S9", "产物等价性", "119 + 62 文件 diff -r 为空", 25, List.of(), false, "P1", "人工新旧 jar 双变体对比", "两个 jar / 两个端口");
+    S9("S9", "产物等价性", "119 + 62 文件 diff -r 为空", 25, List.of(), false, "P1", "人工新旧 jar 双变体对比", "两个 jar / 两个端口"),
+
+    // ===== V9.3 生成产物自动化测试（由生成写盘后 GEN 触发） =====
+    S10("S10", "产物单测", "拉起产物 → mvn test", 30, List.of(), true, "P0",
+            "node scripts/testcenter-suites.mjs S10", "产物根(TC_GEN_ROOT) / maven-wrapper"),
+    S11("S11", "产物接口测试", "TestContainers+RestAssured", 20, List.of(), false, "P1",
+            "node scripts/testcenter-suites.mjs S11", "Docker / TestContainers"),
+    S12("S12", "产物 E2E", "Playwright 端到端", 20, List.of(), false, "P1",
+            "node scripts/testcenter-suites.mjs S12", "Playwright 浏览器");
 
     /**
      * 唯一的命令模板。占位符只能是 suiteId，且替换值来自本枚举，不接受外部输入。
@@ -103,6 +111,25 @@ public enum TcSuite {
     public static List<String> defaultSuiteIds() {
         return Arrays.stream(values())
                 .filter(TcSuite::isDefaultSelected)
+                .map(TcSuite::getId)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * V9.3：针对「生成产物（业务脚手架）」的三套件。
+     * 与 S1~S9（验证代码生成器自身）区分：它们需要 TC_GEN_ROOT 指向产物根目录。
+     */
+    public static final Set<String> GEN_PRODUCT_SUITES = Set.of("S10", "S11", "S12");
+
+    /** 当前套件是否为生成产物验证套件（需要注入 TC_GEN_ROOT）。 */
+    public boolean isGenProductSuite() {
+        return GEN_PRODUCT_SUITES.contains(id);
+    }
+
+    /** 生成产物验证套件 id 列表（供 GEN 触发使用，保持注册表顺序）。 */
+    public static List<String> genProductSuiteIds() {
+        return Arrays.stream(values())
+                .filter(s -> GEN_PRODUCT_SUITES.contains(s.id))
                 .map(TcSuite::getId)
                 .collect(Collectors.toList());
     }
