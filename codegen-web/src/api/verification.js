@@ -19,6 +19,14 @@ export function triggerRun(payload) {
   return request({ url: '/tc/runs', method: 'post', data: payload }).then(res => res.data)
 }
 
+/**
+ * V9.3：手动「验证生成产物」（S10 产物单测 / S11 产物接口测试 / S12 产物 E2E）。
+ * genRoot 为生成产物根目录（SysProject.backendRoot + backendPath），为空则按服务端定位。
+ */
+export function triggerGen(genRoot) {
+  return request({ url: '/tc/runs/gen', method: 'post', data: { genRoot: genRoot || '' } }).then(res => res.data)
+}
+
 export function getRuns(params) {
   return request({ url: '/tc/runs', method: 'get', params }).then(res => res.data)
 }

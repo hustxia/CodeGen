@@ -2,10 +2,23 @@
   <div class="verification-page">
     <el-alert type="info" :closable="false" show-icon class="scope-alert">
       <span slot="title">
-        V9.2 验证中心：把平台自身的验证资产（312+ 单测、i18n 快照契约、206 语言键、生成物 JS、前端构建、空库冒烟）
-        收拢成可追溯的运行记录。业务接口用例请走「测试中心」菜单（/test）。
+        V9.3 验证中心：在 V9.2（312+ 单测、i18n 契约、206 语言键、生成物 JS、前端构建、空库冒烟）基础上，
+        新增「生成产物验证」——生成代码落盘后自动（或手动）拉起 <b>S10 产物单测 / S11 产物接口测试 / S12 产物 E2E</b>，
+        主动验证生成的业务系统能否跑通。业务接口用例仍走「测试中心」（/test）。
       </span>
     </el-alert>
+
+    <!-- 生成产物验证（V9.3） -->
+    <div class="gen-product-bar">
+      <span class="gp-label"><i class="el-icon-cpu" /> 生成产物验证（V9.3）</span>
+      <el-input v-model="genRoot" size="small" class="gp-input" clearable
+        placeholder="生成产物根目录，如 D:/proj/demo（留空按服务端默认解析）" />
+      <el-button type="warning" size="small" icon="el-icon-video-play" :loading="genning" :disabled="busy" @click="runGenProduct">
+        验证生成产物（S10/S11/S12）
+      </el-button>
+      <el-tag size="mini" type="info">S10 单测 · S11 接口 · S12 E2E</el-tag>
+      <span class="muted small">产物根目录下需含 Spring Boot 后端模块（pom.xml）；缺 Maven / Docker / Playwright 时对应套件如实 SKIP</span>
+    </div>
 
     <!-- 总览 -->
     <div class="metric-cards">
@@ -63,6 +76,7 @@
               </el-checkbox>
               <div class="suite-meta">
                 <el-tag size="mini" :type="s.level === 'P0' ? 'success' : 'info'">{{ s.level }}</el-tag>
+                <el-tag v-if="s.genProduct" size="mini" type="warning" effect="plain">生成产物</el-tag>
                 <el-tag v-if="s.lastStatus" size="mini" :type="tagType(s.lastStatus)">{{ s.lastStatus }}</el-tag>
                 <span class="muted">{{ s.timeoutMinutes }}min</span>
               </div>
@@ -70,7 +84,7 @@
               <div v-if="s.dependsOn && s.dependsOn.length" class="suite-dep">依赖 {{ s.dependsOn.join(', ') }}</div>
             </div>
           </el-checkbox-group>
-          <div class="panel-foot muted">S8 / S9 为 P1 重项，默认不勾选（本机内存有限，套件严格串行执行）</div>
+          <div class="panel-foot muted">S8 / S9 为 P1 重项，默认不勾选；S10/S11/S12 为 V9.3「生成产物验证」，产物根由 TC_GEN_ROOT 注入、缺工具时如实 SKIP（套件严格串行执行）</div>
         </el-card>
       </el-col>
 
@@ -87,7 +101,11 @@
           </div>
           <el-table :data="runs" size="small" v-loading="loading" @row-click="openDetail" highlight-current-row>
             <el-table-column prop="runNo" label="运行编号" width="165" />
-            <el-table-column prop="triggerType" label="触发" width="88" />
+            <el-table-column label="触发" width="92">
+              <template slot-scope="{ row }">
+                <el-tag size="mini" :type="triggerTagType(row.triggerType)" effect="plain">{{ row.triggerType }}</el-tag>
+              </template>
+            </el-table-column>
             <el-table-column label="状态" width="105">
               <template slot-scope="{ row }"><el-tag size="mini" :type="tagType(row.status)">{{ row.status }}</el-tag></template>
             </el-table-column>
@@ -180,7 +198,7 @@
 
 <script>
 import {
-  getSuites, getOverview, triggerRun, getRuns, getRun, getRunLog,
+  getSuites, getOverview, triggerRun, triggerGen, getRuns, getRun, getRunLog,
   cancelRun, rerunCase, rerunFailed, getReport, getTrends, downloadArtifact
 } from '@/api/verification'
 import { Message } from 'element-ui'
@@ -193,6 +211,8 @@ export default {
     return {
       suites: [],
       selected: [],
+      genRoot: '',
+      genning: false,
       overview: {},
       runs: [],
       trends: [],
@@ -284,6 +304,24 @@ export default {
         Message.error(e.message || '触发失败')
       } finally {
         this.starting = false
+      }
+    },
+    async runGenProduct() {
+      this.genning = true
+      try {
+        const run = await triggerGen(this.genRoot)
+        if (!run) {
+          Message.warning('未触发：测试中心已停用或无需验证')
+          return
+        }
+        Message.success('已触发生成产物验证 ' + run.runNo)
+        this.busy = true
+        await this.fetchAll()
+        this.openDetail(run)
+      } catch (e) {
+        Message.error(e.message || '触发失败')
+      } finally {
+        this.genning = false
       }
     },
     async runFailedOnly() {
@@ -381,6 +419,9 @@ export default {
     tagType(status) {
       return { PASSED: 'success', FAILED: 'danger', TIMEOUT: 'warning', CANCELLED: 'info', SKIPPED: 'info', RUNNING: 'warning', QUEUED: 'info' }[status] || 'info'
     },
+    triggerTagType(trigger) {
+      return { GEN: 'warning', MANUAL: '', CI: 'success', SCHEDULE: 'info', RERUN: 'info' }[trigger] || 'info'
+    },
     fmtMs(ms) {
       return ms == null ? '-' : (ms / 1000).toFixed(1)
     }
@@ -391,6 +432,11 @@ export default {
 <style scoped>
 .verification-page { padding: 14px; }
 .scope-alert { margin-bottom: 12px; }
+.gen-product-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding: 10px 14px; border: 1px dashed #e6a23c; border-radius: 6px; background: #fdf6ec; flex-wrap: wrap; }
+.gen-product-bar .gp-label { font-weight: 600; color: #e6a23c; white-space: nowrap; }
+.gen-product-bar .gp-input { width: 360px; }
+.gen-product-bar .small { font-size: 12px; }
+.gen-product-bar .muted { margin-left: 2px; }
 .metric-cards { display: flex; gap: 12px; margin-bottom: 12px; }
 .mcard { flex: 1; border: 1px solid #ebeef5; border-radius: 6px; padding: 12px 14px; background: #fff; min-width: 0; }
 .mcard .label { color: #909399; font-size: 12px; }

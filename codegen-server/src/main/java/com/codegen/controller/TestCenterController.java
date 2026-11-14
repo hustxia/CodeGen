@@ -5,6 +5,7 @@ import com.codegen.common.log.Log;
 import com.codegen.common.result.Result;
 import com.codegen.dto.TcRunQuery;
 import com.codegen.dto.TcRunRequest;
+import com.codegen.dto.TcGenRunRequest;
 import com.codegen.entity.TcRun;
 import com.codegen.testcenter.TcException;
 import com.codegen.testcenter.TestCenterService;
@@ -64,6 +65,14 @@ public class TestCenterController {
     @PostMapping("/runs")
     public Result<TcRun> trigger(@RequestBody(required = false) TcRunRequest request) {
         return Result.ok(service.trigger(request));
+    }
+
+    @Operation(summary = "V9.3 验证生成产物（S10/S11/S12）；genRoot 为空则由服务端定位失败→SKIP")
+    @Log(title = "测试中心", type = "OTHER", saveParam = true)
+    @PostMapping("/runs/gen")
+    public Result<TcRun> triggerGen(@RequestBody(required = false) TcGenRunRequest request) {
+        String genRoot = request == null ? null : request.getGenRoot();
+        return Result.ok(service.triggerProductVerification(genRoot));
     }
 
     @Operation(summary = "运行历史分页")

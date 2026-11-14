@@ -83,6 +83,7 @@ public class TestCenterService {
             vo.setDependsOn(s.getDependsOn());
             vo.setEntryHint(s.getEntryHint());
             vo.setRequires(s.getRequires());
+            vo.setGenProduct(s.isGenProductSuite());
             TcCaseResult c = last.get(s.getId());
             vo.setLastStatus(c == null ? null : c.getStatus());
             vo.setLastDurationMs(c == null ? null : c.getDurationMs());
@@ -118,6 +119,16 @@ public class TestCenterService {
         if (!props.isAutoVerifyGen()) {
             return null;
         }
+        return executor.submit(TcSuite.genProductSuiteIds(), "GEN", null, genRoot);
+    }
+
+    /**
+     * V9.3：前端「验证生成产物」手动触发。忽略 {@code autoVerifyGen} 开关（那个开关只约束
+     * GenCodeServiceImpl 写盘后的自动钩子），由人工显式发起时总是跑 S10/S11/S12。
+     *
+     * @param genRoot 生成产物根目录（SysProject.backendRoot + backendPath）
+     */
+    public TcRun triggerProductVerification(String genRoot) {
         return executor.submit(TcSuite.genProductSuiteIds(), "GEN", null, genRoot);
     }
 
