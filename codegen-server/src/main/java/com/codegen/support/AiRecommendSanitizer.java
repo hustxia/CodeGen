@@ -23,7 +23,7 @@ public final class AiRecommendSanitizer {
 
     private static final Set<String> HTML_TYPES = Set.of(
             "input", "textarea", "number", "select", "radio", "switch",
-            "date", "datetime", "image", "file", "multiImage");
+            "date", "datetime", "image", "file", "multiImage", "richtext");
 
     private static final Set<String> QUERY_TYPES = Set.of("EQ", "LIKE", "GE", "LE");
 

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V9.4 一句话建系统 - 分阶段确认向导</title>
+<style>
+:root{--cg-primary:#409eff;--cg-primary-light:#ecf5ff;--cg-success:#67c23a;--cg-success-light:#f0f9eb;--cg-warning:#e6a23c;--cg-warning-light:#fdf6ec;--cg-danger:#f56c6c;--cg-text:#303133;--cg-text-regular:#606266;--cg-text-secondary:#909399;--cg-bg-page:#f2f3f5;--cg-bg-card:#fff;--cg-border:#dcdfe6;--cg-border-light:#ebeef5}
+*{box-sizing:border-box}body{margin:0;padding:22px;background:var(--cg-bg-page);color:var(--cg-text);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}.page{max-width:1380px;margin:auto}.title{font-size:20px;font-weight:600}.subtitle{margin:5px 0 16px;color:var(--cg-text-secondary)}.alert{display:flex;gap:10px;padding:11px 15px;margin-bottom:16px;border-radius:4px;background:var(--cg-primary-light);color:var(--cg-primary);font-size:13px}.card{padding:20px;margin-bottom:18px;border:1px solid var(--cg-border-light);border-radius:5px;background:var(--cg-bg-card);box-shadow:0 1px 3px #00000008}.card-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:17px}.card-title h2{margin:0;font-size:16px}.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:12px;font-weight:400}.tag.blue{background:var(--cg-primary-light);color:var(--cg-primary)}.tag.green{background:var(--cg-success-light);color:var(--cg-success)}.tag.orange{background:var(--cg-warning-light);color:var(--cg-warning)}.tag.gray{background:#f4f4f5;color:var(--cg-text-secondary)}
+.steps{display:flex;align-items:flex-start;margin:10px 40px 25px}.step{width:150px;text-align:center;color:var(--cg-text-secondary);font-size:13px}.step .num{display:flex;align-items:center;justify-content:center;width:27px;height:27px;margin:0 auto 7px;border:2px solid var(--cg-border);border-radius:50%;background:#fff}.step.active{color:var(--cg-primary);font-weight:600}.step.active .num{border-color:var(--cg-primary)}.step.done{color:var(--cg-success)}.step.done .num{border-color:var(--cg-success);background:var(--cg-success);color:#fff}.line{flex:1;height:2px;margin-top:13px;background:var(--cg-border)}.line.done{background:var(--cg-success)}
+.summary{display:grid;grid-template-columns:1fr 1fr 2fr;gap:12px;padding:14px;background:#fafafa;border:1px solid var(--cg-border-light);border-radius:4px}.summary small{display:block;color:var(--cg-text-secondary);margin-bottom:3px}.summary b{font-weight:500}.toolbar{display:flex;align-items:center;gap:12px;margin:15px 0 12px}.toolbar span{color:var(--cg-text-secondary);font-size:13px}.toolbar .spacer{flex:1}.btn{display:inline-block;padding:8px 15px;border:1px solid var(--cg-border);border-radius:4px;background:#fff;color:var(--cg-text-regular);font-size:13px;cursor:default}.btn.primary{border-color:var(--cg-primary);background:var(--cg-primary);color:#fff}.btn.success{border-color:var(--cg-success);background:var(--cg-success);color:#fff}.btn.small{padding:5px 10px;font-size:12px}.actions{display:flex;justify-content:space-between;align-items:center;margin-top:17px}.actions .note{color:var(--cg-text-secondary);font-size:12px}.modules{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.module{position:relative;padding:14px;border:1px solid var(--cg-border);border-radius:5px}.module.checked{border-color:var(--cg-primary);box-shadow:0 0 0 1px var(--cg-primary-light)}.module.off{background:#fafafa;color:var(--cg-text-secondary)}.check{position:absolute;right:13px;top:13px;width:16px;height:16px;border:1px solid var(--cg-primary);border-radius:3px;background:var(--cg-primary)}.check:after{content:"";position:absolute;left:4px;top:1px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}.off .check{border-color:var(--cg-border);background:#fff}.off .check:after{display:none}.module h3{margin:0 28px 5px 0;font-size:14px}.module p{height:38px;margin:0 0 9px;color:var(--cg-text-secondary);font-size:12px}.functions{padding:0;margin:0;list-style:none;font-size:12px}.functions li{padding:3px 0 3px 13px;position:relative}.functions li:before{content:"";position:absolute;left:1px;top:10px;width:4px;height:4px;border-radius:50%;background:var(--cg-primary)}.edit{margin-top:9px;color:var(--cg-primary);font-size:12px}
+.tabs{display:flex;border-bottom:1px solid var(--cg-border);margin-bottom:14px}.tab{padding:10px 18px;color:var(--cg-text-regular)}.tab.active{border-bottom:2px solid var(--cg-primary);color:var(--cg-primary);font-weight:600}.sql-layout{display:grid;grid-template-columns:330px 1fr;gap:14px}.panel{border:1px solid var(--cg-border-light);border-radius:4px;overflow:hidden}.panel-head{display:flex;justify-content:space-between;padding:10px 12px;background:#fafafa;border-bottom:1px solid var(--cg-border-light);font-size:13px}.tables{padding:5px 12px}.table-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed var(--cg-border-light)}.table-row:last-child{border:0}.table-row code{color:var(--cg-text);font-size:12px}.table-row small{display:block;color:var(--cg-text-secondary)}pre{height:390px;overflow:auto;margin:0;padding:15px;background:#1f2733;color:#d6deeb;font:12px/1.65 Consolas,"Courier New",monospace;white-space:pre-wrap}.sql-keyword{color:#82aaff}.sql-comment{color:#7fdbca}.meta{display:flex;gap:18px;padding:9px 12px;background:#fafafa;color:var(--cg-text-secondary);font-size:12px}.confirm{display:flex;gap:12px;align-items:center;padding:14px;margin-top:14px;border:1px solid #faecd8;background:var(--cg-warning-light);border-radius:4px}.confirm .icon{color:var(--cg-warning);font-size:20px}.confirm div{flex:1}.confirm b{display:block;font-size:13px}.confirm span{color:var(--cg-text-regular);font-size:12px}.result{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}.stat{padding:15px;border:1px solid var(--cg-border-light);border-radius:4px;background:#fafafa}.stat strong{display:block;font-size:22px;color:var(--cg-success)}.stat span{color:var(--cg-text-secondary);font-size:12px}.pipeline{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pipe{padding:7px 10px;border-radius:3px;background:#f4f4f5;color:var(--cg-text-secondary);font-size:12px}.pipe.ready{background:var(--cg-primary-light);color:var(--cg-primary)}.footer-note{text-align:center;color:var(--cg-text-secondary);font-size:12px}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="title">V9.4 一句话建系统 <span class="tag blue">分阶段确认</span></div>
+  <div class="subtitle">代码生成 → 建系统向导 ｜ 功能清单、SQL、建表与构建均由用户明确确认</div>
+  <div class="alert"><b>流程说明</b><span>预览阶段不会修改数据库。确认功能清单后才生成表结构，确认 SQL 后才建库建表，建表完成后仍需单独确认构建启动。</span></div>
+
+  <section class="card">
+    <div class="steps">
+      <div class="step done"><div class="num">1</div>录入需求</div><div class="line done"></div>
+      <div class="step active"><div class="num">2</div>确认功能清单</div><div class="line"></div>
+      <div class="step"><div class="num">3</div>表结构与 SQL</div><div class="line"></div>
+      <div class="step"><div class="num">4</div>建表与构建</div>
+    </div>
+    <div class="summary">
+      <div><small>系统名称</small><b>设备资产管理系统</b></div>
+      <div><small>目标数据库</small><b>asset_demo</b></div>
+      <div><small>一句话描述</small><b>管理设备档案、采购入库、领用归还、维修保养、盘点报废和统计报表</b></div>
+    </div>
+    <div class="toolbar"><span>AI 规划出 6 个业务模块、24 项功能；可编辑清单并勾选本次建模范围。</span><div class="spacer"></div><a class="btn small">新增模块</a><a class="btn small">全选</a></div>
+    <div class="modules">
+      <div class="module checked"><i class="check"></i><h3>资产档案</h3><p>统一维护设备分类、资产台账与生命周期状态</p><ul class="functions"><li>设备分类管理</li><li>资产档案管理</li><li>资产条码管理</li><li>资产状态变更</li></ul><div class="edit">编辑模块与功能点</div></div>
+      <div class="module checked"><i class="check"></i><h3>采购入库</h3><p>覆盖采购申请、供应商和资产入库登记</p><ul class="functions"><li>采购申请管理</li><li>供应商管理</li><li>采购入库登记</li><li>入库单查询</li></ul><div class="edit">编辑模块与功能点</div></div>
+      <div class="module checked"><i class="check"></i><h3>领用归还</h3><p>记录设备使用人、领用和归还全过程</p><ul class="functions"><li>领用申请</li><li>领用登记</li><li>归还登记</li><li>在用资产查询</li></ul><div class="edit">编辑模块与功能点</div></div>
+      <div class="module checked"><i class="check"></i><h3>维修保养</h3><p>管理故障报修、维修工单和定期保养</p><ul class="functions"><li>故障报修</li><li>维修工单</li><li>保养计划</li><li>维保记录</li></ul><div class="edit">编辑模块与功能点</div></div>
+      <div class="module checked"><i class="check"></i><h3>盘点报废</h3><p>支持资产盘点、差异处理和报废审批</p><ul class="functions"><li>盘点任务</li><li>盘点差异处理</li><li>报废申请</li><li>报废审批</li></ul><div class="edit">编辑模块与功能点</div></div>
+      <div class="module off"><i class="check"></i><h3>统计报表</h3><p>按需生成资产分布与维保成本报表</p><ul class="functions"><li>资产分布统计</li><li>维保成本分析</li><li>生命周期分析</li><li>报表导出</li></ul><div class="edit">本次不生成，点击勾选可恢复</div></div>
+    </div>
+    <div class="actions"><a class="btn">上一步</a><span class="note">已选 5 个模块；确认后逐模块生成表结构，此操作仍不会建表</span><a class="btn primary">确认清单，生成表结构和 SQL</a></div>
+  </section>
+
+  <section class="card">
+    <div class="card-title"><h2>③ 确认表结构与 SQL <span class="tag orange">SQL 只读预览</span></h2><span class="tag gray">目标库 asset_demo</span></div>
+    <div class="tabs"><div class="tab">表结构（18 张）</div><div class="tab active">SQL 脚本</div></div>
+    <div class="sql-layout">
+      <div class="panel"><div class="panel-head"><b>候选业务表</b><span>18 张</span></div><div class="tables">
+        <div class="table-row"><div><code>asset_category</code><small>设备分类</small></div><span class="tag green">6 列</span></div>
+        <div class="table-row"><div><code>asset_info</code><small>资产档案</small></div><span class="tag green">15 列</span></div>
+        <div class="table-row"><div><code>asset_supplier</code><small>供应商</small></div><span class="tag green">10 列</span></div>
+        <div class="table-row"><div><code>asset_stock_in</code><small>采购入库单</small></div><span class="tag green">12 列</span></div>
+        <div class="table-row"><div><code>asset_maintenance</code><small>维修保养记录</small></div><span class="tag green">13 列</span></div>
+        <div class="table-row"><div><code>asset_check_task</code><small>盘点任务</small></div><span class="tag green">11 列</span></div>
+      </div></div>
+      <div class="panel"><div class="panel-head"><b>db.sql</b><a class="btn small">复制 SQL</a></div><pre><span class="sql-keyword">CREATE DATABASE IF NOT EXISTS</span> `asset_demo` <span class="sql-keyword">DEFAULT CHARACTER SET</span> utf8mb4;
+
+<span class="sql-keyword">CREATE TABLE IF NOT EXISTS</span> `asset_category` (
+  `id` bigint <span class="sql-keyword">NOT NULL COMMENT</span> <span class="sql-comment">'主键'</span>,
+  `category_name` varchar(64) <span class="sql-keyword">NULL COMMENT</span> <span class="sql-comment">'分类名称'</span>,
+  `parent_id` bigint <span class="sql-keyword">NULL COMMENT</span> <span class="sql-comment">'上级分类'</span>,
+  `create_time` datetime <span class="sql-keyword">NULL COMMENT</span> <span class="sql-comment">'创建时间'</span>,
+  `update_time` datetime <span class="sql-keyword">NULL COMMENT</span> <span class="sql-comment">'更新时间'</span>,
+  `create_by` bigint <span class="sql-keyword">NULL COMMENT</span> <span class="sql-comment">'创建人'</span>,
+  `update_by` bigint <span class="sql-keyword">NULL COMMENT</span> <span class="sql-comment">'更新人'</span>,
+  `deleted` tinyint <span class="sql-keyword">NOT NULL DEFAULT</span> 0 <span class="sql-keyword">COMMENT</span> <span class="sql-comment">'逻辑删除'</span>,
+  <span class="sql-keyword">PRIMARY KEY</span> (`id`)
+) <span class="sql-keyword">ENGINE</span>=InnoDB <span class="sql-keyword">DEFAULT CHARSET</span>=utf8mb4 <span class="sql-keyword">COMMENT</span>=<span class="sql-comment">'设备分类'</span>;
+
+<span class="sql-keyword">CREATE TABLE IF NOT EXISTS</span> `asset_info` (
+  `id` bigint <span class="sql-keyword">NOT NULL COMMENT</span> <span class="sql-comment">'主键'</span>,
+  `asset_code` varchar(64) <span class="sql-keyword">NULL COMMENT</span> <span class="sql-comment">'资产编码'</span>,
+  `asset_name` varchar(128) <span class="sql-keyword">NULL COMMENT</span> <span class="sql-comment">'资产名称'</span>
+  <span class="sql-comment">-- 其余字段与审计列由同一服务端组装器生成</span>
+);</pre><div class="meta"><span>19 条 DDL 语句</span><span>18 张业务表</span><span>utf8mb4 / InnoDB</span><span>仅 CREATE，无危险语句</span></div></div>
+    </div>
+    <div class="confirm"><div class="icon">!</div><div><b>请确认 SQL 与目标数据库</b><span>点击确认后才会创建流水线、系统台账并执行以上脚本；已存在的同名库表不会覆盖。</span></div></div>
+    <div class="actions"><a class="btn">返回功能清单</a><span class="note">表结构有修改时，请先刷新 SQL 预览</span><a class="btn primary">确认 SQL 并建库建表</a></div>
+  </section>
+
+  <section class="card">
+    <div class="card-title"><h2>④ 建表完成，等待构建确认 <span class="tag green">await_confirm</span></h2><span class="tag gray">PPL20261114153000</span></div>
+    <div class="result"><div class="stat"><strong>18</strong><span>成功建表</span></div><div class="stat"><strong>18</strong><span>导入生成配置</span></div><div class="stat"><strong>0</strong><span>失败语句</span></div><div class="stat"><strong>0</strong><span>已运行构建步骤</span></div></div>
+    <div class="alert"><b>建表已完成</b><span>目标库 asset_demo 与生成配置已就绪。代码生成、打包、部署和健康检查尚未执行。</span></div>
+    <div class="pipeline"><span class="pipe ready">01 前后端骨架 · 待运行</span><span class="pipe">02 代码生成与自检</span><span class="pipe">03 后端打包启动</span><span class="pipe">04 前端依赖与启动</span><span class="pipe">05 健康检查</span></div>
+    <div class="actions"><a class="btn">查看建表 SQL</a><span class="note">这是最后一个确认节点，点击后才开始完整构建</span><a class="btn success">开始构建并启动</a></div>
+  </section>
+  <div class="footer-note">UI 效果图 · 示例数据仅用于确认交互，不代表已创建真实系统</div>
+</div>
+</body>
+</html>

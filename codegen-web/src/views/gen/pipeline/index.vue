@@ -4,17 +4,18 @@
       type="info"
       :closable="false"
       class="tip-bar"
-      title="一句话建系统：录入名称与描述 → AI 建模（或手动粘贴 DDL）→ 确认表结构 → 一键构建 → 部署完成后直接打开系统。全程不碰数据库、不开 curl。"
+      title="一句话建系统：确认功能清单后才生成表结构，确认完整 SQL 后才建库建表，建表完成后仍需单独确认构建启动。AI 与 SQL 预览均不写数据库；确认建表前的清单、表结构和 SQL 都是本页暂存，刷新页面会丢失。"
     />
 
     <el-card shadow="never" class="main-card">
       <el-steps :active="step" finish-status="success" align-center class="steps">
-        <el-step title="① 录入与建模" />
-        <el-step title="② 表结构确认" />
-        <el-step title="③ 构建进度" />
+        <el-step title="① 录入需求" />
+        <el-step title="② 确认功能清单" />
+        <el-step title="③ 表结构与 SQL" />
+        <el-step title="④ 建表与构建" />
       </el-steps>
 
-      <!-- ============ 第①步：录入与建模 ============ -->
+      <!-- ============ 第①步：录入需求 ============ -->
       <div v-show="step === 0">
         <el-form label-width="120px" style="max-width: 720px; margin-top: 8px" @submit.native.prevent>
           <el-form-item label="系统名称" required>
@@ -25,7 +26,7 @@
               v-model="form.systemDesc"
               type="textarea"
               :rows="2"
-              placeholder="如：管理入库、出库、库存盘点"
+              placeholder="如：管理图书入库、读者借阅、归还与逾期处理。写清业务对象和动作，AI 规划的模块才贴合该系统"
               maxlength="512"
             />
           </el-form-item>
@@ -34,20 +35,14 @@
           </el-form-item>
           <el-form-item label="建模方式">
             <el-radio-group v-model="form.mode">
-              <el-radio label="ai" :disabled="!aiEnabled">AI 生成表结构</el-radio>
+              <el-radio label="ai" :disabled="!aiEnabled">AI 规划功能与表结构</el-radio>
               <el-radio label="manual">手动粘贴 DDL</el-radio>
             </el-radio-group>
             <div v-if="!aiEnabled" style="font-size:12px;color:#909399;line-height:1.6;">
               AI 建模未启用（服务端未配置 LLM key），请在「手动粘贴 DDL」中完成建表
             </div>
-          </el-form-item>
-          <el-form-item v-if="form.mode === 'ai'" label="建模规模">
-            <el-radio-group v-model="aiScale">
-              <el-radio label="quick">精简（3-5 张，约 4 分钟）</el-radio>
-              <el-radio label="full">完整系统（50 张+，逐模块生成约 40 分钟）</el-radio>
-            </el-radio-group>
-            <div v-if="aiScale === 'full' && aiLoading" style="font-size:12px;color:#409EFF;line-height:1.6;">
-              {{ aiProgressText || '正在拆分业务模块...' }}
+            <div v-else-if="form.mode === 'ai'" class="audit-note">
+              首次只生成功能清单，可编辑、增删并勾选本次范围；此阶段不会生成表或写数据库。
             </div>
           </el-form-item>
           <el-form-item v-if="form.mode === 'manual'" label="建表 DDL">
@@ -59,66 +54,131 @@
             />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" :loading="aiLoading" @click="onAiModel">
-              {{ form.mode === 'ai' ? 'AI 生成表结构' : '检查 DDL' }}
+            <el-button type="primary" :loading="featureLoading" @click="onStart">
+              {{ form.mode === 'ai' ? '生成功能清单' : '下一步：确认 DDL' }}
             </el-button>
           </el-form-item>
         </el-form>
       </div>
 
-      <!-- ============ 第②步：表结构确认 ============ -->
+      <!-- ============ 第②步：确认功能清单 ============ -->
       <div v-show="step === 1">
-        <!-- AI 模式：可编辑表结构 -->
+        <div class="confirm-bar">
+          <span>基于「<strong>{{ form.systemName }}</strong>」规划出 {{ featureModules.length }} 个模块，已选 {{ checkedModuleCount }} 个；可编辑清单并勾选本次建模范围。</span>
+          <div>
+            <el-button size="small" icon="el-icon-refresh" :loading="featureLoading" @click="onRegenerate">重新生成</el-button>
+            <el-button size="small" icon="el-icon-plus" @click="addModule">新增模块</el-button>
+            <el-button size="small" @click="selectAllModules">全选</el-button>
+          </div>
+        </div>
+        <el-alert v-if="relevanceWarning" type="warning" :closable="false" class="tip-bar">
+          <template slot="title">
+            <div>{{ relevanceTip }}</div>
+            <div style="margin-top: 4px">可点「上一步」补充业务描述后重新生成，或直接在下方编辑模块清单。</div>
+          </template>
+        </el-alert>
+        <div class="module-grid">
+          <el-card v-for="(m, mi) in featureModules" :key="mi" shadow="never" class="module-card">
+            <div slot="header" class="module-head">
+              <el-checkbox v-model="m.checked">参与本次建模</el-checkbox>
+              <el-button type="text" class="danger-text" @click="featureModules.splice(mi, 1)">删除模块</el-button>
+            </div>
+            <el-input v-model="m.name" size="small" placeholder="模块名称" class="module-name" />
+            <el-input v-model="m.desc" size="small" placeholder="模块说明" class="module-desc" />
+            <div class="function-title">功能点</div>
+            <div v-for="(fn, fi) in m.functions" :key="fi" class="function-row">
+              <el-input v-model="m.functions[fi]" size="mini" placeholder="功能点名称" />
+              <el-button type="text" class="danger-text" @click="m.functions.splice(fi, 1)">删除</el-button>
+            </div>
+            <el-button type="text" icon="el-icon-plus" @click="m.functions.push('')">新增功能点</el-button>
+          </el-card>
+        </div>
+        <el-alert v-if="moduleErrors.length" type="warning" :closable="false" class="tip-bar">
+          <template slot="title">
+            <div>以下模块未生成成功，可在上一步调整或重试：</div>
+            <div v-for="e in moduleErrors" :key="e.name">{{ e.name }}：{{ e.message }}</div>
+          </template>
+        </el-alert>
+        <div v-if="moduleLoading" class="module-progress">{{ moduleProgressText }}</div>
+        <div class="confirm-bar">
+          <el-button size="small" icon="el-icon-back" @click="step = 0">上一步</el-button>
+          <span>确认后仅逐模块生成表结构和 SQL，仍不会建表</span>
+          <el-button type="primary" :loading="moduleLoading" @click="onBuildTables">确认清单，生成表结构和 SQL</el-button>
+        </div>
+      </div>
+
+      <!-- ============ 第③步：表结构与 SQL ============ -->
+      <div v-show="step === 2">
         <template v-if="form.mode === 'ai'">
-          <div class="confirm-bar">
-            <span>共 {{ tables.length }} 张表。列可增删改，确认后执行建库建表（CREATE DATABASE IF NOT EXISTS，幂等可重试）。</span>
-            <div>
-              <el-button size="small" icon="el-icon-plus" @click="addTable">新增表</el-button>
-              <el-button type="primary" size="small" :loading="dbLoading" @click="onPrepareDb">建库建表</el-button>
-            </div>
-          </div>
-          <div v-for="(t, ti) in tables" :key="ti" class="table-block">
-            <div class="table-head">
-              <el-input v-model="t.tableName" size="small" style="width: 240px" placeholder="表名 snake_case">
-                <template slot="prepend">表名</template>
-              </el-input>
-              <el-input v-model="t.tableComment" size="small" style="width: 220px" placeholder="表注释">
-                <template slot="prepend">注释</template>
-              </el-input>
-              <el-button size="small" icon="el-icon-plus" @click="addColumn(t)">加列</el-button>
-              <el-button size="small" type="danger" plain icon="el-icon-delete" @click="removeTable(ti)">删表</el-button>
-            </div>
-            <el-table :data="t.columns" size="mini" border>
-              <el-table-column label="列名" width="220">
-                <template slot-scope="{ row }"><el-input v-model="row.name" size="mini" placeholder="列名" /></template>
-              </el-table-column>
-              <el-table-column label="类型" width="180">
-                <template slot-scope="{ row }">
-                  <el-select v-model="row.type" size="mini" filterable allow-create>
-                    <el-option v-for="opt in TYPE_OPTIONS" :key="opt" :label="opt" :value="opt" />
-                  </el-select>
-                </template>
-              </el-table-column>
-              <el-table-column label="注释" min-width="200">
-                <template slot-scope="{ row }"><el-input v-model="row.comment" size="mini" /></template>
-              </el-table-column>
-              <el-table-column label="操作" width="70">
-                <template slot-scope="{$index}">
-                  <el-button type="text" class="danger-text" @click="t.columns.splice($index, 1)">删除</el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-            <div class="audit-note">建库时自动补齐：id（主键）、create_time、update_time、create_by、update_by、deleted</div>
-          </div>
+          <el-alert v-if="moduleErrors.length" type="warning" :closable="false" class="tip-bar">
+            <template slot="title">
+              未生成模块：{{ moduleErrors.map(e => e.name).join('、') }}。当前只预览成功模块的表，不会隐藏失败范围。
+            </template>
+          </el-alert>
+          <el-tabs v-model="activeSchemaTab">
+            <el-tab-pane :label="`表结构（${tables.length} 张）`" name="schema">
+              <div class="confirm-bar">
+                <span>表与列可增删改；任何修改都会使已生成的 SQL 预览过期。</span>
+                <el-button size="small" icon="el-icon-plus" @click="addTable">新增表</el-button>
+              </div>
+              <div v-for="(t, ti) in tables" :key="ti" class="table-block">
+                <div class="table-head">
+                  <el-input v-model="t.tableName" size="small" style="width: 240px" placeholder="表名 snake_case">
+                    <template slot="prepend">表名</template>
+                  </el-input>
+                  <el-input v-model="t.tableComment" size="small" style="width: 220px" placeholder="表注释">
+                    <template slot="prepend">注释</template>
+                  </el-input>
+                  <el-button size="small" icon="el-icon-plus" @click="addColumn(t)">加列</el-button>
+                  <el-button size="small" type="danger" plain icon="el-icon-delete" @click="removeTable(ti)">删表</el-button>
+                </div>
+                <el-table :data="t.columns" size="mini" border>
+                  <el-table-column label="列名" width="220">
+                    <template slot-scope="{ row }"><el-input v-model="row.name" size="mini" placeholder="列名" /></template>
+                  </el-table-column>
+                  <el-table-column label="类型" width="180">
+                    <template slot-scope="{ row }">
+                      <el-select v-model="row.type" size="mini" filterable allow-create>
+                        <el-option v-for="opt in TYPE_OPTIONS" :key="opt" :label="opt" :value="opt" />
+                      </el-select>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="注释" min-width="200">
+                    <template slot-scope="{ row }"><el-input v-model="row.comment" size="mini" /></template>
+                  </el-table-column>
+                  <el-table-column label="操作" width="70">
+                    <template slot-scope="{$index}">
+                      <el-button type="text" class="danger-text" @click="t.columns.splice($index, 1)">删除</el-button>
+                    </template>
+                  </el-table-column>
+                </el-table>
+                <div class="audit-note">服务端组装 SQL 时自动补齐：id（主键）、create_time、update_time、create_by、update_by、deleted</div>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane label="SQL 脚本" name="sql">
+              <div class="confirm-bar">
+                <span>以下完整 SQL 由服务端组装，仅供确认，尚未执行。</span>
+                <div>
+                  <el-button size="small" icon="el-icon-document-copy" :disabled="!sqlPreview || sqlStale" @click="copySql">复制 SQL</el-button>
+                  <el-button size="small" type="primary" icon="el-icon-refresh" :loading="previewLoading" @click="refreshSqlPreview">刷新预览</el-button>
+                </div>
+              </div>
+              <el-alert v-if="sqlStale" type="warning" :closable="false" class="tip-bar" title="表结构或数据库名已变化，旧 SQL 已过期；必须刷新预览后才能建表。" />
+              <el-alert v-if="sqlError" type="error" :closable="false" class="tip-bar" :title="`SQL 预览失败：${sqlError}。未创建任何任务或数据库。`" />
+              <div v-if="sqlPreview" class="sql-meta">
+                <span>目标库：{{ sqlPreview.dbName }}</span>
+                <span>{{ sqlPreview.tableCount }} 张业务表</span>
+                <span>{{ sqlPreview.statementCount }} 条 DDL 语句</span>
+              </div>
+              <pre v-if="sqlPreview" class="sql-preview">{{ sqlPreview.ddl }}</pre>
+              <el-empty v-else description="尚未生成 SQL 预览，请点击刷新预览" :image-size="80" />
+            </el-tab-pane>
+          </el-tabs>
         </template>
 
-        <!-- 手动模式：DDL 确认 -->
         <template v-else>
-          <el-input v-model="form.ddlText" type="textarea" :rows="14" />
-          <div class="confirm-bar">
-            <span>执行前将按 BaseEntity 约定检查审计列，缺列由服务端自动补齐（只增不改），补齐明细在下一步展示。</span>
-            <el-button type="primary" size="small" :loading="dbLoading" @click="onPrepareDb">建库建表</el-button>
-          </div>
+          <el-input v-model="form.ddlText" type="textarea" :rows="16" />
+          <div class="audit-note">执行前将按 BaseEntity 约定检查审计列，缺列由服务端自动补齐（只增不改），补齐明细在下一步展示。</div>
         </template>
 
         <!-- V5.2 数据初始化（两种模式共用） -->
@@ -131,13 +191,38 @@
           <div class="seed-tip">规则生成：建表后按外键依赖自动灌入中文示例数据（主数据 12 行、单据 8 行、明细跟随主表），枚举/唯一/必填约束全部满足，单次上限 2000 行。AI 增强：由 AI 依据系统名与表结构生成业务贴合的值池（商品名/公司名/备注等），约束仍由规则保证；AI 失败自动回落规则词库，需已配置 pipeline.ai。</div>
         </div>
 
-        <div style="margin-top: 12px">
-          <el-button size="small" icon="el-icon-back" @click="step = 0">上一步</el-button>
+        <div class="confirm-bar">
+          <el-button size="small" icon="el-icon-back" @click="step = form.mode === 'ai' ? 1 : 0">上一步</el-button>
+          <span>确认后才会创建流水线、系统台账并执行建库建表</span>
+          <el-button type="primary" :loading="dbLoading" :disabled="prepareDisabled" @click="onPrepareDb">
+            {{ form.mode === 'ai' ? '确认 SQL 并建库建表' : '确认 DDL 并建库建表' }}
+          </el-button>
         </div>
       </div>
 
-      <!-- ============ 第③步：构建进度 ============ -->
-      <div v-show="step === 2">
+      <!-- ============ 第④步：建表与构建 ============ -->
+      <div v-show="step === 3">
+        <!-- V9.4：全部取自 prepare-db 执行器回报，不硬编码「0 失败」、不用建表数冒充导入数 -->
+        <div v-if="prepareResult" class="prepare-result">
+          <div class="result-stat"><strong>{{ prepareResult.tableCount }}</strong><span>成功建表（库 {{ prepareResult.dbName }}）</span></div>
+          <div class="result-stat"><strong>{{ prepareResult.importedTableCount }}</strong><span>导入生成配置</span></div>
+          <div class="result-stat"><strong>{{ prepareResult.failedStatementCount }}</strong><span>失败 / 拦截 {{ prepareResult.blockedStatementCount }} · 共 {{ prepareResult.statementCount }} 条语句</span></div>
+          <div class="result-stat"><strong>{{ executedStepCount }}</strong><span>已运行构建步骤</span></div>
+        </div>
+        <el-alert
+          v-if="prepareError"
+          type="error"
+          :closable="false"
+          class="tip-bar"
+          :title="`建库建表失败：${prepareError}。未进入构建，可返回修改后重试。`"
+        />
+        <el-alert
+          v-if="detail && detail.status === 'await_confirm'"
+          type="success"
+          :closable="false"
+          class="tip-bar"
+          title="建库建表已完成，代码生成、打包、部署和健康检查尚未执行。点击“开始构建并启动”后才会继续。"
+        />
         <div v-if="detail" class="progress-head">
           <div>
             <span class="sys-name">{{ detail.systemName }}</span>
@@ -152,7 +237,7 @@
               icon="el-icon-video-play"
               :loading="runLoading"
               @click="onRun"
-            >开始构建</el-button>
+            >开始构建并启动</el-button>
             <el-button
               v-if="detail.status === 'success'"
               type="success"
@@ -351,7 +436,7 @@
 </template>
 
 <script>
-import { aiModel, aiModules, createPipeline, preparePipelineDb, runPipeline, getPipeline, getPipelinePage, stopPipeline, getConfig, lintDb, fixPipelineLint, aiRecommendPreview, aiRecommendApply } from '@/api/pipeline'
+import { aiModel, aiModules, previewPipelineDdl, createPipeline, preparePipelineDb, runPipeline, getPipeline, getPipelinePage, stopPipeline, getConfig, lintDb, fixPipelineLint, aiRecommendPreview, aiRecommendApply } from '@/api/pipeline'
 import { getToken } from '@/utils/auth'
 import AiRecommendDialog from '../components/AiRecommendDialog.vue'
 
@@ -388,11 +473,23 @@ export default {
     return {
       step: 0,
       aiEnabled: false,
-      aiScale: 'quick',
-      aiProgressText: '',
       form: { systemName: '', systemDesc: '', dbName: '', mode: 'ai', ddlText: '', seedMode: 'rule' },
+      featureModules: [],
+      featureLoading: false,
+      relevanceWarning: false,
+      relevanceTip: '',
+      moduleLoading: false,
+      moduleProgressText: '',
+      moduleErrors: [],
       tables: [],
-      aiLoading: false,
+      activeSchemaTab: 'sql',
+      sqlPreview: null,
+      sqlStale: false,
+      sqlError: '',
+      confirmedTables: null,
+      schemaVersion: 0,
+      previewLoading: false,
+      prepareError: '',
       dbLoading: false,
       runLoading: false,
       detail: null,
@@ -416,6 +513,16 @@ export default {
     }
   },
   computed: {
+    checkedModuleCount() {
+      return this.featureModules.filter(m => m.checked).length
+    },
+    prepareDisabled() {
+      return this.form.mode === 'ai' && (!this.sqlPreview || this.sqlStale || this.previewLoading ||
+        !this.confirmedTables || !this.tables.length)
+    },
+    executedStepCount() {
+      return ((this.detail && this.detail.steps) || []).filter(s => ['success', 'failed'].includes(s.status)).length
+    },
     /* V5.1：建库时被补齐的表（PATCHED），供结果区徽标展示 */
     patchedReport() {
       const list = (this.prepareResult && this.prepareResult.auditReport) || []
@@ -429,6 +536,21 @@ export default {
     /* V7.0：生成期被白名单丢弃的 AI 建议项（提示用户哪些建议没进来） */
     recDrops() {
       return this.recData.drops || []
+    }
+  },
+  watch: {
+    tables: {
+      deep: true,
+      handler() {
+        this.schemaVersion++
+        if (this.sqlPreview) this.sqlStale = true
+        this.confirmedTables = null
+      }
+    },
+    'form.dbName'() {
+      this.schemaVersion++
+      if (this.sqlPreview) this.sqlStale = true
+      this.confirmedTables = null
     }
   },
   created() {
@@ -445,31 +567,63 @@ export default {
     this.closeSse()
   },
   methods: {
-    /* ---------- 第①步 ---------- */
-    async onAiModel() {
+    /* ---------- 第①步：录入需求 ---------- */
+    async onStart() {
       if (!this.form.systemName.trim()) return this.$message.warning('请输入系统名称')
-      if (this.form.mode === 'ai' && !this.aiEnabled) {
-        return this.$message.warning('AI 建模未启用（服务端未配置 LLM key），请使用手动粘贴 DDL')
-      }
+      if (!this.form.dbName.trim()) return this.$message.warning('请填写数据库名')
       if (this.form.mode === 'manual') {
         if (!this.form.ddlText.trim()) return this.$message.warning('请粘贴 DDL')
-        this.step = 1
+        this.step = 2
         return
       }
-      this.aiLoading = true
-      this.aiProgressText = ''
-      try {
-        if (this.aiScale === 'full') {
-          await this.buildFullSystem()
-        } else {
-          const res = await aiModel({ systemName: this.form.systemName, systemDesc: this.form.systemDesc })
-          this.tables = this.normalizeTables((res.data.tables || []))
-          this.step = 1
-        }
-      } finally {
-        this.aiLoading = false
-        this.aiProgressText = ''
+      if (!this.aiEnabled) {
+        return this.$message.warning('AI 建模未启用（服务端未配置 LLM key），请使用手动粘贴 DDL')
       }
+      this.featureLoading = true
+      try {
+        const res = await aiModules({ systemName: this.form.systemName, systemDesc: this.form.systemDesc })
+        const modules = (res.data && res.data.modules) || []
+        if (!modules.length) {
+          this.$message.warning('AI 未能拆分出业务模块，请重试或改用手动 DDL')
+          return
+        }
+        this.relevanceWarning = !!(res.data && res.data.relevanceWarning)
+        this.relevanceTip = (res.data && res.data.relevanceTip) || ''
+        this.featureModules = modules.map(m => ({
+          name: m.name || '',
+          desc: m.desc || '',
+          functions: Array.isArray(m.functions) ? m.functions.filter(fn => typeof fn === 'string' && fn.trim()).map(fn => fn.trim()) : [],
+          checked: true
+        }))
+        this.moduleErrors = []
+        this.tables = []
+        this.sqlPreview = null
+        this.sqlError = ''
+        this.sqlStale = false
+        this.confirmedTables = null
+        this.prepareError = ''
+        this.step = 1
+      } catch (e) {
+        this.$message.error(`AI 功能清单生成失败：${e.message || '未知错误'}。未创建任务、未写数据库，可重试或改用手动 DDL`)
+      } finally {
+        this.featureLoading = false
+      }
+    },
+
+    /* ---------- 第②步：确认功能清单 ---------- */
+    async onRegenerate() {
+      try {
+        await this.$confirm('重新生成会覆盖当前已编辑的模块清单，确认继续？', '重新生成功能清单', { type: 'warning' })
+      } catch (e) {
+        return
+      }
+      await this.onStart()
+    },
+    addModule() {
+      this.featureModules.push({ name: '', desc: '', functions: [''], checked: true })
+    },
+    selectAllModules() {
+      this.featureModules.forEach(m => { m.checked = true })
     },
 
     /** 列结构统一成编辑器需要的形状 */
@@ -481,44 +635,96 @@ export default {
       }))
     },
 
-    /**
-     * 完整系统模式：AI 先拆业务模块，再逐模块生成表结构，前端按表名合并去重。
-     * 单模块失败跳过不中断（小模型偶发超时属正常，凑够总量即可）。
-     */
-    async buildFullSystem() {
+    async onBuildTables() {
+      const selected = this.featureModules.filter(m => m.checked)
+      if (!selected.length) return this.$message.warning('请至少勾选一个模块')
+      if (selected.some(m => !m.name.trim())) return this.$message.warning('已勾选模块中存在空名称')
+      this.moduleLoading = true
+      this.moduleErrors = []
+      this.moduleProgressText = ''
       const base = { systemName: this.form.systemName, systemDesc: this.form.systemDesc }
-      const modRes = await aiModules(base)
-      const modules = (modRes.data && modRes.data.modules) || []
-      if (!modules.length) throw new Error('AI 未能拆分出业务模块，请重试或改用精简模式')
       const merged = []
       const seen = new Set()
-      let failed = 0
-      for (let i = 0; i < modules.length; i++) {
-        const m = modules[i]
-        this.aiProgressText = `正在生成模块 ${i + 1}/${modules.length}：${m.name}${m.desc ? '（' + m.desc + '）' : ''} —— 已合并 ${merged.length} 张表`
-        try {
-          const r = await aiModel({ ...base, moduleName: m.name })
-          for (const t of this.normalizeTables(r.data.tables || [])) {
-            const key = (t.tableName || '').trim().toLowerCase()
-            if (key && !seen.has(key)) {
-              seen.add(key)
-              merged.push(t)
+      const errors = []
+      try {
+        for (let i = 0; i < selected.length; i++) {
+          const m = selected[i]
+          this.moduleProgressText = `正在生成模块 ${i + 1}/${selected.length}：${m.name}，已合并 ${merged.length} 张表`
+          try {
+            const res = await aiModel({ ...base, moduleName: m.name })
+            for (const t of this.normalizeTables((res.data && res.data.tables) || [])) {
+              const key = (t.tableName || '').trim().toLowerCase()
+              if (key && !seen.has(key)) {
+                seen.add(key)
+                merged.push(t)
+              }
             }
+          } catch (e) {
+            errors.push({ name: m.name, message: e.message || '生成失败' })
           }
-        } catch (e) {
-          failed++
-          console.warn('模块生成失败，已跳过:', m.name, e)
         }
+        this.moduleErrors = errors
+        if (!merged.length) {
+          this.$message.error('所有勾选模块均未生成表结构，请查看失败模块后重试')
+          return
+        }
+        this.tables = merged
+        this.step = 2
+        this.activeSchemaTab = 'sql'
+        const ok = await this.refreshSqlPreview()
+        if (!ok) this.$message.warning('SQL 预览未就绪或已过期，请检查失败原因后点击刷新预览')
+        if (errors.length) this.$message.warning(`${errors.length} 个模块生成失败，已在页面列明`)
+      } catch (e) {
+        this.$message.error(`生成表结构失败：${e.message || '未知错误'}。未创建任务、未写数据库`)
+      } finally {
+        this.moduleLoading = false
+        this.moduleProgressText = ''
       }
-      if (!merged.length) throw new Error('所有模块均生成失败，请检查模型服务后重试')
-      if (failed > 0) {
-        this.$message.warning(`${failed} 个模块生成失败已跳过，其余模块合并出 ${merged.length} 张表`)
-      }
-      this.tables = merged
-      this.step = 1
     },
 
-    /* ---------- 第②步 ---------- */
+    /* ---------- 第③步：表结构与 SQL ---------- */
+    async refreshSqlPreview() {
+      if (!this.form.dbName.trim()) {
+        this.$message.warning('请填写数据库名')
+        return false
+      }
+      if (!this.tables.length) {
+        this.$message.warning('没有可预览的表结构')
+        return false
+      }
+      this.previewLoading = true
+      this.sqlError = ''
+      // 预览请求与后续建表必须用同一份表结构快照，避免「看了 A 的 SQL、执行了 B 的 DDL」
+      const snapshot = JSON.parse(JSON.stringify(this.tables))
+      try {
+        await this.$nextTick()
+        const version = this.schemaVersion
+        const res = await previewPipelineDdl({ dbName: this.form.dbName.trim(), tables: snapshot })
+        this.sqlPreview = res.data
+        this.sqlStale = version !== this.schemaVersion
+        this.confirmedTables = this.sqlStale ? null : snapshot
+        this.activeSchemaTab = 'sql'
+        return !this.sqlStale
+      } catch (e) {
+        this.sqlError = e.message || '未知错误'
+        this.sqlPreview = null
+        this.confirmedTables = null
+        this.$message.error(`SQL 预览失败：${this.sqlError}。未创建任务、未写数据库`)
+        return false
+      } finally {
+        this.previewLoading = false
+      }
+    },
+    async copySql() {
+      if (!this.sqlPreview || this.sqlStale) return
+      if (!navigator.clipboard) return this.$message.warning('当前浏览器不支持剪贴板，请手动选择 SQL 复制')
+      try {
+        await navigator.clipboard.writeText(this.sqlPreview.ddl)
+        this.$message.success('SQL 已复制')
+      } catch (e) {
+        this.$message.warning('浏览器未允许剪贴板访问，请手动选择 SQL 复制')
+      }
+    },
     addTable() {
       this.tables.push({ tableName: '', tableComment: '', columns: [{ name: '', type: 'varchar(64)', comment: '' }] })
     },
@@ -530,42 +736,64 @@ export default {
     },
     async onPrepareDb() {
       if (!this.form.dbName.trim()) return this.$message.warning('请填写数据库名')
+      if (this.form.mode === 'manual' && !this.form.ddlText.trim()) return this.$message.warning('请粘贴 DDL')
+      let confirmed = this.tables
       if (this.form.mode === 'ai') {
-        for (const t of this.tables) {
-          if (!t.tableName.trim()) return this.$message.warning('存在未命名的表')
+        if (!this.sqlPreview || this.sqlStale || !this.confirmedTables) {
+          return this.$message.warning('SQL 预览已缺失或过期，请先刷新预览')
         }
+        // 用预览时的表结构快照，保证「确认过的 SQL」与「执行的 DDL」输入完全一致
+        confirmed = this.confirmedTables
+        if (confirmed.some(t => !t.tableName.trim())) return this.$message.warning('存在未命名的表')
       }
-      await this.$confirm(
-        `将在数据库 ${this.form.dbName} 中建表${this.form.mode === 'ai' ? `（共 ${this.tables.length} 张）` : ''}，已存在的同名库/表不会覆盖。确认执行？`,
-        '建库建表',
-        { type: 'warning' }
-      )
+      try {
+        await this.$confirm(
+          `将在数据库 ${this.form.dbName} 中建表${this.form.mode === 'ai' ? `（共 ${confirmed.length} 张）` : ''}。已确认${this.form.mode === 'ai' ? '服务端 SQL 预览' : '上述 DDL'}，已存在的同名库/表不会覆盖。确认执行？`,
+          this.form.mode === 'ai' ? '确认 SQL 并建库建表' : '确认 DDL 并建库建表',
+          { type: 'warning' }
+        )
+      } catch (e) {
+        // 取消确认不产生任何副作用，也不能留下未捕获的 Promise rejection
+        return
+      }
+      this.prepareError = ''
       this.dbLoading = true
       try {
-        // 任务先落库（建模结果一并带上），prepare-db 只带确认后的表结构
-        const created = await createPipeline({ ...this.form, tables: this.tables })
+        // 只有确认 SQL/DDL 后才创建任务与系统台账，并复用现有 prepare-db 执行链
+        const created = await createPipeline({ ...this.form, tables: confirmed })
         const pipelineId = created.data.id
         const prep = await preparePipelineDb(pipelineId, {
-          tables: this.form.mode === 'ai' ? this.tables : null,
+          tables: this.form.mode === 'ai' ? confirmed : null,
           ddlText: this.form.mode === 'manual' ? this.form.ddlText : null
         })
         this.prepareResult = prep.data || null
         this.resetLint()
         await this.loadDetail(pipelineId)
-        this.step = 2
+        this.step = 3
         this.fetchPage()
+      } catch (e) {
+        this.prepareError = e.message || '未知错误'
+        this.prepareResult = null
+        this.$message.error(`建库建表失败：${this.prepareError}。未进入构建`)
       } finally {
         this.dbLoading = false
       }
     },
 
-    /* ---------- 第③步 ---------- */
+    /* ---------- 第④步：建表后独立确认构建 ---------- */
     async onRun() {
+      try {
+        await this.$confirm('将开始代码生成、打包、部署和健康检查，确认开始构建并启动？', '开始构建并启动', { type: 'warning' })
+      } catch (e) {
+        return
+      }
       this.runLoading = true
       try {
         await runPipeline(this.detail.id)
         await this.loadDetail(this.detail.id)
         this.subscribeSse(this.detail.id)
+      } catch (e) {
+        this.$message.error(`启动构建失败：${e.message || '未知错误'}`)
       } finally {
         this.runLoading = false
       }
@@ -600,7 +828,7 @@ export default {
       this.prepareResult = null
       this.resetLint()
       this.loadDetail(row.id)
-      this.step = 2
+      this.step = 3
     },
 
     /* ---------- V5.1 审计列检查/一键补齐 ---------- */
@@ -718,6 +946,20 @@ export default {
 .tip-bar { margin-bottom: 12px; }
 .main-card { margin-bottom: 12px; }
 .steps { margin-bottom: 18px; }
+.module-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.module-card { border-color: #dcdfe6; }
+.module-head { display: flex; justify-content: space-between; align-items: center; }
+.module-name { margin-bottom: 8px; }
+.module-desc { margin-bottom: 10px; }
+.function-title { color: #606266; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.function-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.module-progress { color: #409eff; font-size: 13px; margin: 10px 0; }
+.sql-meta { display: flex; gap: 20px; color: #606266; font-size: 13px; margin-bottom: 8px; }
+.sql-preview { max-height: 480px; overflow: auto; margin: 0; padding: 14px; border-radius: 4px; background: #1f2937; color: #d1e7dd; font-size: 12px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; user-select: text; }
+.prepare-result { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+.result-stat { padding: 14px; border: 1px solid #ebeef5; border-radius: 4px; text-align: center; background: #fafafa; }
+.result-stat strong { display: block; color: #67c23a; font-size: 26px; line-height: 1.2; }
+.result-stat span { color: #909399; font-size: 12px; }
 .confirm-bar {
   display: flex; justify-content: space-between; align-items: center;
   margin: 8px 0 12px; color: #606266; font-size: 13px;
