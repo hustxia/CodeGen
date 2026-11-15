@@ -5,14 +5,18 @@ import com.codegen.config.GenPipelineProperties;
 import com.codegen.dto.GenAiBuildConfirmDTO;
 import com.codegen.dto.GenAiBuildPlanDTO;
 import com.codegen.dto.GenPipelineDdlPreviewDTO;
+import com.codegen.service.AiBuildJobService;
 import com.codegen.service.AiTableRecommendService;
 import com.codegen.vo.GenAiBuildConfirmVO;
+import com.codegen.vo.GenAiBuildJobVO;
 import com.codegen.vo.GenAiBuildPlanVO;
 import com.codegen.vo.GenPipelineDdlPreviewVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,6 +36,8 @@ public class GenAiBuildController {
     @Autowired
     private AiTableRecommendService aiBuildService;
     @Autowired
+    private AiBuildJobService jobService;
+    @Autowired
     private GenPipelineProperties pipelineProps;
 
     @Operation(summary = "AI 推荐表设计：规模分批建模 + 关系视图（单表/主从/树形）；只读，零写库")
@@ -50,6 +56,31 @@ public class GenAiBuildController {
     @PostMapping("/confirm")
     public Result<GenAiBuildConfirmVO> confirm(@RequestBody @Valid GenAiBuildConfirmDTO dto) {
         return Result.ok(aiBuildService.confirm(dto));
+    }
+
+    @Operation(summary = "V9.6 提交分批建模任务（大型/超大型）：拆模块→每模块一批→多 worker 并发")
+    @PostMapping("/plan/job")
+    public Result<GenAiBuildJobVO> submitPlanJob(@RequestBody @Valid GenAiBuildPlanDTO dto) {
+        return Result.ok(jobService.submitPlan(dto));
+    }
+
+    @Operation(summary = "V9.6 查询分批任务进度（前端轮询）")
+    @GetMapping("/job/{id}")
+    public Result<GenAiBuildJobVO> jobStatus(@PathVariable("id") Long id) {
+        return Result.ok(jobService.status(id));
+    }
+
+    @Operation(summary = "V9.6 取分批任务结果（未完成返回业务错误）")
+    @GetMapping("/job/{id}/result")
+    public Result<GenAiBuildPlanVO> jobResult(@PathVariable("id") Long id) {
+        return Result.ok(jobService.result(id));
+    }
+
+    @Operation(summary = "V9.6 取消分批任务")
+    @PostMapping("/job/{id}/cancel")
+    public Result<Void> cancelJob(@PathVariable("id") Long id) {
+        jobService.cancel(id);
+        return Result.ok(null);
     }
 
     @Operation(summary = "V9.5 配置：AI 建模是否可用（未配 LLM key 时前端禁用 AI 推荐）")

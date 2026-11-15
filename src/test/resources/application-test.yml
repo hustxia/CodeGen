@@ -17,6 +17,12 @@ spring:
       continue-on-error: false
 
 gen:
+  ai-build:
+    job:
+      # 测试环境关掉分批任务调度：否则每个 @SpringBootTest 都会拉起后台线程池轮询批次表，
+      # 既拖慢测试，又会在 schema 未覆盖该表时刷一堆 "table doesn't exist" 噪音。
+      # 调度器自身的状态机另有单测（AiBuildJobServiceImplTest）覆盖。
+      enabled: false
   output:
     # 测试兜底路径：真实用例会用 @TempDir 覆盖到表级配置
     backend-root: ${java.io.tmpdir}/gen-contract-fallback
