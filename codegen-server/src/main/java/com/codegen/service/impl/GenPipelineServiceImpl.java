@@ -9,6 +9,7 @@ import com.codegen.config.GenOutputProperties;
 import com.codegen.config.GenPipelineProperties;
 import com.codegen.dto.GenDdlExecuteDTO;
 import com.codegen.dto.GenPipelineCreateDTO;
+import com.codegen.dto.GenPipelineDdlPreviewDTO;
 import com.codegen.dto.GenPipelinePageDTO;
 import com.codegen.dto.GenPipelinePrepareDTO;
 import com.codegen.entity.GenPipeline;
@@ -25,6 +26,7 @@ import com.codegen.support.PipelineAssembler;
 import com.codegen.support.PipelineSseRegistry;
 import com.codegen.vo.GenPipelineAiVO;
 import com.codegen.vo.GenPipelineAuditReportVO;
+import com.codegen.vo.GenPipelineDdlPreviewVO;
 import com.codegen.vo.GenPipelineLintFixVO;
 import com.codegen.vo.GenPipelineLintVO;
 import com.codegen.vo.GenPipelinePrepareVO;
@@ -165,6 +167,24 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     // ==================== 建库建表 ====================
 
     @Override
+    public GenPipelineDdlPreviewVO previewDdl(GenPipelineDdlPreviewDTO dto) {
+        String dbName = dto.getDbName() == null ? "" : dto.getDbName().trim();
+        if (!DB_NAME.matcher(dbName).matches()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                    "数据库名只能用小写字母开头的小写字母/数字/下划线（1~63 位）");
+        }
+        if (dto.getTables() == null || dto.getTables().isEmpty()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "AI 模式必须带回确认过的表结构");
+        }
+        GenPipelineDdlPreviewVO vo = new GenPipelineDdlPreviewVO();
+        vo.setDbName(dbName);
+        vo.setDdl(buildDdl(dbName, dto.getTables()));
+        vo.setTableCount(dto.getTables().size());
+        vo.setStatementCount(dto.getTables().size() + 1);
+        return vo;
+    }
+
+    @Override
     public GenPipelinePrepareVO prepareDb(Long id, GenPipelinePrepareDTO dto) {
         GenPipeline pipeline = mustGet(id);
         if (!"draft".equals(pipeline.getStatus()) && !"await_confirm".equals(pipeline.getStatus())
@@ -233,6 +253,12 @@ public class GenPipelineServiceImpl implements GenPipelineService {
             vo.setProjectId(projectId);
             vo.setDbName(result.getSchema());
             vo.setTableCount(result.getCreatedTables().size());
+            // V9.4：分阶段确认页要展示真实建表结果，全部取自 DDL 执行器回报，
+            // 不用 tableCount 冒充导入数，也不硬编码「0 失败语句」。
+            vo.setImportedTableCount(result.getImportedTables() == null ? 0 : result.getImportedTables().size());
+            vo.setFailedStatementCount(result.getFailedCount());
+            vo.setBlockedStatementCount(result.getBlockedCount());
+            vo.setStatementCount(result.getStatements() == null ? 0 : result.getStatements().size());
             vo.setAuditReport(auditReport);
             return vo;
         } catch (RuntimeException e) {
@@ -245,7 +271,7 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     /**
      * AI 表结构 → DDL：每张表固定补 id 主键 + 5 个审计列，从源头消灭「生成物跑起来才爆缺列」。
      */
-    private String buildDdl(String dbName, List<GenPipelineAiVO.TableModel> tables) {
+    String buildDdl(String dbName, List<GenPipelineAiVO.TableModel> tables) {
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE DATABASE IF NOT EXISTS `").append(dbName)
                 .append("` DEFAULT CHARACTER SET utf8mb4;\n");

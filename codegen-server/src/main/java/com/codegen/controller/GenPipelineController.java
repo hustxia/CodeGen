@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.codegen.common.result.Result;
 import com.codegen.dto.GenPipelineAiModelDTO;
 import com.codegen.dto.GenPipelineCreateDTO;
+import com.codegen.dto.GenPipelineDdlPreviewDTO;
 import com.codegen.dto.GenPipelinePageDTO;
 import com.codegen.dto.GenPipelinePrepareDTO;
 import com.codegen.service.AiModelService;
 import com.codegen.service.GenPipelineService;
 import com.codegen.vo.GenPipelineAiVO;
+import com.codegen.vo.GenPipelineDdlPreviewVO;
 import com.codegen.vo.GenPipelineLintVO;
 import com.codegen.vo.GenPipelinePrepareVO;
 import com.codegen.vo.GenPipelineVO;
@@ -56,6 +58,12 @@ public class GenPipelineController {
     @PostMapping("/ai-modules")
     public Result<com.codegen.vo.GenPipelineAiModulesVO> aiModules(@RequestBody @Valid GenPipelineAiModelDTO dto) {
         return Result.ok(aiModelService.modules(dto.getSystemName(), dto.getSystemDesc()));
+    }
+
+    @Operation(summary = "AI 模式 DDL 只读预览：与建库执行共用同一组装方法，不写任何数据库")
+    @PostMapping("/ddl-preview")
+    public Result<GenPipelineDdlPreviewVO> ddlPreview(@RequestBody @Valid GenPipelineDdlPreviewDTO dto) {
+        return Result.ok(pipelineService.previewDdl(dto));
     }
 
     @Operation(summary = "创建流水线任务（建模结果一并落库）")

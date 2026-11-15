@@ -427,6 +427,10 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
                 write(frontendRoot, "src/components/MultiImageUpload.vue",
                         ScaffoldOpsWriter.fileResource("MultiImageUpload.vue", pkg), "frontend", force, vo, counter);
             }
+            // V9.5 §4.7 富文本组件：不受 fileEnabled 网控（正文列是否需要富文本与文件开关无关），
+            // 页面在 hasRichText 时才 import，组件文件始终随前端骨架写盘，保证 import 不会落空。
+            write(frontendRoot, "src/components/RichTextEditor.vue",
+                    ScaffoldOpsWriter.fileResource("RichTextEditor.vue", pkg), "frontend", force, vo, counter);
             // V8.0 产物国际化：只有开关打开才写这一组文件，存量工程零 diff
             if (i18nOn) {
                 writeI18nResources(frontendRoot, dto, force, vo, counter);

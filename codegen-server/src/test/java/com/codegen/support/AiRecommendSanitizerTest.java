@@ -37,7 +37,7 @@ class AiRecommendSanitizerTest {
         String raw = """
                 {"tables":[{"tableName":"wms_stock","columns":[
                   {"columnName":"status","isQuery":1,"queryType":"EQ","isList":1,"isForm":1,"htmlType":"select","dictType":"sys_status","sort":5},
-                  {"columnName":"name","isQuery":1,"queryType":"FUZZY","isList":1,"isForm":1,"htmlType":"richtext","sort":6}
+                  {"columnName":"name","isQuery":1,"queryType":"FUZZY","isList":1,"isForm":1,"htmlType":"wysiwyg","sort":6}
                 ]}]}
                 """;
         GenAiRecommendVO vo = AiRecommendSanitizer.sanitize(
@@ -48,7 +48,7 @@ class AiRecommendSanitizerTest {
         GenAiRecommendVO.ColumnSuggest name = vo.getTables().get(0).getColumns().stream()
                 .filter(c -> "name".equals(c.getColumnName())).findFirst().orElseThrow();
         assertNull(name.getQueryType(), "FUZZY 非法，该字段丢弃");
-        assertNull(name.getHtmlType(), "richtext 非法，该字段丢弃");
+        assertNull(name.getHtmlType(), "wysiwyg 非法，该字段丢弃（richtext 自 V9.5 起已合法）");
         assertEquals(1, name.getIsQuery(), "同行的合法字段保留");
         assertEquals(6, name.getSort(), "同行的合法字段保留");
         assertTrue(vo.getDrops().stream().anyMatch(d -> d.contains("name") && d.contains("queryType")),
