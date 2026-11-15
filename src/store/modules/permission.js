@@ -9,6 +9,18 @@ import { getRouters } from '@/api/user'
  * 这样后端加一张表、注册一个菜单，前端不用改代码也不用重新打包。
  */
 
+// V9.5「AI 建表推荐」静态入口：不依赖后端菜单表，前端注入即可在侧边栏出现并可达。
+// 仅新增菜单节点，不改动任何 V9.4 路由/页面（AC-01）。
+const V95_AIBUILD_MENU = {
+  id: 'v95_aibuild',
+  title: 'V9.5 AI 建表',
+  icon: 'tool',
+  type: 2,
+  path: '/gen/aibuild',
+  component: 'gen/aibuild/index',
+  children: []
+}
+
 // 一次性把所有页面收进 map，运行时按字符串取组件（webpack 会静态收集这里的依赖）
 const viewContext = require.context('@/views', true, /\.vue$/)
 const viewKeys = viewContext.keys()
@@ -144,7 +156,7 @@ const actions = {
   generateRoutes({ commit }) {
     return getRouters().then(res => {
       const data = res.data || {}
-      const menus = data.routers || []
+      const menus = (data.routers || []).concat([V95_AIBUILD_MENU])
       const { routes, leafPaths } = buildRoutes(menus)
       // 根路径按角色落到"第一个能进的页面"，避免非管理员登录后停在空白 dashboard
       if (leafPaths.length > 0) {
@@ -160,7 +172,7 @@ const actions = {
       commit('SET_ROUTES', {
         routes,
         menus,
-        allPaths: data.allPaths || [],
+        allPaths: (data.allPaths || []).concat(['/gen/aibuild']),
         accessiblePaths: collectPaths(menus),
         superAdmin: !!data.superAdmin
       })
