@@ -380,7 +380,7 @@
         <el-button size="mini" type="text" icon="el-icon-refresh" style="float: right" @click="fetchPage">刷新</el-button>
       </div>
       <el-table :data="pageData" size="mini" border stripe>
-        <el-table-column prop="pipelineNo" label="流水线号" width="170" />
+        <el-table-column prop="pipelineNo" label="流水线号" width="200" />
         <el-table-column prop="systemName" label="系统名称" min-width="140" />
         <el-table-column prop="dbName" label="目标库" width="140" />
         <el-table-column prop="mode" label="方式" width="70">
