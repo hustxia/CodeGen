@@ -38,6 +38,22 @@
               <el-radio label="supplement">为已有系统补表</el-radio>
             </el-radio-group>
           </el-form-item>
+          <el-form-item v-if="form.scope === 'supplement'" label="目标系统" required>
+            <el-select
+              v-model="form.projectId"
+              filterable
+              placeholder="选择要补表的系统（其已有表会被自动排除）"
+              style="width: 100%"
+            >
+              <el-option
+                v-for="p in projects"
+                :key="p.id"
+                :label="p.projectName + (p.projectCode ? '（' + p.projectCode + '）' : '')"
+                :value="p.id"
+              />
+            </el-select>
+            <div class="muted">补表只推荐该系统缺失的表：已有表写进 prompt 让模型避让，服务端再做一次差集兜底。</div>
+          </el-form-item>
           <el-form-item label="规模">
             <el-radio-group v-model="form.scale">
               <el-radio label="small">精简（&lt;50 表）</el-radio>
@@ -81,6 +97,15 @@
           :title="'AI 拆模块与系统关联度偏低：' + (plan.relevanceTip || '建议补充更具体的业务描述后重试')"
           style="margin-bottom: 10px"
         />
+        <el-alert
+          v-if="plan && plan.excludedCount > 0"
+          type="success"
+          :closable="false"
+          style="margin-bottom: 10px"
+          :title="'已排除 ' + plan.excludedCount + ' 张重复表（目标系统已有表 ' + plan.existingTableCount + ' 张）'"
+        >
+          <div class="muted">{{ (plan.excludedTables || []).join('；') }}</div>
+        </el-alert>
         <div class="editor-layout">
           <!-- 左：模块树 -->
           <div class="tree-pane">
@@ -218,6 +243,9 @@
         </el-form>
         <el-alert v-if="confirmResult" type="success" :closable="false" class="mt12">
           <div>执行完成：模式 {{ confirmResult.mode }}，形态 {{ confirmResult.deploy }}，服务数 {{ confirmResult.serviceCount }}，表数 {{ confirmResult.tableCount }}。</div>
+          <div v-if="confirmResult.skippedCount > 0" class="del-text">
+            已跳过 {{ confirmResult.skippedCount }} 张与目标系统重复的表：{{ (confirmResult.skippedTables || []).join('；') }}
+          </div>
           <div v-if="confirmResult.pipelineId">单体流水线 ID：{{ confirmResult.pipelineId }}（请到「一句话建系统」点「构建」启动）。</div>
           <div v-if="confirmResult.services && confirmResult.services.length">
             <div class="mt8">微服务逐服务结果：</div>
@@ -245,6 +273,7 @@ import {
   aiBuildDdlPreview,
   aiBuildConfirm
 } from '@/api/pipeline'
+import { listProjectOptions } from '@/api/gen'
 
 const FK_SET = ['org', 'user', 'dept', 'type', 'category', 'parent', 'creator', 'owner']
 
@@ -259,9 +288,11 @@ export default {
         systemDesc: '',
         dbName: '',
         scope: 'new',
+        projectId: null,
         scale: 'huge',
         deploy: 'micro'
       },
+      projects: [],
       planLoading: false,
       plan: null,
       treeFilter: '',
@@ -350,6 +381,9 @@ export default {
   },
   created() {
     aiBuildConfig().then(r => { this.aiEnabled = !!(r.data && r.data.aiEnabled) }).catch(() => { this.aiEnabled = false })
+    listProjectOptions()
+      .then(r => { this.projects = r.data || [] })
+      .catch(() => { this.projects = [] })
   },
   methods: {
     doPlan() {
@@ -357,8 +391,15 @@ export default {
         this.$message.warning('请先填写系统名称与数据库名')
         return
       }
+      if (this.form.scope === 'supplement' && !this.form.projectId) {
+        this.$message.warning('补表必须选择目标系统，否则无法排除已有表')
+        return
+      }
       this.planLoading = true
       const payload = { ...this.form }
+      if (this.form.scope !== 'supplement') {
+        payload.projectId = null
+      }
       aiBuildPlan(payload).then(r => {
         const vo = r.data
         // 给每张表打 _mod 标记，便于模块树分组
@@ -409,6 +450,7 @@ export default {
         systemDesc: this.form.systemDesc,
         dbName: this.form.dbName,
         scope: this.form.scope,
+        projectId: this.form.scope === 'supplement' ? this.form.projectId : null,
         deploy: this.form.deploy,
         mode: this.confirmMode,
         tables: this.plan.tables,
