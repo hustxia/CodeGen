@@ -9,6 +9,7 @@ import com.codegen.config.GenOutputProperties;
 import com.codegen.config.GenPipelineProperties;
 import com.codegen.dto.GenDdlExecuteDTO;
 import com.codegen.dto.GenPipelineCreateDTO;
+import com.codegen.dto.GenPipelineDdlPreviewDTO;
 import com.codegen.dto.GenPipelinePageDTO;
 import com.codegen.dto.GenPipelinePrepareDTO;
 import com.codegen.entity.GenPipeline;
@@ -25,12 +26,14 @@ import com.codegen.support.PipelineAssembler;
 import com.codegen.support.PipelineSseRegistry;
 import com.codegen.vo.GenPipelineAiVO;
 import com.codegen.vo.GenPipelineAuditReportVO;
+import com.codegen.vo.GenPipelineDdlPreviewVO;
 import com.codegen.vo.GenPipelineLintFixVO;
 import com.codegen.vo.GenPipelineLintVO;
 import com.codegen.vo.GenPipelinePrepareVO;
 import com.codegen.vo.GenPipelineVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -46,7 +49,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 /**
@@ -61,6 +66,12 @@ public class GenPipelineServiceImpl implements GenPipelineService {
 
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private static final Pattern DB_NAME = Pattern.compile("^[a-z][a-z0-9_]{1,62}$");
+
+    /**
+     * 流水线号序号：JVM 内自增，随机起点（重启后不会从 000 开始撞上一次的号）。
+     * 微服务形态一个请求内连建多条流水线，秒级时间戳不够用，靠它区分同秒。
+     */
+    private static final AtomicInteger NO_SEQ = new AtomicInteger(ThreadLocalRandom.current().nextInt(10000));
 
     @Autowired
     private GenPipelineMapper pipelineMapper;
@@ -128,7 +139,6 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         }
 
         GenPipeline pipeline = new GenPipeline();
-        pipeline.setPipelineNo("PPL" + TS.format(LocalDateTime.now()));
         pipeline.setSystemName(dto.getSystemName().trim());
         pipeline.setSystemDesc(dto.getSystemDesc());
         pipeline.setDbName(dbName);
@@ -138,7 +148,7 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         pipeline.setSeedMode("rule".equals(dto.getSeedMode()) || "ai".equals(dto.getSeedMode())
                 ? dto.getSeedMode() : "off");
         pipeline.setStatus("draft");
-        pipelineMapper.insert(pipeline);
+        insertWithUniqueNo(pipeline);
 
         seedSteps(pipeline.getId());
         return detail(pipeline.getId());
@@ -163,6 +173,24 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     }
 
     // ==================== 建库建表 ====================
+
+    @Override
+    public GenPipelineDdlPreviewVO previewDdl(GenPipelineDdlPreviewDTO dto) {
+        String dbName = dto.getDbName() == null ? "" : dto.getDbName().trim();
+        if (!DB_NAME.matcher(dbName).matches()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                    "数据库名只能用小写字母开头的小写字母/数字/下划线（1~63 位）");
+        }
+        if (dto.getTables() == null || dto.getTables().isEmpty()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "AI 模式必须带回确认过的表结构");
+        }
+        GenPipelineDdlPreviewVO vo = new GenPipelineDdlPreviewVO();
+        vo.setDbName(dbName);
+        vo.setDdl(buildDdl(dbName, dto.getTables()));
+        vo.setTableCount(dto.getTables().size());
+        vo.setStatementCount(dto.getTables().size() + 1);
+        return vo;
+    }
 
     @Override
     public GenPipelinePrepareVO prepareDb(Long id, GenPipelinePrepareDTO dto) {
@@ -233,6 +261,12 @@ public class GenPipelineServiceImpl implements GenPipelineService {
             vo.setProjectId(projectId);
             vo.setDbName(result.getSchema());
             vo.setTableCount(result.getCreatedTables().size());
+            // V9.4：分阶段确认页要展示真实建表结果，全部取自 DDL 执行器回报，
+            // 不用 tableCount 冒充导入数，也不硬编码「0 失败语句」。
+            vo.setImportedTableCount(result.getImportedTables() == null ? 0 : result.getImportedTables().size());
+            vo.setFailedStatementCount(result.getFailedCount());
+            vo.setBlockedStatementCount(result.getBlockedCount());
+            vo.setStatementCount(result.getStatements() == null ? 0 : result.getStatements().size());
             vo.setAuditReport(auditReport);
             return vo;
         } catch (RuntimeException e) {
@@ -245,7 +279,7 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     /**
      * AI 表结构 → DDL：每张表固定补 id 主键 + 5 个审计列，从源头消灭「生成物跑起来才爆缺列」。
      */
-    private String buildDdl(String dbName, List<GenPipelineAiVO.TableModel> tables) {
+    String buildDdl(String dbName, List<GenPipelineAiVO.TableModel> tables) {
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE DATABASE IF NOT EXISTS `").append(dbName)
                 .append("` DEFAULT CHARACTER SET utf8mb4;\n");
@@ -521,6 +555,40 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         } catch (Exception e) {
             log.warn("SSE 推送失败: {}", e.getMessage());
         }
+    }
+
+    // ==================== 流水线号 ====================
+
+    /**
+     * 插入流水线，撞 uk_no 就换号重插。
+     *
+     * <p>流水线号 = PPL + 秒级时间戳 + 3 位序号。只用时间戳时，一个请求里连建多条
+     * （微服务形态逐模块建库、或用户连点两次）必然同秒撞号，前端看到的就是
+     * 「库存仓储 → mall_m3（ID ）failed / Duplicate entry 'PPL...' for key 'gen_pipeline.uk_no'」。
+     * 序号解决同 JVM 同秒，再保留一次重试兜住「重启后同秒」和「多实例同秒」。
+     */
+    void insertWithUniqueNo(GenPipeline pipeline) {
+        for (int attempt = 1; ; attempt++) {
+            pipeline.setId(null); // 上一次失败的 insert 可能已回填 id，不清会撞主键
+            pipeline.setPipelineNo(nextPipelineNo());
+            try {
+                pipelineMapper.insert(pipeline);
+                return;
+            } catch (DuplicateKeyException ex) {
+                boolean noConflict = String.valueOf(ex.getMessage()).contains("uk_no");
+                if (attempt >= 3 || !noConflict) {
+                    // 非 uk_no 的冲突（如同名库并发建档）是真问题，不能靠换号掩盖
+                    throw ex;
+                }
+                log.warn("V9.6 流水线号冲突，换号重试 attempt={} no={}", attempt, pipeline.getPipelineNo());
+            }
+        }
+    }
+
+    /** PPL + yyyyMMddHHmmss + 4 位自增序号，长度 21，varchar(32) 内；同秒可容纳 1 万个 */
+    static String nextPipelineNo() {
+        return "PPL" + TS.format(LocalDateTime.now())
+                + String.format("%04d", NO_SEQ.getAndIncrement() % 10000);
     }
 
     private void seedSteps(Long pipelineId) {
