@@ -83,7 +83,39 @@
               :disabled="!aiEnabled"
               @click="doPlan"
             >🤖 AI 推荐（仅推荐，不会建表）</el-button>
-            <span class="muted" style="margin-left: 10px">大模型本地推理一次约 3-5 分钟，请耐心等待。</span>
+            <span class="muted" style="margin-left: 10px">大型/超大型走后台分批（每模块一批、多批并发），进度见下方，可离开页面。</span>
+          </el-form-item>
+          <el-form-item v-if="job" label="后台进度">
+            <div style="width: 100%">
+              <el-progress
+                :percentage="job.progress || 0"
+                :status="job.status === 'failed' ? 'exception' : (job.status === 'success' ? 'success' : null)"
+              />
+              <div class="muted" style="margin-top: 4px">
+                批次 {{ (job.doneBatch || 0) + (job.failedBatch || 0) }}/{{ job.totalBatch || 0 }}
+                · 已出表 {{ job.totalTable || 0 }} 张
+                · 状态 {{ job.status }}
+                · 任务号 {{ job.jobNo }}
+                <el-button
+                  v-if="job.status === 'pending' || job.status === 'running'"
+                  type="text"
+                  size="mini"
+                  @click="cancelJob"
+                >取消</el-button>
+              </div>
+              <div style="margin-top: 6px">
+                <el-tag
+                  v-for="b in job.batches"
+                  :key="b.id"
+                  size="mini"
+                  :type="batchTag(b.status)"
+                  style="margin: 0 4px 4px 0"
+                >{{ b.kind === 'split' ? '拆模块' : b.moduleName }} · {{ b.status }}<span v-if="b.tableCount">（{{ b.tableCount }} 张）</span></el-tag>
+              </div>
+              <div v-if="job.status === 'partial'" class="muted">
+                部分模块失败：成功批次已合并出表，失败批次可在批次标签里查看原因；调大超时或重试后再跑一次即可补齐。
+              </div>
+            </div>
           </el-form-item>
         </el-form>
       </div>
@@ -270,6 +302,10 @@
 import {
   aiBuildConfig,
   aiBuildPlan,
+  aiBuildPlanJob,
+  aiBuildJobStatus,
+  aiBuildJobResult,
+  aiBuildJobCancel,
   aiBuildDdlPreview,
   aiBuildConfirm
 } from '@/api/pipeline'
@@ -295,6 +331,9 @@ export default {
       projects: [],
       planLoading: false,
       plan: null,
+      // V9.6 分批任务（大型/超大型）
+      job: null,
+      jobTimer: null,
       treeFilter: '',
       activeModule: null,
       selectedTables: [],
@@ -379,6 +418,9 @@ export default {
       return map
     }
   },
+  beforeDestroy() {
+    this.clearJobTimer()
+  },
   created() {
     aiBuildConfig().then(r => { this.aiEnabled = !!(r.data && r.data.aiEnabled) }).catch(() => { this.aiEnabled = false })
     listProjectOptions()
@@ -396,26 +438,86 @@ export default {
         return
       }
       this.planLoading = true
+      this.job = null
+      this.clearJobTimer()
       const payload = { ...this.form }
       if (this.form.scope !== 'supplement') {
         payload.projectId = null
       }
-      aiBuildPlan(payload).then(r => {
-        const vo = r.data
-        // 给每张表打 _mod 标记，便于模块树分组
-        const mods = vo.moduleTableNames || {}
-        const modOf = {}
-        Object.keys(mods).forEach(m => (mods[m] || []).forEach(n => { modOf[n] = m }))
-        vo.tables.forEach(t => { t._mod = modOf[t.tableName] || '' })
-        this.plan = vo
-        this.ddlText = ''
-        this.confirmResult = null
-        this.genScenario = vo.masterCount > 0 ? 'master' : 'single'
-        this.step = 1
-        this.$message.success('AI 推荐完成，请人工确认表设计')
+      const huge = this.form.scale === 'large' || this.form.scale === 'huge'
+      if (!huge) {
+        // 精简：一次建模，单请求即可
+        aiBuildPlan(payload).then(r => {
+          this.applyPlan(r.data)
+          this.$message.success('AI 推荐完成，请人工确认表设计')
+        }).catch(e => {
+          this.$message.error('AI 推荐失败：' + (e.message || e))
+        }).finally(() => { this.planLoading = false })
+        return
+      }
+      // V9.6：大型/超大型拆模块后逐模块建模，走后台任务并发执行
+      aiBuildPlanJob(payload).then(r => {
+        this.job = r.data
+        this.$message.success('已提交后台任务（' + (this.job.totalBatch || 1) + ' 批），正在分批建模')
+        this.pollJob(this.job.jobId)
       }).catch(e => {
-        this.$message.error('AI 推荐失败：' + (e.message || e))
-      }).finally(() => { this.planLoading = false })
+        this.planLoading = false
+        this.$message.error('提交建模任务失败：' + (e.message || e))
+      })
+    },
+    applyPlan(vo) {
+      // 给每张表打 _mod 标记，便于模块树分组
+      const mods = vo.moduleTableNames || {}
+      const modOf = {}
+      Object.keys(mods).forEach(m => (mods[m] || []).forEach(n => { modOf[n] = m }))
+      ;(vo.tables || []).forEach(t => { t._mod = modOf[t.tableName] || '' })
+      this.plan = vo
+      this.ddlText = ''
+      this.confirmResult = null
+      this.genScenario = vo.masterCount > 0 ? 'master' : 'single'
+      this.step = 1
+    },
+    pollJob(jobId) {
+      aiBuildJobStatus(jobId).then(r => {
+        this.job = r.data
+        const st = this.job.status
+        const finished = st === 'success' || st === 'partial' || st === 'failed' || st === 'canceled'
+        if (!finished) {
+          this.jobTimer = setTimeout(() => this.pollJob(jobId), 2000)
+          return
+        }
+        this.planLoading = false
+        if (st === 'canceled') { this.$message.info('任务已取消'); return }
+        if (st === 'failed') { this.$message.error('建模任务失败：' + (this.job.error || '请查看批次明细')); return }
+        aiBuildJobResult(jobId).then(res => {
+          this.applyPlan(res.data)
+          this.$message.success(st === 'partial'
+            ? '部分模块失败，已用成功批次出的表（明细见进度区）'
+            : 'AI 推荐完成，请人工确认表设计')
+        }).catch(e => this.$message.error('取任务结果失败：' + (e.message || e)))
+      }).catch(e => {
+        this.planLoading = false
+        this.$message.error('查询任务进度失败：' + (e.message || e))
+      })
+    },
+    cancelJob() {
+      if (!this.job || !this.job.jobId) return
+      aiBuildJobCancel(this.job.jobId)
+        .then(() => this.$message.info('已请求取消，运行中的批次会跑完即止'))
+        .catch(e => this.$message.error('取消失败：' + (e.message || e)))
+    },
+    clearJobTimer() {
+      if (this.jobTimer) {
+        clearTimeout(this.jobTimer)
+        this.jobTimer = null
+      }
+    },
+    batchTag(status) {
+      if (status === 'success') return 'success'
+      if (status === 'failed') return 'danger'
+      if (status === 'running') return 'warning'
+      if (status === 'skipped') return 'info'
+      return ''
     },
     onTreeNodeClick(node) {
       if (node.isTable) {

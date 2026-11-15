@@ -111,6 +111,28 @@ export function aiBuildDdlPreview(data) {
   return request({ url: '/gen/ai-build/ddl-preview', method: 'post', data })
 }
 
+/* ---------- V9.6 大型/超大型：分批建模任务 ---------- */
+
+// 提交任务：立即返回 jobId，后台按模块分批并发建模
+export function aiBuildPlanJob(data) {
+  return request({ url: '/gen/ai-build/plan/job', method: 'post', data, timeout: 60000 })
+}
+
+// 进度轮询（含批次明细）
+export function aiBuildJobStatus(id) {
+  return request({ url: `/gen/ai-build/job/${id}`, method: 'get' })
+}
+
+// 取最终结果（未完成会返回业务错误）
+export function aiBuildJobResult(id) {
+  return request({ url: `/gen/ai-build/job/${id}/result`, method: 'get' })
+}
+
+// 取消任务
+export function aiBuildJobCancel(id) {
+  return request({ url: `/gen/ai-build/job/${id}/cancel`, method: 'post' })
+}
+
 // V9.5 确认落库/建库：draft=草稿 build=建库；micro=逐模块微服务拆分
 export function aiBuildConfirm(data) {
   return request({ url: '/gen/ai-build/confirm', method: 'post', data, timeout: 600000 })
