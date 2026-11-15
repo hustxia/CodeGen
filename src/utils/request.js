@@ -32,9 +32,13 @@ function toLogin() {
     type: 'warning'
   }).then(() => {
     store.dispatch('user/resetToken').then(() => {
-      // 回登录页并带上当前地址，登录后能回原位
-      const redirect = encodeURIComponent(window.location.hash.replace(/^#/, '') || '/')
-      window.location.href = `/#/login?redirect=${redirect}`
+      // 回登录页并带上当前地址，登录后能回原位。
+      // 修正（核心风险 #8）：本项目 router 为 history 模式（无 #），
+      // 此前用 location.hash 拼 /#/login 在 history 模式下 hash 恒为空、
+      // 且登录页从 this.$route.query.redirect 读取，hash 里的 redirect 会被忽略。
+      // 改为用 pathname + search（history 模式），与守卫 next('/login?redirect=...') 一致。
+      const redirect = encodeURIComponent(window.location.pathname + window.location.search || '/')
+      window.location.href = `/login?redirect=${redirect}`
       window.location.reload()
     })
   }).catch(() => {

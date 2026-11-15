@@ -20,6 +20,7 @@ async function clickText(page, selector, text) {
   }, selector, text)
 }
 
+// eslint-disable-next-line no-extra-semi -- 行首分号用于阻断上一行的 ASI，不能删
 ;(async () => {
   if (!TOKEN) throw new Error('缺少 token')
   fs.mkdirSync(OUT, { recursive: true })
