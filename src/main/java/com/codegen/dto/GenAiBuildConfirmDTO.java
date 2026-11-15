@@ -35,6 +35,9 @@ public class GenAiBuildConfirmDTO {
     @Schema(description = "范围：new / supplement")
     private String scope = "new";
 
+    @Schema(description = "补表时的目标系统项目 ID（scope=supplement 必填，用于剔除已有表）")
+    private Long projectId;
+
     @Schema(description = "部署形态：mono / micro")
     private String deploy = "micro";
 

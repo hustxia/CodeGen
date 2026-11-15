@@ -19,8 +19,17 @@ public class GenAiBuildConfirmVO {
     @Schema(description = "部署形态：mono / micro")
     private String deploy;
 
-    @Schema(description = "表总数")
+    @Schema(description = "表总数（已剔除重复/已有表后的实际落库数）")
     private int tableCount;
+
+    @Schema(description = "补表目标系统 ID")
+    private Long projectId;
+
+    @Schema(description = "补表时被跳过的已存在表数量")
+    private int skippedCount;
+
+    @Schema(description = "补表时被跳过的已存在表名")
+    private List<String> skippedTables = new ArrayList<>();
 
     @Schema(description = "生成的服务/工程数（mono=1，micro=模块数）")
     private int serviceCount;

@@ -1,8 +1,11 @@
 package com.codegen.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.codegen.common.exception.BusinessException;
 import com.codegen.common.result.ResultCode;
 import com.codegen.config.GenPipelineProperties;
+import com.codegen.entity.GenTable;
+import com.codegen.mapper.GenTableMapper;
 import com.codegen.dto.GenAiBuildConfirmDTO;
 import com.codegen.dto.GenAiBuildPlanDTO;
 import com.codegen.dto.GenPipelineCreateDTO;
@@ -23,8 +26,11 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -48,6 +54,9 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
     private GenPipelineService pipelineService;
     @Autowired
     private GenPipelineProperties properties;
+    /** 补表差集数据源：只读 gen_table 已有表名（@TableLogic 自动过滤 deleted=1） */
+    @Autowired
+    private GenTableMapper genTableMapper;
 
     @Override
     public GenAiBuildPlanVO plan(GenAiBuildPlanDTO dto) {
@@ -59,18 +68,36 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
         vo.setScale(dto.getScale());
         vo.setDeploy(dto.getDeploy());
 
+        // 补表：先读出目标系统已有表做差集基数（设计 §5.4「只推荐该系统缺失的表」）
+        boolean supplement = isSupplement(dto.getScope());
+        Set<String> existing = new LinkedHashSet<>();
+        if (supplement) {
+            if (dto.getProjectId() == null) {
+                throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                        "补表必须选择目标系统（projectId），否则无法判断哪些表已存在");
+            }
+            existing.addAll(loadExistingTableNames(dto.getProjectId()));
+            vo.setProjectId(dto.getProjectId());
+            vo.setExistingTableCount(existing.size());
+            log.info("V9.5 补表模式 projectId={} 已有表 {} 张", dto.getProjectId(), existing.size());
+        }
+        // 已有表清单同时写进 prompt：先让模型主动避让，再靠下面的服务端差集兜底
+        String descForAi = withExistingHint(dto.getSystemDesc(), existing);
+
         List<GenPipelineAiVO.TableModel> tables = new ArrayList<>();
         Map<String, List<String>> moduleTableNames = new LinkedHashMap<>();
 
         boolean huge = "large".equals(dto.getScale()) || "huge".equals(dto.getScale());
         if (!huge) {
             // 精简：一次整体建模
-            GenPipelineAiVO r = aiModelService.model(dto.getSystemName(), dto.getSystemDesc(), null);
+            GenPipelineAiVO r = aiModelService.model(dto.getSystemName(), descForAi, null);
             if (r != null && r.getTables() != null) {
                 tables.addAll(r.getTables());
             }
         } else {
             // 大型/超大型：先拆模块，再逐模块建模（复用 V9.4 aiModules + 带 moduleName 的 model）
+            // 拆模块只看业务描述：把已有表清单塞进来会让它按「已建过的模块」重复拆分，
+            // 已有表约束只下沉到逐模块建模的 prompt（见 descForAi）
             com.codegen.vo.GenPipelineAiModulesVO modulesVo =
                     aiModelService.modules(dto.getSystemName(), dto.getSystemDesc());
             if (modulesVo != null) {
@@ -84,7 +111,7 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
                 }
                 for (int i = 0; i < limit; i++) {
                     com.codegen.vo.GenPipelineAiModulesVO.Module m = mods.get(i);
-                    GenPipelineAiVO r = aiModelService.model(dto.getSystemName(), dto.getSystemDesc(), m.getName());
+                    GenPipelineAiVO r = aiModelService.model(dto.getSystemName(), descForAi, m.getName());
                     if (r != null && r.getTables() != null && !r.getTables().isEmpty()) {
                         List<String> names = new ArrayList<>();
                         for (GenPipelineAiVO.TableModel t : r.getTables()) {
@@ -97,13 +124,24 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
             }
         }
 
-        vo.setTables(tables);
-        vo.setModuleTableNames(moduleTableNames);
-        vo.setTableCount(tables.size());
-        vo.setModuleCount(moduleTableNames.size());
+        // 服务端兜底：推荐结果内部去重 + 补表差集。
+        // 只靠 prompt 约束模型避让已有表不可靠（实测模型仍会整批返回已有表），所以在这里硬过滤。
+        List<String> excluded = new ArrayList<>();
+        List<GenPipelineAiVO.TableModel> kept = filterTables(tables, existing, excluded);
+        Map<String, List<String>> keptModules = pruneModules(moduleTableNames, namesOf(kept));
+
+        vo.setTables(kept);
+        vo.setModuleTableNames(keptModules);
+        vo.setExcludedTables(excluded);
+        vo.setExcludedCount(excluded.size());
+        vo.setTableCount(kept.size());
+        vo.setModuleCount(keptModules.size());
+        if (!excluded.isEmpty()) {
+            log.info("V9.5 已排除 {} 张重复表：{}", excluded.size(), excluded);
+        }
 
         // 关系视图（规则推导，不依赖 AI 输出 relations，零侵入 V9.4）
-        List<GenAiBuildPlanVO.TableRelation> relations = computeRelations(tables);
+        List<GenAiBuildPlanVO.TableRelation> relations = computeRelations(kept);
         vo.setRelations(relations);
         for (GenAiBuildPlanVO.TableRelation r : relations) {
             switch (r.getRole()) {
@@ -132,17 +170,38 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
         boolean micro = "micro".equals(dto.getDeploy());
         boolean build = "build".equals(dto.getMode());
 
+        // 补表：确认阶段再剔一次已有表（计划生成后库里可能又落了同表，编辑器里也可能被手工加回）
+        Set<String> existing = new LinkedHashSet<>();
+        if (isSupplement(dto.getScope())) {
+            if (dto.getProjectId() == null) {
+                throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                        "补表必须指定目标系统（projectId），否则无法跳过已有表");
+            }
+            existing.addAll(loadExistingTableNames(dto.getProjectId()));
+        }
+        List<String> skipped = new ArrayList<>();
+        List<GenPipelineAiVO.TableModel> keptTables =
+                filterTables(dto.getTables() == null ? List.of() : dto.getTables(), existing, skipped);
+        if (keptTables.isEmpty()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                    "没有可落库的表：全部与目标系统已有表重复，请调整表设计后再确认");
+        }
+        Map<String, List<String>> modMap = pruneModules(dto.getModuleTableNames(), namesOf(keptTables));
+
         GenAiBuildConfirmVO result = new GenAiBuildConfirmVO();
         result.setMode(dto.getMode());
         result.setDeploy(dto.getDeploy());
-        result.setTableCount(dto.getTables().size());
+        result.setProjectId(dto.getProjectId());
+        result.setSkippedTables(skipped);
+        result.setSkippedCount(skipped.size());
+        result.setTableCount(keptTables.size());
 
         if (!micro) {
             // 单体：一张表集合 → 一个流水线任务
-            GenPipelineCreateDTO createDto = toCreateDto(dto, dto.getSystemName(), dto.getDbName(), dto.getTables());
+            GenPipelineCreateDTO createDto = toCreateDto(dto, dto.getSystemName(), dto.getDbName(), keptTables);
             GenPipelineVOHolder holder = doCreate(createDto);
             if (build) {
-                doPrepare(holder.id, dto.getTables());
+                doPrepare(holder.id, keptTables);
             }
             result.setPipelineId(holder.id);
             result.setServiceCount(1);
@@ -150,15 +209,14 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
         }
 
         // 微服务：按模块拆分，逐服务 create（+ 可选 prepareDb），每服务自有 schema
-        Map<String, List<String>> modMap = dto.getModuleTableNames();
-        if (modMap == null || modMap.isEmpty()) {
+        if (modMap.isEmpty()) {
             throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
                     "微服务形态必须提供 moduleTableNames（模块→表名）以拆分服务");
         }
         int idx = 0;
         for (Map.Entry<String, List<String>> e : modMap.entrySet()) {
             String moduleName = e.getKey();
-            List<GenPipelineAiVO.TableModel> modTables = filterByNames(dto.getTables(), e.getValue());
+            List<GenPipelineAiVO.TableModel> modTables = filterByNames(keptTables, e.getValue());
             if (modTables.isEmpty()) {
                 continue;
             }
@@ -187,6 +245,107 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
     }
 
     // ---------------- 内部工具 ----------------
+
+    private static boolean isSupplement(String scope) {
+        return scope != null && "supplement".equalsIgnoreCase(scope.trim());
+    }
+
+    /** 目标系统已有表名（小写归一），只查 table_name 一列；逻辑删除由 @TableLogic 自动过滤 */
+    private Set<String> loadExistingTableNames(Long projectId) {
+        List<GenTable> rows = genTableMapper.selectList(new QueryWrapper<GenTable>()
+                .select("table_name")
+                .eq("project_id", projectId));
+        Set<String> names = new LinkedHashSet<>();
+        for (GenTable row : rows) {
+            String n = normalize(row.getTableName());
+            if (!n.isEmpty()) {
+                names.add(n);
+            }
+        }
+        return names;
+    }
+
+    /** 已有表清单追加进系统描述：先提示模型别重复，服务端再兜底过滤（模型不听话时也不放行） */
+    private static String withExistingHint(String desc, Set<String> existing) {
+        String base = desc == null ? "" : desc;
+        if (existing == null || existing.isEmpty()) {
+            return base;
+        }
+        return base + "\n\n【硬性要求】该系统已存在下列表，禁止重复推荐，只需补充缺失的业务表：\n"
+                + String.join("、", existing)
+                + "\n已有表需要扩展功能时，请新增关联表（如 xxx_extra / xxx_record），不要复用原表名。";
+    }
+
+    static String normalize(String tableName) {
+        return tableName == null ? "" : tableName.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * 去重 + 补表差集：同一次推荐里跨模块重名的表只留第一张，已有表直接剔除。
+     * 排除明细写进 {@code excluded}（形如 {@code asset_device（系统中已存在）}），供前端提示。
+     */
+    static List<GenPipelineAiVO.TableModel> filterTables(List<GenPipelineAiVO.TableModel> in,
+                                                         Set<String> existing, List<String> excluded) {
+        List<GenPipelineAiVO.TableModel> out = new ArrayList<>();
+        Set<String> seen = new LinkedHashSet<>();
+        Set<String> excludedDedup = new LinkedHashSet<>();
+        if (in != null) {
+            for (GenPipelineAiVO.TableModel t : in) {
+                String n = normalize(t.getTableName());
+                if (n.isEmpty()) {
+                    continue;
+                }
+                if (existing != null && existing.contains(n)) {
+                    excludedDedup.add(n + "（系统中已存在）");
+                    continue;
+                }
+                if (!seen.add(n)) {
+                    excludedDedup.add(n + "（推荐结果内重名）");
+                    continue;
+                }
+                out.add(t);
+            }
+        }
+        if (excluded != null) {
+            excluded.addAll(excludedDedup);
+        }
+        return out;
+    }
+
+    /** 模块 → 表名映射按保留表裁剪；整模块被剔空的直接丢弃，避免建出空服务工程 */
+    static Map<String, List<String>> pruneModules(Map<String, List<String>> mods, Set<String> kept) {
+        Map<String, List<String>> out = new LinkedHashMap<>();
+        if (mods == null || mods.isEmpty()) {
+            return out;
+        }
+        for (Map.Entry<String, List<String>> e : mods.entrySet()) {
+            List<String> names = new ArrayList<>();
+            if (e.getValue() != null) {
+                for (String n : e.getValue()) {
+                    if (kept.contains(normalize(n))) {
+                        names.add(n);
+                    }
+                }
+            }
+            if (!names.isEmpty()) {
+                out.put(e.getKey(), names);
+            }
+        }
+        return out;
+    }
+
+    static Set<String> namesOf(List<GenPipelineAiVO.TableModel> tables) {
+        Set<String> set = new LinkedHashSet<>();
+        if (tables != null) {
+            for (GenPipelineAiVO.TableModel t : tables) {
+                String n = normalize(t.getTableName());
+                if (!n.isEmpty()) {
+                    set.add(n);
+                }
+            }
+        }
+        return set;
+    }
 
     private GenPipelineVOHolder doCreate(GenPipelineCreateDTO createDto) {
         com.codegen.vo.GenPipelineVO vo = pipelineService.create(createDto);

@@ -19,6 +19,18 @@ import java.util.Map;
 @Schema(description = "V9.5 AI 推荐建表结果")
 public class GenAiBuildPlanVO {
 
+    @Schema(description = "补表目标系统 ID（scope=supplement 时回显）")
+    private Long projectId;
+
+    @Schema(description = "目标系统已有表数量（补表差集基数）")
+    private int existingTableCount;
+
+    @Schema(description = "被排除的表数量（已有表 + 推荐结果内重名）")
+    private int excludedCount;
+
+    @Schema(description = "被排除的表名及原因（供前端提示，不落库）")
+    private List<String> excludedTables = new ArrayList<>();
+
     @Schema(description = "候选表结构（扁平，前端可增删改）")
     private List<TableModel> tables = new ArrayList<>();
 
