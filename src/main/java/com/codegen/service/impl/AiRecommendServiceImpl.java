@@ -67,7 +67,7 @@ public class AiRecommendServiceImpl implements AiRecommendService {
             1. 输出纯 JSON，不要 markdown 代码块，不要任何解释文字。
             2. JSON 格式：{"tables":[{"tableName":"原样照抄","moduleName":"模块key","treeParentColumn":"","treeLabelColumn":"","masterTableName":"","relationType":"","columns":[{"columnName":"原样照抄","isQuery":0,"queryType":"EQ","isList":1,"isForm":1,"htmlType":"input","dictType":"","sort":1}]}]}
             3. tableName / columnName 必须原样照抄输入，不允许发明新表、新列。
-            4. htmlType 只能用：input,textarea,number,select,radio,switch,date,datetime,image,file,multiImage。queryType 只能用：EQ,LIKE,GE,LE。
+            4. htmlType 只能用：input,textarea,number,select,radio,switch,date,datetime,image,file,multiImage,richtext（正文/详情等长文本列建议用 richtext → 富文本编辑器）。queryType 只能用：EQ,LIKE,GE,LE。
             5. isQuery/isList/isForm 只能是 0 或 1。dictType 只能用我给你的字典编码，不确定就留空字符串。
             6. moduleName 用英文小写模块 key（如 stock、order、system），按业务相近程度归纳。
             7. treeParentColumn/treeLabelColumn 只对自关联树形表（如部门、分类）给值，其他留空字符串。

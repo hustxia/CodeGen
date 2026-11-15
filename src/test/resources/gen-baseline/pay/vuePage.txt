@@ -45,7 +45,6 @@
         header-cell-class-name="table-head-cell"
         empty-text="暂无数据"
       >
-        <el-table-column prop="id" label="ID" width="180" />
         <el-table-column prop="feeItem" label="缴费项目" min-width="140" show-overflow-tooltip />
         <el-table-column prop="amount" label="金额" width="110" align="right" show-overflow-tooltip />
         <el-table-column prop="payStatus" label="支付状态" width="110" align="right" show-overflow-tooltip />
@@ -100,10 +99,6 @@
          数据复用 /with-children 一次拉全，不逐 tab 发请求 -->
     <el-drawer title="缴费单详情" v-model="detailVisible" size="420px">
       <div class="detail-body">
-        <div class="detail-row">
-          <span class="detail-label">ID</span>
-          <span class="detail-value">{{ detail.id }}</span>
-        </div>
         <div class="detail-row">
           <span class="detail-label">缴费项目</span>
           <span class="detail-value">{{ detail.feeItem }}</span>

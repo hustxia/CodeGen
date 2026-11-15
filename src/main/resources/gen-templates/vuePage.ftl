@@ -79,7 +79,9 @@
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
 </#if>
       >
+<#if showIdColumn!false>
         <el-table-column prop="id" label="ID" width="<#if idColWidth gt 0>${idColWidth}<#else>70</#if>" />
+</#if>
 <#list listColumns as c>
 <#if c.isMultiImage && fileEnabled>
         <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> width="${c.colWidth}" align="center">
@@ -105,6 +107,9 @@
             <el-link v-if="row.${c.javaField}" type="primary" :href="row.${c.javaField}" target="_blank" icon="Document">{{ row.${c.javaField}.split('/').pop() }}</el-link>
           </template>
         </el-table-column>
+<#elseif c.isRichText>
+        <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="${c.colWidth}" show-overflow-tooltip
+          :formatter="(row) => richTextSummary(row.${c.javaField})" />
 <#elseif c.hasRef>
         <el-table-column prop="${c.javaField}" <#if i18nEnabled?? && i18nEnabled == 1>:label="$t('crud.${className}.field.${c.javaField}', '${c.commentLabel}')"<#else>label="${c.commentLabel}"</#if> min-width="${c.colWidth}" show-overflow-tooltip
           :formatter="(row) => refText('${c.javaField}', row.${c.javaField})" />
@@ -204,6 +209,8 @@
           <image-upload v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> />
 <#elseif c.isFile && fileEnabled>
           <file-upload v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> />
+<#elseif c.isRichText>
+          <rich-text-editor v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> />
 <#elseif c.hasRef>
           <el-select v-model="form.${c.javaField}"<#if c.hasLink> :disabled="link.disabled('${c.javaField}')"</#if> filterable remote clearable <#if i18nEnabled?? && i18nEnabled == 1>:placeholder="$t('crud.${className}.field.${c.javaField}.ph', '输入关键字搜索${c.commentLabel}')"<#else>placeholder="输入关键字搜索${c.commentLabel}"</#if>
             :remote-method="kw => searchRef('${c.javaField}', '${c.refTable}', '${c.refLabel}', kw)"
@@ -373,6 +380,7 @@
 <#else>
       <div class="detail-body">
 </#if>
+<#if showIdColumn!false>
 <#if hasChild>            <div class="detail-row">
               <span class="detail-label">ID</span>
               <span class="detail-value">{{ detail.id }}</span>
@@ -382,6 +390,7 @@
           <span class="detail-label">ID</span>
           <span class="detail-value">{{ detail.id }}</span>
         </div>
+</#if>
 </#if>
 <#list listColumns as c>
 <#if hasChild>          <div class="detail-row">
@@ -400,6 +409,10 @@
 <#elseif c.isFile && fileEnabled>
 <#if hasChild>            <span class="detail-value"><el-link v-if="detail.${c.javaField}" type="primary" :href="detail.${c.javaField}" target="_blank" icon="Document">{{ detail.${c.javaField}.split('/').pop() }}</el-link></span>
 <#else>          <span class="detail-value"><el-link v-if="detail.${c.javaField}" type="primary" :href="detail.${c.javaField}" target="_blank" icon="Document">{{ detail.${c.javaField}.split('/').pop() }}</el-link></span>
+</#if>
+<#elseif c.isRichText>
+<#if hasChild>            <span class="detail-value" v-html="richTextHtml(detail.${c.javaField})"></span>
+<#else>          <span class="detail-value" v-html="richTextHtml(detail.${c.javaField})"></span>
 </#if>
 <#elseif c.hasRef>
 <#if hasChild>            <span class="detail-value">{{ refText('${c.javaField}', detail.${c.javaField}) }}</span>
@@ -603,6 +616,10 @@ import FileUpload from '@/components/FileUpload.vue'
 import MultiImageUpload from '@/components/MultiImageUpload.vue'
 </#if>
 </#if>
+<#if hasRichText!false>
+// V9.5 §4.7 富文本列：页面里有 richtext 列才引入富文本编辑器
+import RichTextEditor from '@/components/RichTextEditor.vue'
+</#if>
 
 const defaultForm = () => ({
   id: undefined,
@@ -641,8 +658,8 @@ const grandTitleMap = {
 
 export default {
   name: '${className}',
-<#if hasUpload>
-  components: { ImageUpload, FileUpload<#if hasMultiImage>, MultiImageUpload</#if> },
+<#if hasUpload || hasRichText!false>
+  components: {<#if hasUpload> ImageUpload, FileUpload<#if hasMultiImage>, MultiImageUpload</#if></#if><#if hasRichText!false><#if hasUpload>,</#if> RichTextEditor</#if> },
 </#if>
   data() {
     return {
@@ -896,6 +913,35 @@ export default {
     firstImage(raw) {
       const list = this.imageListOf(raw)
       return list.length ? list[0] : ''
+    },
+</#if>
+<#if hasRichText!false>
+    // V9.5 §4.7 富文本：列表/摘要区取纯文本前 60 字（不渲染原始 HTML，防 XSS）；
+    // 详情页渲染已净化 HTML（剥掉 script/iframe/事件属性/javascript: 链接）。
+    richTextSummary(raw) {
+      const text = this.richTextPlain(raw)
+      return text.length > 60 ? text.slice(0, 60) + '…' : text
+    },
+    richTextPlain(raw) {
+      if (!raw) return ''
+      const div = document.createElement('div')
+      div.innerHTML = String(raw)
+      return (div.textContent || '').replace(/\s+/g, ' ').trim()
+    },
+    richTextHtml(raw) {
+      if (!raw) return ''
+      const box = document.createElement('div')
+      box.innerHTML = String(raw)
+      box.querySelectorAll('script,style,iframe,object,embed,link,meta').forEach(n => n.remove())
+      box.querySelectorAll('*').forEach(n => {
+        for (const a of Array.from(n.attributes)) {
+          const nm = a.name.toLowerCase()
+          if (nm.startsWith('on') || ((nm === 'href' || nm === 'src') && /^\s*javascript:/i.test(a.value))) {
+            n.removeAttribute(a.name)
+          }
+        }
+      })
+      return box.innerHTML
     },
 </#if>
 <#if vueHasDict>

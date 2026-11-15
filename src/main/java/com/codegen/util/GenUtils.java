@@ -239,6 +239,12 @@ public final class GenUtils {
         if (ct.startsWith("enum") || ct.startsWith("set")) {
             return "select";
         }
+        // V9.5 §4.7 富文本：DB text 家族 + 正文语义列名 → richtext。
+        // 只认 text/longtext/mediumtext 这类长文本列，避免把 varchar 短备注全变成富文本编辑器；
+        // 显式配 htmlType=richtext 时已落库，不会走到推断。
+        if ("String".equals(jt) && ct.contains("text") && looksLikeRichTextColumn(columnName)) {
+            return "richtext";
+        }
         // V6.6 文件能力包：varchar 列名带图片/文件语义 → 上传控件
         // （仅 String 列参与；用户在平台显式改回其他控件时 htmlType 已落库，不再走到推断）
         if ("String".equals(jt) && looksLikeMultiImageColumn(columnName)) {
@@ -255,6 +261,21 @@ public final class GenUtils {
             case "String" -> ct.contains("text") ? "textarea" : "input";
             default -> "input";
         };
+    }
+
+    /**
+     * V9.5 §4.7 富文本列语义：content/body/article/description/detail/remark/intro 等正文列名。
+     * 仅在 DB 类型为 text 家族时生效（见 inferHtmlType 的 ct.contains("text") 前置条件）。
+     */
+    private static boolean looksLikeRichTextColumn(String columnName) {
+        String n = columnName == null ? "" : columnName.toLowerCase(Locale.ROOT);
+        return n.equals("content") || n.equals("body") || n.equals("article")
+                || n.equals("intro") || n.equals("introduction") || n.equals("description")
+                || n.equals("detail") || n.equals("details") || n.equals("remark")
+                || n.equals("remarks") || n.equals("richtext") || n.equals("rich_text")
+                || n.endsWith("_content") || n.endsWith("_body") || n.endsWith("_article")
+                || n.endsWith("_intro") || n.endsWith("_description") || n.endsWith("_detail")
+                || n.endsWith("_remark") || n.endsWith("_html");
     }
 
     /**
