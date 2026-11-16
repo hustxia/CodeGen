@@ -251,8 +251,17 @@ public class GenCodeServiceImpl implements GenCodeService {
                 boolean wrote = results.subList(before, results.size()).stream()
                         .anyMatch(r -> "WRITTEN".equals(r.getStatus()) || "MERGED".equals(r.getStatus()));
                 if (wrote) {
-                    jdbcTemplate.update("UPDATE gen_table SET last_gen_time = NOW(), last_gen_by = ? WHERE id = ?",
-                            UserContext.getUserId(), table.getId());
+                    // V9.2 修正（核心风险 #1）：getUserId() 在定时任务/异步线程下可返回 null，
+                    // 直接写入 last_gen_by 会导致列被置 NULL（NOT NULL/FK 时直接 SQL 报错）。
+                    // 改为 null 安全：有登录态才更新审计人，否则只刷新生成时间。
+                    Long genBy = UserContext.getUserId();
+                    if (genBy != null) {
+                        jdbcTemplate.update("UPDATE gen_table SET last_gen_time = NOW(), last_gen_by = ? WHERE id = ?",
+                                genBy, table.getId());
+                    } else {
+                        jdbcTemplate.update("UPDATE gen_table SET last_gen_time = NOW() WHERE id = ?",
+                                table.getId());
+                    }
                     // V9.2 F-15：生成完成自动为这张表登记/刷新测试套件（指纹比对决定覆盖或保留手工用例）。
                     // 套件注册失败不应让代码写盘回滚，故只记录不抛出。
                     try {

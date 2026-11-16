@@ -19,6 +19,12 @@ public class GenPipelineAiModulesVO {
     @Schema(description = "业务模块清单")
     private List<Module> modules = new ArrayList<>();
 
+    @Schema(description = "模块与所输入系统的关联度偏低告警（true 时前端提示补充描述/重新生成）")
+    private boolean relevanceWarning = false;
+
+    @Schema(description = "关联度告警说明，relevanceWarning=false 时为空")
+    private String relevanceTip = "";
+
     @Data
     @Schema(description = "业务模块")
     public static class Module {
@@ -28,5 +34,8 @@ public class GenPipelineAiModulesVO {
 
         @Schema(description = "模块职责一句话说明", example = "入院登记、在院床位与出院结算")
         private String desc;
+
+        @Schema(description = "功能点清单（3-6 条）", example = "[\"入院登记\",\"床位管理\",\"出院结算\"]")
+        private List<String> functions = new ArrayList<>();
     }
 }

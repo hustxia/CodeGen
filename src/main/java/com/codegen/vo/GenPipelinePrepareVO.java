@@ -25,6 +25,18 @@ public class GenPipelinePrepareVO {
     @Schema(description = "建表数量")
     private int tableCount;
 
+    @Schema(description = "V9.4 自动导入生成配置的表数（来自 DDL 执行结果，不与建表数混用）")
+    private int importedTableCount;
+
+    @Schema(description = "V9.4 DDL 执行失败语句数（如实回报，前端不得硬编码 0）")
+    private int failedStatementCount;
+
+    @Schema(description = "V9.4 DDL 执行被拦截语句数")
+    private int blockedStatementCount;
+
+    @Schema(description = "V9.4 DDL 语句总数")
+    private int statementCount;
+
     @Schema(description = "lint 命中的缺列明细（空 = 全部合规）")
     private List<GenPipelineLintVO.Item> lintIssues = new ArrayList<>();
 
