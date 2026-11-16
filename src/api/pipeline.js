@@ -106,9 +106,19 @@ export function aiBuildPlan(data) {
   return request({ url: '/gen/ai-build/plan', method: 'post', data, timeout: 600000 })
 }
 
-// V9.7 行业模板清单（电商/ERP/CRM/CMS，秒级克隆表结构）
+// V9.9 行业模板清单（250+ 套，轻量：不含表明细）
 export function aiBuildTemplates() {
   return request({ url: '/gen/ai-build/templates', method: 'get' })
+}
+
+// V9.9 行业模板分类清单（供分组筛选）
+export function aiBuildTemplateCategories() {
+  return request({ url: '/gen/ai-build/template-categories', method: 'get' })
+}
+
+// V9.9 行业模板明细（含模块与表结构，按需加载）
+export function aiBuildTemplateDetail(key) {
+  return request({ url: `/gen/ai-build/templates/${encodeURIComponent(key)}`, method: 'get' })
 }
 
 // V9.7 行业模板建表：克隆模板表结构（不调 LLM），走与 AI 相同的收口/编辑/落库链路
