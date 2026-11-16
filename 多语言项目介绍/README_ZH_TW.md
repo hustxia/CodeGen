@@ -4,6 +4,8 @@
 
 ---
 
+> **多語言支援**：生成的系統內建整頁國際化，框架涵蓋 **206 種語言**並可自動回退；其中 **8 種為專業翻譯**（zh-CN、en-US、ja-JP、ko-KR、fr-FR、de-DE、es-ES、ar-SA），其餘語言統一回退到簡體中文。想貢獻翻譯？見 [`多語言項目介紹/CONTRIBUTING.md`](多語言項目介紹/CONTRIBUTING.md)。
+
 > 一個針對 **Spring Boot + Vue** 的多專案程式碼產生器：從資料庫表結構出發，產出**可編譯、可執行、具備選單與權限**的前後端業務程式碼，並處理寫入磁碟、備份、記帳與回滾的完整交付流程。
 
 GitHub: https://github.com/hustxia/CodeGen
