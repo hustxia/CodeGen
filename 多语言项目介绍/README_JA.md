@@ -10,13 +10,6 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **現行バージョン V9.3 · 生成成果物の自動テスト · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
-> **V9.2 release · テストセンターと検証ハブ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
-> **V9.1 · 保守性リファクタリング · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
-> **V9.0 · 生成物を Vue 3 + Element Plus + Vite に近代化；ランタイム検証済み（40/40 アサーション、vite build 成功、ar-SA RTL 含む 14 スクリーンショット）；ランタイムで発見した 3 件の欠陥を修正**
-> **V8.1** · 品質強化：オフライン契約ハーネス（9 モード OFF ゼロ diff）+ i18n-core 単体テスト + CI ゲート + README の正直な分割（フレームワーク 206 / 精訳 8）+ check-locale-keys.mjs
-> **V8.0** · 全ページ i18n：206 言語フレームワーク（8 言語は精訳）、OFF ゼロ diff 契約のデュアルトラック i18n
-
 ## 1. これは何か
 
 CodeGen は「テーブルを源とする」コード工場です。業務テーブルを取り込むだけ（DB 接続インポート、または DDL を貼り付け）で、フィールドと生成スイッチを設定し、「生成」ボタンを押せば、バックエンドの Entity／Mapper／Service／Controller／DTO／VO、フロントエンドの `api.js` と Vue ページ、メニューとルーティング、さらには A4 印刷ページや結合テストのスケルトンまでをすべて生成し、安全にターゲットプロジェクトへ書き込みます。
@@ -77,7 +70,7 @@ CodeGen は「テーブルを源とする」コード工場です。業務テー
 | 印刷伝票 | 「印刷」スイッチをチェックすると A4 印刷ページとルートを生成、ヘッダー＋明細テーブル対応 |
 | 一言でシステム構築 | 業務ドメインを記述するだけで、AI が DB・テーブル作成＋足場＋全量生成＋メニュー登録まで一気に実行 |
 
-> 上記シナリオはすべて実行可能なデモ（`demo_admin` プロジェクト）とスクリーンショットを用意しています。詳細は `../codegen-server/docs/典型场景操作指南-演示后台demo.md`（中国語）を参照してください。
+> 上記シナリオはすべて実行可能なデモ（`demo_admin` プロジェクト）とスクリーンショットを用意しています。詳細は `docs/典型场景操作指南-演示后台demo.md`（中国語）を参照してください。
 
 ---
 
@@ -230,11 +223,11 @@ npm run serve
 
 | ドキュメント | 内容 |
 | --- | --- |
-| `../codegen-server/docs/代码生成器-操作手册.md`（中国語） | デプロイ、5 分で開始、テーブル設定、一括取込、テンプレート管理、台帳、API 目録、パイプライン全フロー（実写スクリーンショット付き） |
-| `../codegen-server/docs/典型场景操作指南-演示后台demo.md`（中国語） | 6 テーブルで 5 種類の典型シナリオをカバー、実行可能デモと実跑スクリーンショット付き |
-| `项目介绍.md` | 本文と同源のプロジェクト紹介ドキュメント |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.3 の各バージョン計画と機能棚卸し |
-| `../codegen-web/README.md` | フロントエンド コンソールのクイック スタート参考 |
+| `docs/代码生成器-操作手册.md`（中国語） | デプロイ、5 分で開始、テーブル設定、一括取込、テンプレート管理、台帳、API 目録、パイプライン全フロー（実写スクリーンショット付き） |
+| `docs/典型场景操作指南-演示后台demo.md`（中国語） | 6 テーブルで 5 種類の典型シナリオをカバー、実行可能デモと実跑スクリーンショット付き |
+| `docs/项目介绍.md` | 本文と同源のプロジェクト紹介ドキュメント |
+| `docs/代码生成器-Vx.x-规划.md` | V3.1 → V7.3 の各バージョン計画と機能棚卸し |
+| `codegen-web/README.md` | フロントエンド コンソールのクイック スタート参考 |
 
 ---
 
@@ -267,23 +260,28 @@ npm run serve
 | V7.0 | AI ページ・メニュー レコメンド（preview／apply） | V7.0（94 行）、45f2670 |
 | V7.1 | シードデータ AI 強化（AI が意味を、ルールが構造を担当） | V7.1（42 行）、5ca6e72 |
 | V7.2 | パイプライン成功後の SQL デリバラブルを `db/` に書き出し | eebff88 |
-| **V7.3** | **デリバリーの信頼性：セルフチェック コンパイル产物テスト／統一 SQL デリバリー出口／テーブル単位 AI レコメンド** | **V7.3（138 行）, 696765b** |
+| **V7.3** | **デリバリーの信頼性：セルフチェック コンパイル产物テスト／統一 SQL デリバリー出口／テーブル単位 AI レコメンド** | **V7.3（138 行）** |
 | **V7.4** | 再現可能デリバリー：空 DB からでもデプロイ可能、全コミットで実行を保証 | c306e29 |
-| **V7.5** | **プロジェクト言語設定：206 言語リスト / デフォルト / 有効言語、生成物への lang・dir 注入** | 7a9afa0 + abac56d |
-| **V8.0** | **全ページ i18n：206 言語フレームワーク（8 言語は精訳）、OFF ゼロ diff 契約のデュアルトラック i18n** | 9e5dd57 → 7d57aea |
-| **V8.1** | **品質強化：オフライン契約ハーネス（9 モード OFF ゼロ diff）+ i18n-core 単体テスト + CI ゲート + README の正直な分割（フレームワーク 206 / 精訳 8）+ check-locale-keys.mjs** | 93a12d5 + e49330b |
-| **V9.0** | **生成物を Vue 3 + Element Plus + Vite に近代化；ランタイム検証済み（40/40 アサーション、vite build 成功、ar-SA RTL 含む 14 スクリーンショット）；ランタイムで発見した 3 件の欠陥を修正** | 93a12d5 + e49330b  |
+| **V7.5** | プロジェクト言語設定：206 言語リスト / デフォルト / 有効言語、生成物への lang・dir 注入 | 7a9afa0 + abac56d |
+| **V8.0** | 全ページ i18n：206 言語フレームワーク（8 言語は精訳）、OFF ゼロ diff 契約のデュアルトラック i18n | 9e5dd57 → 7d57aea |
+| **V8.1** | 品質強化：オフライン契約ハーネス（9 モード OFF ゼロ diff）+ i18n-core 単体テスト + CI ゲート + README の正直な分割（フレームワーク 206 / 精訳 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | 生成物を Vue 3 + Element Plus + Vite に近代化；ランタイム検証済み（40/40 アサーション、vite build 成功、ar-SA RTL 含む 14 スクリーンショット）；ランタイムで発見した 3 件の欠陥を修正 | 93a12d5 + e49330b  |
 | **V9.1** | **保守性リファクタリング · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **テストセンターと検証ハブ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
-| **V9.3** | **生成成果物の自動テスト · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **現行バージョン** |
+| **V9.2** | **テストセンターと検証ハブ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **現行バージョン** |
+| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
+| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
+| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
+| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
+| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
 
 ---
 
-> **V6.10 プラットフォーム可観測性**：Actuator ＋ Micrometer を統合し、5 秒ごとにサンプリングしてインメモリ リング バッファへ書き込み（30 分ウィンドウを保持）、組込み「システム モニター」ページを新設 — バックエンド `/monitor/*` 集約 API ＋ フロントエンド ECharts パネル。エンドポイントはホワイトリストで `health/info/metrics` のみ許可、`/actuator/health` は token 不要、`metrics` 等は要認証。`env/beans/heapdump/threaddump/loggers` は一切公開しません。サンプリング ウィンドウはプロセス内のみ、再起動で失われ、複数インスタンス間で共有されません。詳細は `../codegen-server/docs/可观测性说明.md`（中国語）を参照。
+> **V6.10 プラットフォーム可観測性**：Actuator ＋ Micrometer を統合し、5 秒ごとにサンプリングしてインメモリ リング バッファへ書き込み（30 分ウィンドウを保持）、組込み「システム モニター」ページを新設 — バックエンド `/monitor/*` 集約 API ＋ フロントエンド ECharts パネル。エンドポイントはホワイトリストで `health/info/metrics` のみ許可、`/actuator/health` は token 不要、`metrics` 等は要認証。`env/beans/heapdump/threaddump/loggers` は一切公開しません。サンプリング ウィンドウはプロセス内のみ、再起動で失われ、複数インスタンス間で共有されません。詳細は `docs/可观测性说明.md`（中国語）を参照。
 
 ## 13. プロジェクトの現状
 
-- 現在の計画バージョン ラインは **V9.3** に達しており、能力は継続的に反復中（AI モデリング、シードデータ強化、能力パック体系など）。
+- 現在の計画バージョン ラインは **V9.2** に達しており、能力は継続的に反復中（AI モデリング、シードデータ強化、能力パック体系など）。
 - 付属デモ プロジェクト `demo_admin`（バックエンド 8140／フロントエンド 9040）が、ツリー／CRUD／マスター・ディテール／参照専用／印刷の全シナリオをカバーし、単独実行で検証可能。
 - 両リポジトリは Gitee でホスト：`https://gitee.com/hustxiayuhong/CodeGen.git`
 
@@ -296,3 +294,39 @@ npm run serve
 - **技術サポート**：メールは**中国語**でお送りください。問題の内容、実行環境（JDK / MySQL / バージョン）、再現手順を添えてください
 
 > いただいたメールはすべて拝見し、必ず返信します。不具合報告・機能要望・協業のご相談を歓迎します。
+
+---
+
+## 15. 類似ツールとの比較
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.

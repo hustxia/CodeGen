@@ -8,13 +8,6 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **目前版本 V9.3 · 生成產物自動化測試 · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
-> **V9.2 release · 測試中心與驗證中心：把介面/UI 用例資產（7 張表）與平台驗證資產（S1–S9 套件、三層落庫、統一 JSON 摘要）合併為一個版本；產物零差異，373/373 單測，206/206 語言鍵**
-> **V9.1 · 可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9**
-> **V9.0 · 生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷**
-> **V8.1** · 品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs
-> **V8.0** · 全頁面國際化：206 語言框架（8 種精譯），雙軌制 i18n、OFF 逐位元組零 diff 契約
-
 ## 1. 這是什麼
 
 CodeGen 是一個「以表驅動」的程式碼工廠。帶入你的業務表（透過資料庫匯入或貼上 DDL），設定欄位與產生開關，然後點選「產生」——它會產出後端的 Entity/Mapper/Service/Controller/DTO/VO、前端的 `api.js` 與 Vue 頁面、選單與路由，甚至 A4 列印頁面與整合測試骨架，並安全地寫入你的目標專案。
@@ -75,7 +68,7 @@ Table intake (DB import / DDL)
 | 列印文件 | 勾選「列印」開關產出 A4 列印頁面與路由，含表頭 + 明細表 |
 | 一句話建系統 | 描述業務領域——AI 一次性建立資料庫與資料表 + 腳手架 + 完整產生 + 選單註冊 |
 
-> 所有場景皆有可執行示範（`demo_admin` 專案）與螢幕截圖——詳見 `../codegen-server/docs/典型场景操作指南-演示后台demo.md`（中文）。
+> 所有場景皆有可執行示範（`demo_admin` 專案）與螢幕截圖——詳見 `docs/典型场景操作指南-演示后台demo.md`（中文）。
 
 ---
 
@@ -228,11 +221,11 @@ npm run serve
 
 | 文件 | 內容 |
 | --- | --- |
-| `../codegen-server/docs/代码生成器-操作手册.md` (中文) | 部署、5 分鐘上手、表設定、批次匯入、模板管理、記帳、API 目錄、完整管線（含截圖） |
-| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (中文) | 6 張表涵蓋 5 個典型場景，含可執行示範與實際執行截圖 |
-| `项目介绍.md` | 專案介紹文件，與本文件同源 |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.3 的版本規劃與功能清單 |
-| `../codegen-web/README.md` | 前端控制台快速上手參考 |
+| `docs/代码生成器-操作手册.md` (中文) | 部署、5 分鐘上手、表設定、批次匯入、模板管理、記帳、API 目錄、完整管線（含截圖） |
+| `docs/典型场景操作指南-演示后台demo.md` (中文) | 6 張表涵蓋 5 個典型場景，含可執行示範與實際執行截圖 |
+| `docs/项目介绍.md` | 專案介紹文件，與本文件同源 |
+| `docs/代码生成器-Vx.x-规划.md` | V3.1 → V7.3 的版本規劃與功能清單 |
+| `codegen-web/README.md` | 前端控制台快速上手參考 |
 
 ---
 
@@ -265,23 +258,28 @@ npm run serve
 | V7.0 | AI 頁面與選單推薦（預覽 / 套用） | V7.0（94 行），45f2670 |
 | V7.1 | 種子資料 AI 增強（AI 負責語意，規則負責結構） | V7.1（42 行），5ca6e72 |
 | V7.2 | 管線成功後將 SQL 交付物寫入 `db/` | eebff88 |
-| **V7.3** | **交付可信度：自檢已編譯產出物測試 / 統一 SQL 交付出口 / 逐表 AI 推薦** | **V7.3（138 行）, 696765b** |
+| **V7.3** | **交付可信度：自檢已編譯產出物測試 / 統一 SQL 交付出口 / 逐表 AI 推薦** | **V7.3（138 行）** |
 | **V7.4** | 可重複交付：可從空資料庫部署，每次提交保證可執行 | c306e29 |
-| **V7.5** | **專案語言設定：206 語言清單 / 預設語言 / 啟用語言，生成物 lang 與 dir 注入** | 7a9afa0 + abac56d |
-| **V8.0** | **全頁面國際化：206 語言框架（8 種精譯），雙軌制 i18n、OFF 逐位元組零 diff 契約** | 9e5dd57 → 7d57aea |
-| **V8.1** | **品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs** | 93a12d5 + e49330b |
-| **V9.0** | **生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷** | 93a12d5 + e49330b  |
+| **V7.5** | 專案語言設定：206 語言清單 / 預設語言 / 啟用語言，生成物 lang 與 dir 注入 | 7a9afa0 + abac56d |
+| **V8.0** | 全頁面國際化：206 語言框架（8 種精譯），雙軌制 i18n、OFF 逐位元組零 diff 契約 | 9e5dd57 → 7d57aea |
+| **V8.1** | 品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | 生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷 | 93a12d5 + e49330b  |
 | **V9.1** | **可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **測試中心與驗證中心：把介面/UI 用例資產（7 張表）與平台驗證資產（S1–S9 套件、三層落庫、統一 JSON 摘要）合併為一個版本；產物零差異，373/373 單測，206/206 語言鍵** | V9.2 release  |
-| **V9.3** | **生成產物自動化測試 · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **目前版本** |
+| **V9.2** | **測試中心與驗證中心：把介面/UI 用例資產（7 張表）與平台驗證資產（S1–S9 套件、三層落庫、統一 JSON 摘要）合併為一個版本；產物零差異，373/373 單測，206/206 語言鍵** | V9.2 release, **目前版本** |
+| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
+| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
+| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
+| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
+| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
 
 ---
 
-> **V6.10 平台可觀測性**：整合 Actuator + Micrometer，每 5 秒取樣至記憶體環形緩衝區（30 分鐘視窗），並新增內嵌「系統監控」頁面——後端 `/monitor/*` 聚合 API + 前端 ECharts 面板。僅開放 `health/info/metrics` 端點；`/actuator/health` 免令牌，而 `metrics` 等需驗證；`env/beans/heapdump/threaddump/loggers` 永不暴露。取樣視窗僅限單一程序，重啟即遺失，且不跨實例共享。詳見 `../codegen-server/docs/可观测性说明.md`（中文）。
+> **V6.10 平台可觀測性**：整合 Actuator + Micrometer，每 5 秒取樣至記憶體環形緩衝區（30 分鐘視窗），並新增內嵌「系統監控」頁面——後端 `/monitor/*` 聚合 API + 前端 ECharts 面板。僅開放 `health/info/metrics` 端點；`/actuator/health` 免令牌，而 `metrics` 等需驗證；`env/beans/heapdump/threaddump/loggers` 永不暴露。取樣視窗僅限單一程序，重啟即遺失，且不跨實例共享。詳見 `docs/可观测性说明.md`（中文）。
 
 ## 13. 專案狀態
 
-- 目前規劃的版本線已抵達 **V9.3**（能力持續迭代：AI 建模、種子資料增強、能力包系統等）。
+- 目前規劃的版本線已抵達 **V9.2**（能力持續迭代：AI 建模、種子資料增強、能力包系統等）。
 - 配套示範專案 `demo_admin`（後端 8140 / 前端 9040）涵蓋樹狀 / CRUD / 主從 / 唯讀 / 列印場景，可獨立執行驗證。
 - 兩個倉庫皆託管於 Gitee：`https://gitee.com/hustxiayuhong/CodeGen.git`
 
@@ -294,3 +292,39 @@ npm run serve
 - **技術支援**：請以**中文**撰寫電子郵件，內容包含問題描述、執行環境（JDK / MySQL / 版本）與重現步驟
 
 > 我閱讀並回覆每一封郵件。錯誤回報、功能建議與合作洽詢皆歡迎。
+
+---
+
+## 十五、同類產品比較
+
+CodeGen 既不是片段程式碼產生器，也不是全堆疊低程式碼平台——它處在一個非常具體的生態位。下面是它和 Spring Boot / Java 生態裡常見工具的定位對比。
+
+### vs. 片段產生輔助工具（JPA Buddy · MapStruct · Spring Initializr）
+
+**JPA Buddy**、**MapStruct**、**Spring Initializr** 這類工具擅長腳手架和小範圍開發提效，但產物都是**片段**：一個實體類、一個 Mapper 介面、幾份 DTO 轉換 helper，或者一個空專案殼。CRUD 頁面、選單、路由、權限碼仍然要你手動接；表欄位一改，重新手工改一輪。
+
+CodeGen 產出的是**零修改可跑的完整垂直切片**：後端（Entity → Mapper → Service → Controller → DTO/VO）+ 前端（`api.js` + Vue 頁面 + A4 列印頁）+ 選單 + 路由註冊。貼上 DDL、點一下產生，功能直接上線。
+
+### vs. 腳手架框架（JeecgBoot · RuoYi · dlow）
+
+**JeecgBoot**、**RuoYi** 這類框架是先給你一套完整的後台管理基座，再在上面掛一個程式碼產生器。你必須 **fork 他們的腳手架**，承擔他們的約定、認證層、選單 schema、檔案佈局，以及——關鍵——他們的版本升級路徑。產生器**繼承了父框架的偏見**（比如動態資料來源約定、Shiro/Spring Security 選擇、前端技術鎖死）。
+
+CodeGen 走的是另一條路：**絕不碰觸目標工程的基礎設施**。它假設你的專案已經具備 `Result`、`BaseEntity`、`PageQuery`、`PaginationInnerInterceptor`、以及一個能傳回 `{list, total}` 的 `utils/request.js`。它只做一件事——在你現有的目錄佈局裡**乾淨地丟進業務程式碼**，和你已經選好的認證堆疊、UI 框架、專案約定並存。不 fork。不劫持約定。乾淨、精準。
+
+### vs. 腳手架內建產生器（雲宅 · JeecgBoot 內建 · RuoYi 內建）
+
+不少腳手架現在都內建了程式碼產生器，跑出來產物是能用的——但品質護欄普遍偏弱：沒有真實編譯校驗、沒有結構化契約測試、沒有模板版本管理、沒有回滾、沒有變更台帳。一旦模板改動生成了壞掉的產物，你只能到執行時才發現。
+
+CodeGen 的**品質護欄鏈**是它和這些內建產生器最本質的差異：
+
+| 環節 | 它實際做了什麼 |
+|---|---|
+| 預覽與差異 | 先在記憶體產生，逐檔案渲染對磁碟目前狀態的 diff，確認後才寫盤 |
+| 寫盤帶備份 | 每個被改動的檔案在覆蓋前都會拷貝到 `.gen-backup/<批次號>/` |
+| 標記區合併 | `// gen:begin-end` 之間的手寫程式碼原樣保留，只替換生成區 |
+| 記憶體自檢驗證 | 對所有產生的後端產物跑一次**真實 `javac` 編譯**（不是正則式 lint）——沒編譯過的檔案不會落盤 |
+| 獨立 classpath 編譯 | 產生的整合測試用目標工程自己的 classpath 再編譯一次——缺什麼依賴寫盤時報什麼，不是執行時才炸 |
+| 四狀態台帳 | `gen_output` 把每個檔案記為 **created / merged / skipped / failed**，附帶位元組數、MD5、備份路徑 |
+| 批次級回滾 | 任意一批產生可一鍵回滾，恢復到那一批執行前的精確狀態 |
+
+預覽 → 備份 → 合併 → javac 自檢 → classpath 編譯 → 台帳 → 回滾，這**七環品質護欄**——據作者所知，**市面上主流腳手架的內建產生器沒有一家是完整具備的**。

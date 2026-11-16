@@ -8,13 +8,6 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **നിലവിലെ പതിപ്പ് V9.3 · സൃഷ്ടിച്ച ആർട്ടിഫാക്റ്റുകളുടെ ഓട്ടോമേറ്റഡ് പരിശോധന · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
-> **V9.2 release · പരിശോധനാ കേന്ദ്രം & സ്ഥിരീകരണ കേന്ദ്രം · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
-> **V9.1 · പരിപാലനക്ഷമത പുനഃക്രമീകരണം · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
-> **V9.0 · ജനറേറ്റ് ചെയ്ത ആർട്ടിഫാക്ടുകൾ Vue 3 + Element Plus + Vite ലേക്ക് ആധുനികവൽക്കരിച്ചു; റൺടൈമിൽ സ്ഥിരീകരിച്ചു (40/40 അസെർഷനുകൾ, വിജയകരമായ vite build, ar-SA RTL ഉൾപ്പെടെ 14 സ്ക്രീൻഷോട്ടുകൾ); 3 റൺടൈം വൈകല്യങ്ങൾ ശരിയാക്കി**
-> **V8.1** · ഗുണനിലവാര ശക്തിപ്പെടുത്തൽ: ഓഫ്‌ലൈൻ കരാർ ഹാർനസ് (9 മോഡുകൾ, OFF സീറോ-ഡിഫ്) + i18n-core യൂണിറ്റ് ടെസ്റ്റുകൾ + CI ഗേറ്റ് + സത്യസന്ധമായ README വിഭജനം (ഫ്രെയിംവർക്ക് 206 / വിവർത്തനം 8) + check-locale-keys.mjs
-> **V8.0** · പൂർണ്ണ പേജ് i18n: 206 ഭാഷാ ഫ്രെയിംവർക്ക് (8 പ്രൊഫഷണൽ വിവർത്തനം), OFF സീറോ-ഡിഫ് കരാറുള്ള ഇരട്ട-ട്രാക്ക് i18n
-
 ## 1. ഇതെന്താണ്
 
 CodeGen ഒരു 'ടേബിൾ-ഡ്രൈവൻ' കോഡ് ഫാക്ടറിയാണ്. നിങ്ങളുടെ ബിസിനസ് ടേബിളുകൾ (ഡാറ്റാബേസ് ഇംപോർട്ട് വഴിയോ DDL പേസ്റ്റ് ചെയ്തോ) കൊണ്ടുവരിക, ഫീൽഡുകളും ജനറേഷൻ സ്വിച്ചുകളും ക്രമീകരിക്കുക, തുടർന്ന് 'Generate' ക്ലിക്ക് ചെയ്യുക — ഇത് ബാക്ക്-എൻഡ് Entity/Mapper/Service/Controller/DTO/VO, ഫ്രണ്ട്-എൻഡ് `api.js` എന്നിവയും Vue പേജുകൾ, മെനുകൾ, റൂട്ടുകൾ, പോലും A4 പ്രിന്റ് പേജുകളും ഇൻറിഗ്രേഷൻ-ടെസ്റ്റ് സ്കെലിറ്റണുകളും ഉത്പാദിപ്പിക്കുകയും നിങ്ങളുടെ ടാർഗെറ്റ് പ്രോജക്റ്റിലേക്ക് സുരക്ഷിതമായി എഴുതുകയും ചെയ്യുന്നു.
@@ -77,7 +70,7 @@ Table intake (DB import / DDL)
 | പ്രിന്റ് ഡോക്യുമെന്റുകൾ | 'print' സ്വിച്ച് ടിക്ക് ചെയ്യുക ഒരു A4 പ്രിന്റ് പേജും റൂട്ടും, ഹെഡർ + ഡീറ്റെയിൽ ടേബിളോടു കൂടി ഉത്പാദിപ്പിക്കാൻ |
 | ഒരു വാചകത്തിൽ സിസ്റ്റം കെട്ടിപ്പടുക്കൽ | ബിസിനസ് ഡൊമെയ്ൻ വിവരിക്കുക — AI ഒരേ ഊഴിൽ DB & ടേബിളുകൾ + scaffold + പൂർണ്ണ ജനറേഷൻ + മെനു രജിസ്ട്രേഷൻ സൃഷ്ടിക്കുന്നു |
 
-> എല്ലാ സാഹചര്യങ്ങൾക്കും റൺ ചെയ്യാവുന്ന demos (`demo_admin` പ്രോജക്റ്റ്) സ്ക്രീൻഷോട്ടുകളോടു കൂടി ഉണ്ട് — `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (ചൈനീസ്) കാണുക.
+> എല്ലാ സാഹചര്യങ്ങൾക്കും റൺ ചെയ്യാവുന്ന demos (`demo_admin` പ്രോജക്റ്റ്) സ്ക്രീൻഷോട്ടുകളോടു കൂടി ഉണ്ട് — `docs/典型场景操作指南-演示后台demo.md` (ചൈനീസ്) കാണുക.
 
 ---
 
@@ -230,11 +223,11 @@ npm run serve
 
 | ഡോക്യുമെന്റ് | ഉള്ളടക്കം |
 | --- | --- |
-| `../codegen-server/docs/代码生成器-操作手册.md` (ചൈനീസ്) | ഡിപ്ലോയ്മെന്റ്, 5-മിനിറ്റ് സ്റ്റാർട്ട്, ടേബിൾ കോൺഫിഗ്, ബാച്ച് ഇൻടേക്ക്, ടെംപ്ലേറ്റ് മാനേജ്മെന്റ്, ലെഡ്ജർ, API കാറ്റലോഗ്, പൂർണ്ണ പൈപ്പ്ലൈൻ (സ്ക്രീൻഷോട്ടുകളോടു കൂടി) |
-| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (ചൈനീസ്) | 5 സാധാരണ സാഹചര്യങ്ങൾ ഉൾക്കൊള്ളുന്ന 6 ടേബിളുകൾ, റൺ ചെയ്യാവുന്ന demo ഉം യഥാർത്ഥ-റൺ സ്ക്രീൻഷോട്ടുകളും ഉള്ളത് |
-| `项目介绍.md` | പ്രോജക്റ്റ് ആമുഖ ഡോക്യുമെന്റ്, ഈ ഫയലിന് തുല്യമായ സോഴ്സ് |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.3 വരെയുള്ള പതിപ്പ് പ്ലാനുകളും ഫീച്ചർ ഇൻവെന്ററികളും |
-| `../codegen-web/README.md` | ഫ്രണ്ട്-എൻഡ് കൺസോൾ ക്വിക്ക്-സ്റ്റാർട്ട് റഫറൻസ് |
+| `docs/代码生成器-操作手册.md` (ചൈനീസ്) | ഡിപ്ലോയ്മെന്റ്, 5-മിനിറ്റ് സ്റ്റാർട്ട്, ടേബിൾ കോൺഫിഗ്, ബാച്ച് ഇൻടേക്ക്, ടെംപ്ലേറ്റ് മാനേജ്മെന്റ്, ലെഡ്ജർ, API കാറ്റലോഗ്, പൂർണ്ണ പൈപ്പ്ലൈൻ (സ്ക്രീൻഷോട്ടുകളോടു കൂടി) |
+| `docs/典型场景操作指南-演示后台demo.md` (ചൈനീസ്) | 5 സാധാരണ സാഹചര്യങ്ങൾ ഉൾക്കൊള്ളുന്ന 6 ടേബിളുകൾ, റൺ ചെയ്യാവുന്ന demo ഉം യഥാർത്ഥ-റൺ സ്ക്രീൻഷോട്ടുകളും ഉള്ളത് |
+| `docs/项目介绍.md` | പ്രോജക്റ്റ് ആമുഖ ഡോക്യുമെന്റ്, ഈ ഫയലിന് തുല്യമായ സോഴ്സ് |
+| `docs/代码生成器-Vx.x-规划.md` | V3.1 → V7.3 വരെയുള്ള പതിപ്പ് പ്ലാനുകളും ഫീച്ചർ ഇൻവെന്ററികളും |
+| `codegen-web/README.md` | ഫ്രണ്ട്-എൻഡ് കൺസോൾ ക്വിക്ക്-സ്റ്റാർട്ട് റഫറൻസ് |
 
 ---
 
@@ -267,23 +260,28 @@ npm run serve
 | V7.0 | AI പേജ് & മെനു ശുപാർശകൾ (പ്രിവ്യൂ / അപ്ലൈ) | V7.0 (94 ലൈനുകൾ), 45f2670 |
 | V7.1 | Seed-data AI വർദ്ധനവ് (AI സെമാന്റിക്സ് ഉടമസ്ഥതയെടുക്കുന്നു, റൂളുകൾ സ്ട്രക്ചർ ഉടമസ്ഥതയെടുക്കുന്നു) | V7.1 (42 ലൈനുകൾ), 5ca6e72 |
 | V7.2 | വിജയകരമായ പൈപ്പ്ലൈനിന് ശേഷം `db/`-ലേക്ക് എഴുതിയ SQL ഡെലിവറബിളുകൾ | eebff88 |
-| **V7.3** | **ഡെലിവറി വിശ്വാസ്യത: സെൽഫ്-ചെക്ക് കംപൈൽ ചെയ്ത artifact ടെസ്റ്റുകൾ / യൂണിഫൈഡ് SQL ഡെലിവറി ഔട്ട്‌ലെറ്റ് / ടേബിൾ-തിരിഞ്ഞുള്ള AI ശുപാർശകൾ** | **V7.3 (138 ലൈനുകൾ), 696765b** |
+| **V7.3** | **ഡെലിവറി വിശ്വാസ്യത: സെൽഫ്-ചെക്ക് കംപൈൽ ചെയ്ത artifact ടെസ്റ്റുകൾ / യൂണിഫൈഡ് SQL ഡെലിവറി ഔട്ട്‌ലെറ്റ് / ടേബിൾ-തിരിഞ്ഞുള്ള AI ശുപാർശകൾ** | **V7.3 (138 ലൈനുകൾ)** |
 | **V7.4** | റിപ്പീറ്റബിൾ ഡെലിവറി: ഒരു ശൂന്യ ഡാറ്റാബേസിൽ നിന്ന് ഡിപ്ലോയ് ചെയ്യാവുന്ന, ഓരോ കമ്മിറ്റും റൺ ചെയ്യാവുന്നതായി ഗ്യാരണ്ടി ചെയ്യപ്പെട്ടിട്ടുള്ളത് | c306e29 |
-| **V7.5** | **പ്രോജക്റ്റ് ഭാഷ കോൺഫിഗറേഷൻ: 206 ഭാഷകളുടെ പട്ടിക / സ്ഥിര ഭാഷ / പ്രവർത്തനക്ഷമമാക്കിയ ഭാഷകൾ, ജനറേറ്റ് ചെയ്ത കോഡിൽ lang & dir ഇൻജക്ഷൻ** | 7a9afa0 + abac56d |
-| **V8.0** | **പൂർണ്ണ പേജ് i18n: 206 ഭാഷാ ഫ്രെയിംവർക്ക് (8 പ്രൊഫഷണൽ വിവർത്തനം), OFF സീറോ-ഡിഫ് കരാറുള്ള ഇരട്ട-ട്രാക്ക് i18n** | 9e5dd57 → 7d57aea |
-| **V8.1** | **ഗുണനിലവാര ശക്തിപ്പെടുത്തൽ: ഓഫ്‌ലൈൻ കരാർ ഹാർനസ് (9 മോഡുകൾ, OFF സീറോ-ഡിഫ്) + i18n-core യൂണിറ്റ് ടെസ്റ്റുകൾ + CI ഗേറ്റ് + സത്യസന്ധമായ README വിഭജനം (ഫ്രെയിംവർക്ക് 206 / വിവർത്തനം 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
-| **V9.0** | **ജനറേറ്റ് ചെയ്ത ആർട്ടിഫാക്ടുകൾ Vue 3 + Element Plus + Vite ലേക്ക് ആധുനികവൽക്കരിച്ചു; റൺടൈമിൽ സ്ഥിരീകരിച്ചു (40/40 അസെർഷനുകൾ, വിജയകരമായ vite build, ar-SA RTL ഉൾപ്പെടെ 14 സ്ക്രീൻഷോട്ടുകൾ); 3 റൺടൈം വൈകല്യങ്ങൾ ശരിയാക്കി** | 93a12d5 + e49330b  |
+| **V7.5** | പ്രോജക്റ്റ് ഭാഷ കോൺഫിഗറേഷൻ: 206 ഭാഷകളുടെ പട്ടിക / സ്ഥിര ഭാഷ / പ്രവർത്തനക്ഷമമാക്കിയ ഭാഷകൾ, ജനറേറ്റ് ചെയ്ത കോഡിൽ lang & dir ഇൻജക്ഷൻ | 7a9afa0 + abac56d |
+| **V8.0** | പൂർണ്ണ പേജ് i18n: 206 ഭാഷാ ഫ്രെയിംവർക്ക് (8 പ്രൊഫഷണൽ വിവർത്തനം), OFF സീറോ-ഡിഫ് കരാറുള്ള ഇരട്ട-ട്രാക്ക് i18n | 9e5dd57 → 7d57aea |
+| **V8.1** | ഗുണനിലവാര ശക്തിപ്പെടുത്തൽ: ഓഫ്‌ലൈൻ കരാർ ഹാർനസ് (9 മോഡുകൾ, OFF സീറോ-ഡിഫ്) + i18n-core യൂണിറ്റ് ടെസ്റ്റുകൾ + CI ഗേറ്റ് + സത്യസന്ധമായ README വിഭജനം (ഫ്രെയിംവർക്ക് 206 / വിവർത്തനം 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | ജനറേറ്റ് ചെയ്ത ആർട്ടിഫാക്ടുകൾ Vue 3 + Element Plus + Vite ലേക്ക് ആധുനികവൽക്കരിച്ചു; റൺടൈമിൽ സ്ഥിരീകരിച്ചു (40/40 അസെർഷനുകൾ, വിജയകരമായ vite build, ar-SA RTL ഉൾപ്പെടെ 14 സ്ക്രീൻഷോട്ടുകൾ); 3 റൺടൈം വൈകല്യങ്ങൾ ശരിയാക്കി | 93a12d5 + e49330b  |
 | **V9.1** | **പരിപാലനക്ഷമത പുനഃക്രമീകരണം · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **പരിശോധനാ കേന്ദ്രം & സ്ഥിരീകരണ കേന്ദ്രം · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
-| **V9.3** | **സൃഷ്ടിച്ച ആർട്ടിഫാക്റ്റുകളുടെ ഓട്ടോമേറ്റഡ് പരിശോധന · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **നിലവിലെ പതിപ്പ്** |
+| **V9.2** | **പരിശോധനാ കേന്ദ്രം & സ്ഥിരീകരണ കേന്ദ്രം · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **നിലവിലെ പതിപ്പ്** |
+| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
+| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
+| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
+| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
+| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
 
 ---
 
-> **V6.10 പ്ലാറ്റ്ഫോം ഒബ്സർവബിലിറ്റി**: Actuator + Micrometer ഇൻറഗ്രേറ്റ് ചെയ്യുന്നു, ഇൻ-മെമ്മറി റിംഗ് ബഫറിലേക്ക് (30-മിനിറ്റ് വിൻഡോ) ഓരോ 5 സെക്കൻഡിലും സാമ്പിൾ ചെയ്യൽ, പുതിയ എംബഡഡ് "System Monitor" പേജ് കൂടാതെ — ബാക്ക്-എൻഡ് `/monitor/*` അഗ്രിഗേഷൻ APIs + ഫ്രണ്ട്-എൻഡ് ECharts പാനലുകൾ. `health/info/metrics` എൻഡ്‌പോയിന്റുകൾ മാത്രമേ whitelist-ൽ ആകൂ; `/actuator/health` ടോക്കൺ-ഫ്രീ ആണ്, `metrics` മുതലായവ auth ആവശ്യപ്പെടുന്നു; `env/beans/heapdump/threaddump/loggers` ഒരിക്കലും എക്സ്പോസ് ചെയ്യപ്പെടില്ല. സാമ്പിൾ വിൻഡോ പെർ-പ്രോസസ്സ് മാത്രം, റീസ്റ്റാർട്ടിൽ നഷ്ടപ്പെടുന്നു, ഇൻസ്റ്റൻസുകൾക്കിടയിൽ പങ്കിടുന്നില്ല. വിശദാംശങ്ങൾക്ക് `../codegen-server/docs/可观测性说明.md` (ചൈനീസ്) കാണുക.
+> **V6.10 പ്ലാറ്റ്ഫോം ഒബ്സർവബിലിറ്റി**: Actuator + Micrometer ഇൻറഗ്രേറ്റ് ചെയ്യുന്നു, ഇൻ-മെമ്മറി റിംഗ് ബഫറിലേക്ക് (30-മിനിറ്റ് വിൻഡോ) ഓരോ 5 സെക്കൻഡിലും സാമ്പിൾ ചെയ്യൽ, പുതിയ എംബഡഡ് "System Monitor" പേജ് കൂടാതെ — ബാക്ക്-എൻഡ് `/monitor/*` അഗ്രിഗേഷൻ APIs + ഫ്രണ്ട്-എൻഡ് ECharts പാനലുകൾ. `health/info/metrics` എൻഡ്‌പോയിന്റുകൾ മാത്രമേ whitelist-ൽ ആകൂ; `/actuator/health` ടോക്കൺ-ഫ്രീ ആണ്, `metrics` മുതലായവ auth ആവശ്യപ്പെടുന്നു; `env/beans/heapdump/threaddump/loggers` ഒരിക്കലും എക്സ്പോസ് ചെയ്യപ്പെടില്ല. സാമ്പിൾ വിൻഡോ പെർ-പ്രോസസ്സ് മാത്രം, റീസ്റ്റാർട്ടിൽ നഷ്ടപ്പെടുന്നു, ഇൻസ്റ്റൻസുകൾക്കിടയിൽ പങ്കിടുന്നില്ല. വിശദാംശങ്ങൾക്ക് `docs/可观测性说明.md` (ചൈനീസ്) കാണുക.
 
 ## 13. പ്രോജക്റ്റ് സ്റ്റാറ്റസ്
 
-- നിലവിലെ പ്ലാൻ ചെയ്ത പതിപ്പ് ലൈൻ **V9.3** എത്തിയിരിക്കുന്നു (കഴിവുകൾ തുടർച്ചയായി ഇറ്ററേറ്റ് ചെയ്യപ്പെടുന്നു: AI മോഡലിംഗ്, seed-data വർദ്ധനവ്, കപ്പാസിറ്റി-പാക്ക് സിസ്റ്റം മുതലായവ).
+- നിലവിലെ പ്ലാൻ ചെയ്ത പതിപ്പ് ലൈൻ **V9.2** എത്തിയിരിക്കുന്നു (കഴിവുകൾ തുടർച്ചയായി ഇറ്ററേറ്റ് ചെയ്യപ്പെടുന്നു: AI മോഡലിംഗ്, seed-data വർദ്ധനവ്, കപ്പാസിറ്റി-പാക്ക് സിസ്റ്റം മുതലായവ).
 - ഒരു കൂട്ടാളി demo പ്രോജക്റ്റ് `demo_admin` (ബാക്ക്-എൻഡ് 8140 / ഫ്രണ്ട്-എൻഡ് 9040) ട്രീ / CRUD / മാസ്റ്റർ-ഡീറ്റെയിൽ / റീഡ്-ഓൺലി / പ്രിന്റ് സാഹചര്യങ്ങൾ ഉൾക്കൊള്ളുന്നു, വെരിഫിക്കേഷന് സ്വയം റൺ ചെയ്യാവുന്നതാണ്.
 - രണ്ട് റിപ്പോകളും Gitee-ൽ ഹോസ്റ്റ് ചെയ്തിരിക്കുന്നു: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
@@ -296,3 +294,39 @@ npm run serve
 - **ടെക്നിക്കൽ സപ്പോർട്ട്**: ദയവായി നിങ്ങളുടെ ഇമെയിൽ **ചൈനീസിൽ** എഴുതുക, പ്രശ്നത്തിന്റെ വിവരണം, റൺടൈം എൻവയൺമെന്റ് (JDK / MySQL / പതിപ്പ്), റീപ്രൊഡക്ഷൻ സ്റ്റെപ്പുകൾ എന്നിവ ഉൾപ്പെടുത്തി
 
 > ഞാൻ ഓരോ ഇമെയിലും വായിച്ച് മറുപടി നൽകുന്നു. ബഗ് റിപ്പോർട്ടുകൾ, ഫീച്ചർ റിക്വസ്റ്റുകൾ, കോളബറേഷൻ എന്നിവ എല്ലാം സ്വാഗതം ചെയ്യുന്നു.
+
+---
+
+## 15. സമാന ടൂളുകളുമായി താരതമ്യം
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.

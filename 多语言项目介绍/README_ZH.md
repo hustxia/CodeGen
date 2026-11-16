@@ -10,13 +10,6 @@
 github 地址：https://github.com/hustxia/CodeGen
 
 
-> **当前版本 V9.3 · 生成产物自动化测试：在 V9.2 验证中心扩展 S10（对真实产物跑 `mvn test` + Surefire 解析）、S11（产物接口测试，需 Docker/TestContainers，缺失如实 SKIP）、S12（产物 E2E，需 Playwright，缺失如实 SKIP）；新增 GEN 触发器、`TC_GEN_ROOT` 注入、`POST /tc/runs/gen` 手动入口、`autoVerifyGen` 写盘钩子（默认关闭）与前端「验证生成产物」操作区。端到端实测：新建「设备资产管理系统」（4 张表）跑完 12 步流水线 status=success，用真实产物触发 GEN 验证 PASSED，S10 20/20 用例全过，run/case/artifact 三层落库。全流程实测顺带修掉 4 个流水线缺陷（肥 jar 自检 classpath、子进程相对路径、Vite/vue-cli 启动串台、NOT_NULL 残留 fail_reason）与生成产物 Vue3 页面的 3 处 Vue2 遗留**
-> **V9.2 release · 测试中心与验证中心：把接口/UI 用例资产（7 张表）与平台验证资产（S1–S9 套件、三层落库、统一 JSON 摘要）合并为一个版本；产物零 diff，373/373 单测，206/206 语言键**
-> **V9.1 · 可维护性重构：GenScaffoldServiceImpl 5072 → 931 行拆为 8 个 Writer；产物逐字节零差异（新旧 jar 共 119 + 62 文件 diff -r 为空）；312/312 单测；离线 i18n 契约 9/9**
-> **V9.0 · 生成物现代化：Vue 3 + Element Plus + Vite；运行时验证（40/40 断言、vite build 成功、14 张截图含 ar-SA RTL）；修复 3 个运行时缺陷**
-> **V8.1** · 质量加固：离线契约 harness（9 模式 OFF 零 diff）+ i18n-core 单测 + CI 卡点 + README 诚实拆分（框架 206 / 精译 8）+ check-locale-keys.mjs
-> **V8.0** · 全页面国际化：206 语言框架（8 种精译），双轨制 i18n、OFF 逐字节零 diff 契约
-
 ## 一、这是什么
 
 CodeGen 是一套“以表为源”的代码工厂。你只要把业务表接进来（连库导入或贴一段 DDL），配置好字段与生成开关，点一下“生成”，它就替你把后端 Entity/Mapper/Service/Controller/DTO/VO、前端 api.js 与 Vue 页面、菜单与路由、甚至 A4 打印页和集成测试骨架全部生成好，并安全地写进你的目标工程。
@@ -80,7 +73,7 @@ CodeGen 是一套“以表为源”的代码工厂。你只要把业务表接进
 | 打印单据 | 勾选“打印”开关，产出 A4 打印页与路由，支持表头 + 明细表 |
 | 一句话建系统 | 描述业务域，AI 建库建表 + 脚手架 + 全量生成 + 注册菜单一气呵成 |
 
-> 以上场景均有可运行演示（`demo_admin` 工程）与配套截图，详见 `../codegen-server/docs/典型场景操作指南-演示后台demo.md`。
+> 以上场景均有可运行演示（`demo_admin` 工程）与配套截图，详见 `docs/典型场景操作指南-演示后台demo.md`。
 
 ---
 
@@ -231,11 +224,11 @@ npm run serve
 
 | 文档 | 内容 |
 | --- | --- |
-| `../codegen-server/docs/代码生成器-操作手册.md` | 部署、五分钟上手、表配置、批量接管、模板管理、台账、接口目录、流水线全流程（含实拍截图） |
-| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` | 6 张表覆盖 5 类典型场景，含可运行 demo 与实跑截图 |
-| `项目介绍.md` | 与本文同源的项目介绍文档 |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.3 各版本规划与功能盘点 |
-| `../codegen-web/README.md` | 前端控制台快速上手参考 |
+| `docs/代码生成器-操作手册.md` | 部署、五分钟上手、表配置、批量接管、模板管理、台账、接口目录、流水线全流程（含实拍截图） |
+| `docs/典型场景操作指南-演示后台demo.md` | 6 张表覆盖 5 类典型场景，含可运行 demo 与实跑截图 |
+| `docs/项目介绍.md` | 与本文同源的项目介绍文档 |
+| `docs/代码生成器-Vx.x-规划.md` | V3.1 → V7.3 各版本规划与功能盘点 |
+| `codegen-web/README.md` | 前端控制台快速上手参考 |
 
 ---
 
@@ -268,23 +261,28 @@ npm run serve
 | V7.0 | AI 页面与菜单推荐（preview / apply） | V7.0（94 行），45f2670 |
 | V7.1 | 种子数据 AI 增强（AI 管语义、规则管结构） | V7.1（42 行），5ca6e72 |
 | V7.2 | 流水线成功后 SQL 交付物落盘 `db/` | eebff88 |
-| **V7.3** | **交付可信度：自检编译产物测试 / 统一 SQL 交付出口 / 表级 AI 推荐** | **V7.3（138 行）, 696765b** |
-| **V7.4** | 可重复交付：空库能部署、每次提交都保证能跑 | c306e29 |
-| **V7.5** | **项目语言配置：206 语言清单 / 默认语言 / 启用语言，生成物 lang 与 dir 注入** | 7a9afa0 + abac56d |
-| **V8.0** | **全页面国际化：206 语言框架（8 种精译），双轨制 i18n、OFF 逐字节零 diff 契约** | 9e5dd57 → 7d57aea |
-| **V8.1** | **质量加固：离线契约 harness（9 模式 OFF 零 diff）+ i18n-core 单测 + CI 卡点 + README 诚实拆分（框架 206 / 精译 8）+ check-locale-keys.mjs** | 93a12d5 + e49330b |
-| **V9.0** | **生成物现代化：Vue 3 + Element Plus + Vite；运行时验证（40/40 断言、vite build 成功、14 张截图含 ar-SA RTL）；修复 3 个运行时缺陷** | 93a12d5 + e49330b  |
+| **V7.3** | **交付可信度：自检编译产物测试 / 统一 SQL 交付出口 / 表级 AI 推荐** | **V7.3（138 行）** |
+| **V7.4** | 可重复交付：空库能部署、每次提交都保证能跑  ** | c306e29 |
+| **V7.5** | 项目语言配置：206 语言清单 / 默认语言 / 启用语言，生成物 lang 与 dir 注入 | 7a9afa0 + abac56d |
+| **V8.0** | 全页面国际化：206 语言框架（8 种精译），双轨制 i18n、OFF 逐字节零 diff 契约 | 9e5dd57 → 7d57aea |
+| **V8.1** | 质量加固：离线契约 harness（9 模式 OFF 零 diff）+ i18n-core 单测 + CI 卡点 + README 诚实拆分（框架 206 / 精译 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | 生成物现代化：Vue 3 + Element Plus + Vite；运行时验证（40/40 断言、vite build 成功、14 张截图含 ar-SA RTL）；修复 3 个运行时缺陷 | 93a12d5 + e49330b  |
 | **V9.1** | **可维护性重构：GenScaffoldServiceImpl 5072 → 931 行拆为 8 个 Writer；产物逐字节零差异（新旧 jar 共 119 + 62 文件 diff -r 为空）；312/312 单测；离线 i18n 契约 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **测试中心与验证中心：把接口/UI 用例资产（7 张表）与平台验证资产（S1–S9 套件、三层落库、统一 JSON 摘要）合并为一个版本；产物零 diff，373/373 单测，206/206 语言键** | V9.2 release  |
-| **V9.3** | **生成产物自动化测试：在 V9.2 验证中心扩展 S10（对真实产物跑 `mvn test` + Surefire 解析）、S11（产物接口测试，需 Docker/TestContainers，缺失如实 SKIP）、S12（产物 E2E，需 Playwright，缺失如实 SKIP）；新增 GEN 触发器、`TC_GEN_ROOT` 注入、`POST /tc/runs/gen` 手动入口、`autoVerifyGen` 写盘钩子（默认关闭）与前端「验证生成产物」操作区。端到端实测：新建「设备资产管理系统」（4 张表）跑完 12 步流水线 status=success，用真实产物触发 GEN 验证 PASSED，S10 20/20 用例全过，run/case/artifact 三层落库。全流程实测顺带修掉 4 个流水线缺陷（肥 jar 自检 classpath、子进程相对路径、Vite/vue-cli 启动串台、NOT_NULL 残留 fail_reason）与生成产物 Vue3 页面的 3 处 Vue2 遗留** | V9.3 release, **当前版本** |
+| **V9.2** | **测试中心与验证中心：把接口/UI 用例资产（7 张表）与平台验证资产（S1–S9 套件、三层落库、统一 JSON 摘要）合并为一个版本；产物零 diff，373/373 单测，206/206 语言键** | V9.2 release, **当前版本** |
+| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
+| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
+| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
+| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
+| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
 
 ---
 
-> **V6.10 平台可观测性**：接入 Actuator + Micrometer，5 秒采样写入内存环形缓冲（保留 30 分钟窗口），新增内嵌「系统监控」页——后端 `/monitor/*` 聚合接口 + 前端 ECharts 面板。端点仅白名单放行 `health/info/metrics`，`/actuator/health` 免 token，`metrics` 等需鉴权；`env/beans/heapdump/threaddump/loggers` 永不暴露。采样窗口仅进程内、重启即丢、多实例不共享。详见 `../codegen-server/docs/可观测性说明.md`。
+> **V6.10 平台可观测性**：接入 Actuator + Micrometer，5 秒采样写入内存环形缓冲（保留 30 分钟窗口），新增内嵌「系统监控」页——后端 `/monitor/*` 聚合接口 + 前端 ECharts 面板。端点仅白名单放行 `health/info/metrics`，`/actuator/health` 免 token，`metrics` 等需鉴权；`env/beans/heapdump/threaddump/loggers` 永不暴露。采样窗口仅进程内、重启即丢、多实例不共享。详见 `docs/可观测性说明.md`。
 
 ## 十三、项目状态
 
-- 当前规划版本线已达 **V9.3**，能力持续迭代（AI 建模、种子数据增强、能力包体系等）。
+- 当前规划版本线已达 **V9.2**，能力持续迭代（AI 建模、种子数据增强、能力包体系等）。
 - 已沉淀配套演示工程 `demo_admin`（后端 8140 / 前端 9040），覆盖树形 / CRUD / 主子表 / 只读 / 打印全场景，可独立运行验证。
 - 两仓库均托管于 Gitee：`https://gitee.com/hustxiayuhong/CodeGen.git`
 
@@ -297,3 +295,39 @@ npm run serve
 - **技术支持**：请用**中文**写邮件，附上问题描述、运行环境（JDK / MySQL / 版本号）与复现步骤
 
 > 所有邮件我都会看，看到就会回复。问题反馈、功能建议、合作洽谈都欢迎。
+
+---
+
+## 十五、同类产品比较
+
+CodeGen 既不是片段代码生成器，也不是全栈低代码平台——它处在一个非常具体的生态位。下面是它和 Spring Boot / Java 生态里常见工具的定位对比。
+
+### vs. 片段生成辅助工具（JPA Buddy · MapStruct · Spring Initializr）
+
+**JPA Buddy**、**MapStruct**、**Spring Initializr** 这类工具擅长脚手架和小范围开发提效，但产物都是**片段**：一个实体类、一个 Mapper 接口、几份 DTO 转换 helper，或者一个空项目壳。CRUD 页面、菜单、路由、权限码仍然要你手动接；表字段一改，重新手工改一轮。
+
+CodeGen 产出的是**零修改可跑的完整垂直切片**：后端（Entity → Mapper → Service → Controller → DTO/VO）+ 前端（`api.js` + Vue 页面 + A4 打印页）+ 菜单 + 路由注册。粘贴 DDL、点一下生成，功能直接上线。
+
+### vs. 脚手架框架（JeecgBoot · RuoYi · dlow）
+
+**JeecgBoot**、**RuoYi** 这类框架是先给你一套完整的后台管理基座，再在上面挂一个代码生成器。你必须 **fork 他们的脚手架**，承担他们的约定、认证层、菜单 schema、文件布局，以及——关键——他们的版本升级路径。生成器**继承了父框架的偏见**（比如动态数据源约定、Shiro/Spring Security 选择、前端技术锁死）。
+
+CodeGen 走的是另一条路：**绝不触碰目标工程的基础设施**。它假设你的项目已经具备 `Result`、`BaseEntity`、`PageQuery`、`PaginationInnerInterceptor`、以及一个能返回 `{list, total}` 的 `utils/request.js`。它只做一件事——在你现有的目录布局里**干净地丢进业务代码**，和你已经选好的认证栈、UI 框架、项目约定并存。不 fork。不劫持约定。干净、精准。
+
+### vs. 脚手架内置生成器（云宅 · JeecgBoot 内置 · RuoYi 内置）
+
+不少脚手架现在都内置了代码生成器，跑起来产物是能用的——但质量护栏普遍偏弱：没有真实编译校验、没有结构化契约测试、没有模板版本管理、没有回滚、没有变更台账。一旦模板改动生成了坏掉的产物，你只能到运行时才发现。
+
+CodeGen 的**质量护栏链**是它和这些内置生成器最本质的差异：
+
+| 环节 | 它实际做了什么 |
+|---|---|
+| 预览与差异 | 先在内存生成，逐文件渲染对磁盘当前状态的 diff，确认后才写盘 |
+| 写盘带备份 | 每个被改动的文件在覆盖前都会拷贝到 `.gen-backup/<批次号>/` |
+| 标记区合并 | `// gen:begin-end` 之间的手写代码原样保留，只替换生成区 |
+| 内存自检验证 | 对所有生成的后端产物跑一次**真实 `javac` 编译**（不是正则式 lint）——没编译过的文件不会落盘 |
+| 独立 classpath 编译 | 生成的集成测试用目标工程自己的 classpath 再编译一次——缺什么依赖写盘时报什么，不是运行时才炸 |
+| 四状态台账 | `gen_output` 把每个文件记为 **created / merged / skipped / failed**，附带字节数、MD5、备份路径 |
+| 批次级回滚 | 任意一批生成可一键回滚，恢复到那一批执行前的精确状态 |
+
+预览 → 备份 → 合并 → javac 自检 → classpath 编译 → 台账 → 回滚，这**七环质量护栏**——据作者所知，**市面上主流脚手架的内置生成器没有一家是完整具备的**。

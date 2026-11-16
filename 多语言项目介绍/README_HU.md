@@ -8,13 +8,6 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **Jelenlegi verzió V9.3 · Generált artefaktumok automatizált tesztelése · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
-> **V9.2 release · Tesztközpont & ellenőrzési központ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
-> **V9.1 · Karbantarthatósági refaktorálás · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
-> **V9.0 · A generált kód modernizálása Vue 3 + Element Plus + Vite alapra; futásidejű ellenőrzés (40/40 állítás, sikeres vite build, 14 képernyőkép az ar-SA RTL-lel); 3 futásidejű hiba javítva**
-> **V8.1** · Minőségi megerősítés: offline szerződés-harness (9 mód, OFF zero-diff) + i18n-core egységtesztek + CI-kapu + őszinte README-felosztás (keretrendszer 206 / fordított 8) + check-locale-keys.mjs
-> **V8.0** · Teljes oldalas i18n: 206 nyelvű keretrendszer (8 nyelv professzionálisan fordítva), kétvágányú i18n, OFF zero-diff szerződéssel
-
 ## 1. Mi ez
 
 A CodeGen egy "táblaalapú" kódgyár. Hozza létre üzleti tábláit (adatbázis-importálás vagy DDL beillesztésével), konfigurálja a mezőket és a generációs kapcsolókat, majd kattintson a "Generálás" gombra — a rendszer létrehozza a back-end Entity/Mapper/Service/Controller/DTO/VO osztályait, a front-end `api.js` fájlt és Vue oldalakat, a menüket és route-okat, sőt még A4-es nyomtatási oldalakat és integrációs tesztvázlatokat is, és mindent biztonságosan a célprojektjébe ír.
@@ -78,7 +71,7 @@ Tábla bevitel (DB import / DDL)
 | Nyomtatási dokumentumok | Jelölje be a "nyomtatás" kapcsolót A4-es nyomtatási oldal és route létrehozásához, fejléc + részlettáblával |
 | Egy mondatban rendszer létrehozás | Írja le az üzleti tartományt — AI létrehozza a DB-t és táblákat + állványt + teljes generálást + menü regisztrálást egy lépésben |
 
-> Minden forgatókönyvnek futtatható demoja van (`demo_admin` projekt) képernyőképekkel — lásd a `../codegen-server/docs/典型场景操作指南-演示后台demo.md` fájlt (kínai).
+> Minden forgatókönyvnek futtatható demoja van (`demo_admin` projekt) képernyőképekkel — lásd a `docs/典型场景操作指南-演示后台demo.md` fájlt (kínai).
 
 ---
 
@@ -231,11 +224,11 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 
 | Dokumentum | Tartalom |
 | --- | --- |
-| `../codegen-server/docs/代码生成器-操作手册.md` (kínai) | Üzembe helyezés, 5 perces kezdés, tábla konfiguráció, köteges bevitel, sablonkezelés, napló, API katalógus, teljes folyamat (képernyőképekkel) |
-| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kínai) | 6 tábla, amely 5 tipikus forgatókönyvet fed le, futtatható demóval és valódi képernyőképekkel |
-| `项目介绍.md` | Projektbemutató dokumentum, ugyanaz a forrás, mint ez a fájl |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Verziótervek és funkcióleltárak V3.1 → V9.3 |
-| `../codegen-web/README.md` | Front-end konzol gyorskezelés referencia |
+| `docs/代码生成器-操作手册.md` (kínai) | Üzembe helyezés, 5 perces kezdés, tábla konfiguráció, köteges bevitel, sablonkezelés, napló, API katalógus, teljes folyamat (képernyőképekkel) |
+| `docs/典型场景操作指南-演示后台demo.md` (kínai) | 6 tábla, amely 5 tipikus forgatókönyvet fed le, futtatható demóval és valódi képernyőképekkel |
+| `docs/项目介绍.md` | Projektbemutató dokumentum, ugyanaz a forrás, mint ez a fájl |
+| `docs/代码生成器-Vx.x-规划.md` | Verziótervek és funkcióleltárak V3.1 → V7.3 |
+| `codegen-web/README.md` | Front-end konzol gyorskezelés referencia |
 
 ---
 
@@ -268,23 +261,28 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 | V7.0 | AI oldal & menü ajánlások (preview / apply) | V7.0 (94 sor), 45f2670 |
 | V7.1 | Seed adat AI fejlesztés (AI birtokolja a szemantikát, szabályok birtokolják a struktúrát) | V7.1 (42 sor), 5ca6e72 |
 | V7.2 | SQL szállított objektumok írva a `db/` könyvtárba sikeres folyamat után | eebff88 |
-| **V7.3** | **Szállítási megbízhatóság: önellenőrzés lefordított műtermék tesztek / egységes SQL szállítási kimenet / táblaalapú AI ajánlások** | **V7.3 (138 sor), 696765b** |
+| **V7.3** | **Szállítási megbízhatóság: önellenőrzés lefordított műtermék tesztek / egységes SQL szállítási kimenet / táblaalapú AI ajánlások** | **V7.3 (138 sor)** |
 | **V7.4** | Ismételhető szállítás: üres adatbázisból telepíthető, minden commit garantáltan futtatható | c306e29 |
-| **V7.5** | **Projekt nyelvi beállítások: 206 nyelv listája / alapértelmezett nyelv / engedélyezett nyelvek, lang és dir injektálás a generált kódba** | 7a9afa0 + abac56d |
-| **V8.0** | **Teljes oldalas i18n: 206 nyelvű keretrendszer (8 nyelv professzionálisan fordítva), kétvágányú i18n, OFF zero-diff szerződéssel** | 9e5dd57 → 7d57aea |
-| **V8.1** | **Minőségi megerősítés: offline szerződés-harness (9 mód, OFF zero-diff) + i18n-core egységtesztek + CI-kapu + őszinte README-felosztás (keretrendszer 206 / fordított 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
-| **V9.0** | **A generált kód modernizálása Vue 3 + Element Plus + Vite alapra; futásidejű ellenőrzés (40/40 állítás, sikeres vite build, 14 képernyőkép az ar-SA RTL-lel); 3 futásidejű hiba javítva** | 93a12d5 + e49330b  |
+| **V7.5** | Projekt nyelvi konfiguráció: 206 nyelv listája / alapértelmezett nyelv / engedélyezett nyelvek, lang és dir befecskendezése a generált kódba | 7a9afa0 + abac56d |
+| **V8.0** | Teljes oldal i18n: 206 nyelvű keretrendszer (8 szakmailag lefordítva), kétvágányú i18n OFF zero-diff szerződéssel | 9e5dd57 → 7d57aea |
+| **V8.1** | Minőségszilárdítás: offline szerződéses harness (9 mód, OFF zero-diff) + i18n-core egységtesztek + CI kapu + őszinte README felosztás (keretrendszer 206 / lefordítva 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | A generált artefaktok modernizálva Vue 3 + Element Plus + Vite-re; futásidőben ellenőrizve (40/40 assertion, sikeres vite build, 14 képernyőkép incl. ar-SA RTL); 3 futásidejű hiba javítva | 93a12d5 + e49330b  |
 | **V9.1** | **Karbantarthatósági refaktorálás · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Tesztközpont & ellenőrzési központ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
-| **V9.3** | **Generált artefaktumok automatizált tesztelése · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **Jelenlegi verzió** |
+| **V9.2** | **Tesztközpont & ellenőrzési központ · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **Jelenlegi verzió** |
+| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
+| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
+| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
+| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
+| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
 
 ---
 
-> **V6.10 Platform megfigyelhetőség**: integrálja az Actuator + Micrometer rendszert, 5 másodpercenként mintát vesz egy memóriabeli körbufferbe (30 perces ablak), plusz egy új beágyazott "Rendszerfigyelő" oldal — backend `/monitor/*` aggregációs API-k + front-end ECharts panelek. Csak `health/info/metrics` végpontok vannak engedélyezve a whitelist-en; `/actuator/health` token nélküli, míg a `metrics` stb. hitelesítést igényel; `env/beans/heapdump/threaddump/loggers` soha nem kerül közzétételre. A mintavételi ablak csak folyamatonkénti, újraindítás esetén elveszik, és nincs megosztva a példányok között. Lásd a `../codegen-server/docs/可观测性说明.md` fájlt (kínai) részletekért.
+> **V6.10 Platform megfigyelhetőség**: integrálja az Actuator + Micrometer rendszert, 5 másodpercenként mintát vesz egy memóriabeli körbufferbe (30 perces ablak), plusz egy új beágyazott "Rendszerfigyelő" oldal — backend `/monitor/*` aggregációs API-k + front-end ECharts panelek. Csak `health/info/metrics` végpontok vannak engedélyezve a whitelist-en; `/actuator/health` token nélküli, míg a `metrics` stb. hitelesítést igényel; `env/beans/heapdump/threaddump/loggers` soha nem kerül közzétételre. A mintavételi ablak csak folyamatonkénti, újraindítás esetén elveszik, és nincs megosztva a példányok között. Lásd a `docs/可观测性说明.md` fájlt (kínai) részletekért.
 
 ## 13. Projekt állapot
 
-- A jelenlegi tervezett verzióvonal elérte a **V9.3**-at (képességek folyamatosan iterálódnak: AI modellezés, seed adat fejlesztés, képességcsomag rendszer stb.).
+- A jelenlegi tervezett verzióvonal elérte a **V7.3**-at (képességek folyamatosan iterálódnak: AI modellezés, seed adat fejlesztés, képességcsomag rendszer stb.).
 - Egy kísérő demo projekt `demo_admin` (backend 8140 / front-end 9040) lefedi a fa / CRUD / master-detail / csak olvasható / nyomtatási forgatókönyveket és önállóan futtatható ellenőrzés céljából.
 - Mindkét repozitório a Gitee-en van tárolva: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
@@ -297,3 +295,39 @@ A front-end alapértelmezés szerint a **9530**-as porton fut, a `/dev-api` kér
 - **Technikai támogatás**: kérjük, írja meg e-mailjét **kínai nyelven**, beleértve a probléma leírását, a futtatási környezetet (JDK / MySQL / verzió) és a reprodukciós lépéseket
 
 > Minden e-mailt elolvasok és válaszolok rájuk. Hiba jelentések, funkciókérések és együttműködési megkeresések mind welcome.
+
+---
+
+## 15. Összehasonlítás hasonló eszközökkel
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.

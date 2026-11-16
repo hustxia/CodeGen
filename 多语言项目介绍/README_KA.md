@@ -8,13 +8,6 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **Current version V9.3 · გენერირებული არტეფაქტების ავტომატური ტესტირება · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
-> **V9.2 release · ტესტირების ცენტრი & ვერიფიკაციის ცენტრი · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
-> **V9.1 · მოვლადობის რეფაქტორინგი · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
-> ** V9.0 · **
-> **V8.1** · 
-> **V8.0** · 
-
 ## 1. რა არის ეს
 
 CodeGen არის "ცხრილებით მართული" კოდის ქარხანა. შემოიტანეთ თქვენი ბიზნეს ცხრილები (მონაცემთა ბაზიდან იმპორტით ან DDL-ის ჩასმით), დააკონფიგურირეთ ველები და გენერაციის გადამრთველები, შემდეგ დააჭირეთ "გენერირება" — მაშინ ის ქმნის back-end Entity/Mapper/Service/Controller/DTO/VO, front-end `api.js` და Vue გვერდებს, მენიუს და მარშრუტებს, თუნდაც A4 ბეჭდვის გვერდებს და ინტეგრაციის ტესტის ჩონჩხებს, და ყველაფერს უსაფრთხოდ წერს თქვენს სამიზნე პროექტში.
@@ -122,13 +115,9 @@ Back-end ნაგულისხმევი პორტი **8120**, front-en
 
 ## 11. პროექტის სტატუსი
 
-> **Version History · V9.3**
-> **V9.3** · გენერირებული არტეფაქტების ავტომატური ტესტირება · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted — `V9.3 release`.
-> **V9.2** · ტესტირების ცენტრი & ვერიფიკაციის ცენტრი · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical — `V9.2 release`.
-> **V9.1** · მოვლადობის რეფაქტორინგი · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9 — `654b8e0 → b0d081e`.
->  — `93a12d5 + e49330b`.
-
-- მიმდინარე დაგეგმილი ვერსიის ხაზმა მიაღწია **V9.3**.
+- მიმდინარე დაგეგმილი ვერსიის ხაზმა მიაღწია **V9.2**.
+- **V9.2** · ტესტირების ცენტრი & ვერიფიკაციის ცენტრი · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical
+- **V9.2** · მოვლადობის რეფაქტორინგი · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - ორივე რეპოზიტორია განთავსებულია Gitee-ზე: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. ავტორი
@@ -136,3 +125,39 @@ Back-end ნაგულისხმევი პორტი **8120**, front-en
 - **ავტორი**: ჩინელი პროგრამისტი (დამოუკიდებელი დეველოპერი)
 - **ელ. ფოსტა**: `hustxiayuhong@126.com`
 - **ტექნიკური მხარდაჭერა**: გთხოვთ დაწეროთ თქვენი ელ. ფოსტა **ჩინურად**, პრობლემის აღწერილობა, runtime გარემო (JDK / MySQL / ვერსია) და რეპროდუქციის ნაბიჯები ჩათვლით.
+
+---
+
+## 13. შედარება მსგავს ინსტრუმენტებთან
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.

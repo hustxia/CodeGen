@@ -8,13 +8,6 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **aktuell version V9.3 · Automatiserade tester av genererade artefakter · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
-> **V9.2 release · Testcenter & verifieringshubb · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
-> **V9.1 · Underhållsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
-> **V9.0 · Genererade artefakter moderniserade till Vue 3 + Element Plus + Vite; verifierade i drift (40/40 asserteringar, lyckad vite build, 14 skärmbilder inkl. ar-SA RTL); 3 runtime-fel åtgärdade**
-> **V8.1** · Kvalitetshärdning: offline kontrakts-harness (9 lägen, OFF zero-diff) + i18n-core enhetstester + CI-grind + ärlig README-fördelning (ramverk 206 / översatta 8) + check-locale-keys.mjs
-> **V8.0** · Helsides-i18n: ramverk med 206 språk (8 professionellt översatta), tvåspårig i18n med OFF zero-diff-kontrakt
-
 ## 1. Vad är detta
 
 CodeGen är en "tabellstyrd" kodfabrik. Ta med dina affärstabeller (via databasimport eller genom att klistra in en DDL), konfigurera fält och generationsomkopplare och klicka på "Generera" — då producerar den backend Entity/Mapper/Service/Controller/DTO/VO, frontendens `api.js` och Vue-sidor, menyer och rutter, till och med A4-utskriftssidor och integrationstestskelett, och skriver allt säkert till ditt målprojekt.
@@ -76,7 +69,7 @@ Tabellinmatning (DB-import / DDL)
 | Utskriftsdokument | Kryssa i "utskrift"-omkopplaren för att producera en A4-utskriftssida och rutt, med rubrik + detaljtabell |
 | En-meningars systembyggnad | Beskriv affärsdomen — AI skapar DB & tabeller + ställning + fullständig generering + menyregistrering i ett svep |
 
-> Alla scenarier har körbara demo:r (`demo_admin`-projekt) med skärmdumpar — se `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kinesiska).
+> Alla scenarier har körbara demo:r (`demo_admin`-projekt) med skärmdumpar — se `docs/典型场景操作指南-演示后台demo.md` (kinesiska).
 
 ---
 
@@ -229,11 +222,11 @@ Frontenden körs som standard på port **9530**, proxyrar `/dev-api` till backen
 
 | Dokument | Innehåll |
 | --- | --- |
-| `../codegen-server/docs/代码生成器-操作手册.md` (kinesiska) | Distribution, 5-minutersstart, tabellkonfig, satsvis inmatning, mallhantering, reskontra, API-katalog, fullständig pipeline (med skärmdumpar) |
-| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (kinesiska) | 6 tabeller som täcker 5 typiska scenarier, med körbar demo och verkliga skärmdumpar |
-| `项目介绍.md` | Projektintroduktionsdokument, samma källa som denna fil |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Versionsplaner och funktionsinventarier från V3.1 → V9.3 |
-| `../codegen-web/README.md` | Frontend-konsol snabbstartreferens |
+| `docs/代码生成器-操作手册.md` (kinesiska) | Distribution, 5-minutersstart, tabellkonfig, satsvis inmatning, mallhantering, reskontra, API-katalog, fullständig pipeline (med skärmdumpar) |
+| `docs/典型场景操作指南-演示后台demo.md` (kinesiska) | 6 tabeller som täcker 5 typiska scenarier, med körbar demo och verkliga skärmdumpar |
+| `docs/项目介绍.md` | Projektintroduktionsdokument, samma källa som denna fil |
+| `docs/代码生成器-Vx.x-规划.md` | Versionsplaner och funktionsinventarier från V3.1 → V7.3 |
+| `codegen-web/README.md` | Frontend-konsol snabbstartreferens |
 
 ---
 
@@ -266,23 +259,28 @@ Frontenden körs som standard på port **9530**, proxyrar `/dev-api` till backen
 | V7.0 | AI sid- & menyrekommendationer (preview / apply) | V7.0 (94 rader), 45f2670 |
 | V7.1 | Frödata AI-förbättring (AI äger semantik, regler äger struktur) | V7.1 (42 rader), 5ca6e72 |
 | V7.2 | SQL-leverbara objekt skrivna till `db/` efter lyckad pipeline | eebff88 |
-| **V7.3** | **Leveranspålitlighet: självkontroll kompilerade artefakttester / enhetlig SQL-leveransuttag / tabellberoende AI-rekommendationer** | **V7.3 (138 rader), 696765b** |
+| **V7.3** | **Leveranspålitlighet: självkontroll kompilerade artefakttester / enhetlig SQL-leveransuttag / tabellberoende AI-rekommendationer** | **V7.3 (138 rader)** |
 | **V7.4** | Återställningsbar leverans: deployerbar från en tom databas, varje commit garanterad körbar | c306e29 |
-| **V7.5** | **Projektspråkskonfiguration: lista över 206 språk / standardspråk / aktiverade språk, injicering av lang och dir i genererad kod** | 7a9afa0 + abac56d |
-| **V8.0** | **Helsides-i18n: ramverk med 206 språk (8 professionellt översatta), tvåspårig i18n med OFF zero-diff-kontrakt** | 9e5dd57 → 7d57aea |
-| **V8.1** | **Kvalitetshärdning: offline kontrakts-harness (9 lägen, OFF zero-diff) + i18n-core enhetstester + CI-grind + ärlig README-fördelning (ramverk 206 / översatta 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
-| **V9.0** | **Genererade artefakter moderniserade till Vue 3 + Element Plus + Vite; verifierade i drift (40/40 asserteringar, lyckad vite build, 14 skärmbilder inkl. ar-SA RTL); 3 runtime-fel åtgärdade** | 93a12d5 + e49330b  |
+| **V7.5** | Projektspråkskonfiguration: lista över 206 språk / standardspråk / aktiverade språk, injicering av lang och dir i genererad kod | 7a9afa0 + abac56d |
+| **V8.0** | Helsides-i18n: ramverk med 206 språk (8 professionellt översatta), tvåspårig i18n med OFF zero-diff-kontrakt | 9e5dd57 → 7d57aea |
+| **V8.1** | Kvalitetshärdning: offline kontrakts-harness (9 lägen, OFF zero-diff) + i18n-core enhetstester + CI-grind + ärlig README-fördelning (ramverk 206 / översatta 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | Genererade artefakter moderniserade till Vue 3 + Element Plus + Vite; verifierade i drift (40/40 asserteringar, lyckad vite build, 14 skärmbilder inkl. ar-SA RTL); 3 runtime-fel åtgärdade | 93a12d5 + e49330b  |
 | **V9.1** | **Underhållsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Testcenter & verifieringshubb · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
-| **V9.3** | **Automatiserade tester av genererade artefakter · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **aktuell version** |
+| **V9.2** | **Testcenter & verifieringshubb · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **aktuell version** |
+| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
+| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
+| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
+| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
+| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
 
 ---
 
-> **V6.10 Plattformsobserverbarhet**: integrerar Actuator + Micrometer, provtar var 5:e sekund till en in-memory ringbuffert (30-minutersfönster), plus en ny inbäddad "Systemmonitor"-sida — backend `/monitor/*` aggregerings-API:er + frontend ECharts paneler. Endast `health/info/metrics` endpoints är vitlistade; `/actuator/health` är tokenfri medan `metrics` etc. kräver auth; `env/beans/heapdump/threaddump/loggers` exponeras aldrig. Provtagningsfönstret är endast per process, förloras vid omstart, och delas inte mellan instanser. Se `../codegen-server/docs/可观测性说明.md` (kinesiska) för detaljer.
+> **V6.10 Plattformsobserverbarhet**: integrerar Actuator + Micrometer, provtar var 5:e sekund till en in-memory ringbuffert (30-minutersfönster), plus en ny inbäddad "Systemmonitor"-sida — backend `/monitor/*` aggregerings-API:er + frontend ECharts paneler. Endast `health/info/metrics` endpoints är vitlistade; `/actuator/health` är tokenfri medan `metrics` etc. kräver auth; `env/beans/heapdump/threaddump/loggers` exponeras aldrig. Provtagningsfönstret är endast per process, förloras vid omstart, och delas inte mellan instanser. Se `docs/可观测性说明.md` (kinesiska) för detaljer.
 
 ## 13. Projektstatus
 
-- Den nuvarande planerade versionslinjen har nått **V9.3** (kapaciteter fortsätter iterera: AI-modellering, frödataförbättring, kapacitetspaketsystem, etc.).
+- Den nuvarande planerade versionslinjen har nått **V9.2** (kapaciteter fortsätter iterera: AI-modellering, frödataförbättring, kapacitetspaketsystem, etc.).
 - Ett medföljande demo-projekt `demo_admin` (backend 8140 / frontend 9040) täcker träd / CRUD / master-detail / skrivskyddad / utskriftsscenarier och kör fristående för verifiering.
 - Båda repositorierna hostas på Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
@@ -295,3 +293,39 @@ Frontenden körs som standard på port **9530**, proxyrar `/dev-api` till backen
 - **Teknisk support**: skriv din e-post **på kinesiska**, inklusive problembeskrivning, körmiljö (JDK / MySQL / version) och reproduktionssteg
 
 > Jag läser och svarar på varje e-post. Felrapporter, funktionsförfrågningar och samarbetsförfrågningar är alla välkomna.
+
+---
+
+## 15. Jämförelse med liknande verktyg
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.

@@ -8,13 +8,6 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **தற்போதைய பதிப்பு V9.3 · உருவாக்கப்பட்ட ஆர்ட்டிஃபாக்ட்களின் தானியங்கி சோதனை · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
-> **V9.2 release · சோதனை மையம் & சரிபார்ப்பு மையம் · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
-> **V9.1 · பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
-> **V9.0 · உருவாக்கப்பட்ட ஆர்டிஃபேக்ட்கள் Vue 3 + Element Plus + Vite ஆக நவீனமாக்கப்பட்டன; இயக்க நேரத்தில் சரிபார்க்கப்பட்டது (40/40 உறுதிப்பாடுகள், வெற்றிகரமான vite build, ar-SA RTL உட்பட 14 ஸ்கிரீன்ஷாட்கள்); 3 இயக்க குறைபாடுகள் சரிசெய்யப்பட்டன**
-> **V8.1** · தர வலுவூட்டல்: ஆஃப்லைன் ஒப்பந்த ஹார்னஸ் (9 முறைகள், OFF பூஜ்ஜிய-வேறுபாடு) + i18n-core யூனிட் சோதனைகள் + CI கேட் + நேர்மையான README பிரிவு (கட்டமைப்பு 206 / மொழிபெயர்ப்பு 8) + check-locale-keys.mjs
-> **V8.0** · முழு பக்க i18n: 206 மொழி கட்டமைப்பு (8 தொழில்முறை மொழிபெயர்ப்பு), OFF பூஜ்ஜிய-வேறுபாடு ஒப்பந்தத்துடன் இருவழி i18n
-
 ## 1. இது என்ன
 
 CodeGen என்பது "அட்டவணைகளால் இயக்கப்படும்" ஒரு குறியீடு தொழிற்சாலை. உங்கள் வணிக அட்டவணைகளை உள்ளே கொண்டு வாருங்கள் (தரவுத்தள இறக்குமதி மூலம் அல்லது ஒரு DDL ஐ ஒட்டுவதன் மூலம்), புலங்கள் மற்றும் உருவாக்க சுவிட்சுகளை கட்டமைக்கவும், பின்னர் "உருவாக்கு" என்பதை கிளிக் செய்யவும் — பின்னர் அது பின் இறுதி Entity/Mapper/Service/Controller/DTO/VO, முன் இறுதி `api.js` மற்றும் Vue பக்கங்கள், மெனுக்கள் மற்றும் வழிகள், A4 அச்சிடும் பக்கங்கள் மற்றும் ஒருங்கிணைப்பு சோதனை எலும்புக்கூடுகள் கூட உருவாக்குகிறது, மற்றும் அனைத்தையும் உங்கள் இலக்கு திட்டத்தில் பாதுகாப்பாக எழுதுகிறது.
@@ -129,13 +122,9 @@ npm run serve
 
 ## 11. திட்ட நிலை
 
-> **Version History · V9.3**
-> **V9.3** · உருவாக்கப்பட்ட ஆர்ட்டிஃபாக்ட்களின் தானியங்கி சோதனை · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted — `V9.3 release`.
-> **V9.2** · சோதனை மையம் & சரிபார்ப்பு மையம் · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical — `V9.2 release`.
-> **V9.1** · பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9 — `654b8e0 → b0d081e`.
-> உருவாக்கப்பட்ட ஆர்டிஃபேக்ட்கள் Vue 3 + Element Plus + Vite ஆக நவீனமாக்கப்பட்டன; இயக்க நேரத்தில் சரிபார்க்கப்பட்டது (40/40 உறுதிப்பாடுகள், வெற்றிகரமான vite build, ar-SA RTL உட்பட 14 ஸ்கிரீன்ஷாட்கள்); 3 இயக்க குறைபாடுகள் சரிசெய்யப்பட்டன — `93a12d5 + e49330b`.
-
-- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V9.3** ஐ அடைந்தது.
+- தற்போதைய திட்டமிடப்பட்ட பதிப்பு வரி **V9.2** ஐ அடைந்தது.
+- **V9.2** · சோதனை மையம் & சரிபார்ப்பு மையம் · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical
+- **V9.2** · பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9
 - இரண்டு களஞ்சியங்களும் Gitee இல் ஹோஸ்ட் செய்யப்படுகின்றன: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
 ## 12. ஆசிரியர்
@@ -143,3 +132,39 @@ npm run serve
 - **ஆசிரியர்**: ஒரு சீன புரோகிராமர் (சுயாதீன டெவலப்பர்)
 - **மின்னஞ்சல்**: `hustxiayuhong@126.com`
 - **தொழில்நுட்ப ஆதரவு**: உங்கள் மின்னஞ்சலை **சீன மொழியில்** எழுதவும், பிரச்சனை விளக்கம், இயக்க சூழல் (JDK / MySQL / பதிப்பு) மற்றும் மறுஉற்பத்தி படிகள் ஆகியவற்றை உள்ளடக்கவும்.
+
+---
+
+## 13. ஒத்த கருவிகளுடன் ஒப்பீடு
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.

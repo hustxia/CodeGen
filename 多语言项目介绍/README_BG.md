@@ -8,13 +8,6 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
-> **текуща версия V9.3 · Автоматизирано тестване на генерираните артефакти · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted**
-> **V9.2 release · Център за тестване и проверка · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
-> **V9.1 · Рефакторинг за по-лесна поддръжка · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
-> **V9.0 · Генерираните артефакти модернизирани към Vue 3 + Element Plus + Vite; проверено по време на изпълнение (40/40 проверки, успешен vite build, 14 екранни снимки incl. ar-SA RTL); коригирани 3 runtime дефекта**
-> **V8.1** · Втвърдяване на качеството: офлайн стенд за контракт (9 режима, нулева разлика OFF) + unit тестове i18n-core + CI порта + честно разделяне в README (рамка 206 / преведени 8) + check-locale-keys.mjs
-> **V8.0** · i18n на цялата страница: рамка от 206 езика (8 професионално преведени), двупътна i18n с договор за нулева разлика при OFF
-
 ## 1. Какво е това
 
 CodeGen е „таблично управлявана“ фабрика за код. Донесете своите бизнес таблици (чрез импорт от базата данни или чрез поставяне на DDL), конфигурирайте полетата и превключвателите за генериране, след това натиснете „Generate“ — той създава бек-енд Entity/Mapper/Service/Controller/DTO/VO, фронт-енд `api.js` и Vue страници, менюта и маршрути, дори A4 страници за печат и скелети за тестове за интеграция, и ги записва безопасно в целевия проект.
@@ -75,7 +68,7 @@ Table intake (DB import / DDL)
 | Документи за печат | Поставете отметка на превключвателя „print“, за да се създаде A4 страница за печат и маршрут, с антетка + таблица с детайли |
 | Изграждане на система с едно изречение | Опишете бизнес домейна — AI създава БД и таблици + scaffold + пълно генериране + регистрация на менюта наведнъж |
 
-> Всички сценарии имат работещи демонстрации (проектът `demo_admin`) с екранни снимки — вижте `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (на китайски).
+> Всички сценарии имат работещи демонстрации (проектът `demo_admin`) с екранни снимки — вижте `docs/典型场景操作指南-演示后台demo.md` (на китайски).
 
 ---
 
@@ -228,11 +221,11 @@ npm run serve
 
 | Документ | Съдържание |
 | --- | --- |
-| `../codegen-server/docs/代码生成器-操作手册.md` (на китайски) | Внедряване, старт за 5 минути, конфиг таблица, пакетно поемане, управление на шаблони, ledger, каталог с API, пълен конвейер (с екранни снимки) |
-| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (на китайски) | 6 таблици, покриващи 5 типични сценария, с работещо демо и екранни снимки от реално изпълнение |
-| `项目介绍.md` | Документ за представяне на проекта, същият източник като този файл |
-| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Планове за версии и описи на функционалности от V3.1 → V9.3 |
-| `../codegen-web/README.md` | Справка за бърз старт на фронт-енд конзолата |
+| `docs/代码生成器-操作手册.md` (на китайски) | Внедряване, старт за 5 минути, конфиг таблица, пакетно поемане, управление на шаблони, ledger, каталог с API, пълен конвейер (с екранни снимки) |
+| `docs/典型场景操作指南-演示后台demo.md` (на китайски) | 6 таблици, покриващи 5 типични сценария, с работещо демо и екранни снимки от реално изпълнение |
+| `docs/项目介绍.md` | Документ за представяне на проекта, същият източник като този файл |
+| `docs/代码生成器-Vx.x-规划.md` | Планове за версии и описи на функционалности от V3.1 → V7.3 |
+| `codegen-web/README.md` | Справка за бърз старт на фронт-енд конзолата |
 
 ---
 
@@ -265,23 +258,28 @@ npm run serve
 | V7.0 | AI препоръки за страници и менюта (преглед / прилагане) | V7.0 (94 реда), 45f2670 |
 | V7.1 | AI подобрение на seed данни (AI притежава семантиката, правилата притежават структурата) | V7.1 (42 реда), 5ca6e72 |
 | V7.2 | SQL артефакти, записани в `db/` след успешен конвейер | eebff88 |
-| **V7.3** | **Надеждност на доставката: тестове на компилирани артефакти със самопроверка / унифициран изход за доставка на SQL / AI препоръки за всяка таблица** | **V7.3 (138 реда), 696765b** |
+| **V7.3** | **Надеждност на доставката: тестове на компилирани артефакти със самопроверка / унифициран изход за доставка на SQL / AI препоръки за всяка таблица** | **V7.3 (138 реда)** |
 | **V7.4** | Повторима доставка: внедряем от празна база данни, всеки комит гарантирано изпълним | c306e29 |
-| **V7.5** | **Езикова конфигурация на проекта: списък от 206 езика / език по подразбиране / включени езици, вмъкване на lang и dir в генерирания код** | 7a9afa0 + abac56d |
-| **V8.0** | **i18n на цялата страница: рамка от 206 езика (8 професионално преведени), двупътна i18n с договор за нулева разлика при OFF** | 9e5dd57 → 7d57aea |
-| **V8.1** | **Втвърдяване на качеството: офлайн стенд за контракт (9 режима, нулева разлика OFF) + unit тестове i18n-core + CI порта + честно разделяне в README (рамка 206 / преведени 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
-| **V9.0** | **Генерираните артефакти модернизирани към Vue 3 + Element Plus + Vite; проверено по време на изпълнение (40/40 проверки, успешен vite build, 14 екранни снимки incl. ar-SA RTL); коригирани 3 runtime дефекта** | 93a12d5 + e49330b  |
+| **V7.5** | Езикова конфигурация на проекта: списък от 206 езика / език по подразбиране / включени езици, вмъкване на lang и dir в генерирания код | 7a9afa0 + abac56d |
+| **V8.0** | i18n на цялата страница: рамка от 206 езика (8 професионално преведени), двупътна i18n с договор за нулева разлика при OFF | 9e5dd57 → 7d57aea |
+| **V8.1** | Втвърдяване на качеството: офлайн стенд за контракт (9 режима, нулева разлика OFF) + unit тестове i18n-core + CI порта + честно разделяне в README (рамка 206 / преведени 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
+| **V9.0** | Генерираните артефакти модернизирани към Vue 3 + Element Plus + Vite; проверено по време на изпълнение (40/40 проверки, успешен vite build, 14 екранни снимки incl. ar-SA RTL); коригирани 3 runtime дефекта | 93a12d5 + e49330b  |
 | **V9.1** | **Рефакторинг за по-лесна поддръжка · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **Център за тестване и проверка · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
-| **V9.3** | **Автоматизирано тестване на генерираните артефакти · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **текуща версия** |
+| **V9.2** | **Център за тестване и проверка · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **текуща версия** |
+| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
+| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
+| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
+| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
+| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
 
 ---
 
-> **V6.10 Наблюдаемост на платформата**: интегрира Actuator + Micrometer, семплирайки на всеки 5 секунди в пръстенов буфер в паметта (прозорец от 30 минути), плюс нова вградена страница „System Monitor“ — API за агрегиране на бек-енда `/monitor/*` + ECharts панели на фронт-енда. Само endpoint-ите `health/info/metrics` са в бял списък; `/actuator/health` е без token, докато `metrics` и др. изискват автентикация; `env/beans/heapdump/threaddump/loggers` никога не се разкриват. Прозорецът за семплиране е само за процес, губи се при рестарт и не се споделя между инстанции. Вижте `../codegen-server/docs/可观测性说明.md` (на китайски) за подробности.
+> **V6.10 Наблюдаемост на платформата**: интегрира Actuator + Micrometer, семплирайки на всеки 5 секунди в пръстенов буфер в паметта (прозорец от 30 минути), плюс нова вградена страница „System Monitor“ — API за агрегиране на бек-енда `/monitor/*` + ECharts панели на фронт-енда. Само endpoint-ите `health/info/metrics` са в бял списък; `/actuator/health` е без token, докато `metrics` и др. изискват автентикация; `env/beans/heapdump/threaddump/loggers` никога не се разкриват. Прозорецът за семплиране е само за процес, губи се при рестарт и не се споделя между инстанции. Вижте `docs/可观测性说明.md` (на китайски) за подробности.
 
 ## 13. Състояние на проекта
 
-- Текущата планирана линия на версиите е достигнала **V9.3** (възможностите продължават да се развиват: AI моделиране, подобрение на seed данни, система от пакети с възможности и т.н.).
+- Текущата планирана линия на версиите е достигнала **V9.2** (възможностите продължават да се развиват: AI моделиране, подобрение на seed данни, система от пакети с възможности и т.н.).
 - Придружаващ демо проект `demo_admin` (бек-енд 8140 / фронт-енд 9040) покрива сценариите дърво / CRUD / главен-детайл / само четене / печат и работи самостоятелно за проверка.
 - И двете хранилища са хоствани в Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
@@ -294,3 +292,39 @@ npm run serve
 - **Техническа поддръжка**: моля, пишете имейла си **на китайски**, включвайки описание на проблема, среда за изпълнение (JDK / MySQL / версия) и стъпки за възпроизвеждане
 
 > Чета и отговарям на всеки имейл. Докладите за грешки, заявките за функционалности и запитванията за сътрудничество са добре дошли.
+
+---
+
+## 15. Сравнение с подобни инструменти
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.

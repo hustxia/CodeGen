@@ -10,23 +10,39 @@ GitHub: https://github.com/hustxia/CodeGen
 > 各语言完整项目说明见 **[多语言项目介绍/](多语言项目介绍/)** 文件夹。
 
 
-> **Current release — V9.3 (Generated-artifact Automated Testing) on top of V9.2 (Test Center & Verification Hub)**
-> Three new product suites extend the V9.2 Verification Center: **S10** runs a real `mvn test` on the generated project
-> (Surefire parsing), **S11** covers artifact API tests (Docker/TestContainers) and **S12** artifact E2E (Playwright);
-> S11/S12 report an honest SKIPPED when their toolchain is absent. A **GEN** trigger, `TC_GEN_ROOT` injection,
-> `POST /tc/runs/gen` manual entry point, an `autoVerifyGen` write-hook (default off) and a front-end action
-> "Verify Generated Artifacts" complete the loop. End-to-end verified on a freshly built **device asset management**
-> system (4 tables): 12-step pipeline `success`, real artifact GEN run **PASSED**, **20/20 S10 cases**, three-layer
-> run/case/artifact persistence. Full-flow testing also fixed 4 pipeline defects and 3 Vue 2 leftovers in Vue 3 pages.
+> **Current release — V9.8 (Multi-pipeline concurrent runs + startup recovery) on top of V9.7 (fast table creation)**
+> **V9.8**: pipelines can now run concurrently — a `PipelineRunGate` enforces a global `max-running` cap
+> plus same-project mutual exclusion (cross-system parallel runs are safe; ports / logs / output dirs are
+> per-pipeline). A startup-recovery runner marks orphaned `running` pipelines as `failed` after a service
+> restart, so a restart can no longer leave a pipeline spinning forever. Full suite **462/462 green**.
 >
-> **V9.2 — Test Center & Verification Hub (previous release)**
-> Two merged sub-modules: **/test** case center (environments / suites / cases / datasets / runs / results / schedules,
-> 7 tables) and **/tc/center** verification center (`tc_run` / `tc_case_result` / `tc_artifact`, 9 suites S1-S9,
-> a global single-run lock with HTTP 409, and a `codegen.testcenter/v1` JSON summary shared by CI).
-> Full suite **373/373 green** (50 new tests); i18n contract 9/9; 206/206 locale keys; console build passed.
-> `verify.sh` now gates i18n + locales and emits the same JSON summary; generated output stays byte-identical.
+> **V9.7 — fast table creation (previous release)**
+> Two-phase skeleton generation: the AI only lists table / comment / column names; types and primary keys
+> are filled in by naming-semantics rules (`TableSkeletonExpander`), measured **3m13s → 54s (~3.6×)** on a
+> real local model. Plus an industry template library (e-commerce / ERP / CRM / CMS JSON packs) that clones
+> table structures in seconds with zero AI, through the same assemble funnel as the AI path.
 >
-> **V9.1 — maintainability refactor (previous release)**
+> **V9.6 — batched AI modeling jobs (previous release)**
+> For large / huge systems, modeling runs as a background job split into batches with a claim scheduler
+> (conditional-update claim, multi-worker, timeout reclaim & retry) and 2s polling progress in the console;
+> measured 11 batches / 70 tables / 8s (stub, 4 workers). Pipeline numbers gained a 4-digit sequence +
+> unique-key retry to eliminate second-timestamp collisions.
+>
+> **V9.5 — AI table recommendation (previous release)**
+> Independent `/gen/ai-build` entry: AI recommends table structures → editable → same-source DDL preview →
+> confirm to draft / database; supplement mode diffs against the target system's existing tables with
+> server-side hard dedup.
+>
+> **V9.4 — staged confirmation (previous release)**
+> One-sentence system building now goes through explicit stage gates: recommend (AI) → edit/preview
+> (read-only DDL sharing the exact `buildDdl` assembler used by execution) → confirm (draft / DB).
+>
+> **V9.2/V9.3 — test center & verification hub (earlier releases)**
+> `/test` case center (7 tables) + `/tc/center` verification center (9 suites S1-S9, 409 single-run lock,
+> CI-shared `codegen.testcenter/v1` summary); artifact verification S10-S12 (S11/S12 honestly SKIPPED
+> without toolchain); generated-artifact runtime fixes and end-to-end one-sentence system run.
+>
+> **V9.1 — maintainability refactor (earlier release)**
 > `GenScaffoldServiceImpl` was split from **5,072 → 931 lines** (914 orchestration + 17 reflection-compat
 > stubs) into 8 single-purpose writers
 > (Flow / Ops / Pom / Common / Auth / Seed / Frontend / TextSupport). Equivalence was proven by
@@ -272,7 +288,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | `codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
 | `多语言项目介绍/项目介绍.md` | Project introduction document, same source as this file |
 | `codegen-server/docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V9.3 |
-| `codegen-server/ROADMAP.md` | Release-by-release progress and verification records (V8.0 / V8.1 / V9.0 / V9.1 / V9.2 / V9.3) |
+| `codegen-server/ROADMAP.md` | Release-by-release progress and verification records (V8.0 / V8.1 / V9.0 → V9.8) |
 | `codegen-web/README.md` | Frontend console quick-start reference |
 
 ---
@@ -288,7 +304,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | V4.3 | Template regression & quality guardrails | V4.3 (200 lines) |
 | V4.4 | One-master-many-detail, cascade-write completeness, template lanes | V4.4 (154 lines) |
 | V4.5 | A4 print documents (zero third-party dependencies) | V4.5 (127 lines) |
-| V5.0 | One-sentence system build: pipeline + AI modeling + scaffold base | — |
+| V5.0 | One-sentence system build: pipeline + AI modeling + scaffold base | eec6117 (pipeline M1; prototype 13ecee2; AI modeling 5cf6436) |
 | V5.1 | DDL audit columns auto-completion | V5.1 (100 lines) |
 | V5.2 | Pipeline seed-data initialization step | V5.2 (107 lines), 84ec8dd |
 | V5.5 | Multi-module project generation wrap-up | af73dd3 |
@@ -301,8 +317,8 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | V6.6 | File capability pack | 98f3c09 |
 | V6.7 | Artifact test factory acceptance (test_enabled tri-state + H2 skeleton) | V6.7 (134 lines), 4e7d318 |
 | V6.8 | Artifact maintainability (dryRun / protected skip / brand parameterization) | V6.8 (141 lines), be6f858 |
-| V6.9 | Platform documentation center (backend base, frontend finished in the same batch) | — |
-| V6.10 | Platform observability: Actuator + in-memory metric window + embedded monitor page | — |
+| V6.9 | Platform documentation center (backend base, frontend finished in the same batch) | 49edbec (merge 62a7b17) |
+| V6.10 | Platform observability: Actuator + in-memory metric window + embedded monitor page | 49edbec / 62a7b17 (same batch; f3bb68e backfills main) |
 | V7.0 | AI page & menu recommendations (preview / apply) | V7.0 (94 lines), 45f2670 |
 | V7.1 | Seed-data AI enhancement (AI owns semantics, rules own structure) | V7.1 (42 lines), 5ca6e72 |
 | V7.2 | SQL deliverables written to `db/` after successful pipeline | eebff88 |
@@ -312,9 +328,14 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | **V8.0** | **Full-page i18n: 206-language framework (8 professionally translated), dual-track i18n with OFF zero-diff contract** | 9e5dd57 (scaffold i18n base) → 7d57aea (full rollout, 206 languages) |
 | **V8.1** | **Quality hardening: offline Freemarker contract harness (9 modes, OFF byte-zero-diff / ON emits `$t`) + `i18n-core` unit tests (vitest) + CI gate (`i18n-contract.yml`) + honest README split (framework 206 / translated 8) + `check-locale-keys.mjs` shipped in generated projects + translation contribution guide** | 93a12d5 + e49330b |
 | **V9.0** | **Generated-artifact modernization: Vue 3 + Element Plus + Vite (package.json / vite.config.js / main.js / router / store / request.js; template mechanics: `.sync`→`v-model`, `slot=`→`#`, `slot-scope`→`#default`, `.native` removed, font icons→component icons, `size="mini"`→`small`). Runtime-verified: Maven build + API-driven generation + 40/40 script assertions + `vite build` success + 14 Chrome screenshots incl. ar-SA RTL. 3 real defects found & fixed at runtime (`.native` leftovers, `index.html` entry location, missing `@` alias)** | 93a12d5 + e49330b (docs abe1c5d) |
-| **V9.1** | **Maintainability: `GenScaffoldServiceImpl` split 5,072 → 931 lines (914 orchestration + 17 reflection-compat stubs) into 8 single-purpose writers; output byte-identical (old vs new jar: 119 + 62 files, `diff -r` empty); full suite 312/312 green (Vue 3 baseline snapshots refreshed, i18n template guard made stack-aware, histogram probe locked to config contract); offline i18n contract 9/9** | 654b8e0  |
-| **V9.2** | **Test Center & Verification Hub: merged `/test` case center (7 tables: env/suite/case/dataset/run/result/schedule) + `/tc/center` verification center (`tc_run` / `tc_case_result` / `tc_artifact`, 9 registered suites S1-S9, global single-run 409 lock, `codegen.testcenter/v1` JSON summary shared with CI). 373/373 tests (50 new), 206/206 locale keys, i18n contract 9/9, front-end build passed; `verify.sh` gate aligned (MIN_TESTS 312 + i18n + locales); generated output byte-identical** | V9.2 release  |
-| **V9.3** | **Generated-artifact automated testing: extends the V9.2 Verification Center with S10 (real `mvn test` on generated projects + Surefire parsing), S11 (artifact API tests, Docker/TestContainers, honestly SKIPPED when unavailable) and S12 (artifact E2E, Playwright, SKIPPED when unavailable); adds the GEN trigger, `TC_GEN_ROOT` env injection, `POST /tc/runs/gen` manual entry point, `autoVerifyGen` write-hook (default off) and a front-end "Verify Generated Artifacts" action. End-to-end: a freshly built complete system (device asset management, 4 tables) ran the 12-step pipeline to `success`, and its real artifact GEN run was PASSED with 20/20 S10 cases and three-layer run/case/artifact persistence. Full-flow testing also fixed 4 pipeline defects (fat-jar self-check classpath, subprocess relative paths, Vite vs vue-cli startup, NOT_NULL stale fail_reason) and 3 Vue 2 leftovers in generated Vue 3 pages** | V9.3 release, **current** |
+| **V9.1** | **Maintainability: `GenScaffoldServiceImpl` split from 5,072 lines to 931 (914 lines of orchestration + 17 lines of reflection-compat stubs; 8 single-purpose writers: Flow / Ops / Pom / Common / Auth / Seed / Frontend / TextSupport); generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); full suite 312/312 green (13 legacy red tests paid off: baseline snapshots refreshed for the Vue 3 migration, i18n template-guard assertion made stack-aware, histogram probe locked to config contract); offline i18n contract still 9/9** | V9.1 |
+| **V9.2** | **Test Center & Verification Hub: merged `/test` case center (7 tables: env/suite/case/dataset/run/result/schedule) + `/tc/center` verification center (tc_run / tc_case_result / tc_artifact, 9 registered suites S1-S9, global single-run 409 lock, `codegen.testcenter/v1` JSON summary shared with CI); 373/373 tests (50 new), i18n contract 9/9** | 8be92a9 + f9f16d2 |
+| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
+| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
+| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
+| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
+| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
 
 ---
 
@@ -322,7 +343,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ## 13. Project Status
 
-- The current released version is **V9.3** (Generated-artifact Automated Testing: S10 artifact unit tests with real `mvn test`, S11 artifact API tests and S12 artifact E2E on top of the V9.2 Verification Center; GEN trigger, `TC_GEN_ROOT`, `POST /tc/runs/gen` and a front-end verification action). It builds on **V9.2** (Test Center + Verification Hub), **V9.1** (byte-identical maintainability refactor), **V9.0** (Vue 3 + Element Plus + Vite generated artifacts), **V8.1** (quality gate) and **V8.0** (full-page i18n). Language support verified on 2026-11-14: 206/206 locales, 12 RTL, 8 translated word banks key-identical to zh-CN (60 keys each). Generated-artifact verification on 2026-11-14: real run PASSED with 20/20 S10 cases, S11/S12 honestly SKIPPED.
+- The current released version is **V9.8** (multi-pipeline concurrent runs via `PipelineRunGate` — global `max-running` cap + same-project mutual exclusion — plus startup recovery that marks orphaned `running` pipelines `failed` after a restart). It builds on **V9.7** (fast table creation: two-phase skeleton generation, measured 3m13s → 54s, + industry template library), **V9.6** (batched AI modeling jobs for large/huge systems), **V9.5** (AI table recommendation with human confirmation), **V9.4** (staged confirmation), **V9.2/V9.3** (test center + verification hub), **V9.1** (byte-identical maintainability refactor), **V9.0** (Vue 3 + Element Plus + Vite generated artifacts), **V8.1** (quality gate) and **V8.0** (full-page i18n). Language support verified on 2026-11-14: 206/206 locales, 12 RTL, 8 translated word banks key-identical to zh-CN (60 keys each). Generated-artifact verification on 2026-11-14: real run PASSED with 20/20 S10 cases, S11/S12 honestly SKIPPED.
 - A companion demo project `demo_admin` (backend 8140 / frontend 9040) covers tree / CRUD / master-detail / read-only / print scenarios and runs standalone for verification.
 - Both repositories are hosted on Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
