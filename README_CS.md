@@ -282,7 +282,7 @@ Frontend běží výchozí port **9530**, proxy `/dev-api` na backend port 8120.
 
 ## 13. Stav projektu
 
-- Aktuální plánovaná verzní řada dosáhla **V9.2** (kapacity se neustále iterují: AI modelování, vylepšení seed dat, systém balíčků schopností atd.).
+- Aktuální plánovaná verzní řada dosáhla **V9.8** (kapacity se neustále iterují: AI modelování, vylepšení seed dat, systém balíčků schopností atd.).
 - Doprovodný demo projekt `demo_admin` (backend 8140 / frontend 9040) pokrývá scénáře strom / CRUD / master-detail / jen pro čtení / tisk a běží samostatně pro ověření.
 - Oba repozitáře jsou hostovány na Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

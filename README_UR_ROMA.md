@@ -280,7 +280,7 @@ Frontend default port **9530** hai, `/dev-api` ko backend port 8120 par proxy ka
 
 ## 13. Project Status
 
-- Mazkoor planned version line **V9.2** tak pahunch chuki hai (capabilities iterate hoti rahtin hain: AI modeling, seed-data enhancement, capability-pack system, waghaira).
+- Mazkoor planned version line **V9.8** tak pahunch chuki hai (capabilities iterate hoti rahtin hain: AI modeling, seed-data enhancement, capability-pack system, waghaira).
 - Ek companion demo project `demo_admin` (backend 8140 / frontend 9040) tree / CRUD / master-detail / read-only / print scenarios cover karta hai aur verification ke liye standalone run hota hai.
 - Dono repositories Gitee par host hain: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
