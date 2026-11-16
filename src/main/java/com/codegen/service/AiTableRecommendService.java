@@ -24,4 +24,10 @@ public interface AiTableRecommendService {
 
     /** 确认落库/建库：draft=create；build=create+prepareDb；micro=逐模块 create/prepareDb */
     GenAiBuildConfirmVO confirm(GenAiBuildConfirmDTO dto);
+
+    /** V9.7 行业模板清单（key/name/desc/模块数/表数，不含表结构明细） */
+    java.util.List<com.codegen.vo.GenAiTemplateVO> templates();
+
+    /** V9.7 行业模板建表：克隆模板表结构 → 走与 AI 推荐相同的收口（去重/差集/关系视图） */
+    GenAiBuildPlanVO planFromTemplate(com.codegen.dto.GenAiTemplatePlanDTO dto);
 }

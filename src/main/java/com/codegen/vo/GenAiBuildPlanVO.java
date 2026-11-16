@@ -19,6 +19,9 @@ import java.util.Map;
 @Schema(description = "V9.5 AI 推荐建表结果")
 public class GenAiBuildPlanVO {
 
+    @Schema(description = "计划来源：ai=AI 生成 template=行业模板克隆（V9.7）", example = "ai")
+    private String source = "ai";
+
     @Schema(description = "补表目标系统 ID（scope=supplement 时回显）")
     private Long projectId;
 

@@ -411,10 +411,13 @@ public class AiBuildJobServiceImpl implements AiBuildJobService {
         log.info("V9.6 拆模块完成 jobId={} 模块={} 批次={}", job.getId(), cap, cap + 1);
     }
 
-    /** 单个模块建模 */
+    /** 单个模块建模：V9.7 骨架模式 AI 只列字段名，类型由规则补全（快 3-5 倍） */
     private void doModule(GenAiBuildJob job, GenAiBuildJobBatch batch, Payload p) {
-        GenPipelineAiVO r = aiModelService.model(p.getDto().getSystemName(), p.getDescForAi(),
-                batch.getModuleName());
+        GenAiBuildPlanDTO dto = p.getDto();
+        boolean skeleton = !"full".equalsIgnoreCase(dto.getGenerationMode());
+        GenPipelineAiVO r = skeleton
+                ? aiModelService.modelSkeleton(dto.getSystemName(), p.getDescForAi(), batch.getModuleName())
+                : aiModelService.model(dto.getSystemName(), p.getDescForAi(), batch.getModuleName());
         List<GenPipelineAiVO.TableModel> tables = r == null || r.getTables() == null
                 ? List.of() : r.getTables();
         markBatch(batch, "success", tables.isEmpty() ? "模型未返回表" : null, tables.size());

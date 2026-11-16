@@ -14,6 +14,7 @@ import com.codegen.dto.GenPipelinePrepareDTO;
 import com.codegen.service.AiModelService;
 import com.codegen.service.AiTableRecommendService;
 import com.codegen.service.GenPipelineService;
+import com.codegen.support.IndustryTemplateRegistry;
 import com.codegen.vo.GenAiBuildConfirmVO;
 import com.codegen.vo.GenAiBuildPlanVO;
 import com.codegen.vo.GenPipelineAiVO;
@@ -57,6 +58,9 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
     /** 补表差集数据源：只读 gen_table 已有表名（@TableLogic 自动过滤 deleted=1） */
     @Autowired
     private GenTableMapper genTableMapper;
+    /** V9.7 行业模板注册表：预置行业表结构包（电商/ERP/CRM/CMS），克隆后走同一条收口链路 */
+    @Autowired
+    private com.codegen.support.IndustryTemplateRegistry templateRegistry;
 
     @Override
     public GenAiBuildPlanVO plan(GenAiBuildPlanDTO dto) {
@@ -64,10 +68,6 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
             throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
                     "AI 建模未启用，请在配置中开启 LLM 或在「一句话建系统」向导使用手动 DDL");
         }
-        GenAiBuildPlanVO vo = new GenAiBuildPlanVO();
-        vo.setScale(dto.getScale());
-        vo.setDeploy(dto.getDeploy());
-
         // 补表：先读出目标系统已有表做差集基数（设计 §5.4「只推荐该系统缺失的表」）
         boolean supplement = isSupplement(dto.getScope());
         Set<String> existing = new LinkedHashSet<>();
@@ -77,8 +77,6 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
                         "补表必须选择目标系统（projectId），否则无法判断哪些表已存在");
             }
             existing.addAll(loadExistingTableNames(dto.getProjectId()));
-            vo.setProjectId(dto.getProjectId());
-            vo.setExistingTableCount(existing.size());
             log.info("V9.5 补表模式 projectId={} 已有表 {} 张", dto.getProjectId(), existing.size());
         }
         // 已有表清单同时写进 prompt：先让模型主动避让，再靠下面的服务端差集兜底
@@ -86,11 +84,18 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
 
         List<GenPipelineAiVO.TableModel> tables = new ArrayList<>();
         Map<String, List<String>> moduleTableNames = new LinkedHashMap<>();
+        Boolean relevanceWarning = null;
+        String relevanceTip = null;
+
+        // V9.7 两段式：skeleton=AI 只列字段名骨架（类型规则补全，输出量降 60%+）；full=完整设计
+        boolean skeleton = !"full".equalsIgnoreCase(dto.getGenerationMode());
 
         boolean huge = "large".equals(dto.getScale()) || "huge".equals(dto.getScale());
         if (!huge) {
             // 精简：一次整体建模
-            GenPipelineAiVO r = aiModelService.model(dto.getSystemName(), descForAi, null);
+            GenPipelineAiVO r = skeleton
+                    ? aiModelService.modelSkeleton(dto.getSystemName(), descForAi, null)
+                    : aiModelService.model(dto.getSystemName(), descForAi, null);
             if (r != null && r.getTables() != null) {
                 tables.addAll(r.getTables());
             }
@@ -101,8 +106,8 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
             com.codegen.vo.GenPipelineAiModulesVO modulesVo =
                     aiModelService.modules(dto.getSystemName(), dto.getSystemDesc());
             if (modulesVo != null) {
-                vo.setRelevanceWarning(modulesVo.isRelevanceWarning());
-                vo.setRelevanceTip(modulesVo.getRelevanceTip());
+                relevanceWarning = modulesVo.isRelevanceWarning();
+                relevanceTip = modulesVo.getRelevanceTip();
                 List<com.codegen.vo.GenPipelineAiModulesVO.Module> mods = modulesVo.getModules();
                 int limit = Math.min(mods.size(), MODULE_CAP);
                 if (mods.size() > MODULE_CAP) {
@@ -111,7 +116,9 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
                 }
                 for (int i = 0; i < limit; i++) {
                     com.codegen.vo.GenPipelineAiModulesVO.Module m = mods.get(i);
-                    GenPipelineAiVO r = aiModelService.model(dto.getSystemName(), descForAi, m.getName());
+                    GenPipelineAiVO r = skeleton
+                            ? aiModelService.modelSkeleton(dto.getSystemName(), descForAi, m.getName())
+                            : aiModelService.model(dto.getSystemName(), descForAi, m.getName());
                     if (r != null && r.getTables() != null && !r.getTables().isEmpty()) {
                         List<String> names = new ArrayList<>();
                         for (GenPipelineAiVO.TableModel t : r.getTables()) {
@@ -123,6 +130,33 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
                 }
             }
         }
+
+        return assemblePlan(dto, tables, moduleTableNames, existing, relevanceWarning, relevanceTip);
+    }
+
+    /**
+     * 把「已产出的表 + 模块映射」收口成计划 VO：去重 + 补表差集 + 关系视图 + 分类计数。
+     *
+     * <p>同步路径（small）与分批任务（{@code AiBuildJobServiceImpl}）共用同一段收口逻辑，
+     * 避免两条路径对「排除表」「主从关系」的口径不一致。
+     */
+    GenAiBuildPlanVO assemblePlan(GenAiBuildPlanDTO dto,
+                                  List<GenPipelineAiVO.TableModel> tables,
+                                  Map<String, List<String>> moduleTableNames,
+                                  Set<String> existing,
+                                  Boolean relevanceWarning,
+                                  String relevanceTip) {
+        GenAiBuildPlanVO vo = new GenAiBuildPlanVO();
+        vo.setScale(dto.getScale());
+        vo.setDeploy(dto.getDeploy());
+        if (isSupplement(dto.getScope())) {
+            vo.setProjectId(dto.getProjectId());
+            vo.setExistingTableCount(existing == null ? 0 : existing.size());
+        }
+        if (relevanceWarning != null) {
+            vo.setRelevanceWarning(relevanceWarning);
+        }
+        vo.setRelevanceTip(relevanceTip);
 
         // 服务端兜底：推荐结果内部去重 + 补表差集。
         // 只靠 prompt 约束模型避让已有表不可靠（实测模型仍会整批返回已有表），所以在这里硬过滤。
@@ -152,6 +186,52 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
                 default -> { }
             }
         }
+        return vo;
+    }
+
+    @Override
+    public java.util.List<com.codegen.vo.GenAiTemplateVO> templates() {
+        return templateRegistry.list();
+    }
+
+    @Override
+    public GenAiBuildPlanVO planFromTemplate(com.codegen.dto.GenAiTemplatePlanDTO dto) {
+        com.codegen.vo.GenAiTemplateVO template = templateRegistry.get(dto.getTemplateKey());
+        if (template == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                    "行业模板不存在：" + dto.getTemplateKey());
+        }
+        IndustryTemplateRegistry.CloneResult cloned =
+                templateRegistry.cloneTables(template, dto.getModuleNames());
+        if (cloned.tables().isEmpty()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                    "模板中没有可用的表（请检查模块选择）");
+        }
+
+        // 补表差集与 AI 路径同口径：模板表也可能与目标系统已有表撞名
+        boolean supplement = isSupplement(dto.getScope());
+        Set<String> existing = new LinkedHashSet<>();
+        if (supplement) {
+            if (dto.getProjectId() == null) {
+                throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                        "补表必须选择目标系统（projectId），否则无法判断哪些表已存在");
+            }
+            existing.addAll(loadExistingTableNames(dto.getProjectId()));
+        }
+
+        // 复用与 AI 完全相同的收口逻辑（去重/差集/关系视图/计数），前端零差异消费
+        GenAiBuildPlanDTO planDto = new GenAiBuildPlanDTO();
+        planDto.setSystemName(dto.getSystemName());
+        planDto.setSystemDesc(dto.getSystemDesc());
+        planDto.setScope(dto.getScope());
+        planDto.setProjectId(dto.getProjectId());
+        planDto.setScale(dto.getScale());
+        planDto.setDeploy(dto.getDeploy());
+        GenAiBuildPlanVO vo = assemblePlan(planDto, cloned.tables(),
+                cloned.moduleTableNames(), existing, null, null);
+        vo.setSource("template");
+        log.info("V9.7 模板建表 key={} 模块 {} 表 {} 张（排除 {}）",
+                dto.getTemplateKey(), vo.getModuleCount(), vo.getTableCount(), vo.getExcludedCount());
         return vo;
     }
 
@@ -251,7 +331,7 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
     }
 
     /** 目标系统已有表名（小写归一），只查 table_name 一列；逻辑删除由 @TableLogic 自动过滤 */
-    private Set<String> loadExistingTableNames(Long projectId) {
+    Set<String> loadExistingTableNames(Long projectId) {
         List<GenTable> rows = genTableMapper.selectList(new QueryWrapper<GenTable>()
                 .select("table_name")
                 .eq("project_id", projectId));
@@ -266,7 +346,7 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
     }
 
     /** 已有表清单追加进系统描述：先提示模型别重复，服务端再兜底过滤（模型不听话时也不放行） */
-    private static String withExistingHint(String desc, Set<String> existing) {
+    static String withExistingHint(String desc, Set<String> existing) {
         String base = desc == null ? "" : desc;
         if (existing == null || existing.isEmpty()) {
             return base;

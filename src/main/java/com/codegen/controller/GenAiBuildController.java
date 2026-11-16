@@ -83,6 +83,18 @@ public class GenAiBuildController {
         return Result.ok(null);
     }
 
+    @Operation(summary = "V9.7 行业模板清单（电商/ERP/CRM/CMS，秒级克隆表结构）")
+    @GetMapping("/templates")
+    public Result<java.util.List<com.codegen.vo.GenAiTemplateVO>> templates() {
+        return Result.ok(aiBuildService.templates());
+    }
+
+    @Operation(summary = "V9.7 行业模板建表：克隆模板表结构（不调 LLM），走与 AI 相同的收口/编辑/落库链路")
+    @PostMapping("/plan/template")
+    public Result<GenAiBuildPlanVO> planFromTemplate(@RequestBody @Valid com.codegen.dto.GenAiTemplatePlanDTO dto) {
+        return Result.ok(aiBuildService.planFromTemplate(dto));
+    }
+
     @Operation(summary = "V9.5 配置：AI 建模是否可用（未配 LLM key 时前端禁用 AI 推荐）")
     @PostMapping("/config")
     public Result<java.util.Map<String, Object>> config() {

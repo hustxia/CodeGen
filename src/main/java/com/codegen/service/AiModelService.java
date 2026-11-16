@@ -27,6 +27,15 @@ public interface AiModelService {
     GenPipelineAiVO model(String systemName, String systemDesc, String moduleName);
 
     /**
+     * V9.7 两段式骨架建模（极速模式）：AI 只输出「表名 + 表注释 + 字段名/注释」，
+     * 不输出类型与主键——类型/长度/pk 由 {@code TableSkeletonExpander} 按命名语义规则补全。
+     *
+     * <p>输出量比 {@link #model} 降 60%+，本地 CPU 小模型单模块从 3 分钟级降到 1 分钟级。
+     * 返回的 VO 已补全为完整表结构，与 {@link #model} 同形，调用方无需区分。
+     */
+    GenPipelineAiVO modelSkeleton(String systemName, String systemDesc, String moduleName);
+
+    /**
      * 把系统拆分为 8-12 个业务模块（完整系统模式第一步）
      */
     GenPipelineAiModulesVO modules(String systemName, String systemDesc);

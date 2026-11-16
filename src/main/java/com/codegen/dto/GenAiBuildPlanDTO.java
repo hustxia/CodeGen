@@ -34,4 +34,8 @@ public class GenAiBuildPlanDTO {
 
     @Schema(description = "部署形态：mono=单体工程 micro=微服务拆分（超大型默认）", example = "micro")
     private String deploy = "micro";
+
+    @Schema(description = "V9.7 AI 生成模式：skeleton=极速骨架（AI 只列字段名，类型规则补全，快 3-5 倍）full=完整设计（AI 定类型）",
+            example = "skeleton")
+    private String generationMode = "skeleton";
 }
