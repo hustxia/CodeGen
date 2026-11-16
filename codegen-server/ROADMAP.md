@@ -1,8 +1,8 @@
 # 代码生成器 · 版本路线图（Roadmap）
 
-> 当前版本：**V9.3** — 生成产物自动化测试（S10/S11/S12 + GEN 触发），基于 V9.2 测试中心 + 验证中心；V8.0 全页面国际化 → V8.1 质量加固 → V9.0 生成物 Vue3 现代化 → V9.1 巨型类拆分 → V9.2 测试中心/验证中心 → V9.3 产物自动化测试，均已落地并通过验证  
-> 路线图建立：2026-11-12　|　最近更新：2026-11-14  
-> 状态：V9.3 已完成生成产物自动化测试；12 步全流程实测通过，真实产物 GEN 验证 PASSED（S10 20/20 用例、S11/S12 如实 SKIP、三层落库齐全）。
+> 当前版本：**V9.8** — 全页面国际化（V8.0）→ 质量加固（V8.1）→ 生成物 Vue3 现代化（V9.0）→ 巨型类拆分（V9.1）→ 测试/验证中心（V9.2）→ 分阶段确认（V9.4）→ AI 建表推荐（V9.5）→ 分批建模任务（V9.6）→ 快速建表：骨架生成 + 行业模板（V9.7）→ 多流水线并发 + 启动恢复（V9.8）  
+> 路线图建立：2026-11-12　|　最近更新：2026-11-16  
+> 状态：V9.1 已完成 `GenScaffoldServiceImpl` 拆分（5072 → 931 行：914 行编排 + 17 行反射兼容桩，新增 8 个职责单一的 Writer/Support 类），产物**逐字节零 diff**（新旧 jar 各生成 119 + 62 个文件，全量 diff 为空），全量测试 **312/312 通过**（顺带清偿 13 个历史红测试），离线 i18n 契约 **9/9**。
 
 本文档承接项目评估结论，把近期必须推进的三件事拆成可执行的版本里程碑：  
 **P0 前端升级 Vue 3 + Element Plus**、**P1 i18n 自动化测试**、**P1 README 诚实化与翻译共建**。
@@ -118,6 +118,42 @@
 
 ---
 
+### V9.5 — AI 建表推荐与人工确认（已完成）
+
+独立入口 `/gen/ai-build`：AI 推荐表结构 → 可编辑 → 同源 DDL 预览 → 确认落草稿/建库；补表按目标系统已有表做差集，服务端硬过滤重复表。
+
+### V9.6 — 大型/超大型分批建模任务（已完成）
+
+- [x] `gen_ai_build_job` / `gen_ai_build_batch` 两表，任务与批次落库，支持重启续跑。
+- [x] `AiBuildJobScheduler` 每 2s 认领 + 固定线程池多 worker 并发；认领用条件更新，多实例不重复。
+- [x] 进度查询 / 结果获取 / 取消 / 超时回收重试（默认 900s、重试 2 次）。
+- [x] 前端大型/超大型自动走异步任务，2s 轮询展示批次进度与明细。
+- [x] 实测（stub，4 worker）：电商 11 批 / 70 表 / 8s / 去重 70 唯一；失败任务正确 `failed`。
+- [x] 真实模型复验：Qwen3-4B（node-llama-cpp，OpenAI 兼容 11434）实测 5.2 tok/s；大型/超大型本地 4B 耗时 1h+ 不实用，超时需按 1800s 调整。
+- [ ] `confirm` 建库阶段分批化（超大型串行 DDL 会话，待排期）。
+
+详见 `docs/requirements/V9.6 大型系统分批建模任务-需求.md`、`docs/design/V9.6 大型系统分批建模任务-设计.md`。
+
+### V9.7 — 快速建表：两段式骨架生成 + 行业模板库（已完成，2026-11-16）
+
+- [x] **两段式骨架生成**（提速 3.6 倍）：AI 只输出表名 + 注释 + 字段名清单（`modelSkeleton`），类型/主键由 `TableSkeletonExpander` 按命名语义规则补全（`*_id→bigint`、`*_amount→decimal(12,2)`、`*_status→tinyint` 等），口径表锁进单测。真模型实测：宠物领养系统 3 表 3m13s → 54s。
+- [x] **行业模板库**（秒级、零 AI）：预置电商商城 / 进销存 ERP / 客户关系 CRM / 内容管理 CMS 四套模板包（`resources/industry-templates/*.json`），`GET /gen/ai-build/templates` + `POST /plan/template` 克隆；克隆走与 AI 相同的 assemblePlan 收口（去重/补表差集/关系视图），深拷贝防编辑污染。
+- [x] `generationMode`（skeleton|full）同时接入同步 plan 与 V9.6 分批任务；前端第①步加建表方式 / 生成模式。
+- [x] 测试 +23 用例；全量 453 run 0 fail。
+
+详见 `docs/design/V9.7快速建表-骨架生成与行业模板-设计.md`。
+
+### V9.8 — 多流水线并发运行 + 启动恢复（已完成，2026-11-16）
+
+- [x] **多流水线并发**：废除单线程执行器 + 全局 `AtomicBoolean`（`max-running` 死配置首次接线）。新增 `PipelineRunGate`：全局并发上限 + 同系统（projectId）互斥——跨系统并行安全（执行器无实例态、日志按流水线号分目录、端口按流水线分配），同系统串行防生成目录/目标库互踩。
+- [x] run() 先占闸门再分配端口（被拒零副作用）；端口/投递失败正确释放闸门；`allocatePort` 加 synchronized 防"彼此未落库"窗口。
+- [x] **启动恢复**：流水线执行线程在 JVM 内存里，服务重启后 DB 残留 running 孤儿状态（实际事故：10:02 重启打断药品管理流水线）。`PipelineStartupRecovery` 启动时批量 running → failed，并解除同名库活流水线阻断。
+- [x] 流水线号防撞加固：秒级时间戳 + 4 位自增序号 + `uk_no` 冲突换号重试（清雪花 id 后重插）。
+- [x] 补齐 V9.2/V9.4 遗留入库：DDL 只读预览接口、审批节点按 roleCode 实查校验（原恒放行）、自检肥 jar 下诚实跳过编译检查、异步线程 last_gen_by 空指针防护。
+- [x] 测试 +9 用例（闸门 7 + 恢复 2）；全量 462 run 0 fail。
+
+---
+
 ### V9.2+ — 体验与生态（P2，待排期）
 
 - [ ] H2 内存库一键 demo / Docker 镜像，降低上手门槛。
@@ -221,31 +257,15 @@
 
 ---
 
-## V9.3 — 生成产物自动化测试（已实现，2026-11-14）
+## V9.4 — 一句话建系统分阶段确认（已立项，待 UI 确认，尚未开发）
 
-> 主题由用户指定为「生成产物自动化测试」。在 V9.2 验证中心（S1–S9）之上扩展产物类套件，
-> 不重写测试中心；方案与实现记录见 `docs/代码生成器-V9.3-规划.md`。
+> 2026-11-14 用户指定纳入 V9.4。增强现有流水线，不新建另一套生成器；执行方式已确认为“每个阶段都确认”。
+> 需求：`docs/requirements/V9.4一句话建系统分阶段确认-需求.md`；设计：`docs/design/V9.4一句话建系统分阶段确认-设计.md`。
 
-**交付**
-- 套件：`TcSuite` 新增 **S10 产物单测**（对真实产物跑 `mvn test` + Surefire 解析）、**S11 产物接口测试**
-  （Docker/TestContainers，缺失如实 SKIPPED）、**S12 产物 E2E**（Playwright，缺失如实 SKIPPED）；
-  `GEN_PRODUCT_SUITES` / `isGenProductSuite()` 统一标识，前端按 `TcSuiteVO.genProduct` 渲染，不硬编码套件号。
-- 触发：`TestCenterExecutor` 新增 `GEN` trigger 与 `TC_GEN_ROOT`（经 `TcProcessSpec.env` 注入子进程）；
-  `autoVerifyGen` 默认 `false` 控制写盘后自动钩子；`POST /tc/runs/gen` 手动触发忽略该开关。
-- 前端：`views/verification/index.vue` 新增「验证生成产物」操作区，`api/verification.js` 新增 `triggerGen()`，
-  运行历史的 GEN 触发类型高亮。
-- 安全：`TcGenRunRequest` 只接 `genRoot`，不接收命令 / path 黑名单字段。
+**范围**
+- 一句话需求先形成可编辑、可勾选的模块与功能清单，再由清单驱动 AI 表建模。
+- 新增服务端完整 SQL 只读预览，预览与 `prepareDb` 共用唯一 `buildDdl`，确认前零任务、零台账、零业务 DDL。
+- 向导调整为“需求 → 功能清单 → 表结构与 SQL → 建表与构建”；建表后仍需单独点击才生成、打包、部署和健康检查。
+- 保留手动 DDL、危险语句拦截、失败重试和本机部署；不新增平台表、不接新模型供应商、不做无人值守执行。
 
-**验证**
-- `TcSuiteRegistryTest` 通过（12 套件 / 默认勾选 8 个）；`mvn -o compile` / `package`、控制台 `npm run build` 均通过。
-- 端到端：新建「设备资产管理系统」（`v93_asset_demo`，4 张表）真跑 12 步流水线 `status=success`、
-  `failReason=None`、后端 8140 / 前端 9040 / health 200。
-- 真实产物 GEN 验证：`TC20261114-00147`、`TC20261114-00109` 均 **PASSED**；S10 真跑产物自带的
-  4 个 ControllerTest **20/20 用例全过**，S11/S12 如实 SKIPPED，`tc_run` / `tc_case_result` /
-  `tc_artifact` 三层落库核对无误（1 行 / 3 行 / 3 个日志）。
-- 全流程实测修掉 4 个流水线缺陷（肥 jar 自检 classpath、子进程相对路径、Vite 与 vue-cli 启动串台、
-  MyBatis-Plus NOT_NULL 导致 `fail_reason` 残留）与生成产物 Vue3 页面 3 处 Vue2 遗留
-  （`gen:end` 尾部标记、`GroupView` 的 `h(RouterView)`、`>>>` 深度选择器），已沉淀坑 65–69。
-
-**未做**：S11/S12 真实接入（需 Docker + Playwright 且产物内置 TestContainers / RestAssured /
-Playwright 测试骨架）；`autoVerifyGen` 保持默认关闭，避免日常生成刷测试记录。
+**当前状态**：仅完成需求/设计文档与静态 UI 原型，UI 尚待用户确认；后端、前端和端到端验证均未开始。

@@ -703,6 +703,12 @@ public final class GenTemplateModel {
         boolean hasMultiImage = fileOn && (hasMultiImageColumn(bizModel)
                 || childrenModel.stream().anyMatch(GenTemplateModel::childHasMultiImage));
         m.put("hasMultiImage", hasMultiImage);
+        // V9.5 §4.7 富文本：不受 fileEnabled 网控（正文列是否需要富文本与文件上传开关无关）。
+        // 统计范围含主表 + 子表/孙表，模板对 child.formColumns / gc.formColumns 同样渲染编辑器，
+        // 只看主表会让「富文本列只在子表」的页面漏 import（渲染即 Unknown custom element）。
+        boolean hasRichText = hasRichTextColumn(bizModel)
+                || childrenModel.stream().anyMatch(GenTemplateModel::childHasRichText);
+        m.put("hasRichText", hasRichText);
 
         // ===== P3-2 多对多 =====
         // 中间表本身不需要一整套 CRUD 页面：它是关系，不是实体。
@@ -752,6 +758,9 @@ public final class GenTemplateModel {
         m.put("opColWidth", Math.max(120, btnCount * 62 + 30));
         // ID 列：19 位雪花号需要约 180px 才能完整显示
         m.put("idColWidth", 180);
+        // V9.5 §4.6 生成页面规范：物理主键 id 默认不渲染（列表/详情/表单）。
+        // 保留模型开关，便于将来「超级管理员调试模式」按项目配置打开，模板只消费此值。
+        m.put("showIdColumn", false);
 
         // 脱敏：任意列配了 maskType 就需要 vo.ftl 输出脱敏 getter
         m.put("hasMask", cols.stream().anyMatch(c -> c.getMaskType() != null && !c.getMaskType().isBlank()));
@@ -967,6 +976,28 @@ public final class GenTemplateModel {
         }
         for (Object grand : asList(child.get("grandChildren"))) {
             if (grand instanceof Map<?, ?> gm && hasMultiImageColumn(asList(gm.get("formColumns")))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** V9.5 §4.7 列模型是否带富文本标志 —— hasRichText 判定用 */
+    private static boolean isRichTextColumn(Object colModel) {
+        return colModel instanceof Map<?, ?> cm && Boolean.TRUE.equals(cm.get("isRichText"));
+    }
+
+    private static boolean hasRichTextColumn(List<?> columnModels) {
+        return columnModels != null && columnModels.stream().anyMatch(GenTemplateModel::isRichTextColumn);
+    }
+
+    /** 子表是否自带富文本列（含下级明细表单列）——与 childHasUpload 同口径 */
+    private static boolean childHasRichText(Map<String, Object> child) {
+        if (hasRichTextColumn(asList(child.get("formColumns")))) {
+            return true;
+        }
+        for (Object grand : asList(child.get("grandChildren"))) {
+            if (grand instanceof Map<?, ?> gm && hasRichTextColumn(asList(gm.get("formColumns")))) {
                 return true;
             }
         }
@@ -1270,6 +1301,8 @@ public final class GenTemplateModel {
             cm.put("isMultiImage", "multiImage".equals(htmlType));
             // 上传类控件统一标志（image/file/multiImage）——统计口径只认这一个，避免各处各写一遍
             cm.put("isUpload", "image".equals(htmlType) || "file".equals(htmlType) || "multiImage".equals(htmlType));
+            // V9.5 §4.7 富文本列派生标志（唯一实现在此，模板只消费）
+            cm.put("isRichText", "richtext".equals(htmlType));
             // P1-2 列宽自适应：按控件类型与宽度语义给默认值，避免所有列等宽
             cm.put("colWidth", columnWidth(c, htmlType, javaType));
             cm.put("dictType", hasDict ? dictType.trim() : "");

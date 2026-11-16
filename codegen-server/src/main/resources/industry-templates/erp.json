@@ -1,0 +1,204 @@
+{
+  "key": "erp",
+  "name": "进销存 ERP",
+  "desc": "物料、采购、销售、库存、生产、财务等企业资源计划核心域",
+  "modules": [
+    {
+      "name": "物料管理",
+      "tables": [
+        {
+          "tableName": "material_category",
+          "tableComment": "物料分类",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "parent_id", "type": "bigint", "comment": "上级分类"},
+            {"name": "category_name", "type": "varchar(64)", "comment": "分类名称"},
+            {"name": "category_code", "type": "varchar(64)", "comment": "分类编码"},
+            {"name": "sort", "type": "int", "comment": "排序号"}
+          ]
+        },
+        {
+          "tableName": "measure_unit",
+          "tableComment": "计量单位",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "unit_name", "type": "varchar(32)", "comment": "单位名称"},
+            {"name": "unit_code", "type": "varchar(32)", "comment": "单位编码"},
+            {"name": "conversion_rate", "type": "decimal(5,2)", "comment": "换算率"}
+          ]
+        },
+        {
+          "tableName": "material",
+          "tableComment": "物料档案",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "material_no", "type": "varchar(64)", "comment": "物料编码"},
+            {"name": "material_name", "type": "varchar(128)", "comment": "物料名称"},
+            {"name": "category_id", "type": "bigint", "comment": "所属分类"},
+            {"name": "unit_id", "type": "bigint", "comment": "计量单位"},
+            {"name": "spec", "type": "varchar(255)", "comment": "规格型号"},
+            {"name": "safe_stock_num", "type": "int", "comment": "安全库存"},
+            {"name": "status", "type": "tinyint", "comment": "启用状态"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "采购管理",
+      "tables": [
+        {
+          "tableName": "supplier",
+          "tableComment": "供应商",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "supplier_name", "type": "varchar(128)", "comment": "供应商名称"},
+            {"name": "supplier_code", "type": "varchar(64)", "comment": "供应商编码"},
+            {"name": "contact_person", "type": "varchar(64)", "comment": "联系人"},
+            {"name": "contact_phone", "type": "varchar(20)", "comment": "联系电话"},
+            {"name": "address", "type": "text", "comment": "地址"},
+            {"name": "status", "type": "tinyint", "comment": "合作状态"}
+          ]
+        },
+        {
+          "tableName": "purchase_order",
+          "tableComment": "采购订单",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "purchase_no", "type": "varchar(64)", "comment": "采购单号"},
+            {"name": "supplier_id", "type": "bigint", "comment": "供应商"},
+            {"name": "buyer_id", "type": "bigint", "comment": "采购员"},
+            {"name": "total_amount", "type": "decimal(12,2)", "comment": "采购总额"},
+            {"name": "expect_date", "type": "date", "comment": "期望到货日"},
+            {"name": "status", "type": "tinyint", "comment": "单据状态"}
+          ]
+        },
+        {
+          "tableName": "purchase_order_item",
+          "tableComment": "采购订单明细",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "purchase_id", "type": "bigint", "comment": "所属采购单"},
+            {"name": "material_id", "type": "bigint", "comment": "物料"},
+            {"name": "purchase_price", "type": "decimal(12,2)", "comment": "采购单价"},
+            {"name": "quantity", "type": "int", "comment": "采购数量"},
+            {"name": "arrived_num", "type": "int", "comment": "已到货数量"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "销售管理",
+      "tables": [
+        {
+          "tableName": "erp_customer",
+          "tableComment": "客户档案",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "customer_name", "type": "varchar(128)", "comment": "客户名称"},
+            {"name": "customer_code", "type": "varchar(64)", "comment": "客户编码"},
+            {"name": "contact_person", "type": "varchar(64)", "comment": "联系人"},
+            {"name": "contact_phone", "type": "varchar(20)", "comment": "联系电话"},
+            {"name": "credit_level", "type": "tinyint", "comment": "信用等级"},
+            {"name": "status", "type": "tinyint", "comment": "合作状态"}
+          ]
+        },
+        {
+          "tableName": "sales_order",
+          "tableComment": "销售订单",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "sales_no", "type": "varchar(64)", "comment": "销售单号"},
+            {"name": "customer_id", "type": "bigint", "comment": "客户"},
+            {"name": "saler_id", "type": "bigint", "comment": "销售员"},
+            {"name": "total_amount", "type": "decimal(12,2)", "comment": "销售总额"},
+            {"name": "sign_date", "type": "date", "comment": "签约日期"},
+            {"name": "status", "type": "tinyint", "comment": "单据状态"}
+          ]
+        },
+        {
+          "tableName": "sales_order_item",
+          "tableComment": "销售订单明细",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "sales_id", "type": "bigint", "comment": "所属销售单"},
+            {"name": "material_id", "type": "bigint", "comment": "物料"},
+            {"name": "sale_price", "type": "decimal(12,2)", "comment": "销售单价"},
+            {"name": "quantity", "type": "int", "comment": "销售数量"},
+            {"name": "delivered_num", "type": "int", "comment": "已发货数量"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "库存管理",
+      "tables": [
+        {
+          "tableName": "erp_warehouse",
+          "tableComment": "仓库档案",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "warehouse_name", "type": "varchar(128)", "comment": "仓库名称"},
+            {"name": "warehouse_code", "type": "varchar(64)", "comment": "仓库编码"},
+            {"name": "warehouse_type", "type": "tinyint", "comment": "仓库类型"},
+            {"name": "address", "type": "text", "comment": "仓库地址"}
+          ]
+        },
+        {
+          "tableName": "inventory",
+          "tableComment": "即时库存",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "material_id", "type": "bigint", "comment": "物料"},
+            {"name": "warehouse_id", "type": "bigint", "comment": "仓库"},
+            {"name": "stock_num", "type": "int", "comment": "库存数量"},
+            {"name": "lock_num", "type": "int", "comment": "锁定数量"}
+          ]
+        },
+        {
+          "tableName": "stock_transfer_order",
+          "tableComment": "调拨单",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "transfer_no", "type": "varchar(64)", "comment": "调拨单号"},
+            {"name": "out_warehouse_id", "type": "bigint", "comment": "调出仓库"},
+            {"name": "in_warehouse_id", "type": "bigint", "comment": "调入仓库"},
+            {"name": "material_id", "type": "bigint", "comment": "物料"},
+            {"name": "quantity", "type": "int", "comment": "调拨数量"},
+            {"name": "status", "type": "tinyint", "comment": "单据状态"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "财务管理",
+      "tables": [
+        {
+          "tableName": "receivable",
+          "tableComment": "应收账款",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "biz_no", "type": "varchar(64)", "comment": "关联业务单号"},
+            {"name": "customer_id", "type": "bigint", "comment": "客户"},
+            {"name": "receivable_amount", "type": "decimal(12,2)", "comment": "应收金额"},
+            {"name": "received_amount", "type": "decimal(12,2)", "comment": "已收金额"},
+            {"name": "due_date", "type": "date", "comment": "到期日"},
+            {"name": "status", "type": "tinyint", "comment": "核销状态"}
+          ]
+        },
+        {
+          "tableName": "payable",
+          "tableComment": "应付账款",
+          "columns": [
+            {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
+            {"name": "biz_no", "type": "varchar(64)", "comment": "关联业务单号"},
+            {"name": "supplier_id", "type": "bigint", "comment": "供应商"},
+            {"name": "payable_amount", "type": "decimal(12,2)", "comment": "应付金额"},
+            {"name": "paid_amount", "type": "decimal(12,2)", "comment": "已付金额"},
+            {"name": "due_date", "type": "date", "comment": "到期日"},
+            {"name": "status", "type": "tinyint", "comment": "核销状态"}
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -9,6 +9,7 @@ import com.codegen.config.GenOutputProperties;
 import com.codegen.config.GenPipelineProperties;
 import com.codegen.dto.GenDdlExecuteDTO;
 import com.codegen.dto.GenPipelineCreateDTO;
+import com.codegen.dto.GenPipelineDdlPreviewDTO;
 import com.codegen.dto.GenPipelinePageDTO;
 import com.codegen.dto.GenPipelinePrepareDTO;
 import com.codegen.entity.GenPipeline;
@@ -25,12 +26,14 @@ import com.codegen.support.PipelineAssembler;
 import com.codegen.support.PipelineSseRegistry;
 import com.codegen.vo.GenPipelineAiVO;
 import com.codegen.vo.GenPipelineAuditReportVO;
+import com.codegen.vo.GenPipelineDdlPreviewVO;
 import com.codegen.vo.GenPipelineLintFixVO;
 import com.codegen.vo.GenPipelineLintVO;
 import com.codegen.vo.GenPipelinePrepareVO;
 import com.codegen.vo.GenPipelineVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -44,16 +47,17 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ExecutorService;import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 /**
  * 流水线编排实现。
  *
- * <p>并发策略：单线程执行器 + 运行标记，天然满足 M1「同一时刻仅 1 条运行中」；
- * run 接口只负责置状态和投递，执行体在后台线程，HTTP 请求立即返回。
+ * <p>并发策略（V9.8）：固定线程池（大小 = {@code gen.pipeline.max-running}）+ 运行闸门
+ * {@link com.codegen.support.PipelineRunGate}，多条流水线跨系统并行、同系统串行；
+ * run 接口只负责占闸门、置状态和投递，执行体在后台线程，HTTP 请求立即返回。
  */
 @Slf4j
 @Service
@@ -61,6 +65,12 @@ public class GenPipelineServiceImpl implements GenPipelineService {
 
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private static final Pattern DB_NAME = Pattern.compile("^[a-z][a-z0-9_]{1,62}$");
+
+    /**
+     * 流水线号序号：JVM 内自增，随机起点（重启后不会从 000 开始撞上一次的号）。
+     * 微服务形态一个请求内连建多条流水线，秒级时间戳不够用，靠它区分同秒。
+     */
+    private static final AtomicInteger NO_SEQ = new AtomicInteger(ThreadLocalRandom.current().nextInt(10000));
 
     @Autowired
     private GenPipelineMapper pipelineMapper;
@@ -89,14 +99,24 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     @Autowired
     private com.codegen.monitor.MonitorMetrics monitorMetrics;
 
-    /** 单线程执行器：M1 只允许一条流水线在跑，排队即拒绝 */
-    private final ExecutorService runner = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "pipeline-runner");
-        t.setDaemon(true);
-        return t;
-    });
+    /** 固定线程池（V9.8）：大小 = gen.pipeline.max-running，@PostConstruct 按配置创建 */
+    private ExecutorService runner;
 
-    private final AtomicBoolean running = new AtomicBoolean(false);
+    /** V9.8 并发闸门：全局上限 + 同系统互斥（共用生成目录/目标库，不能并行） */
+    private com.codegen.support.PipelineRunGate runGate;
+
+    @jakarta.annotation.PostConstruct
+    void initRunner() {
+        int max = Math.max(1, props.getMaxRunning());
+        AtomicInteger seq = new AtomicInteger();
+        this.runner = Executors.newFixedThreadPool(max, r -> {
+            Thread t = new Thread(r, "pipeline-runner-" + seq.incrementAndGet());
+            t.setDaemon(true);
+            return t;
+        });
+        this.runGate = new com.codegen.support.PipelineRunGate(max);
+        log.info("V9.8 流水线并发运行：max-running={}", max);
+    }
 
     // ==================== 查询 ====================
 
@@ -128,7 +148,6 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         }
 
         GenPipeline pipeline = new GenPipeline();
-        pipeline.setPipelineNo("PPL" + TS.format(LocalDateTime.now()));
         pipeline.setSystemName(dto.getSystemName().trim());
         pipeline.setSystemDesc(dto.getSystemDesc());
         pipeline.setDbName(dbName);
@@ -138,7 +157,7 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         pipeline.setSeedMode("rule".equals(dto.getSeedMode()) || "ai".equals(dto.getSeedMode())
                 ? dto.getSeedMode() : "off");
         pipeline.setStatus("draft");
-        pipelineMapper.insert(pipeline);
+        insertWithUniqueNo(pipeline);
 
         seedSteps(pipeline.getId());
         return detail(pipeline.getId());
@@ -163,6 +182,24 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     }
 
     // ==================== 建库建表 ====================
+
+    @Override
+    public GenPipelineDdlPreviewVO previewDdl(GenPipelineDdlPreviewDTO dto) {
+        String dbName = dto.getDbName() == null ? "" : dto.getDbName().trim();
+        if (!DB_NAME.matcher(dbName).matches()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                    "数据库名只能用小写字母开头的小写字母/数字/下划线（1~63 位）");
+        }
+        if (dto.getTables() == null || dto.getTables().isEmpty()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "AI 模式必须带回确认过的表结构");
+        }
+        GenPipelineDdlPreviewVO vo = new GenPipelineDdlPreviewVO();
+        vo.setDbName(dbName);
+        vo.setDdl(buildDdl(dbName, dto.getTables()));
+        vo.setTableCount(dto.getTables().size());
+        vo.setStatementCount(dto.getTables().size() + 1);
+        return vo;
+    }
 
     @Override
     public GenPipelinePrepareVO prepareDb(Long id, GenPipelinePrepareDTO dto) {
@@ -233,6 +270,12 @@ public class GenPipelineServiceImpl implements GenPipelineService {
             vo.setProjectId(projectId);
             vo.setDbName(result.getSchema());
             vo.setTableCount(result.getCreatedTables().size());
+            // V9.4：分阶段确认页要展示真实建表结果，全部取自 DDL 执行器回报，
+            // 不用 tableCount 冒充导入数，也不硬编码「0 失败语句」。
+            vo.setImportedTableCount(result.getImportedTables() == null ? 0 : result.getImportedTables().size());
+            vo.setFailedStatementCount(result.getFailedCount());
+            vo.setBlockedStatementCount(result.getBlockedCount());
+            vo.setStatementCount(result.getStatements() == null ? 0 : result.getStatements().size());
             vo.setAuditReport(auditReport);
             return vo;
         } catch (RuntimeException e) {
@@ -245,7 +288,7 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     /**
      * AI 表结构 → DDL：每张表固定补 id 主键 + 5 个审计列，从源头消灭「生成物跑起来才爆缺列」。
      */
-    private String buildDdl(String dbName, List<GenPipelineAiVO.TableModel> tables) {
+    String buildDdl(String dbName, List<GenPipelineAiVO.TableModel> tables) {
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE DATABASE IF NOT EXISTS `").append(dbName)
                 .append("` DEFAULT CHARACTER SET utf8mb4;\n");
@@ -316,36 +359,42 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         if (pipeline.getProjectId() == null) {
             throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "请先完成建库建表");
         }
-        // 端口预分配并回填：失败时任务留在原状态，可改端口后重试
-        if (pipeline.getBackendPort() == null) {
-            pipeline.setBackendPort(allocatePort(props.getBackendPortBase()));
-        }
-        if (pipeline.getFrontendPort() == null) {
-            pipeline.setFrontendPort(allocatePort(props.getFrontendPortBase()));
-        }
-        pipelineMapper.updateById(pipeline);
-
-        // 先投递任务再置位标记的窗口里可能被并发钻空子，但 M1 单用户场景可接受；
-        // 关键约束是：submit 失败必须回滚标记，否则运行标记永久卡死
-        if (!running.compareAndSet(false, true)) {
-            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "已有流水线在运行中，请稍后再试");
-        }
-        pipeline.setStatus("running");
-        pipelineMapper.updateById(pipeline);
-        push(pipeline);
+        // V9.8 先占闸门再分配端口：被拒绝时不产生任何副作用（不写库、不占端口）
+        final Long projectId = pipeline.getProjectId();
         try {
+            runGate.acquire(id, projectId);
+        } catch (IllegalStateException e) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), e.getMessage());
+        }
+        try {
+            // 端口预分配并回填：失败时任务留在原状态，可改端口后重试
+            if (pipeline.getBackendPort() == null) {
+                pipeline.setBackendPort(allocatePort(props.getBackendPortBase()));
+            }
+            if (pipeline.getFrontendPort() == null) {
+                pipeline.setFrontendPort(allocatePort(props.getFrontendPortBase()));
+            }
+            pipelineMapper.updateById(pipeline);
+
+            pipeline.setStatus("running");
+            pipelineMapper.updateById(pipeline);
+            push(pipeline);
             runner.submit(() -> {
                 try {
                     executor.execute(id);
                 } finally {
-                    running.set(false);
+                    runGate.release(id, projectId);
                 }
             });
         } catch (RuntimeException e) {
-            running.set(false);
-            pipeline.setStatus("failed");
-            pipeline.setFailReason("流水线投递失败：" + e.getMessage());
-            pipelineMapper.updateById(pipeline);
+            // 端口分配失败/投递失败：释放闸门。端口失败时状态未变，留在原状态可重试；
+            // 已置 running 的（投递被拒）置 failed
+            runGate.release(id, projectId);
+            if ("running".equals(pipeline.getStatus())) {
+                pipeline.setStatus("failed");
+                pipeline.setFailReason("流水线投递失败：" + e.getMessage());
+                pipelineMapper.updateById(pipeline);
+            }
             throw e;
         }
         return detail(id);
@@ -523,6 +572,40 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         }
     }
 
+    // ==================== 流水线号 ====================
+
+    /**
+     * 插入流水线，撞 uk_no 就换号重插。
+     *
+     * <p>流水线号 = PPL + 秒级时间戳 + 3 位序号。只用时间戳时，一个请求里连建多条
+     * （微服务形态逐模块建库、或用户连点两次）必然同秒撞号，前端看到的就是
+     * 「库存仓储 → mall_m3（ID ）failed / Duplicate entry 'PPL...' for key 'gen_pipeline.uk_no'」。
+     * 序号解决同 JVM 同秒，再保留一次重试兜住「重启后同秒」和「多实例同秒」。
+     */
+    void insertWithUniqueNo(GenPipeline pipeline) {
+        for (int attempt = 1; ; attempt++) {
+            pipeline.setId(null); // 上一次失败的 insert 可能已回填 id，不清会撞主键
+            pipeline.setPipelineNo(nextPipelineNo());
+            try {
+                pipelineMapper.insert(pipeline);
+                return;
+            } catch (DuplicateKeyException ex) {
+                boolean noConflict = String.valueOf(ex.getMessage()).contains("uk_no");
+                if (attempt >= 3 || !noConflict) {
+                    // 非 uk_no 的冲突（如同名库并发建档）是真问题，不能靠换号掩盖
+                    throw ex;
+                }
+                log.warn("V9.6 流水线号冲突，换号重试 attempt={} no={}", attempt, pipeline.getPipelineNo());
+            }
+        }
+    }
+
+    /** PPL + yyyyMMddHHmmss + 4 位自增序号，长度 21，varchar(32) 内；同秒可容纳 1 万个 */
+    static String nextPipelineNo() {
+        return "PPL" + TS.format(LocalDateTime.now())
+                + String.format("%04d", NO_SEQ.getAndIncrement() % 10000);
+    }
+
     private void seedSteps(Long pipelineId) {
         String[][] defs = {
                 {"model", "AI 领域建模", "pipeline"},
@@ -572,7 +655,9 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     /**
      * 端口分配：从起点顺延找第一个空闲端口，并避开平台自身端口。
      */
-    private Integer allocatePort(int base) {
+    private synchronized Integer allocatePort(int base) {
+        // synchronized：并发 run 时两个线程可能同时选中同一空闲端口（彼此都还没落库），
+        // 服务内串行化这个决策，DB 查重仍是第二道防线
         int ownPort = 8120;
         for (int port = base; port < base + 200; port++) {
             final int candidate = port;

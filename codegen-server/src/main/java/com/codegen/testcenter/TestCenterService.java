@@ -83,7 +83,6 @@ public class TestCenterService {
             vo.setDependsOn(s.getDependsOn());
             vo.setEntryHint(s.getEntryHint());
             vo.setRequires(s.getRequires());
-            vo.setGenProduct(s.isGenProductSuite());
             TcCaseResult c = last.get(s.getId());
             vo.setLastStatus(c == null ? null : c.getStatus());
             vo.setLastDurationMs(c == null ? null : c.getDurationMs());
@@ -106,30 +105,6 @@ public class TestCenterService {
             ids = TcSuite.defaultSuiteIds(); // 空 body = 一键 P0 全量
         }
         return executor.submit(ids, request.getTrigger(), request.getGitCommit());
-    }
-
-    /**
-     * V9.3：生成完成自动验证产物（S10/S11/S12）。由 GenCodeServiceImpl 在写盘后 best-effort 调用：
-     * 测试中心停用或已有运行进行中（409）时由调用方 try/catch 忽略，不影响代码写盘结果。
-     *
-     * @param genRoot 生成产物后端根目录（SysProject.backendRoot + backendPath）
-     */
-    public TcRun triggerGen(String genRoot) {
-        // 开关关闭则不开自动验证（避免日常生成产生测试运行记录）
-        if (!props.isAutoVerifyGen()) {
-            return null;
-        }
-        return executor.submit(TcSuite.genProductSuiteIds(), "GEN", null, genRoot);
-    }
-
-    /**
-     * V9.3：前端「验证生成产物」手动触发。忽略 {@code autoVerifyGen} 开关（那个开关只约束
-     * GenCodeServiceImpl 写盘后的自动钩子），由人工显式发起时总是跑 S10/S11/S12。
-     *
-     * @param genRoot 生成产物根目录（SysProject.backendRoot + backendPath）
-     */
-    public TcRun triggerProductVerification(String genRoot) {
-        return executor.submit(TcSuite.genProductSuiteIds(), "GEN", null, genRoot);
     }
 
     public Page<TcRun> runs(TcRunQuery query) {

@@ -49,3 +49,4 @@ target/cp.txt
 
 # 走查产物（台账与扫描报告，本地留档不入库）
 audit/
+.claude/

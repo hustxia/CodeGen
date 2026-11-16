@@ -34,6 +34,11 @@ export function aiModules(data) {
   })
 }
 
+// V9.4 AI 模式 DDL 只读预览：与 prepare-db 共用服务端组装器，不创建任务、不写数据库
+export function previewPipelineDdl(data) {
+  return request({ url: '/gen/pipeline/ddl-preview', method: 'post', data })
+}
+
 // 创建流水线任务（建模结果一并落库）
 export function createPipeline(data) {
   return request({ url: '/gen/pipeline', method: 'post', data })
@@ -87,4 +92,58 @@ export function aiRecommendPreview(id) {
 // V7.0 AI 建议应用：只传勾选清单，建议值以服务端产物为准
 export function aiRecommendApply(id, data) {
   return request({ url: `/gen/pipeline/${id}/ai-recommend/apply`, method: 'post', data, timeout: 300000 })
+}
+
+/* ---------- V9.5 AI 建表推荐（独立模块，不动 V9.4） ---------- */
+
+// V9.5 配置：AI 建模是否可用
+export function aiBuildConfig() {
+  return request({ url: '/gen/ai-build/config', method: 'post' })
+}
+
+// V9.5 AI 推荐表设计：规模分批建模 + 关系视图（单表/主从/树形）；只读
+export function aiBuildPlan(data) {
+  return request({ url: '/gen/ai-build/plan', method: 'post', data, timeout: 600000 })
+}
+
+// V9.7 行业模板清单（电商/ERP/CRM/CMS，秒级克隆表结构）
+export function aiBuildTemplates() {
+  return request({ url: '/gen/ai-build/templates', method: 'get' })
+}
+
+// V9.7 行业模板建表：克隆模板表结构（不调 LLM），走与 AI 相同的收口/编辑/落库链路
+export function aiBuildPlanFromTemplate(data) {
+  return request({ url: '/gen/ai-build/plan/template', method: 'post', data })
+}
+
+// V9.5 同源 DDL 预览：委托 V9.4 previewDdl
+export function aiBuildDdlPreview(data) {
+  return request({ url: '/gen/ai-build/ddl-preview', method: 'post', data })
+}
+
+/* ---------- V9.6 大型/超大型：分批建模任务 ---------- */
+
+// 提交任务：立即返回 jobId，后台按模块分批并发建模
+export function aiBuildPlanJob(data) {
+  return request({ url: '/gen/ai-build/plan/job', method: 'post', data, timeout: 60000 })
+}
+
+// 进度轮询（含批次明细）
+export function aiBuildJobStatus(id) {
+  return request({ url: `/gen/ai-build/job/${id}`, method: 'get' })
+}
+
+// 取最终结果（未完成会返回业务错误）
+export function aiBuildJobResult(id) {
+  return request({ url: `/gen/ai-build/job/${id}/result`, method: 'get' })
+}
+
+// 取消任务
+export function aiBuildJobCancel(id) {
+  return request({ url: `/gen/ai-build/job/${id}/cancel`, method: 'post' })
+}
+
+// V9.5 确认落库/建库：draft=草稿 build=建库；micro=逐模块微服务拆分
+export function aiBuildConfirm(data) {
+  return request({ url: '/gen/ai-build/confirm', method: 'post', data, timeout: 600000 })
 }

@@ -266,8 +266,13 @@ npm run serve
 | **V8.1** | سخت‌سازی کیفیت: هارنس قرارداد آفلاین (۹ حالت، صفر دیف OFF) + تست واحد i18n-core + گیت CI + تفکیک صادقانه README (چارچوب ۲۰۶ / ترجمه‌شده ۸) + check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | خروجی‌های تولیدی به Vue 3 + Element Plus + Vite مدرن شدند؛ در زمان اجرا راستی‌آزمایی شد (۴۰/۴۰ ادعا، vite build موفق، ۱۴ اسکرین‌شات شامل ar-SA RTL)؛ ۳ عیب زمان اجرا برطرف شد | 93a12d5 + e49330b  |
 | **V9.1** | **بازآرایی برای نگهداریپذیری · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **مرکز آزمون و مرکز تأیید · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release  |
-| **V9.3** | **آزمون خودکار خروجی‌های تولیدشده · Generated-artifact automated testing: S10 (mvn test + Surefire), S11 (API / TestContainers), S12 (E2E / Playwright); GEN trigger + TC_GEN_ROOT; 12-step pipeline green; real artifact run PASSED 20/20, run/case/artifact persisted** | V9.3 release, **نسخه فعلی** |
+| **V9.2** | **مرکز آزمون و مرکز تأیید · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **نسخه فعلی** |
+| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
+| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
+| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
+| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
+| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
 
 ---
 
@@ -275,7 +280,7 @@ npm run serve
 
 ## ۱۳. وضعیت پروژه
 
-- خط نسخه برنامه‌ریزی‌شده فعلی به **V9.3** رسیده است (قابلیت‌ها همچنان تکرار می‌شوند: مدل‌سازی AI، بهبود داده‌های‌بذر، سیستم بسته قابلیت و غیره).
+- خط نسخه برنامه‌ریزی‌شده فعلی به **V9.2** رسیده است (قابلیت‌ها همچنان تکرار می‌شوند: مدل‌سازی AI، بهبود داده‌های‌بذر، سیستم بسته قابلیت و غیره).
 - یک پروژه دموی همراه `demo_admin` (بک‌اند ۸۱۴۰ / فرانت‌اند ۹۰۴۰) سناریوهای درختی / CRUD / استاد-جزئیات / فقط‌خواندنی / چاپ را پوشش می‌دهد و برای تأیید به‌طور مستقل اجرا می‌شود.
 - هر دو مخزن روی Gitee میزبانی می‌شوند: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

@@ -17,7 +17,6 @@ public class TcSuiteVO {
     private List<String> dependsOn;
     private String entryHint;
     private String requires;
-    private boolean genProduct;
     private String lastStatus;
     private Long lastDurationMs;
 }

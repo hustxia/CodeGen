@@ -157,6 +157,25 @@ gen:
     frontend-port-base: 9040
     deploy-timeout-seconds: 120
     log-dir: logs/pipeline
+    # V9.8 同时运行的流水线上限：跨系统并行、同系统串行（同一系统的两条流水线
+    # 共用生成目录与目标库，闸门会拒绝）。打包/部署是重 IO，不建议调太大
+    max-running: 2
+
+  # ============================================================
+  # V9.6 大型/超大型系统的分批建模任务
+  #
+  # 表多时一次请求串行跑几十个模块会把连接拖死，且进程重启就白跑；
+  # 改为「任务 + 批次」落库，由 AiBuildJobScheduler 多 worker 认领执行。
+  # worker-threads：云端 API 可开到 4；本地纯 CPU 跑 7B/8B 建议 1（并发只会抢核）。
+  # ============================================================
+  ai-build:
+    job:
+      enabled: true
+      worker-threads: 2
+      interval-ms: 2000
+      batch-timeout-seconds: 900
+      max-retry: 2
+      module-cap: 40
 
 # 操作日志的 IP 归属地：先查 classpath:/ip/ip2region.db 离线库，查不到才走在线接口
 # 内网/本机不发请求；结果缓存 24h，失败负缓存 5min

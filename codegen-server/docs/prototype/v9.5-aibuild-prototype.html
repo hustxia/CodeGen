@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>V9.5 AI 建表助手 · 大规模（几千张表）交互原型</title>
+<style>
+  :root{
+    --el-color-primary:#409EFF;
+    --el-color-primary-light:#ecf5ff;
+    --el-color-success:#67C23A;
+    --el-color-warning:#E6A23C;
+    --el-color-danger:#F56C6C;
+    --el-border:#dcdfe6;
+    --el-border-light:#ebeef5;
+    --el-text:#303133;
+    --el-text-secondary:#606266;
+    --el-text-placeholder:#c0c4cc;
+    --el-bg:#f5f7fa;
+    --el-card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--el-bg);color:var(--el-text);font-size:14px;
+  }
+  .app-container{max-width:1280px;margin:0 auto;padding:16px;}
+  .page-title{font-size:20px;font-weight:600;margin:0 0 4px;}
+  .page-sub{color:var(--el-text-secondary);font-size:13px;margin-bottom:14px;}
+  .el-card{background:var(--el-card);border:1px solid var(--el-border-light);border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:16px;}
+  .el-card__header{padding:14px 18px;border-bottom:1px solid var(--el-border-light);font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+  .el-card__body{padding:18px;}
+  /* steps */
+  .steps{display:flex;align-items:center;margin:0 0 4px;}
+  .step-item{display:flex;align-items:center;flex:1;}
+  .step-node{width:28px;height:28px;border-radius:50%;background:#c0c4cc;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex:none;}
+  .step-item.active .step-node{background:var(--el-color-primary);}
+  .step-item.done .step-node{background:var(--el-color-success);}
+  .step-label{margin-left:8px;color:var(--el-text-secondary);font-size:13px;}
+  .step-item.active .step-label,.step-item.done .step-label{color:var(--el-text);font-weight:600;}
+  .step-line{flex:1;height:2px;background:var(--el-border);margin:0 12px;}
+  .step-item.done .step-line,.step-item.active .step-line{background:var(--el-color-success);}
+  /* form */
+  .el-form-item{margin-bottom:18px;}
+  .el-form-item__label{display:block;font-size:13px;color:var(--el-text-secondary);margin-bottom:6px;}
+  .el-input,.el-textarea{width:100%;}
+  .el-input input,.el-textarea textarea{width:100%;border:1px solid var(--el-border);border-radius:4px;padding:8px 10px;font-size:14px;font-family:inherit;outline:none;color:var(--el-text);}
+  .el-input input:focus,.el-textarea textarea:focus{border-color:var(--el-color-primary);}
+  .el-textarea textarea{resize:vertical;min-height:72px;}
+  .el-radio-group{display:flex;gap:10px;flex-wrap:wrap;}
+  .el-radio{display:inline-flex;align-items:center;border:1px solid var(--el-border);border-radius:4px;padding:8px 14px;cursor:pointer;user-select:none;background:#fff;}
+  .el-radio.checked{border-color:var(--el-color-primary);background:var(--el-color-primary-light);color:var(--el-color-primary);font-weight:600;}
+  .el-radio .dot{width:12px;height:12px;border-radius:50%;border:1px solid var(--el-border);margin-right:8px;display:inline-block;}
+  .el-radio.checked .dot{border-color:var(--el-color-primary);background:var(--el-color-primary);box-shadow:inset 0 0 0 3px #fff;}
+  /* buttons */
+  .el-button{border:1px solid var(--el-border);background:#fff;color:var(--el-text);border-radius:4px;padding:8px 16px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .el-button:hover{border-color:var(--el-color-primary);color:var(--el-color-primary);}
+  .el-button--primary{background:var(--el-color-primary);border-color:var(--el-color-primary);color:#fff;}
+  .el-button--primary:hover{background:#66b1ff;border-color:#66b1ff;color:#fff;}
+  .el-button--success{background:var(--el-color-success);border-color:var(--el-color-success);color:#fff;}
+  .el-button--success:hover{background:#85ce61;border-color:#85ce61;color:#fff;}
+  .el-button--danger{background:var(--el-color-danger);border-color:var(--el-color-danger);color:#fff;}
+  .el-button:disabled{opacity:.6;cursor:not-allowed;}
+  .el-button.is-loading{position:relative;color:transparent!important;}
+  .el-button.is-loading::after{content:"";position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  /* alert */
+  .el-alert{border-radius:4px;padding:10px 14px;font-size:13px;display:flex;gap:8px;align-items:flex-start;margin-bottom:16px;border:1px solid;}
+  .el-alert--info{background:var(--el-color-primary-light);border-color:#d9ecff;color:#409EFF;}
+  .el-alert--warning{background:#fdf6ec;border-color:#faecd8;color:#E6A23C;}
+  .el-alert--success{background:#f0f9eb;border-color:#e1f3d8;color:#67C23A;}
+  /* tags */
+  .el-tag{display:inline-flex;align-items:center;background:var(--el-color-primary-light);color:var(--el-color-primary);border-radius:3px;padding:1px 8px;font-size:12px;border:1px solid #d9ecff;}
+  .el-tag--success{background:#f0f9eb;color:#67C23A;border-color:#e1f3d8;}
+  .el-tag--warning{background:#fdf6ec;color:#E6A23C;border-color:#faecd8;}
+  .el-tag--info{background:#f4f4f5;color:#909399;border-color:#e9e9eb;}
+  /* progress */
+  .el-progress{background:var(--el-border-light);border-radius:10px;height:14px;overflow:hidden;position:relative;}
+  .el-progress__bar{height:100%;background:linear-gradient(90deg,#409EFF,#66b1ff);width:0;transition:width .25s;}
+  .el-progress__text{position:absolute;right:8px;top:0;line-height:14px;font-size:11px;color:#fff;}
+  .progress-outer{margin:10px 0;}
+  .progress-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--el-text-secondary);margin-bottom:4px;}
+  /* layout: module tree + table list */
+  .split{display:flex;gap:16px;}
+  .tree-col{width:260px;flex:none;background:#fff;border:1px solid var(--el-border-light);border-radius:4px;padding:10px;height:520px;display:flex;flex-direction:column;}
+  .list-col{flex:1;background:#fff;border:1px solid var(--el-border-light);border-radius:4px;padding:10px;height:520px;display:flex;flex-direction:column;}
+  .tree-head,.list-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex:none;}
+  .tree-search{margin-bottom:8px;flex:none;}
+  .tree-scroll{overflow-y:auto;flex:1;}
+  .tree-group{margin-bottom:4px;}
+  .tree-group__title{display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;border-radius:4px;font-weight:600;font-size:13px;}
+  .tree-group__title:hover{background:var(--el-bg);}
+  .tree-group__count{margin-left:auto;color:var(--el-text-placeholder);font-size:12px;}
+  .tree-group__tables{margin:0 0 2px 22px;display:none;}
+  .tree-group.open .tree-group__tables{display:block;}
+  .tree-leaf{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:4px;font-size:12px;color:var(--el-text-secondary);cursor:pointer;}
+  .tree-leaf:hover{background:var(--el-color-primary-light);color:var(--el-color-primary);}
+  .tree-leaf.active{background:var(--el-color-primary-light);color:var(--el-color-primary);font-weight:600;}
+  /* virtual list */
+  .vlist{position:relative;overflow-y:auto;flex:1;border:1px solid var(--el-border-light);border-radius:4px;}
+  .vlist__spacer{position:relative;width:100%;}
+  .vlist__row{position:absolute;left:0;right:0;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid var(--el-border-light);font-size:13px;}
+  .vlist__row:hover{background:var(--el-color-primary-light);}
+  .vlist__row .tname{font-family:"SFMono-Regular",Consolas,monospace;font-weight:600;color:var(--el-text);}
+  .vlist__row .tcomment{color:var(--el-text-secondary);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row-check{width:16px;height:16px;border:1px solid var(--el-border);border-radius:3px;flex:none;cursor:pointer;}
+  .row-check.on{background:var(--el-color-primary);border-color:var(--el-color-primary);}
+  /* dialog */
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:99;}
+  .mask.show{display:flex;}
+  .dialog{background:#fff;border-radius:6px;width:560px;max-width:92vw;max-height:86vh;display:flex;flex-direction:column;}
+  .dialog__header{padding:14px 18px;border-bottom:1px solid var(--el-border-light);font-weight:600;display:flex;justify-content:space-between;}
+  .dialog__body{padding:18px;overflow-y:auto;}
+  .dialog__footer{padding:12px 18px;border-top:1px solid var(--el-border-light);display:flex;justify-content:flex-end;gap:10px;}
+  .close-x{cursor:pointer;color:var(--el-text-placeholder);font-size:18px;}
+  /* tabs */
+  .el-tabs__header{display:flex;border-bottom:1px solid var(--el-border-light);margin-bottom:12px;}
+  .el-tabs__item{padding:8px 16px;cursor:pointer;color:var(--el-text-secondary);border-bottom:2px solid transparent;}
+  .el-tabs__item.active{color:var(--el-color-primary);border-bottom-color:var(--el-color-primary);font-weight:600;}
+  /* ddl */
+  .ddl-summary{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;}
+  .stat{background:var(--el-bg);border:1px solid var(--el-border-light);border-radius:6px;padding:12px 16px;min-width:130px;}
+  .stat__num{font-size:22px;font-weight:700;color:var(--el-color-primary);}
+  .stat__label{font-size:12px;color:var(--el-text-secondary);margin-top:2px;}
+  .ddl-box{background:#1e1e1e;color:#d4d4d4;font-family:Consolas,monospace;font-size:12px;border-radius:6px;padding:14px;height:360px;overflow:auto;white-space:pre;line-height:1.5;}
+  .ddl-pager{display:flex;gap:10px;align-items:center;margin-top:10px;}
+  /* misc */
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .col-flex{flex:1;min-width:240px;}
+  .mono{font-family:Consolas,monospace;}
+  .muted{color:var(--el-text-secondary);}
+  .mt8{margin-top:8px;} .mt12{margin-top:12px;} .mt16{margin-top:16px;}
+  .batch-card{border:1px dashed var(--el-border);border-radius:6px;padding:14px;background:#fafafa;}
+  .hidden{display:none!important;}
+  .badge{background:var(--el-color-danger);color:#fff;border-radius:10px;font-size:11px;padding:0 6px;margin-left:6px;}
+  .kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--el-border-light);font-size:13px;}
+  .kv:last-child{border-bottom:none;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 18px;border-radius:6px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;}
+  .toast.show{opacity:1;}
+  .scale-note{font-size:12px;color:var(--el-text-secondary);margin-top:6px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="app-container">
+  <h1 class="page-title">V9.5 · AI 建表助手 <span class="el-tag el-tag--info" style="margin-left:8px;">大规模原型</span></h1>
+  <div class="page-sub">独立模块 / 不改动 V9.4 · 本原型模拟 <b>3000 张表 / 200 个模块</b>，演示「几千张表」规模下的交互</div>
+
+  <div class="el-alert el-alert--info">
+    <span>💡</span><span>三个步骤：① 录入需求（AI 批量建模，带模块级+全局进度）→ ② 交互式表设计（模块树导航 + 虚拟滚动，编辑/看同源 DDL）→ ③ 落库/建库（分批执行，带规模预警与分批进度）。确认前零写库。</span>
+  </div>
+
+  <!-- STEPS -->
+  <div class="el-card">
+    <div class="el-card__body">
+      <div class="steps">
+        <div class="step-item active" id="step0"><div class="step-node">1</div><div class="step-label">① 录入需求</div></div>
+        <div class="step-line"></div>
+        <div class="step-item" id="step1"><div class="step-node">2</div><div class="step-label">② 表设计编辑器</div></div>
+        <div class="step-line"></div>
+        <div class="step-item" id="step2"><div class="step-node">3</div><div class="step-label">③ 落库 / 建库</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 0 -->
+  <div class="el-card" id="panel0">
+    <div class="el-card__header">① 录入需求 <span class="el-tag el-tag--warning" id="scaleTag">规模：超大型</span></div>
+    <div class="el-card__body">
+      <div class="el-form-item">
+        <label class="el-form-item__label">系统名称</label>
+        <div class="el-input"><input id="sysName" value="智慧城市运营平台" placeholder="例如：设备资产管理系统" /></div>
+      </div>
+      <div class="el-form-item">
+        <label class="el-form-item__label">系统描述</label>
+        <div class="el-textarea"><textarea id="sysDesc" placeholder="描述业务域、核心实体与预期规模">覆盖城市运行监测、资产、工单、人员、计费、报表等，预计数千张业务表。</textarea></div>
+      </div>
+      <div class="el-form-item">
+        <label class="el-form-item__label">范围</label>
+        <div class="el-radio-group" id="scopeGroup">
+          <div class="el-radio checked" data-v="new"><span class="dot"></span>新建系统</div>
+          <div class="el-radio" data-v="supplement"><span class="dot"></span>为已有系统补表</div>
+        </div>
+      </div>
+      <div class="el-form-item">
+        <label class="el-form-item__label">规模</label>
+        <div class="el-radio-group" id="scaleGroup">
+          <div class="el-radio" data-v="small"><span class="dot"></span>精简（&lt;50 表）</div>
+          <div class="el-radio" data-v="large"><span class="dot"></span>大型（&lt;500 表）</div>
+          <div class="el-radio checked" data-v="huge"><span class="dot"></span>超大型（几千张）</div>
+        </div>
+        <div class="scale-note">超大型将自动走「模块拆分 → 逐模块建模 → 服务端去重合并 → 分批进度」：预计拆出约 200 个模块、每模块 6–15 张表，建模并发受控，进度可观测。</div>
+      </div>
+      <div class="el-form-item">
+        <label class="el-form-item__label">部署形态</label>
+        <div class="el-radio-group" id="deployGroup">
+          <div class="el-radio" data-v="mono"><span class="dot"></span>单体工程（代码在一个工程）</div>
+          <div class="el-radio checked" data-v="micro"><span class="dot"></span>微服务拆分（按领域模块拆 N 个服务 + 网关）</div>
+        </div>
+        <div class="scale-note" id="deployNote">微服务拆分：每个领域模块 = 一个独立服务工程（自有 schema `dbName_&lt;module&gt;`），另生成 `gateway/` 聚合路由；跨服务关系不建物理外键，转逻辑关联。超大型默认此项。</div>
+      </div>
+      <div class="row">
+        <button class="el-button el-button--primary" id="btnAi">🤖 AI 推荐（仅推荐，不会建表）</button>
+        <button class="el-button" id="btnManual">📋 手动粘贴 DDL（AI 不可用时）</button>
+      </div>
+
+      <!-- modeling progress -->
+      <div id="modelProgress" class="hidden mt16">
+        <div class="el-alert el-alert--warning">
+          <span>⏳</span><span>AI 正在按模块批量建模并合并去重，业务库零变化。可随时查看进度；失败模块会单独列出，不伪造成功。</span>
+        </div>
+        <div class="progress-outer">
+          <div class="progress-meta"><span id="modMeta">模块 0 / 200</span><span id="modPct">0%</span></div>
+          <div class="el-progress"><div class="el-progress__bar" id="modBar"></div><div class="el-progress__text" id="modBarTxt"></div></div>
+        </div>
+        <div class="progress-outer">
+          <div class="progress-meta"><span id="tblMeta">已建模表 0 / 3000</span><span id="tblPct">0%</span></div>
+          <div class="el-progress"><div class="el-progress__bar" id="tblBar" style="background:linear-gradient(90deg,#67C23A,#85ce61)"></div><div class="el-progress__text" id="tblBarTxt"></div></div>
+        </div>
+        <div class="muted mt8" id="modelLog">初始化模块拆分…</div>
+        <div class="mt12">
+          <button class="el-button el-button--primary hidden" id="btnToStep1">进入表设计编辑器 →</button>
+          <button class="el-button el-button--danger hidden" id="btnModelFail">查看失败模块（12 个）</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="el-card hidden" id="panel1">
+    <div class="el-card__header">
+      ② 表设计编辑器
+      <span class="el-tag el-tag--info" id="genMeta">已生成 0 张表 / 0 模块</span>
+      <span class="el-tag el-tag--warning hidden" id="staleTag">DDL 已过期，请刷新预览</span>
+    </div>
+    <div class="el-card__body">
+      <div class="el-tabs__header" id="tabs1">
+        <div class="el-tabs__item active" data-tab="design">表设计</div>
+        <div class="el-tabs__item" data-tab="ddl">同源 DDL 预览</div>
+        <div class="el-tabs__item" data-tab="conflict">合并冲突 / 丢弃项</div>
+        <div class="el-tabs__item" data-tab="genpage">生成页预览</div>
+      </div>
+
+      <!-- design tab -->
+      <div id="tabDesign">
+        <div class="split">
+          <!-- module tree -->
+          <div class="tree-col">
+            <div class="tree-head"><b>模块树</b><span class="muted" id="treeCount"></span></div>
+            <div class="tree-search"><div class="el-input"><input id="treeSearch" placeholder="搜索表名 / 注释…" /></div></div>
+            <div class="tree-scroll" id="treeScroll"></div>
+          </div>
+          <!-- table list (virtual) -->
+          <div class="list-col">
+            <div class="list-head">
+              <b id="listTitle">全部表</b>
+              <div class="row">
+                <span class="muted">已选 <b id="selCount">0</b> 张</span>
+                <button class="el-button" id="btnBatchNullable">批量设可空</button>
+                <button class="el-button" id="btnBatchDel">批量删除</button>
+                <button class="el-button el-button--primary" id="btnAddTable">＋ 新增表</button>
+              </div>
+            </div>
+            <div class="vlist" id="vlist">
+              <div class="vlist__spacer" id="vlistSpacer"></div>
+            </div>
+            <div class="muted mt8">虚拟滚动：仅渲染可视区行，3000 张表也不卡。点击行可编辑该表。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ddl tab -->
+      <div id="tabDdl" class="hidden">
+        <div class="ddl-summary">
+          <div class="stat"><div class="stat__num" id="ddlTables">0</div><div class="stat__label">表数量</div></div>
+          <div class="stat"><div class="stat__num" id="ddlStmts">0</div><div class="stat__label">SQL 语句数</div></div>
+          <div class="stat"><div class="stat__num" id="ddlSize">0 MB</div><div class="stat__label">DDL 体量</div></div>
+          <div class="stat"><div class="stat__num" id="ddlBatches">0</div><div class="stat__label">落库批次数（每批 50 表）</div></div>
+        </div>
+        <div class="row" style="align-items:flex-end;">
+          <div class="col-flex">
+            <label class="el-form-item__label">预览范围</label>
+            <div class="el-radio-group" id="ddlScope">
+              <div class="el-radio checked" data-v="current"><span class="dot"></span>当前模块</div>
+              <div class="el-radio" data-v="all"><span class="dot"></span>全部（分块加载）</div>
+            </div>
+          </div>
+          <button class="el-button" id="btnRefreshDdl">🔄 重算预览（同源 buildDdl）</button>
+          <button class="el-button" id="btnExportDdl">⬇ 导出全部 DDL 文件</button>
+        </div>
+        <div class="ddl-box mt12" id="ddlBox">点击「重算预览」生成同源 DDL…</div>
+        <div class="ddl-pager">
+          <button class="el-button" id="ddlPrev">← 上一块</button>
+          <span class="muted" id="ddlPageInfo">—</span>
+          <button class="el-button" id="ddlNext">下一块 →</button>
+          <span class="muted">「全部」模式按 200 表/块分页，避免一次性渲染数 MB。</span>
+        </div>
+      </div>
+
+      <!-- conflict tab -->
+      <div id="tabConflict" class="hidden">
+        <div class="el-alert el-alert--warning mt8">
+          <span>⚠</span><span>同名表去重（首份优先）、非法外键/索引已丢弃并记入下方。合并未写库，仅供确认前核对。</span>
+        </div>
+        <div class="kv"><span>合并冲突（同名表，保留首份）</span><span class="el-tag el-tag--warning">37 处</span></div>
+        <div class="kv"><span>外键指向不存在的表 → 丢弃</span><span class="el-tag el-tag--warning">14 处</span></div>
+        <div class="kv"><span>索引列非法（不存在的列）→ 丢弃</span><span class="el-tag el-tag--warning">9 处</span></div>
+        <div class="kv"><span>建模失败模块</span><span class="el-tag el-tag--danger">12 个</span></div>
+      </div>
+
+      <!-- generated page preview tab -->
+      <div id="tabGenPage" class="hidden">
+        <div class="el-alert el-alert--success mt8">
+          <span>✅</span><span>生成页面规范（§4.6 / §4.8）：列表/详情/表单<b>不显示主键 id</b>；外键列（如 <span class="mono">category_id</span>）显示<b>关联表对应名称</b>，表单中为关联表名称下拉。<b>单表与关联表分离生成</b>——一对多关联自动识别主从关系、按主从模板生成（主表列表 + 内嵌从表明细、级联增删）；自关联走树形模板。下方为按所选场景生成的示例页。</span>
+        </div>
+        <div class="row mt12" style="align-items:flex-end;">
+          <div class="col-flex">
+            <label class="el-form-item__label">生成场景（§4.8 分类）</label>
+            <div class="el-radio-group" id="genRoleGroup" style="display:flex;gap:8px;">
+              <label class="el-radio"><input type="radio" name="genrole" value="master" checked><span>主从（订单→订单明细）</span></label>
+              <label class="el-radio"><input type="radio" name="genrole" value="single"><span>单表</span></label>
+              <label class="el-radio"><input type="radio" name="genrole" value="detail"><span>从表视角</span></label>
+              <label class="el-radio"><input type="radio" name="genrole" value="tree"><span>树形（自关联）</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="row mt12" style="align-items:flex-end;">
+          <div class="col-flex">
+            <label class="el-form-item__label">预览表</label>
+            <div class="el-input"><input id="genPageTable" placeholder="随场景自动选定" readonly /></div>
+          </div>
+          <span id="genRoleBadge" class="el-tag el-tag--primary">主表 master</span>
+        </div>
+        <div class="mt12">
+          <b>列表页 / 详情（已隐藏 id，外键显名称）：</b>
+          <div id="genList" style="border:1px solid var(--el-border-light);border-radius:4px;margin-top:6px;overflow:auto;max-height:320px;"></div>
+        </div>
+        <div class="mt12">
+          <b>新增/编辑表单（外键为关联表名称下拉；主从走明细子表）：</b>
+          <div id="genForm" class="batch-card" style="margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="row mt16" style="justify-content:space-between;">
+        <button class="el-button" id="btnBack0">← 返回上一步</button>
+        <button class="el-button el-button--primary" id="btnToStep2">确认表设计，去落库 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="el-card hidden" id="panel2">
+    <div class="el-card__header">③ 落库 / 建库 <span class="el-tag el-tag--info" id="confirmMeta">0 张表</span></div>
+    <div class="el-card__body">
+      <div class="el-alert el-alert--info">
+        <span>🔒</span><span>确认前零写库。以下两个动作具有副作用，均需二次确认。规模预警：3000 张表将分 <b id="warnBatches">60</b> 批执行。</span>
+      </div>
+
+      <div class="batch-card mt12">
+        <div class="kv"><span>目标库名</span><span class="mono" id="targetDb">smart_city_demo</span></div>
+        <div class="kv"><span>将导入 / 建表数</span><span id="willTables">3000 张</span></div>
+        <div class="kv"><span>落库方式</span><span>分批次（每批 50 表）顺序执行，批次失败可单独重试</span></div>
+        <div class="kv"><span>预计耗时</span><span id="estTime">约 6–10 分钟（按批次并发可调）</span></div>
+      </div>
+
+      <div class="batch-card mt12 hidden" id="microCard">
+        <div class="el-alert el-alert--info" style="margin-bottom:10px;">
+          <span>🧩</span><span>微服务拆分形态：每个领域模块生成一个独立服务工程，跨服务关系转逻辑关联（不建物理外键）。</span>
+        </div>
+        <div class="kv"><span>将生成微服务数</span><span class="el-tag el-tag--success" id="svcCount">0 个</span></div>
+        <div class="kv"><span>每服务自有 schema</span><span class="mono" id="svcSchema">dbName_&lt;module&gt;</span></div>
+        <div class="kv"><span>跨服务关联（转逻辑关联）</span><span class="el-tag el-tag--warning" id="crossRel">0 处</span></div>
+        <div class="kv"><span>网关工程</span><span class="mono">gateway/（按 /api/&lt;module&gt;/** 转发）</span></div>
+        <div class="muted mt8">服务示例（前 6 个）：</div>
+        <div id="svcList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;"></div>
+      </div>
+
+      <div class="row mt16">
+        <button class="el-button" id="btnDraft">📥 落为草稿（仅导入 gen_table，不执行 DDL）</button>
+        <button class="el-button el-button--success" id="btnBuild">🏗 确认建库并构建</button>
+      </div>
+
+      <!-- batch progress -->
+      <div id="confirmProgress" class="hidden mt16">
+        <div class="progress-outer">
+          <div class="progress-meta"><span id="cModMeta">批次 0 / 60</span><span id="cModPct">0%</span></div>
+          <div class="el-progress"><div class="el-progress__bar" id="cModBar"></div><div class="el-progress__text" id="cModBarTxt"></div></div>
+        </div>
+        <div class="muted mt8" id="confirmLog">准备分批 DDL…</div>
+      </div>
+
+      <div class="row mt16" style="justify-content:space-between;">
+        <button class="el-button" id="btnBack1">← 返回编辑器</button>
+        <button class="el-button el-button--primary hidden" id="btnBuildRun">▶ 构建（run）</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- edit table dialog -->
+<div class="mask" id="editMask">
+  <div class="dialog">
+    <div class="dialog__header"><span>编辑表：<span id="editTblName" class="mono"></span></span><span class="close-x" id="editClose">×</span></div>
+    <div class="dialog__body">
+      <div class="el-form-item">
+        <label class="el-form-item__label">表名</label>
+        <div class="el-input"><input id="editName" class="mono" /></div>
+      </div>
+      <div class="el-form-item">
+        <label class="el-form-item__label">注释</label>
+        <div class="el-input"><input id="editComment" /></div>
+      </div>
+      <div class="el-form-item">
+        <label class="el-form-item__label">所属模块</label>
+        <div class="el-input"><input id="editModule" /></div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="text-align:left;color:var(--el-text-secondary);"><th style="padding:6px;border-bottom:1px solid var(--el-border);">列名</th><th style="padding:6px;border-bottom:1px solid var(--el-border);">类型</th><th style="padding:6px;border-bottom:1px solid var(--el-border);">注释</th><th style="padding:6px;border-bottom:1px solid var(--el-border);">PK</th><th style="padding:6px;border-bottom:1px solid var(--el-border);">可空</th></tr></thead>
+        <tbody id="editCols"></tbody>
+      </table>
+      <div class="mt8"><button class="el-button" id="btnAddCol">＋ 加列</button></div>
+    </div>
+    <div class="dialog__footer">
+      <button class="el-button" id="editCancel">取消</button>
+      <button class="el-button el-button--primary" id="editSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- confirm dialog -->
+<div class="mask" id="confirmMask">
+  <div class="dialog" style="width:440px;">
+    <div class="dialog__header"><span id="confirmTitle">二次确认</span><span class="close-x" id="confirmClose">×</span></div>
+    <div class="dialog__body">
+      <div class="el-alert el-alert--warning"><span>⚠</span><span id="confirmWarn">规模预警内容</span></div>
+      <p class="mt12" id="confirmText">确认执行？</p>
+    </div>
+    <div class="dialog__footer">
+      <button class="el-button" id="confirmCancel">取消</button>
+      <button class="el-button el-button--danger" id="confirmOk">确认执行</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ 模拟数据：3000 张表 / 200 模块 ============
+const MODULES = [];
+const TABLES = [];
+const DOMAINS = ["用户","权限","组织","资产","设备","工单","巡检","计费","合同","库存","采购","报表","日志","消息","监控","告警","地图","配置","字典","流程","审批","知识","文档","项目","计划","排班","考勤","绩效","财务","结算","支付","发票","客户","供应商","产品","订单","物流","仓储","质检","营销","活动","积分","会员","评价","投诉","风控","审计","统计","分析","大屏","接口","网关","缓存","搜索","推荐","标签","分类","地域","区域","楼栋","房间","车位","能耗","水表","电表","气表","消防","安防","门禁","停车","照明","空调","电梯","给排水","绿化","环卫","市政","交通","信号","视频","广播","对讲","周界","巡更","应急","物资","救援","演练","培训","证书"," Health","健康","医疗","养老","托育","教育","校园","食堂","图书","档案","人事","招聘","入职","离职","薪资","社保","税务","法务","合规","版权","商标","专利","品牌","舆情","客服","呼叫","工单","现场","施工","监理","验收","维保","备件","工具","车辆","司机","路线","调度","运力","装卸","仓储","冷链","危化","环保","排放","噪声","扬尘","水质","空气","土壤","辐射","监测","传感","采集","边缘","协议","物联","终端","固件","升级","心跳","在线","离线","故障","报修","养护","寿命","更换","折旧","盘点","调拨","领用","归还","报废","处置"];
+const NOUNS = ["info","record","log","detail","config","setting","mapping","relation","stat","summary","history","template","rule","task","item","line","batch","snapshot","archive","meta"];
+const COLTYPES = ["bigint","int","varchar(64)","varchar(128)","varchar(255)","decimal(18,2)","datetime","date","text","tinyint"];
+
+function rnd(n){return Math.floor(Math.random()*n);}
+function pick(a){return a[rnd(a.length)];}
+
+(function buildMock(){
+  let tid=0;
+  for(let m=0;m<200;m++){
+    const modName = DOMAINS[m%DOMAINS.length] + (m>=DOMAINS.length?("_"+(Math.floor(m/DOMAINS.length)+1)):"");
+    const tcount = 6 + rnd(10); // 6-15 表/模块
+    const tbls=[];
+    for(let t=0;t<tcount;t++){
+      const base = pick(NOUNS);
+      const tname = (modName.split("_")[0].toLowerCase().replace(/[^a-z]/g,"")+"_"+base+"_"+ (t+1)).slice(0,40);
+      const cols=[];
+      const cN = 4 + rnd(6);
+      for(let c=0;c<cN;c++){
+        cols.push({
+          name:["id","name","code","status","create_time","update_time","remark",""+pick(["org","user","dept","type","amount","count","time","level","flag"])][c] || ("col_"+c),
+          type: c===0?"bigint":pick(COLTYPES),
+          comment: pick(["名称","编码","状态","创建时间","更新时间","备注","类型","数量","金额","级别","标识"]),
+          pk: c===0,
+          nullable: c>2
+        });
+      }
+      const tbl={id:tid++,tableName:tname,tableComment:modName+"-"+base,module:modName,cols:cols};
+      tbls.push(tbl); TABLES.push(tbl);
+    }
+    MODULES.push({name:modName,tables:tbls});
+  }
+})();
+
+const TOTAL = TABLES.length;
+const MODULE_TOTAL = MODULES.length;
+
+// ============ §4.8 主从 / 树形 演示数据 ============
+const DEMO = {
+  single: {
+    role:"single", tableName:"sys_notice", tableComment:"通知公告", module:"系统管理",
+    cols:[
+      {name:"id",type:"bigint",comment:"主键",pk:true},
+      {name:"title",type:"varchar(128)",comment:"标题",pk:false},
+      {name:"content",type:"text",comment:"内容",pk:false},
+      {name:"status",type:"tinyint",comment:"状态",pk:false},
+      {name:"cover",type:"varchar(255)",comment:"封面图",pk:false},
+      {name:"publish_time",type:"datetime",comment:"发布时间",pk:false}
+    ]
+  },
+  master: {
+    role:"master", tableName:"bus_order", tableComment:"订单", module:"订单中心",
+    details:["bus_order_item"],
+    cols:[
+      {name:"id",type:"bigint",comment:"主键",pk:true},
+      {name:"order_no",type:"varchar(64)",comment:"订单号",pk:false},
+      {name:"customer_id",type:"bigint",comment:"客户",pk:false},
+      {name:"amount",type:"decimal(18,2)",comment:"金额",pk:false},
+      {name:"status",type:"tinyint",comment:"状态",pk:false},
+      {name:"remark",type:"varchar(255)",comment:"备注",pk:false}
+    ]
+  },
+  detail: {
+    role:"detail", tableName:"bus_order_item", tableComment:"订单明细", module:"订单中心", master:"bus_order",
+    cols:[
+      {name:"id",type:"bigint",comment:"主键",pk:true},
+      {name:"order_id",type:"bigint",comment:"订单",pk:false},
+      {name:"product_id",type:"bigint",comment:"商品",pk:false},
+      {name:"qty",type:"int",comment:"数量",pk:false},
+      {name:"price",type:"decimal(18,2)",comment:"单价",pk:false},
+      {name:"subtotal",type:"decimal(18,2)",comment:"小计",pk:false}
+    ]
+  },
+  tree: {
+    role:"tree", tableName:"sys_category", tableComment:"商品分类", module:"商品中心",
+    cols:[
+      {name:"id",type:"bigint",comment:"主键",pk:true},
+      {name:"name",type:"varchar(64)",comment:"分类名称",pk:false},
+      {name:"parent_id",type:"bigint",comment:"上级分类",pk:false},
+      {name:"sort",type:"int",comment:"排序",pk:false},
+      {name:"status",type:"tinyint",comment:"状态",pk:false}
+    ]
+  }
+};
+
+// ============ 状态 ============
+const state = {
+  step:0,
+  scope:"new",
+  scale:"huge",
+  deploy:"micro",
+  ddlScope:"current",
+  activeTab:"design",
+  activeModule:null, // null = 全部
+  selected:new Set(),
+  ddlPage:0,
+  ddlPageSize:200,
+  filtered:TABLES.slice(),
+  genDemo:"master", // §4.8 生成场景：single/master/detail/tree
+};
+
+// ============ 工具 ============
+function $(s){return document.querySelector(s);}
+function $all(s){return Array.from(document.querySelectorAll(s));}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800);}
+function setProgress(barId,txtId,pct,text){
+  $(barId).style.width=pct+"%";
+  if(txtId)$(txtId).textContent=text||(pct+"%");
+}
+
+// ============ radio groups ============
+function bindRadio(groupId,cb){
+  $(groupId).addEventListener("click",e=>{
+    const el=e.target.closest(".el-radio"); if(!el)return;
+    $all("#"+groupId+" .el-radio").forEach(r=>r.classList.remove("checked"));
+    el.classList.add("checked");
+    cb(el.dataset.v);
+  });
+}
+bindRadio("#scopeGroup",v=>state.scope=v);
+function setDeploy(v){
+  state.deploy=v;
+  $all("#deployGroup .el-radio").forEach(r=>r.classList.toggle("checked",r.dataset.v===v));
+  $("#deployNote").innerHTML = v==="micro"
+    ? "微服务拆分：每个领域模块 = 一个独立服务工程（自有 schema <span class='mono'>dbName_&lt;module&gt;</span>），另生成 <span class='mono'>gateway/</span> 聚合路由；跨服务关系不建物理外键，转逻辑关联。超大型默认此项。"
+    : "单体工程：所有代码生成在一个后端工程 + 一个前端应用，单库单 schema。适合精简/大型系统。";
+}
+bindRadio("#deployGroup",v=>setDeploy(v));
+bindRadio("#scaleGroup",v=>{
+  state.scale=v;
+  $("#scaleTag").textContent="规模："+(v==="huge"?"超大型":v==="large"?"大型":"精简");
+  if(v==="small"){setDeploy("mono");toast("精简模式：单模块建模，约 30 张表，默认单体工程");}
+  if(v==="large"){toast("大型模式：约 20 模块分批建模");}
+  if(v==="huge"){setDeploy("micro");toast("超大型：约 "+MODULE_TOTAL+" 模块 / "+TOTAL+" 表，微服务拆分形态");}
+});
+bindRadio("#ddlScope",v=>{state.ddlScope=v;state.ddlPage=0;renderDdl();});
+
+// ============ STEP navigation ============
+function gotoStep(n){
+  state.step=n;
+  [0,1,2].forEach(i=>{
+    $("#panel"+i).classList.toggle("hidden",i!==n);
+    const si=$("#step"+i);
+    si.classList.toggle("active",i===n);
+    si.classList.toggle("done",i<n);
+  });
+  if(n===1)initStep1();
+  if(n===2)initStep2();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+// ============ STEP 0: AI model ============
+$("#btnAi").addEventListener("click",()=>{
+  const name=$("#sysName").value.trim();
+  if(!name){toast("请先填写系统名称");return;}
+  $("#modelProgress").classList.remove("hidden");
+  $("#btnAi").classList.add("is-loading");
+  $("#btnAi").disabled=true;
+  // simulate module + table progress
+  let modDone=0, tblDone=0;
+  const totalMods=MODULE_TOTAL, totalTbls=TOTAL;
+  const failMods=12; // 模拟 12 个模块失败
+  const iv=setInterval(()=>{
+    modDone += Math.max(1,Math.round(totalMods/40));
+    tblDone += Math.max(20,Math.round(totalTbls/40));
+    if(modDone>totalMods-failMods)modDone=totalMods-failMods;
+    if(tblDone>totalTbls)tblDone=totalTbls;
+    const mp=Math.round(modDone/(totalMods-failMods)*100);
+    const tp=Math.round(tblDone/totalTbls*100);
+    setProgress("#modBar","#modBarTxt",mp,mp+"%");
+    setProgress("#tblBar","#tblBarTxt",tp,tp+"%");
+    $("#modMeta").textContent="模块 "+modDone+" / "+(totalMods-failMods)+" (跳过 "+failMods+" 失败)";
+    $("#tblMeta").textContent="已建模表 "+tblDone+" / "+totalTbls;
+    $("#modelLog").textContent="建模模块 ["+pick(DOMAINS)+"] … 已完成 "+modDone+" 个模块，合并去重中（表名首份优先）。";
+    if(tblDone>=totalTbls && modDone>=(totalMods-failMods)){
+      clearInterval(iv);
+      $("#btnAi").classList.remove("is-loading");
+      $("#btnAi").disabled=false;
+      $("#btnToStep1").classList.remove("hidden");
+      $("#btnModelFail").classList.remove("hidden");
+      $("#modelLog").textContent="✅ 建模完成：成功 "+tblDone+" 张 / "+totalMods+" 模块；"+failMods+" 个模块失败已单列。去编辑器查看/编辑。";
+      toast("AI 建模完成，业务库零变化");
+    }
+  },120);
+});
+$("#btnToStep1").addEventListener("click",()=>gotoStep(1));
+$("#btnModelFail").addEventListener("click",()=>{gotoStep(1);switchTab("conflict");});
+$("#btnManual").addEventListener("click",()=>toast("降级通道：手动粘贴 DDL（AI 不可用时）"));
+
+// ============ STEP 1 ============
+function initStep1(){
+  $("#genMeta").textContent="已生成 "+TOTAL+" 张表 / "+MODULE_TOTAL+" 模块";
+  buildTree();
+  state.filtered=TABLES.slice();
+  renderVList();
+}
+
+function buildTree(){
+  const sc=$("#treeScroll");
+  sc.innerHTML="";
+  const q=$("#treeSearch").value.trim().toLowerCase();
+  let shownMods=0,shownTbls=0;
+  MODULES.forEach((mod,mi)=>{
+    const matched = mod.tables.filter(t=>!q || t.tableName.includes(q)||t.tableComment.toLowerCase().includes(q));
+    if(q && matched.length===0)return;
+    shownMods++; shownTbls+=matched.length;
+    const g=document.createElement("div");
+    g.className="tree-group"+(state.activeModule===mod.name?" open":"");
+    const title=document.createElement("div");
+    title.className="tree-group__title";
+    title.innerHTML='<span>📁</span><span>'+mod.name+'</span><span class="tree-group__count">'+(q?matched.length:mod.tables.length)+'</span>';
+    title.addEventListener("click",()=>{
+      state.activeModule=(state.activeModule===mod.name?null:mod.name);
+      state.filtered = state.activeModule? TABLES.filter(t=>t.module===state.activeModule):TABLES.slice();
+      buildTree(); renderVList(); updateListTitle();
+    });
+    g.appendChild(title);
+    const tlist=document.createElement("div");
+    tlist.className="tree-group__tables";
+    matched.slice(0,60).forEach(t=>{
+      const leaf=document.createElement("div");
+      leaf.className="tree-leaf"+(state.activeModule===mod.name?" active":"");
+      leaf.innerHTML='<span>🗂</span><span class="mono">'+t.tableName+'</span>';
+      leaf.addEventListener("click",ev=>{
+        ev.stopPropagation();
+        openEdit(t);
+      });
+      tlist.appendChild(leaf);
+    });
+    if(matched.length>60){const more=document.createElement("div");more.className="tree-leaf";more.style.color="var(--el-text-placeholder)";more.textContent="… 还有 "+(matched.length-60)+" 张（用搜索精确定位）";tlist.appendChild(more);}
+    g.appendChild(tlist);
+    sc.appendChild(g);
+  });
+  $("#treeCount").textContent=shownMods+" 模块 / "+shownTbls+" 表";
+}
+$("#treeSearch").addEventListener("input",buildTree);
+
+function updateListTitle(){
+  $("#listTitle").textContent = state.activeModule? (state.activeModule+"（"+state.filtered.length+" 张）") : "全部表（"+state.filtered.length+" 张）";
+  $("#selCount").textContent=state.selected.size;
+}
+
+// ----- virtual list -----
+const ROW_H=38, VIEW_H=440;
+function renderVList(){
+  updateListTitle();
+  const sp=$("#vlistSpacer");
+  const data=state.filtered;
+  sp.style.height=(data.length*ROW_H)+"px";
+  const vlist=$("#vlist");
+  // remove old rows
+  $all(".vlist__row").forEach(r=>r.remove());
+  function paint(){
+    const scrollTop=vlist.scrollTop;
+    const start=Math.max(0,Math.floor(scrollTop/ROW_H)-4);
+    const end=Math.min(data.length,Math.ceil((scrollTop+VIEW_H)/ROW_H)+4);
+    $all(".vlist__row").forEach(r=>{const i=+r.dataset.i; if(i<start||i>=end)r.remove();});
+    for(let i=start;i<end;i++){
+      if(vlist.querySelector('.vlist__row[data-i="'+i+'"]'))continue;
+      const t=data[i];
+      const row=document.createElement("div");
+      row.className="vlist__row";row.dataset.i=i;
+      row.style.top=(i*ROW_H)+"px";row.style.height=ROW_H+"px";
+      const on=state.selected.has(t.id)?"on":"";
+      row.innerHTML='<div class="row-check '+on+'" data-chk="'+t.id+'"></div>'+
+        '<span class="tname">'+t.tableName+'</span>'+
+        '<span class="tcomment">'+t.tableComment+'</span>'+
+        '<span class="el-tag el-tag--info">'+(t.cols.length)+' 列</span>';
+      row.querySelector(".row-check").addEventListener("click",ev=>{
+        ev.stopPropagation();
+        if(state.selected.has(t.id))state.selected.delete(t.id);else state.selected.add(t.id);
+        ev.target.classList.toggle("on");
+        $("#selCount").textContent=state.selected.size;
+      });
+      row.addEventListener("click",()=>openEdit(t));
+      sp.appendChild(row);
+    }
+  }
+  vlist.onscroll=paint;
+  paint();
+}
+
+// ----- tabs -----
+function switchTab(tab){
+  state.activeTab=tab;
+  $all("#tabs1 .el-tabs__item").forEach(x=>x.classList.toggle("active",x.dataset.tab===tab));
+  $("#tabDesign").classList.toggle("hidden",tab!=="design");
+  $("#tabDdl").classList.toggle("hidden",tab!=="ddl");
+  $("#tabConflict").classList.toggle("hidden",tab!=="conflict");
+  $("#tabGenPage").classList.toggle("hidden",tab!=="genpage");
+  if(tab==="ddl")renderDdl();
+  if(tab==="genpage")renderGenPage();
+}
+
+// ----- generated page preview (§4.6) -----
+const FK_SET=["org","user","dept","type","category","parent","creator","owner"];
+function isFk(col){return col.name.endsWith("_id")||FK_SET.includes(col.name);}
+function friendlyName(col){
+  if(col.comment)return col.comment;
+  if(col.name==="name")return "名称";
+  if(col.name==="code")return "编码";
+  if(col.name==="status")return "状态";
+  return col.name;
+}
+function fkSampleName(col){
+  const base={"org":"组织","user":"用户","dept":"部门","type":"类型","category":"分类","parent":"上级","creator":"创建人","owner":"负责人"}[col.name]||"关联";
+  return base+"A";
+}
+function valSample(col){
+  if(col.name==="name")return "示例名称";
+  if(col.name==="code")return "CODE-001";
+  if(col.name==="status")return "启用";
+  if(col.type&&col.type.includes("datetime"))return "2026-11-15 10:00";
+  if(col.type==="date")return "2026-11-15";
+  if(col.type&&col.type.startsWith("decimal"))return "123.45";
+  if(col.type==="tinyint"||col.type==="int"||col.type==="bigint")return "1";
+  if(col.type==="text")return "—";
+  return "示例值";
+}
+function pickGenTable(){
+  const d=DEMO[state.genDemo];
+  if(!d)return null;
+  return Object.assign({}, d, {cols:d.cols.map(c=>Object.assign({},c))});
+}
+const ROLE_BADGE={single:"单表 single",master:"主表 master",detail:"从表 detail",tree:"树形 tree"};
+function renderGenPage(){
+  const t=pickGenTable();
+  if(!t){return;}
+  $("#genPageTable").value=t.tableName+"（"+t.tableComment+"）";
+  $("#genRoleBadge").textContent=ROLE_BADGE[t.role]||t.role;
+  const visible=t.cols.filter(c=>!c.pk && c.name!=="id");
+
+  if(t.role==="tree"){
+    renderTreePage(t,visible);
+    return;
+  }
+  if(t.role==="master"){
+    renderMasterPage(t,visible);
+    return;
+  }
+  if(t.role==="detail"){
+    renderDetailPage(t,visible);
+    return;
+  }
+  // single
+  renderSinglePage(t,visible);
+}
+
+// ---- 单表 ----
+function renderSinglePage(t,visible){
+  $("#genList").innerHTML=genListHtml(t,visible)+
+    '<div class="muted mt8">说明：主键 <span class="mono">id</span> 已隐藏；标记 FK 的列原本是 <span class="mono">*_id</span>，此处显示关联表名称而非原始 id 值。单表走普通 CRUD 模板（无内嵌明细）。</div>';
+  $("#genForm").innerHTML=genFormHtml(t,visible);
+}
+
+// ---- 主表（主从模板） ----
+function renderMasterPage(t,visible){
+  let html=genListHtml(t,visible);
+  html+='<div class="el-alert el-alert--warning mt12"><span>🧩</span><span>主从模板（§4.8）：主表 <b>'+t.tableName+'</b> 被下列从表以外键指向，详情内嵌明细子表；从表<b>不挂独立菜单</b>，随主表级联增删。</span></div>';
+  // 从表明细（Tabs）
+  html+='<div class="mt12"><b>主表详情 → 内嵌明细（从表子区域）：</b>';
+  html+='<div class="el-tabs" style="margin-top:6px;"><div style="display:flex;gap:6px;border-bottom:1px solid var(--el-border);">';
+  (t.details||[]).forEach((dn,i)=>{
+    html+='<span class="el-tabs__item '+(i===0?'active':'')+'" style="padding:6px 12px;cursor:pointer;'+(i===0?'border-bottom:2px solid var(--el-color-primary);color:var(--el-color-primary);':'')+'">'+dn+'（从表）</span>';
+  });
+  html+='</div>';
+  (t.details||[]).forEach((dn,i)=>{
+    html+='<div style="'+(i===0?'':'display:none;')+'padding:8px 0;">';
+    const d=DEMO.detail;
+    const dcols=d.cols.filter(c=>!c.pk && c.name!=="id" && c.name!==t.tableName.replace("bus_","")+"_id");
+    html+='<div class="muted" style="margin-bottom:6px;">按 <span class="mono">'+t.tableName+'_id</span> 过滤当前主记录的明细（masterId）；支持行内新增/编辑/删除：</div>';
+    html+='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:var(--el-bg);text-align:left;">';
+    dcols.forEach(c=>{const lbl=isFk(c)?(friendlyName(c)+"（名称）"):friendlyName(c);html+='<th style="padding:6px 8px;border-bottom:1px solid var(--el-border);">'+lbl+(isFk(c)?' <span class="el-tag el-tag--info">FK</span>':'')+'</th>';});
+    html+='<th style="padding:6px 8px;border-bottom:1px solid var(--el-border);">操作</th></tr></thead><tbody>';
+    for(let r=0;r<3;r++){html+='<tr>';dcols.forEach(c=>{html+='<td style="padding:6px 8px;border-bottom:1px solid var(--el-border-light);">'+(isFk(c)?fkSampleName(c):valSample(c))+'</td>';});html+='<td><span class="el-tag el-tag--info">改</span> <span class="el-tag el-tag--warning">删</span></td>';html+='</tr>';}
+    html+='</tbody></table>';
+    html+='<button class="el-button el-button--primary el-button--small mt8">+ 新增明细行</button>';
+    html+='</div>';
+  });
+  html+='</div></div>';
+  html+='<div class="muted mt8">主从联动：选中主表行 → 明细按 masterId 过滤；保存主表时<b>事务内级联保存</b>主表 + 明细差异（insert/update/delete）；删除主表提示“将级联删除 N 条明细”。</div>';
+  $("#genList").innerHTML=html;
+
+  // 主表表单（含级联明细编辑）
+  let fhtml=genFormHtml(t,visible,true);
+  fhtml+='<div class="mt12 el-alert el-alert--info"><span>ℹ️</span><span>主表表单内可同时编辑明细（级联保存）。从表详情仅在此内嵌，不生成独立菜单项。</span></div>';
+  $("#genForm").innerHTML=fhtml;
+}
+
+// ---- 从表视角 ----
+function renderDetailPage(t,visible){
+  let html='<div class="el-alert el-alert--warning mt8"><span>🧩</span><span>从表视角（§4.8）：<b>'+t.tableName+'</b> 归属主表 <b>'+t.master+'</b>，按外键 <span class="mono">order_id</span> 关联。此表<b>不挂独立菜单</b>，作为主表详情内的明细子表生成（仅生成 API + 明细子组件）。</span></div>';
+  html+='<div class="mt8"><b>明细子组件（挂于 '+t.master+' 详情内）：</b></div>';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;"><thead><tr style="background:var(--el-bg);text-align:left;">';
+  visible.filter(c=>c.name!=="order_id").forEach(c=>{const lbl=isFk(c)?(friendlyName(c)+"（名称）"):friendlyName(c);html+='<th style="padding:6px 8px;border-bottom:1px solid var(--el-border);">'+lbl+(isFk(c)?' <span class="el-tag el-tag--info">FK</span>':'')+'</th>';});
+  html+='<th style="padding:6px 8px;border-bottom:1px solid var(--el-border);">操作</th></tr></thead><tbody>';
+  for(let r=0;r<3;r++){html+='<tr>';visible.filter(c=>c.name!=="order_id").forEach(c=>{html+='<td style="padding:6px 8px;border-bottom:1px solid var(--el-border-light);">'+(isFk(c)?fkSampleName(c):valSample(c))+'</td>';});html+='<td><span class="el-tag el-tag--info">改</span> <span class="el-tag el-tag--warning">删</span></td>';html+='</tr>';}
+  html+='</tbody></table>';
+  html+='<button class="el-button el-button--primary el-button--small mt8">+ 新增明细行</button>';
+  html+='<div class="muted mt8">注：若主从跨服务（微服务形态），主从降级为<b>远程关联</b>逻辑主从——主表详情经服务间接口拉取明细，不支持事务级联，仅作逻辑主从展示（见 §4.5 / §4.8）。</div>';
+  $("#genList").innerHTML=html;
+  $("#genForm").innerHTML='<div class="muted">从表不单独生成表单页；编辑在主表明细子表内完成（见上）。</div>';
+}
+
+// ---- 树形（自关联） ----
+function renderTreePage(t,visible){
+  let html='<div class="el-alert el-alert--warning mt8"><span>🌳</span><span>树形模板（§4.8）：<b>'+t.tableName+'</b> 通过 <span class="mono">parent_id</span> 自关联，走树形单表模板（树列表 + 层级 CRUD），单列为主从外的第三类。</span></div>';
+  const rows=[["手机","—"],["　├ 苹果手机","手机"],["　├ 安卓手机","手机"],["　　　└ 安卓旗舰","安卓手机"],["　└ 配件","手机"]];
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;"><thead><tr style="background:var(--el-bg);text-align:left;">';
+  visible.filter(c=>c.name!=="parent_id").forEach(c=>{html+='<th style="padding:7px 10px;border-bottom:1px solid var(--el-border);">'+friendlyName(c)+'</th>';});
+  html+='<th style="padding:7px 10px;border-bottom:1px solid var(--el-border);">操作</th></tr></thead><tbody>';
+  rows.forEach(r=>{html+='<tr>';visible.filter(c=>c.name!=="parent_id").forEach((c,idx)=>{html+='<td style="padding:7px 10px;border-bottom:1px solid var(--el-border-light);">'+(idx===0?r[0]:valSample(c))+'</td>';});html+='<td><span class="el-tag el-tag--info">加子级</span> <span class="el-tag el-tag--info">编辑</span> <span class="el-tag el-tag--warning">删除</span></td>';html+='</tr>';});
+  html+='</tbody></table>';
+  html+='<div class="muted mt8">树形列表：每行可“加子级”递归展开；层级 CRUD 复用单表表单（仅额外回填 parent_id 为当前父节点）。</div>';
+  $("#genList").innerHTML=html;
+  $("#genForm").innerHTML=genFormHtml(t,visible.filter(c=>c.name!=="parent_id"));
+}
+
+// ---- 复用片段 ----
+function genListHtml(t,visible){
+  let html='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:var(--el-bg);text-align:left;">';
+  visible.forEach(c=>{
+    const label=isFk(c)?(friendlyName(c)+"（名称）"):friendlyName(c);
+    html+='<th style="padding:8px 10px;border-bottom:1px solid var(--el-border);white-space:nowrap;">'+label+(isFk(c)?' <span class="el-tag el-tag--info">FK</span>':'')+'</th>';
+  });
+  html+='<th style="padding:8px 10px;border-bottom:1px solid var(--el-border);">操作</th></tr></thead><tbody>';
+  for(let r=0;r<3;r++){
+    html+='<tr>';
+    visible.forEach(c=>{
+      const v=isFk(c)?fkSampleName(c):valSample(c);
+      html+='<td style="padding:7px 10px;border-bottom:1px solid var(--el-border-light);">'+v+'</td>';
+    });
+    html+='<td style="padding:7px 10px;border-bottom:1px solid var(--el-border-light);"><span class="el-tag el-tag--info">编辑</span> <span class="el-tag el-tag--warning">删除</span></td>';
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  return html;
+}
+function genFormHtml(t,visible,skipEnhance){
+  let fhtml='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+  visible.forEach(c=>{
+    if(isFk(c)){
+      fhtml+='<div><label class="el-form-item__label">'+friendlyName(c)+'（关联：'+c.name+'）</label>'+
+        '<div class="el-input"><select style="width:100%;border:1px solid var(--el-border);border-radius:4px;padding:8px 10px;"><option>'+fkSampleName(c)+'</option><option>'+fkSampleName(c).slice(0,-1)+'B</option><option>'+fkSampleName(c).slice(0,-1)+'C</option></select></div></div>';
+    }else if(c.type==="text"){
+      fhtml+='<div style="grid-column:1 / -1;"><label class="el-form-item__label">'+friendlyName(c)+'（富文本）</label>'+
+        '<div style="border:1px solid var(--el-border);border-radius:4px;">'+
+        '<div style="background:var(--el-bg);padding:6px;border-bottom:1px solid var(--el-border-light);font-size:12px;">'+
+        '<span class="el-tag el-tag--info">B</span> <span class="el-tag el-tag--info">I</span> <span class="el-tag el-tag--info">🔗</span> <span class="el-tag el-tag--info">🖼</span> <span class="el-tag el-tag--info">列表</span>'+
+        '</div>'+
+        '<div contenteditable="true" style="padding:10px;min-height:70px;font-size:13px;color:var(--el-text-secondary);">在此输入富文本内容…</div></div></div>';
+    }else{
+      fhtml+='<div><label class="el-form-item__label">'+friendlyName(c)+'</label><div class="el-input"><input placeholder="请输入'+friendlyName(c)+'" value="'+valSample(c)+'"></div></div>';
+    }
+  });
+  fhtml+='</div>';
+  if(!skipEnhance){
+    fhtml+='<div class="mt12" style="border-top:1px dashed var(--el-border);padding-top:10px;">'+
+      '<div class="muted" style="margin-bottom:8px;">演示增强字段（图片上传 / 富文本）—— 命中 `image`/`cover` 等列自动渲染图片上传，命中 `content`/`description` 等或类型 `text` 自动渲染富文本：</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'+
+      '<div><label class="el-form-item__label">封面图（图片上传）</label>'+
+        '<div style="border:1px dashed var(--el-color-primary);border-radius:4px;padding:16px;text-align:center;color:var(--el-color-primary);background:var(--el-color-primary-light);cursor:pointer;">📷 点击 / 拖拽上传（支持多图）</div>'+
+        '<div style="display:flex;gap:6px;margin-top:6px;"><div style="width:46px;height:46px;border-radius:4px;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">预览</div></div></div>'+
+      '<div><label class="el-form-item__label">详情（富文本）</label>'+
+        '<div style="border:1px solid var(--el-border);border-radius:4px;">'+
+        '<div style="background:var(--el-bg);padding:6px;border-bottom:1px solid var(--el-border-light);font-size:12px;">'+
+        '<span class="el-tag el-tag--info">B</span> <span class="el-tag el-tag--info">I</span> <span class="el-tag el-tag--info">🔗</span> <span class="el-tag el-tag--info">🖼</span>'+
+        '</div><div contenteditable="true" style="padding:10px;min-height:60px;font-size:13px;color:var(--el-text-secondary);">在此输入富文本内容…</div></div></div>'+
+      '</div></div>';
+  }
+  fhtml+='<div class="mt8"><button class="el-button el-button--primary">保存</button> <button class="el-button">取消</button></div>';
+  return fhtml;
+}
+$all("#genRoleGroup input").forEach(x=>x.addEventListener("change",()=>{state.genDemo=x.value;renderGenPage();}));
+$all("#tabs1 .el-tabs__item").forEach(x=>x.addEventListener("click",()=>switchTab(x.dataset.tab)));
+
+// ----- edit dialog -----
+let editTarget=null;
+function openEdit(t){
+  editTarget=t;
+  $("#editTblName").textContent=t.tableName;
+  $("#editName").value=t.tableName;
+  $("#editComment").value=t.tableComment;
+  $("#editModule").value=t.module;
+  const tb=$("#editCols");tb.innerHTML="";
+  t.cols.forEach((c,ci)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td style="padding:4px;"><input class="mono" value="'+c.name+'" style="width:120px;border:1px solid var(--el-border);padding:3px;border-radius:3px;"></td>'+
+      '<td style="padding:4px;"><input value="'+c.type+'" style="width:110px;border:1px solid var(--el-border);padding:3px;border-radius:3px;"></td>'+
+      '<td style="padding:4px;"><input value="'+c.comment+'" style="width:110px;border:1px solid var(--el-border);padding:3px;border-radius:3px;"></td>'+
+      '<td style="padding:4px;text-align:center;"><input type="checkbox" '+(c.pk?"checked":"")+'></td>'+
+      '<td style="padding:4px;text-align:center;"><input type="checkbox" '+(c.nullable?"checked":"")+'></td>';
+    tb.appendChild(tr);
+  });
+  $("#editMask").classList.add("show");
+}
+function closeEdit(){$("#editMask").classList.remove("show");}
+$("#editClose").addEventListener("click",closeEdit);
+$("#editCancel").addEventListener("click",closeEdit);
+$("#editSave").addEventListener("click",()=>{
+  if(editTarget){
+    editTarget.tableName=$("#editName").value;
+    editTarget.tableComment=$("#editComment").value;
+    if($("#editModule").value!==editTarget.module){
+      editTarget.module=$("#editModule").value;
+      state.activeModule=null;state.filtered=TABLES.slice();buildTree();renderVList();
+    }
+    markStale();
+    toast("已保存："+editTarget.tableName);
+  }
+  closeEdit();
+});
+$("#btnAddCol").addEventListener("click",()=>{
+  const tb=$("#editCols");
+  const tr=document.createElement("tr");
+  tr.innerHTML='<td style="padding:4px;"><input class="mono" value="new_col" style="width:120px;border:1px solid var(--el-border);padding:3px;border-radius:3px;"></td>'+
+    '<td style="padding:4px;"><input value="varchar(64)" style="width:110px;border:1px solid var(--el-border);padding:3px;border-radius:3px;"></td>'+
+    '<td style="padding:4px;"><input value="新列" style="width:110px;border:1px solid var(--el-border);padding:3px;border-radius:3px;"></td>'+
+    '<td style="padding:4px;text-align:center;"><input type="checkbox"></td>'+
+    '<td style="padding:4px;text-align:center;"><input type="checkbox"></td>';
+  tb.appendChild(tr);
+});
+
+function markStale(){$("#staleTag").classList.remove("hidden");}
+
+// ----- batch ops -----
+$("#btnBatchNullable").addEventListener("click",()=>{
+  if(state.selected.size===0){toast("请先勾选表");return;}
+  toast("已对 "+state.selected.size+" 张表批量设置可空（示例）");markStale();
+});
+$("#btnBatchDel").addEventListener("click",()=>{
+  if(state.selected.size===0){toast("请先勾选表");return;}
+  const n=state.selected.size;
+  state.selected.forEach(id=>{const i=TABLES.findIndex(t=>t.id===id);if(i>=0)TABLES.splice(i,1);});
+  // sync modules
+  MODULES.forEach(m=>m.tables=m.tables.filter(t=>TABLES.includes(t)));
+  state.selected.clear();
+  state.filtered=TABLES.slice();buildTree();renderVList();
+  toast("已删除 "+n+" 张表");markStale();
+});
+$("#btnAddTable").addEventListener("click",()=>{
+  const t={id:900000+TABLES.length,tableName:"new_table_"+(TABLES.length+1),tableComment:"新增表",module:state.activeModule||"未分组",cols:[{name:"id",type:"bigint",comment:"主键",pk:true,nullable:false},{name:"name",type:"varchar(64)",comment:"名称",pk:false,nullable:false}]};
+  TABLES.push(t);
+  const m=MODULES.find(x=>x.name===t.module);if(m)m.tables.push(t);
+  state.filtered=TABLES.slice();buildTree();renderVList();
+  toast("已新增表："+t.tableName);markStale();
+});
+
+// ----- DDL -----
+function genDdlFor(list){
+  let sql="";
+  list.forEach(t=>{
+    sql+="CREATE TABLE `"+t.tableName+"` (\n";
+    t.cols.forEach((c,ci)=>{
+      sql+="  `"+c.name+"` "+c.type+(c.pk?" NOT NULL":"")+(c.nullable?" NULL":" NOT NULL")+(ci===0?" AUTO_INCREMENT":"")+",\n";
+    });
+    sql+="  PRIMARY KEY (`"+t.cols[0].name+"`)\n);\n";
+    sql+="-- 表注释："+t.tableComment+"\n\n";
+  });
+  return sql;
+}
+function renderDdl(){
+  let list = state.ddlScope==="current" && state.activeModule? TABLES.filter(t=>t.module===state.activeModule):TABLES.slice();
+  const totalStmts = TOTAL*6; // 估算每表约 6 条语句
+  const sizeMB = (totalStmts*60/1024/1024).toFixed(1); // 粗略
+  $("#ddlTables").textContent=TOTAL;
+  $("#ddlStmts").textContent=totalStmts.toLocaleString();
+  $("#ddlSize").textContent=sizeMB+" MB";
+  const batches=Math.ceil(TOTAL/50);
+  $("#ddlBatches").textContent=batches;
+  $("#warnBatches").textContent=batches;
+  $("#willTables").textContent=TOTAL+" 张";
+  $("#confirmMeta").textContent=TOTAL+" 张表";
+  // 微服务概览
+  const micro=$("#microCard");
+  if(state.deploy==="micro"){
+    micro.classList.remove("hidden");
+    $("#svcCount").textContent=MODULE_TOTAL+" 个";
+    const cross=Math.round(MODULE_TOTAL*0.3);
+    $("#crossRel").textContent=cross+" 处";
+    const list=$("#svcList");list.innerHTML="";
+    MODULES.slice(0,6).forEach(m=>{
+      const tag=document.createElement("span");tag.className="el-tag";
+      tag.textContent=m.name+"（"+m.tables.length+" 表）";list.appendChild(tag);
+    });
+  }else{
+    micro.classList.add("hidden");
+  }
+  // paged
+  const ps=state.ddlPageSize;
+  const pages=Math.ceil(list.length/ps);
+  const slice=list.slice(state.ddlPage*ps,(state.ddlPage+1)*ps);
+  const box=$("#ddlBox");
+  if(state.ddlScope==="all" && list.length>TOTAL){
+    box.textContent="（当前范围即全部）";
+  }
+  box.textContent = slice.length? genDdlFor(slice).slice(0,8000)+(genDdlFor(slice).length>8000?"\n\n…（本块已截断显示，导出文件为完整内容）":""):"无表";
+  $("#ddlPageInfo").textContent="第 "+(state.ddlPage+1)+" / "+Math.max(1,pages)+" 块（每块 "+ps+" 表，共 "+list.length+" 表）";
+}
+$("#btnRefreshDdl").addEventListener("click",()=>{
+  $("#staleTag").classList.add("hidden");
+  renderDdl();
+  toast("已按同源 buildDdl 重算预览");
+});
+$("#btnExportDdl").addEventListener("click",()=>{
+  const blob=new Blob([genDdlFor(TABLES)],{type:"text/sql"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="smart_city_demo.sql";a.click();
+  toast("已导出全部 DDL（"+TOTAL+" 表）");
+});
+$("#ddlPrev").addEventListener("click",()=>{if(state.ddlPage>0){state.ddlPage--;renderDdl();}});
+$("#ddlNext").addEventListener("click",()=>{state.ddlPage++;renderDdl();});
+
+// ----- step1 nav -----
+$("#btnBack0").addEventListener("click",()=>gotoStep(0));
+$("#btnToStep2").addEventListener("click",()=>{
+  if($("#staleTag").classList.contains("hidden")===false){toast("表结构已改动，请先刷新 DDL 预览再确认");switchTab("ddl");return;}
+  gotoStep(2);
+});
+
+// ============ STEP 2 ============
+function initStep2(){renderDdl();}
+$("#btnBack1").addEventListener("click",()=>gotoStep(1));
+
+function doConfirm(mode){
+  $("#confirmMask").classList.remove("show");
+  $("#confirmProgress").classList.remove("hidden");
+  $("#btnBuildRun").classList.add("hidden");
+  const batches=Math.ceil(TOTAL/50);
+  let done=0;
+  const iv=setInterval(()=>{
+    done+=Math.max(1,Math.round(batches/30));
+    if(done>batches)done=batches;
+    const pct=Math.round(done/batches*100);
+    setProgress("#cModBar","#cModBarTxt",pct,pct+"%");
+    $("#cModMeta").textContent="批次 "+done+" / "+batches;
+    $("#confirmLog").textContent=(mode==="draft"?"草稿导入 gen_table":"建库 prepareDb")+"：已完成 "+done+" 批（每批 50 表），失败批次将单独列出可重试。";
+    if(done>=batches){
+      clearInterval(iv);
+      if(mode==="draft"){
+        $("#confirmLog").textContent="✅ 草稿项目创建完成：导入 "+TOTAL+" 张表到 gen_table / gen_table_column，业务库零表。可在 V9.4 或本模块后续接管构建。";
+        toast("已落为草稿（无 DDL 执行）");
+      }else{
+        $("#confirmLog").textContent="✅ 建库完成：3000 张业务表已创建，状态 await_confirm。点击「构建」触发 run。";
+        $("#btnBuildRun").classList.remove("hidden");
+        toast("建库完成，等待构建");
+      }
+    }
+  },130);
+}
+$("#btnDraft").addEventListener("click",()=>{
+  $("#confirmTitle").textContent="落为草稿确认";
+  $("#confirmWarn").textContent="将导入 "+TOTAL+" 张表定义到平台 gen_table / gen_table_column，不执行任何业务 DDL，业务库无变化。";
+  $("#confirmText").textContent="确认落为草稿项目？";
+  window._mode="draft";
+  $("#confirmMask").classList.add("show");
+});
+$("#btnBuild").addEventListener("click",()=>{
+  $("#confirmTitle").textContent="确认建库并构建";
+  const microTxt = state.deploy==="micro"
+    ? "微服务拆分形态：将创建 "+MODULE_TOTAL+" 个独立服务工程（各含自有 schema）+ gateway，按服务并行构建。\n"
+    : "";
+  $("#confirmWarn").textContent="规模预警：将在目标库创建 "+TOTAL+" 张业务表，分 "+Math.ceil(TOTAL/50)+" 批顺序执行，预计 "+(6+(TOTAL/500)).toFixed(0)+"–"+(10+(TOTAL/300)).toFixed(0)+" 分钟。"+(state.deploy==="micro"?"微服务形态，每服务独立 schema。":"")+" 此操作产生真实建表。";
+  $("#confirmText").textContent=(state.deploy==="micro"?("将生成 "+MODULE_TOTAL+" 个微服务 + 网关。\n"):"")+"确认执行建库？建库后由本模块「构建」按钮触发 run，不会自动构建。";
+  window._mode="build";
+  $("#confirmMask").classList.add("show");
+});
+$("#confirmClose").addEventListener("click",()=>$("#confirmMask").classList.remove("show"));
+$("#confirmCancel").addEventListener("click",()=>$("#confirmMask").classList.remove("show"));
+$("#confirmOk").addEventListener("click",()=>doConfirm(window._mode));
+
+$("#btnBuildRun").addEventListener("click",()=>{
+  toast("已触发 run（构建部署）— 原型仅演示入口");
+});
+
+// init
+$("#genMeta").textContent="已生成 0 张表 / 0 模块";
+</script>
+</body>
+</html>

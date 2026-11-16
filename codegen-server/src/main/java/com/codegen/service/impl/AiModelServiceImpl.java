@@ -4,6 +4,7 @@ import com.codegen.common.exception.BusinessException;
 import com.codegen.common.result.ResultCode;
 import com.codegen.config.GenPipelineProperties;
 import com.codegen.service.AiModelService;
+import com.codegen.support.TableSkeletonExpander;
 import com.codegen.vo.GenPipelineAiModulesVO;
 import com.codegen.vo.GenPipelineAiVO;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,8 +21,10 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * AI 建模实现：OpenAI 兼容 /chat/completions，响应要求纯 JSON。
@@ -52,15 +55,58 @@ public class AiModelServiceImpl implements AiModelService {
             7. 直接给出结果，不要逐步推理。/no_think
             """;
 
-    private static final String MODULES_SYSTEM_PROMPT = """
-            你是资深的系统架构师。根据用户给出的系统名称和描述，把系统拆分为业务模块。
+    /**
+     * V9.7 两段式骨架 prompt：只要表名/注释/字段名+注释，不要类型与 pk。
+     * 输出量是完整建模的 1/3 左右——本地 4B 模型一次模块建模从 3 分钟压到 1 分钟内；
+     * 类型/主键由 {@code TableSkeletonExpander} 按命名语义规则补全（规则比小模型猜得稳）。
+     */
+    private static final String SKELETON_SYSTEM_PROMPT = """
+            你是资深的领域建模专家。根据用户给出的需求，列出 MySQL 表的字段骨架。
             硬性要求：
             1. 输出纯 JSON，不要 markdown 代码块，不要任何解释文字。
-            2. JSON 格式：{"modules":[{"name":"用户管理","desc":"账号、角色、权限与登录审计"}]}
-            3. 拆分 8-12 个业务模块；name 用中文短词，desc 用一句话中文说明该模块管什么。
-            4. 模块要覆盖完整业务闭环：核心业务域 + 支撑域（如消息通知、操作日志、统计报表、系统配置）。
-            5. 直接给出结果，不要逐步推理。/no_think
+            2. JSON 格式：{"tables":[{"tableName":"xxx","tableComment":"中文注释","fields":[{"name":"xxx","comment":"中文注释"}]}]}
+            3. 表名/字段名用小写 snake_case；只列业务字段，不要输出 id 及审计列（create_time/update_time/create_by/update_by/deleted 由系统自动补）。
+            4. 不要输出 type/pk/长度等任何类型信息——字段类型由系统按命名规则自动补全。
+            5. 每张表 6-15 个业务字段；所有 comment 用中文。
+            6. 直接给出结果，不要逐步推理。/no_think
             """;
+
+    /**
+     * V9.4 修复「推荐模块与输入系统不相关」：
+     * 旧版把「用户管理/账号管理/角色管理/权限管理」写成具体示例，本地 7B 模型在
+     * response_format=json_object 的语法约束下极易直接照抄示例；又强制 8-12 个模块且
+     * 必带「消息通知/操作日志/统计报表/系统配置」等通用支撑域，进一步稀释领域相关度。
+     * 现在只给字段格式（示例值用占位符），并把「围绕该系统自己的业务对象」写成硬约束。
+     */
+    private static final String MODULES_SYSTEM_PROMPT = """
+            你是资深的系统架构师。请只为「用户给出的那一个系统」拆分业务模块。
+            硬性要求：
+            1. 输出纯 JSON，不要 markdown 代码块，不要任何解释文字。
+            2. JSON 字段格式（尖括号内必须换成该系统自己的业务对象，严禁照抄）：
+               {"modules":[{"name":"<业务对象>管理","desc":"<该系统相关的一句话职责>","functions":["<业务动作1>","<业务动作2>","<业务动作3>"]}]}
+               这里只描述字段结构，不是任何系统的答案；不要输出任何示例中的占位文字。
+            3. 第一步先读懂系统名称与描述，识别该系统的核心业务对象与业务动作
+               （例：「图书馆借阅系统」→ 图书、读者、借阅、归还、逾期；「宠物领养系统」→ 宠物、领养人、申请、回访），
+               再围绕这些对象拆分 5-10 个模块。至少三分之二必须是核心业务模块，
+               模块名、desc、functions 里必须出现该系统自己的业务名词，不能只写「XX管理」这种空壳词。
+            4. 通用支撑模块最多 0-2 个，且必须写清它在该系统里的具体用途；
+               严禁输出与本系统无关的通用后台模块：用户管理、角色权限、账号管理、菜单管理、
+               数据字典、参数配置、系统配置、消息通知、操作日志、统计报表、登录日志、首页大盘。
+            5. 系统描述为空时，只能按系统名称推断业务域，绝不回退成通用后台模板。
+            6. name 用中文短词，desc 一句话中文，functions 列 3-6 条该模块的具体功能点（中文短词）。
+            7. 直接给出结果，不要逐步推理。/no_think
+            """;
+
+    /** 通用后台模板词：命中过多说明模型没在为该领域建模，用于结果侧相关性护栏 */
+    private static final Set<String> GENERIC_MODULE_WORDS = Set.of(
+            "用户管理", "角色管理", "权限管理", "账号管理", "菜单管理", "部门管理", "岗位管理",
+            "数据字典", "字典管理", "参数配置", "系统配置", "消息通知", "操作日志", "登录日志",
+            "统计报表", "报表导出", "定时任务", "文件管理", "首页大盘", "系统监控");
+
+    /** 系统名/描述里的通用词，提取领域词前先剔除，避免「管理系统」被当成领域特征 */
+    private static final Set<String> DOMAIN_STOP_WORDS = Set.of(
+            "管理系统", "系统", "平台", "管理", "信息", "服务", "业务", "应用", "软件", "模块",
+            "一套", "一个", "支持", "实现", "包括", "以及", "进行", "相关", "功能");
 
     @Autowired
     private GenPipelineProperties properties;
@@ -88,11 +134,88 @@ public class AiModelServiceImpl implements AiModelService {
 
     @Override
     public GenPipelineAiModulesVO modules(String systemName, String systemDesc) {
-        String userContent = "系统名称：" + systemName
-                + "\n系统描述：" + (systemDesc == null ? systemName : systemDesc)
+        String desc = StringUtils.hasText(systemDesc) ? systemDesc.trim() : "";
+        String json = chatJson(MODULES_SYSTEM_PROMPT, buildModulesUserContent(systemName, desc));
+        GenPipelineAiModulesVO vo = parseModules(json);
+        assessRelevance(systemName, desc, vo);
+        return vo;
+    }
+
+    /** V9.4：把系统名/描述结构化、重复注入，避免小模型只读到 system prompt 后套通用模板 */
+    static String buildModulesUserContent(String systemName, String desc) {
+        String name = systemName == null ? "" : systemName.trim();
+        String text = StringUtils.hasText(desc) ? desc.trim() : "";
+        return "请只针对下面这一个系统拆分业务模块，不要输出通用后台模块。"
+                + "\n系统名称：" + name
+                + "\n系统描述：" + (text.isEmpty() ? "（未提供描述，请仅根据系统名称推断该系统的业务域）" : text)
+                + "\n再次强调：所有模块名、职责说明与功能点都必须围绕「" + name + "」自己的业务对象展开；"
+                + "与该系统无关的模块一律不要输出。"
                 + "\n/no_think";
-        String json = chatJson(MODULES_SYSTEM_PROMPT, userContent);
-        return parseModules(json);
+    }
+
+    /**
+     * 结果侧护栏：模型偶尔仍会套通用后台模板（尤其是本地 7B 模型）。
+     * 领域词零命中且通用模板模块占比过高 → 直接拦截，绝不静默把无关清单展示给用户；
+     * 命中率偏低 → 只标记告警，仍允许用户在第②步编辑、勾选或重新生成。
+     */
+    private void assessRelevance(String systemName, String desc, GenPipelineAiModulesVO vo) {
+        List<String> tokens = domainTokens(systemName, desc);
+        if (tokens.isEmpty() || vo.getModules().isEmpty()) {
+            return; // 纯英文缩写等无法提取领域词时不做判断，避免误伤
+        }
+        int domainHits = 0;
+        int genericHits = 0;
+        for (GenPipelineAiModulesVO.Module m : vo.getModules()) {
+            StringBuilder text = new StringBuilder(m.getName() == null ? "" : m.getName());
+            if (m.getDesc() != null) {
+                text.append(' ').append(m.getDesc());
+            }
+            for (String fn : m.getFunctions()) {
+                text.append(' ').append(fn);
+            }
+            String joined = text.toString();
+            if (tokens.stream().anyMatch(joined::contains)) {
+                domainHits++;
+            }
+            boolean generic = GENERIC_MODULE_WORDS.contains(m.getName() == null ? "" : m.getName().trim())
+                    || m.getFunctions().stream().anyMatch(f -> GENERIC_MODULE_WORDS.contains(f.trim()));
+            if (generic) {
+                genericHits++;
+            }
+        }
+        int total = vo.getModules().size();
+        if (domainHits == 0 && (double) genericHits / total >= 1.0 / 3) {
+            throw new BusinessException(ResultCode.FAIL.getCode(),
+                    "AI 返回的模块与「" + systemName + "」不相关（疑似套用了通用后台模板），已拦截。"
+                            + "请补充更具体的一句业务描述后重试，或改用「手动粘贴 DDL」");
+        }
+        if ((double) domainHits / total < 1.0 / 3) {
+            vo.setRelevanceWarning(true);
+            vo.setRelevanceTip("AI 生成的模块与「" + systemName
+                    + "」关联度偏低，建议补充更具体的业务描述后重新生成，或直接编辑清单。");
+        }
+    }
+
+    /** 从系统名/描述提取领域特征词；中文长词再拆 2 字连续片段，提升「图书馆借阅」→「图书/借阅」命中率 */
+    private List<String> domainTokens(String systemName, String systemDesc) {
+        String raw = (systemName == null ? "" : systemName) + " " + (systemDesc == null ? "" : systemDesc);
+        Set<String> tokens = new LinkedHashSet<>();
+        for (String part : raw.split("[^\\u4e00-\\u9fa5A-Za-z0-9]+")) {
+            String p = part;
+            for (String stop : DOMAIN_STOP_WORDS) {
+                p = p.replace(stop, "");
+            }
+            if (p.length() < 2) {
+                continue;
+            }
+            tokens.add(p);
+            if (p.matches("[\\u4e00-\\u9fa5]{3,}")) {
+                for (int i = 0; i + 2 <= p.length(); i++) {
+                    tokens.add(p.substring(i, i + 2));
+                }
+            }
+        }
+        return new ArrayList<>(tokens);
     }
 
     // ==================== V7.1 种子数据 AI 增强 ====================
@@ -261,6 +384,81 @@ public class AiModelServiceImpl implements AiModelService {
         }
     }
 
+    @Override
+    public GenPipelineAiVO modelSkeleton(String systemName, String systemDesc, String moduleName) {
+        String userContent;
+        if (StringUtils.hasText(moduleName)) {
+            userContent = "系统名称：" + systemName
+                    + "\n系统描述：" + (systemDesc == null ? systemName : systemDesc)
+                    + "\n本次只列「" + moduleName + "」这个模块的表骨架：6-8 张该模块的核心业务表，不要跨模块。"
+                    + "\n/no_think";
+        } else {
+            userContent = "系统名称：" + systemName
+                    + "\n一句话描述：" + (systemDesc == null ? systemName : systemDesc)
+                    + "\n列 3-5 张核心表的字段骨架。"
+                    + "\n/no_think";
+        }
+        String json = chatJson(SKELETON_SYSTEM_PROMPT, userContent);
+        List<GenPipelineAiVO.TableModel> full = TableSkeletonExpander.expand(parseSkeleton(json));
+        if (full.isEmpty()) {
+            throw new BusinessException(ResultCode.FAIL.getCode(),
+                    "AI 骨架建模结果解析失败，可重试或改用「手动粘贴 DDL」");
+        }
+        GenPipelineAiVO vo = new GenPipelineAiVO();
+        vo.setTables(full);
+        return vo;
+    }
+
+    /** 解析骨架输出：fields 支持对象 {name,comment} 与纯字符串两种形态（小模型不守格式时兜底） */
+    List<GenPipelineAiVO.TableModel> parseSkeleton(String json) {
+        try {
+            JsonNode tables = objectMapper.readTree(json).path("tables");
+            if (!tables.isArray() || tables.isEmpty()) {
+                throw new IllegalStateException("tables 为空");
+            }
+            List<GenPipelineAiVO.TableModel> skeletons = new ArrayList<>();
+            for (JsonNode t : tables) {
+                GenPipelineAiVO.TableModel tm = new GenPipelineAiVO.TableModel();
+                tm.setTableName(firstText(t, "tableName", "table_name"));
+                tm.setTableComment(firstText(t, "tableComment", "table_comment", "comment"));
+                JsonNode fields = t.has("fields") ? t.path("fields") : t.path("columns");
+                if (fields.isArray()) {
+                    for (JsonNode f : fields) {
+                        GenPipelineAiVO.Column col = new GenPipelineAiVO.Column();
+                        if (f.isTextual()) {
+                            // 纯字符串形态："user_name 昵称" / "user_name" —— 名与注释同串时拆开
+                            String text = f.asText().trim();
+                            int sep = text.indexOf(' ');
+                            if (sep > 0) {
+                                col.setName(text.substring(0, sep));
+                                col.setComment(text.substring(sep + 1).trim());
+                            } else {
+                                col.setName(text);
+                                col.setComment("");
+                            }
+                        } else if (f.isObject()) {
+                            col.setName(firstText(f, "name", "field", "column"));
+                            col.setComment(firstText(f, "comment", "desc", "description"));
+                        } else {
+                            continue;
+                        }
+                        tm.getColumns().add(col);
+                    }
+                }
+                if (StringUtils.hasText(tm.getTableName())) {
+                    skeletons.add(tm);
+                }
+            }
+            return skeletons;
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("AI 骨架建模结果解析失败: {}", e.getMessage());
+            throw new BusinessException(ResultCode.FAIL.getCode(),
+                    "AI 骨架建模结果解析失败，可重试或改用「手动粘贴 DDL」");
+        }
+    }
+
     private GenPipelineAiVO parseTables(String json) {
         try {
             JsonNode tables = objectMapper.readTree(json).path("tables");
@@ -313,6 +511,20 @@ public class AiModelServiceImpl implements AiModelService {
                 GenPipelineAiModulesVO.Module mod = new GenPipelineAiModulesVO.Module();
                 mod.setName(name);
                 mod.setDesc(firstText(m, "desc", "description", "moduleDesc"));
+                // V9.4：旧模型没有 functions / 类型不符时按空数组兼容；
+                // 只收文本节点并过滤空白，避免把 null、数字、空串带进可编辑清单。
+                JsonNode functions = m.path("functions");
+                if (functions.isArray()) {
+                    for (JsonNode function : functions) {
+                        if (!function.isTextual()) {
+                            continue;
+                        }
+                        String text = function.asText().trim();
+                        if (StringUtils.hasText(text)) {
+                            mod.getFunctions().add(text);
+                        }
+                    }
+                }
                 vo.getModules().add(mod);
             }
             if (vo.getModules().isEmpty()) {

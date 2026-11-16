@@ -2,6 +2,7 @@ package com.codegen.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.codegen.dto.GenPipelineCreateDTO;
+import com.codegen.dto.GenPipelineDdlPreviewDTO;
 import com.codegen.dto.GenPipelinePageDTO;
 import com.codegen.dto.GenPipelinePrepareDTO;
 import com.codegen.vo.GenPipelineLintFixVO;
@@ -23,6 +24,9 @@ public interface GenPipelineService {
 
     /** 详情（头 + 全部步骤） */
     GenPipelineVO detail(Long id);
+
+    /** AI 模式 DDL 只读预览：与 prepareDb 共用 buildDdl，不创建任务、台账或业务库表 */
+    com.codegen.vo.GenPipelineDdlPreviewVO previewDdl(GenPipelineDdlPreviewDTO dto);
 
     /** 建库建表 + 建系统台账 + 导入表配置（表结构确认后调用，幂等可重试） */
     GenPipelinePrepareVO prepareDb(Long id, GenPipelinePrepareDTO dto);

@@ -137,7 +137,7 @@ class TplRenderTest {
     class Basic {
 
         @Test
-        @DisplayName("vuePage：联动规则、脱敏、查重、ID 列宽")
+        @DisplayName("vuePage：联动规则、脱敏、查重、ID 列默认隐藏（V9.5 §4.6）")
         void vuePage() {
             String out = render("vuePage.ftl", basicModel());
             has(out, "linkRules: [", "联动规则数组");
@@ -150,8 +150,19 @@ class TplRenderTest {
             has(out, "this.applyLink()", "弹窗打开时触发");
             has(out, "uniqueValidator(field) {", "前端查重");
             has(out, "/check-unique", "查重接口路径");
-            has(out, "width=\"180\"", "ID 列宽");
+            // V9.5 §4.6：物理主键 id 默认不渲染（列表页/详情页都不出现）
+            hasNot(out, "<el-table-column prop=\"id\" label=\"ID\"", "默认不渲染列表 ID 列");
+            hasNot(out, "<span class=\"detail-label\">ID</span>", "默认不渲染详情 ID 行");
             hasNot(out, "linkRules: [\n", "linkRules 必须单行内联（多行会撑坏模板）");
+        }
+
+        @Test
+        @DisplayName("vuePage：showIdColumn=true 时仍渲染 180px 宽的 ID 列（调试模式可用）")
+        void vuePageShowIdColumn() {
+            Map<String, Object> model = basicModel();
+            model.put("showIdColumn", true);
+            String out = render("vuePage.ftl", model);
+            has(out, "width=\"180\"", "ID 列宽");
         }
 
         @Test

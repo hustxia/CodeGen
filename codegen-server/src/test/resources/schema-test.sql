@@ -350,3 +350,57 @@ CREATE TABLE `sys_i18n_message` (
   KEY `idx_i18n_project_locale` (`project_id`, `locale`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='V8.0 用户译文覆盖表'
 ;
+
+-- V9.6 AI 建表分批任务：集成测试若触碰调度/任务表，必须有同名结构（与 docs/sql/V9.6__ai_build_job.sql 对齐）
+CREATE TABLE IF NOT EXISTS `gen_ai_build_job` (
+  `id`            bigint       NOT NULL,
+  `job_no`        varchar(40)  DEFAULT NULL,
+  `job_type`      varchar(16)  NOT NULL DEFAULT 'plan',
+  `status`        varchar(16)  NOT NULL DEFAULT 'pending',
+  `system_name`   varchar(200) DEFAULT NULL,
+  `system_desc`   varchar(1000) DEFAULT NULL,
+  `scope`         varchar(16)  DEFAULT 'new',
+  `project_id`    bigint       DEFAULT NULL,
+  `scale`         varchar(16)  DEFAULT NULL,
+  `deploy`        varchar(16)  DEFAULT NULL,
+  `total_batch`   int          NOT NULL DEFAULT 0,
+  `done_batch`    int          NOT NULL DEFAULT 0,
+  `failed_batch`  int          NOT NULL DEFAULT 0,
+  `total_table`   int          NOT NULL DEFAULT 0,
+  `payload`       mediumtext,
+  `result`        mediumtext,
+  `error`         varchar(1000) DEFAULT NULL,
+  `create_time`   datetime     DEFAULT CURRENT_TIMESTAMP,
+  `update_time`   datetime     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `create_by`     bigint       DEFAULT NULL,
+  `update_by`     bigint       DEFAULT NULL,
+  `deleted`       tinyint      NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ai_job_no` (`job_no`),
+  KEY `idx_ai_job_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI 建表分批任务';
+
+CREATE TABLE IF NOT EXISTS `gen_ai_build_batch` (
+  `id`            bigint       NOT NULL,
+  `job_id`        bigint       NOT NULL,
+  `seq`           int          NOT NULL DEFAULT 0,
+  `kind`          varchar(16)  NOT NULL DEFAULT 'module',
+  `module_name`   varchar(200) DEFAULT NULL,
+  `status`        varchar(16)  NOT NULL DEFAULT 'pending',
+  `retry_count`   int          NOT NULL DEFAULT 0,
+  `tables`        mediumtext,
+  `table_count`   int          NOT NULL DEFAULT 0,
+  `pipeline_id`   bigint       DEFAULT NULL,
+  `error`         varchar(1000) DEFAULT NULL,
+  `started_at`    datetime     DEFAULT NULL,
+  `finished_at`   datetime     DEFAULT NULL,
+  `create_time`   datetime     DEFAULT CURRENT_TIMESTAMP,
+  `update_time`   datetime     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `create_by`     bigint       DEFAULT NULL,
+  `update_by`     bigint       DEFAULT NULL,
+  `deleted`       tinyint      NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_ai_batch_job` (`job_id`, `seq`),
+  KEY `idx_ai_batch_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI 建表分批任务-批次';
+
