@@ -106,6 +106,16 @@ export function aiBuildPlan(data) {
   return request({ url: '/gen/ai-build/plan', method: 'post', data, timeout: 600000 })
 }
 
+// V9.7 行业模板清单（电商/ERP/CRM/CMS，秒级克隆表结构）
+export function aiBuildTemplates() {
+  return request({ url: '/gen/ai-build/templates', method: 'get' })
+}
+
+// V9.7 行业模板建表：克隆模板表结构（不调 LLM），走与 AI 相同的收口/编辑/落库链路
+export function aiBuildPlanFromTemplate(data) {
+  return request({ url: '/gen/ai-build/plan/template', method: 'post', data })
+}
+
 // V9.5 同源 DDL 预览：委托 V9.4 previewDdl
 export function aiBuildDdlPreview(data) {
   return request({ url: '/gen/ai-build/ddl-preview', method: 'post', data })

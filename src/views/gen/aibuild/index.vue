@@ -54,6 +54,42 @@
             </el-select>
             <div class="muted">补表只推荐该系统缺失的表：已有表写进 prompt 让模型避让，服务端再做一次差集兜底。</div>
           </el-form-item>
+          <el-form-item label="建表方式">
+            <el-radio-group v-model="form.source">
+              <el-radio label="template">行业模板（秒出，不调 AI）</el-radio>
+              <el-radio label="ai">AI 生成</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="form.source === 'template'" label="行业模板" required>
+            <el-select
+              v-model="form.templateKey"
+              placeholder="选择最接近的行业模板，克隆后可在第②步任意增删改"
+              style="width: 100%"
+            >
+              <el-option
+                v-for="t in templates"
+                :key="t.key"
+                :label="t.name + '（' + t.moduleCount + ' 模块 / ' + t.tableCount + ' 表）'"
+                :value="t.key"
+              >
+                <span>{{ t.name }}</span>
+                <span class="muted" style="margin-left: 8px">{{ t.desc }}</span>
+              </el-option>
+            </el-select>
+            <div v-if="currentTemplate" class="muted">{{ currentTemplate.desc }}</div>
+            <el-checkbox-group v-if="currentTemplate" v-model="form.templateModules" style="margin-top: 6px">
+              <el-checkbox v-for="m in currentTemplate.modules" :key="m.name" :label="m.name">
+                {{ m.name }}（{{ m.tables.length }} 表）
+              </el-checkbox>
+            </el-checkbox-group>
+            <div v-if="currentTemplate" class="muted">不勾选任何模块 = 全量克隆；勾选后只克隆选中的模块。</div>
+          </el-form-item>
+          <el-form-item v-if="form.source === 'ai'" label="生成模式">
+            <el-radio-group v-model="form.generationMode">
+              <el-radio label="skeleton">极速骨架（AI 只列字段名，类型自动补全，快 3-5 倍）</el-radio>
+              <el-radio label="full">完整设计（AI 逐列定类型，较慢）</el-radio>
+            </el-radio-group>
+          </el-form-item>
           <el-form-item label="规模">
             <el-radio-group v-model="form.scale">
               <el-radio label="small">精简（&lt;50 表）</el-radio>
@@ -69,21 +105,22 @@
             <div class="muted">超大型默认微服务：按领域模块拆成 N 个独立服务工程 + 网关，每服务自有 schema。</div>
           </el-form-item>
           <el-alert
-            v-if="!aiEnabled"
+            v-if="!aiEnabled && form.source === 'ai'"
             type="warning"
             :closable="false"
-            title="AI 建模未启用（未配置 LLM）。请在后端开启后重试，或使用「一句话建系统」向导的手动 DDL。"
+            title="AI 建模未启用（未配置 LLM）。请在后端开启后重试，或改用「行业模板」秒级建表，或使用「一句话建系统」向导的手动 DDL。"
             style="margin-bottom: 12px"
           />
           <el-form-item>
             <el-button
               type="primary"
-              icon="el-icon-magic-stick"
+              :icon="form.source === 'template' ? 'el-icon-document-copy' : 'el-icon-magic-stick'"
               :loading="planLoading"
-              :disabled="!aiEnabled"
+              :disabled="form.source === 'ai' && !aiEnabled"
               @click="doPlan"
-            >🤖 AI 推荐（仅推荐，不会建表）</el-button>
-            <span class="muted" style="margin-left: 10px">大型/超大型走后台分批（每模块一批、多批并发），进度见下方，可离开页面。</span>
+            >{{ form.source === 'template' ? '📋 克隆模板（仅推荐，不会建表）' : '🤖 AI 推荐（仅推荐，不会建表）' }}</el-button>
+            <span v-if="form.source === 'ai'" class="muted" style="margin-left: 10px">大型/超大型走后台分批（每模块一批、多批并发），进度见下方，可离开页面。</span>
+            <span v-else class="muted" style="margin-left: 10px">模板克隆不走 AI，秒级返回；表结构进第②步编辑器后与 AI 结果完全同链路。</span>
           </el-form-item>
           <el-form-item v-if="job" label="后台进度">
             <div style="width: 100%">
@@ -306,6 +343,8 @@ import {
   aiBuildJobStatus,
   aiBuildJobResult,
   aiBuildJobCancel,
+  aiBuildTemplates,
+  aiBuildPlanFromTemplate,
   aiBuildDdlPreview,
   aiBuildConfirm
 } from '@/api/pipeline'
@@ -325,9 +364,14 @@ export default {
         dbName: '',
         scope: 'new',
         projectId: null,
+        source: 'template',
+        templateKey: '',
+        templateModules: [],
+        generationMode: 'skeleton',
         scale: 'huge',
         deploy: 'micro'
       },
+      templates: [],
       projects: [],
       planLoading: false,
       plan: null,
@@ -347,6 +391,9 @@ export default {
     }
   },
   computed: {
+    currentTemplate() {
+      return this.templates.find(t => t.key === this.form.templateKey) || null
+    },
     relationMap() {
       const m = {}
       if (this.plan && this.plan.relations) {
@@ -423,6 +470,14 @@ export default {
   },
   created() {
     aiBuildConfig().then(r => { this.aiEnabled = !!(r.data && r.data.aiEnabled) }).catch(() => { this.aiEnabled = false })
+    aiBuildTemplates()
+      .then(r => {
+        this.templates = r.data || []
+        if (this.templates.length && !this.form.templateKey) {
+          this.form.templateKey = this.templates[0].key
+        }
+      })
+      .catch(() => { this.templates = [] })
     listProjectOptions()
       .then(r => { this.projects = r.data || [] })
       .catch(() => { this.projects = [] })
@@ -435,6 +490,10 @@ export default {
       }
       if (this.form.scope === 'supplement' && !this.form.projectId) {
         this.$message.warning('补表必须选择目标系统，否则无法排除已有表')
+        return
+      }
+      if (this.form.source === 'template') {
+        this.doPlanFromTemplate()
         return
       }
       this.planLoading = true
@@ -464,6 +523,34 @@ export default {
         this.planLoading = false
         this.$message.error('提交建模任务失败：' + (e.message || e))
       })
+    },
+    /** V9.7 模板建表：不调 AI，秒级克隆；返回的 plan 与 AI 结果同形（source=template） */
+    doPlanFromTemplate() {
+      if (!this.form.templateKey) {
+        this.$message.warning('请先选择行业模板')
+        return
+      }
+      this.planLoading = true
+      this.job = null
+      this.clearJobTimer()
+      aiBuildPlanFromTemplate({
+        templateKey: this.form.templateKey,
+        systemName: this.form.systemName,
+        systemDesc: this.form.systemDesc,
+        moduleNames: this.form.templateModules,
+        scope: this.form.scope,
+        projectId: this.form.scope === 'supplement' ? this.form.projectId : null,
+        scale: this.form.scale,
+        deploy: this.form.deploy
+      }).then(r => {
+        this.applyPlan(r.data)
+        const src = r.data && r.data.source
+        this.$message.success(src === 'template'
+          ? '模板克隆完成（' + (r.data.tableCount || 0) + ' 张表），请人工确认表设计'
+          : '推荐完成，请人工确认表设计')
+      }).catch(e => {
+        this.$message.error('模板建表失败：' + (e.message || e))
+      }).finally(() => { this.planLoading = false })
     },
     applyPlan(vo) {
       // 给每张表打 _mod 标记，便于模块树分组
