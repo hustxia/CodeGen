@@ -265,13 +265,13 @@ npm run serve
 | **V8.1** | 品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | 生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷 | 93a12d5 + e49330b  |
 | **V9.1** | **可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **測試中心與驗證中心：把介面/UI 用例資產（7 張表）與平台驗證資產（S1–S9 套件、三層落庫、統一 JSON 摘要）合併為一個版本；產物零差異，373/373 單測，206/206 語言鍵** | V9.2 release, **目前版本** |
-| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
-| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
-| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
-| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
-| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
-| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
+| **V9.2** | **測試中心+驗證中心：用例中心 7 表 / 驗證中心 9 套件（S1-S9，全局 409 單跑鎖，CI 共享 JSON 摘要）；373/373 單測（新增 50），i18n 契約 9/9** | V9.2 release, **目前版本** |
+| **V9.3** | **生成產物執行期修復（模板 3 處 Vue2 遺留）+ 驗證中心前端接入 + 一句話建系統端到端跑通（自檢/子進程路徑/前端啟動/重跑清場）；96 份多語言文檔版本歷史同步至 V9.3** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **一句話建系統分階段確認：AI 推薦 → 編輯/預覽（同源 DDL 唯讀）→ 確認落草稿/建庫，階段門禁；DDL 預覽與建庫執行共用同一組裝方法，所見即所得** | b3f0587（含遺留入庫） |
+| **V9.5** | **AI 建表推薦與人工確認（/gen/ai-build）：AI 推薦表結構 → 可編輯 → 同源 DDL 預覽 → 確認落草稿/建庫；補表按目標系統已有表做差集，服務端硬過濾重複表** | 570f6fc + 3104317 |
+| **V9.6** | **大型/超大型分批建模任務：任務/批次兩表落庫，條件更新認領調度（2s tick 多 worker 多實例安全），超時回收重試（900s/2 次），前端 2s 輪詢批次進度；實測 11 批/70 表/8s（stub 4 worker）；流水線號防撞（4 位序號 + uk_no 換號重試）** | 5a2bcac + ecbe2ba |
+| **V9.7** | **快速建表：兩段式骨架生成（AI 只列表名/註釋/欄位名，型別與主鍵由命名語義規則補全，真模型實測 3m13s → 54s，約 3.6 倍）+ 行業模板庫（電商/ERP/CRM/CMS 四套 JSON 模板包，與 AI 同收口克隆，秒級零 AI）** | d38ba7c + fd2440c |
+| **V9.8** | **多流水線並發執行：PipelineRunGate 閘門（全局 max-running 上限 + 同系統互斥，跨系統並行安全）取代單執行緒執行器 + 全域 AtomicBoolean；啟動恢復——服務重啟後 running 孤兒狀態自動置 failed（修復實際事故）；462/462 單測全綠** | 157f5ca + 07e8607, **目前版本** |
 
 ---
 

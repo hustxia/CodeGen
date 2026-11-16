@@ -262,19 +262,19 @@ npm run serve
 | V7.1 | 种子数据 AI 增强（AI 管语义、规则管结构） | V7.1（42 行），5ca6e72 |
 | V7.2 | 流水线成功后 SQL 交付物落盘 `db/` | eebff88 |
 | **V7.3** | **交付可信度：自检编译产物测试 / 统一 SQL 交付出口 / 表级 AI 推荐** | **V7.3（138 行）** |
-| **V7.4** | 可重复交付：空库能部署、每次提交都保证能跑  ** | c306e29 |
+| **V7.4** | 可重复交付：空库能部署、每次提交都保证能跑 | c306e29 |
 | **V7.5** | 项目语言配置：206 语言清单 / 默认语言 / 启用语言，生成物 lang 与 dir 注入 | 7a9afa0 + abac56d |
 | **V8.0** | 全页面国际化：206 语言框架（8 种精译），双轨制 i18n、OFF 逐字节零 diff 契约 | 9e5dd57 → 7d57aea |
 | **V8.1** | 质量加固：离线契约 harness（9 模式 OFF 零 diff）+ i18n-core 单测 + CI 卡点 + README 诚实拆分（框架 206 / 精译 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | 生成物现代化：Vue 3 + Element Plus + Vite；运行时验证（40/40 断言、vite build 成功、14 张截图含 ar-SA RTL）；修复 3 个运行时缺陷 | 93a12d5 + e49330b  |
 | **V9.1** | **可维护性重构：GenScaffoldServiceImpl 5072 → 931 行拆为 8 个 Writer；产物逐字节零差异（新旧 jar 共 119 + 62 文件 diff -r 为空）；312/312 单测；离线 i18n 契约 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **测试中心与验证中心：把接口/UI 用例资产（7 张表）与平台验证资产（S1–S9 套件、三层落库、统一 JSON 摘要）合并为一个版本；产物零 diff，373/373 单测，206/206 语言键** | V9.2 release, **当前版本** |
-| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
-| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
-| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
-| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
-| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
-| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
+| **V9.2** | **测试中心+验证中心：用例中心 7 表 / 验证中心 9 套件（S1-S9，全局 409 单跑锁，CI 共享 JSON 摘要）；373/373 单测（新增 50），i18n 契约 9/9** | 8be92a9 + f9f16d2 |
+| **V9.3** | **生成产物运行时修复（模板 3 处 Vue2 遗留）+ 验证中心前端接入 + 一句话建系统端到端跑通（自检/子进程路径/前端启动/重跑清场）；96 份多语言文档版本历史同步至 V9.3** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **一句话建系统分阶段确认：AI 推荐 → 编辑/预览（同源 DDL 只读）→ 确认落草稿/建库，阶段门禁；DDL 预览与建库执行共用同一组装方法，所见即所得** | b3f0587（含遗留入库） |
+| **V9.5** | **AI 建表推荐与人工确认（/gen/ai-build）：AI 推荐表结构 → 可编辑 → 同源 DDL 预览 → 确认落草稿/建库；补表按目标系统已有表做差集，服务端硬过滤重复表** | 570f6fc + 3104317 |
+| **V9.6** | **大型/超大型分批建模任务：任务/批次两表落库，条件更新认领调度（2s tick 多 worker 多实例安全），超时回收重试（900s/2 次），前端 2s 轮询批次进度；实测 11 批/70 表/8s（stub 4 worker）；流水线号防撞（4 位序号 + uk_no 换号重试）** | 5a2bcac + ecbe2ba（web 2ff1c74） |
+| **V9.7** | **快速建表：两段式骨架生成（AI 只列表名/注释/字段名，类型与主键由命名语义规则补全，真模型实测 3m13s → 54s，约 3.6 倍）+ 行业模板库（电商/ERP/CRM/CMS 四套 JSON 模板包，与 AI 同收口克隆，秒级零 AI）** | d38ba7c + fd2440c（web 3e9eb92） |
+| **V9.8** | **多流水线并发运行：PipelineRunGate 闸门（全局 max-running 上限 + 同系统互斥，跨系统并行安全）取代单线程执行器 + 全局 AtomicBoolean；启动恢复——服务重启后 running 孤儿状态自动置 failed（修复实际事故）；462/462 单测全绿** | 157f5ca + 07e8607, **当前版本** |
 
 ---
 
