@@ -41,6 +41,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -73,6 +78,26 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "crop_code",
+              "type": "varchar(64)",
+              "comment": "作物编码"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -110,6 +135,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -142,6 +172,16 @@
               "name": "reading_time",
               "type": "datetime",
               "comment": "采集时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -179,6 +219,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -211,6 +256,16 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

@@ -14,7 +14,10 @@
             {"name": "parent_id", "type": "bigint", "comment": "上级分类"},
             {"name": "category_name", "type": "varchar(64)", "comment": "分类名称"},
             {"name": "sort", "type": "int", "comment": "排序号"},
-            {"name": "icon_url", "type": "varchar(512)", "comment": "分类图标"}
+            {"name": "icon_url", "type": "varchar(512)", "comment": "分类图标"},
+            {"name": "category_code", "type": "varchar(64)", "comment": "分类编码"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -25,7 +28,8 @@
             {"name": "brand_name", "type": "varchar(64)", "comment": "品牌名称"},
             {"name": "brand_code", "type": "varchar(64)", "comment": "品牌编码"},
             {"name": "logo_url", "type": "varchar(512)", "comment": "品牌 Logo"},
-            {"name": "remark", "type": "text", "comment": "品牌介绍"}
+            {"name": "remark", "type": "text", "comment": "品牌介绍"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"}
           ]
         },
         {
@@ -39,7 +43,8 @@
             {"name": "brand_id", "type": "bigint", "comment": "所属品牌"},
             {"name": "main_image", "type": "varchar(512)", "comment": "主图地址"},
             {"name": "goods_detail", "type": "text", "comment": "商品详情（富文本）"},
-            {"name": "status", "type": "tinyint", "comment": "上架状态"}
+            {"name": "status", "type": "tinyint", "comment": "上架状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -52,7 +57,9 @@
             {"name": "sku_spec", "type": "varchar(255)", "comment": "规格描述"},
             {"name": "sale_price", "type": "decimal(12,2)", "comment": "销售价"},
             {"name": "market_price", "type": "decimal(12,2)", "comment": "市场价"},
-            {"name": "stock_num", "type": "int", "comment": "库存数量"}
+            {"name": "stock_num", "type": "int", "comment": "库存数量"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -71,7 +78,8 @@
             {"name": "pay_amount", "type": "decimal(12,2)", "comment": "实付金额"},
             {"name": "pay_time", "type": "datetime", "comment": "支付时间"},
             {"name": "receiver_address", "type": "text", "comment": "收货地址"},
-            {"name": "status", "type": "tinyint", "comment": "订单状态"}
+            {"name": "status", "type": "tinyint", "comment": "订单状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -84,7 +92,10 @@
             {"name": "sku_id", "type": "bigint", "comment": "SKU"},
             {"name": "goods_name", "type": "varchar(128)", "comment": "商品名称快照"},
             {"name": "goods_price", "type": "decimal(12,2)", "comment": "成交单价"},
-            {"name": "quantity", "type": "int", "comment": "购买数量"}
+            {"name": "quantity", "type": "int", "comment": "购买数量"},
+            {"name": "goods_code", "type": "varchar(64)", "comment": "商品编码快照"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -97,7 +108,8 @@
             {"name": "pay_channel", "type": "varchar(32)", "comment": "支付渠道"},
             {"name": "pay_amount", "type": "decimal(12,2)", "comment": "支付金额"},
             {"name": "pay_time", "type": "datetime", "comment": "支付时间"},
-            {"name": "status", "type": "tinyint", "comment": "支付状态"}
+            {"name": "status", "type": "tinyint", "comment": "支付状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -113,7 +125,9 @@
             {"name": "buyer_id", "type": "bigint", "comment": "买家"},
             {"name": "sku_id", "type": "bigint", "comment": "SKU"},
             {"name": "quantity", "type": "int", "comment": "数量"},
-            {"name": "checked_flag", "type": "tinyint", "comment": "是否勾选结算"}
+            {"name": "checked_flag", "type": "tinyint", "comment": "是否勾选结算"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -132,7 +146,10 @@
             {"name": "min_order_amount", "type": "decimal(12,2)", "comment": "门槛金额"},
             {"name": "start_time", "type": "datetime", "comment": "生效时间"},
             {"name": "end_time", "type": "datetime", "comment": "失效时间"},
-            {"name": "stock_num", "type": "int", "comment": "发放总量"}
+            {"name": "stock_num", "type": "int", "comment": "发放总量"},
+            {"name": "coupon_code", "type": "varchar(64)", "comment": "券编码"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -144,7 +161,9 @@
             {"name": "buyer_id", "type": "bigint", "comment": "买家"},
             {"name": "order_id", "type": "bigint", "comment": "核销订单"},
             {"name": "use_time", "type": "datetime", "comment": "使用时间"},
-            {"name": "status", "type": "tinyint", "comment": "券状态"}
+            {"name": "status", "type": "tinyint", "comment": "券状态"},
+            {"name": "phone", "type": "varchar(64)", "comment": "联系电话"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -162,7 +181,8 @@
             {"name": "buyer_id", "type": "bigint", "comment": "买家"},
             {"name": "apply_reason", "type": "text", "comment": "申请原因"},
             {"name": "refund_amount", "type": "decimal(12,2)", "comment": "退款金额"},
-            {"name": "status", "type": "tinyint", "comment": "售后状态"}
+            {"name": "status", "type": "tinyint", "comment": "售后状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -173,7 +193,9 @@
             {"name": "after_sale_id", "type": "bigint", "comment": "所属售后单"},
             {"name": "sku_id", "type": "bigint", "comment": "SKU"},
             {"name": "quantity", "type": "int", "comment": "退货数量"},
-            {"name": "refund_amount", "type": "decimal(12,2)", "comment": "退款金额"}
+            {"name": "refund_amount", "type": "decimal(12,2)", "comment": "退款金额"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -189,7 +211,9 @@
             {"name": "warehouse_name", "type": "varchar(128)", "comment": "仓库名称"},
             {"name": "warehouse_code", "type": "varchar(64)", "comment": "仓库编码"},
             {"name": "address", "type": "text", "comment": "仓库地址"},
-            {"name": "contact_phone", "type": "varchar(20)", "comment": "联系电话"}
+            {"name": "contact_phone", "type": "varchar(20)", "comment": "联系电话"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -202,7 +226,9 @@
             {"name": "change_num", "type": "int", "comment": "变动数量"},
             {"name": "change_type", "type": "tinyint", "comment": "出入库类型"},
             {"name": "biz_no", "type": "varchar(64)", "comment": "关联业务单号"},
-            {"name": "change_time", "type": "datetime", "comment": "变动时间"}
+            {"name": "change_time", "type": "datetime", "comment": "变动时间"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]

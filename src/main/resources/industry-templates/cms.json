@@ -15,7 +15,9 @@
             {"name": "channel_name", "type": "varchar(64)", "comment": "栏目名称"},
             {"name": "channel_code", "type": "varchar(64)", "comment": "栏目编码"},
             {"name": "sort", "type": "int", "comment": "排序号"},
-            {"name": "visible_flag", "type": "tinyint", "comment": "是否导航可见"}
+            {"name": "visible_flag", "type": "tinyint", "comment": "是否导航可见"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -36,7 +38,9 @@
             {"name": "article_content", "type": "text", "comment": "正文（富文本）"},
             {"name": "view_num", "type": "int", "comment": "阅读量"},
             {"name": "publish_time", "type": "datetime", "comment": "发布时间"},
-            {"name": "status", "type": "tinyint", "comment": "发布状态"}
+            {"name": "status", "type": "tinyint", "comment": "发布状态"},
+            {"name": "content", "type": "text", "comment": "详细内容"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -45,7 +49,10 @@
           "columns": [
             {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
             {"name": "article_id", "type": "bigint", "comment": "文章"},
-            {"name": "tag_id", "type": "bigint", "comment": "标签"}
+            {"name": "tag_id", "type": "bigint", "comment": "标签"},
+            {"name": "content", "type": "text", "comment": "详细内容"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -54,7 +61,10 @@
           "columns": [
             {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
             {"name": "tag_name", "type": "varchar(64)", "comment": "标签名称"},
-            {"name": "use_num", "type": "int", "comment": "引用次数"}
+            {"name": "use_num", "type": "int", "comment": "引用次数"},
+            {"name": "tag_code", "type": "varchar(64)", "comment": "标签编码"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -72,7 +82,10 @@
             {"name": "commenter_id", "type": "bigint", "comment": "评论人"},
             {"name": "comment_content", "type": "text", "comment": "评论内容"},
             {"name": "like_num", "type": "int", "comment": "点赞数"},
-            {"name": "audit_status", "type": "tinyint", "comment": "审核状态"}
+            {"name": "audit_status", "type": "tinyint", "comment": "审核状态"},
+            {"name": "content", "type": "text", "comment": "详细内容"},
+            {"name": "sort", "type": "int", "comment": "排序"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -89,7 +102,10 @@
             {"name": "media_url", "type": "varchar(512)", "comment": "资源地址"},
             {"name": "media_type", "type": "tinyint", "comment": "资源类型"},
             {"name": "file_size", "type": "int", "comment": "文件大小(KB)"},
-            {"name": "uploader_id", "type": "bigint", "comment": "上传人"}
+            {"name": "uploader_id", "type": "bigint", "comment": "上传人"},
+            {"name": "media_code", "type": "varchar(64)", "comment": "资源编码"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -104,7 +120,9 @@
             {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
             {"name": "user_id", "type": "bigint", "comment": "用户"},
             {"name": "article_id", "type": "bigint", "comment": "文章"},
-            {"name": "favorite_time", "type": "datetime", "comment": "收藏时间"}
+            {"name": "favorite_time", "type": "datetime", "comment": "收藏时间"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -114,7 +132,9 @@
             {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
             {"name": "user_id", "type": "bigint", "comment": "用户"},
             {"name": "article_id", "type": "bigint", "comment": "文章"},
-            {"name": "like_time", "type": "datetime", "comment": "点赞时间"}
+            {"name": "like_time", "type": "datetime", "comment": "点赞时间"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]

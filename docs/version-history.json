@@ -1,6 +1,6 @@
 {
   "meta": {
-    "currentVersion": "V9.9",
+    "currentVersion": "V9.10",
     "updated": "2026-11-16",
     "source": "README.md(en) + README_ZH.md(zh) 为权威源；sync-version-rows*.mjs 仅 harvest 其余语言的 V7.5~V9.1 译本",
     "note": "改动版本表只需编辑本文件，再运行 node scripts/render_version_history.mjs"
@@ -494,8 +494,20 @@
         "zh": "行业模板库扩至 250+ 套 / 19 大类 / 2100+ 表：可复用领域蓝图 + 生成脚本（scripts/gen_industry_templates.py）；模板清单改为轻量（不表明细），明细按需加载，支持分类筛选与搜索；464/464 单测全绿"
       },
       "commit": {
-        "en": "7e16b72 (web 7a5d1c7), **current**",
-        "zh": "7e16b72（web 7a5d1c7）, **当前版本**"
+        "en": "7e16b72 (web 7a5d1c7)",
+        "zh": "7e16b72（web 7a5d1c7）"
+      }
+    },
+    {
+      "version": "V9.10",
+      "highlight": true,
+      "theme": {
+        "en": "Industry template field expansion: 2191 tables enriched with business fields by table semantics (id code / doc no / amount / contact / time range / content / sort / status / remark), avg 6.12 → 7.87 columns, status 100% + remark 96% + code/no 82% coverage; semantic equivalence groups prevent duplicate columns; fixed legacy prescription create_time collision with audit column (would break DDL); 465/465 tests green",
+        "zh": "行业模板字段展开：2191 张表按表语义补充业务字段（编码/单号/金额/联系方式/时间区间/正文/排序/状态/备注），平均每表 6.12 → 7.87 列，状态 100% / 备注 96% / 编码 82% 覆盖；语义等价组防止重复列；修复历史处方表 create_time 与审计列撞名（会导致建表重复列失败）；465/465 单测全绿"
+      },
+      "commit": {
+        "en": "pending, **current**",
+        "zh": "待提交, **当前版本**"
       }
     }
   ],
@@ -513,7 +525,8 @@
       "V9.6": "大型/超大型分批建模任務：任務/批次兩表落庫，條件更新認領調度（2s tick 多 worker 多實例安全），超時回收重試（900s/2 次），前端 2s 輪詢批次進度；實測 11 批/70 表/8s（stub 4 worker）；流水線號防撞（4 位序號 + uk_no 換號重試）",
       "V9.7": "快速建表：兩段式骨架生成（AI 只列表名/註釋/欄位名，型別與主鍵由命名語義規則補全，真模型實測 3m13s → 54s，約 3.6 倍）+ 行業模板庫（電商/ERP/CRM/CMS 四套 JSON 模板包，與 AI 同收口克隆，秒級零 AI）",
       "V9.8": "多流水線並發執行：PipelineRunGate 閘門（全局 max-running 上限 + 同系統互斥，跨系統並行安全）取代單執行緒執行器 + 全域 AtomicBoolean；啟動恢復——服務重啟後 running 孤兒狀態自動置 failed（修復實際事故）；462/462 單測全綠",
-      "V9.9": "行業模板庫擴至 250+ 套 / 19 大類 / 2100+ 表：可複用領域藍圖 + 生成腳本；模板清單改為輕量（不含表明細），明細按需載入，支援分類篩選與搜尋；464/464 單測全綠"
+      "V9.9": "行業模板庫擴至 250+ 套 / 19 大類 / 2100+ 表：可複用領域藍圖 + 生成腳本；模板清單改為輕量（不含表明細），明細按需載入，支援分類篩選與搜尋；464/464 單測全綠",
+      "V9.10": "行業模板欄位展開：2191 張表依表語義補業務欄位（編碼/單號/金額/聯絡方式/時間區間/正文/排序/狀態/備註），平均每表 6.12 → 7.87 欄，狀態 100% / 備註 96% / 編碼 82% 覆蓋；語義等價組避免重複欄；修復處方表 create_time 與審計欄撞名；465/465 單測全綠"
     },
     "JA": {
       "V7.5": "プロジェクト言語設定：206 言語リスト / デフォルト / 有効言語、生成物への lang・dir 注入",
@@ -521,7 +534,8 @@
       "V8.1": "品質強化：オフライン契約ハーネス（9 モード OFF ゼロ diff）+ i18n-core 単体テスト + CI ゲート + README の正直な分割（フレームワーク 206 / 精訳 8）+ check-locale-keys.mjs",
       "V9.0": "生成物を Vue 3 + Element Plus + Vite に近代化；ランタイム検証済み（40/40 アサーション、vite build 成功、ar-SA RTL 含む 14 スクリーンショット）；ランタイムで発見した 3 件の欠陥を修正",
       "V9.1": "保守性リファクタリング · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
-      "V9.9": "業界テンプレートライブラリを 250+  packs / 19 カテゴリ / 2100+ テーブルに拡張：再利用可能なドメイン青写真＋生成スクリプト；一覧は軽量（テーブル明細なし）で明細はオンデマンド、カテゴリ絞り込み・検索対応；464/464 テスト成功"
+      "V9.9": "業界テンプレートライブラリを 250+  packs / 19 カテゴリ / 2100+ テーブルに拡張：再利用可能なドメイン青写真＋生成スクリプト；一覧は軽量（テーブル明細なし）で明細はオンデマンド、カテゴリ絞り込み・検索対応；464/464 テスト成功",
+      "V9.10": "業界テンプレートのフィールド拡張：2191 テーブルに表の意味に応じた業務フィールド（コード/伝票番号/金額/連絡先/期間/本文/並び順/ステータス/備考）を追加、1 テーブル平均 6.12 → 7.87 列、ステータス 100% / 備考 96% / コード 82% カバー。意味的等価グループで重複列を防止；処方箋の create_time と監査列の衝突を修正；465/465 テスト成功"
     },
     "KO": {
       "V7.5": "프로젝트 언어 설정: 206개 언어 목록 / 기본 언어 / 사용 언어, 생성물에 lang·dir 주입",
@@ -529,7 +543,8 @@
       "V8.1": "품질 강화: 오프라인 계약 하네스(9 모드 OFF 제로 diff) + i18n-core 단위 테스트 + CI 게이트 + README 정직 분할(프레임워크 206 / 정밀 8) + check-locale-keys.mjs",
       "V9.0": "생성물을 Vue 3 + Element Plus + Vite로 현대화; 런타임 검증 완료(40/40 어설션, vite build 성공, ar-SA RTL 포함 14장 스크린샷); 런타임 결함 3건 수정",
       "V9.1": "유지보수성 리팩터링 · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
-      "V9.9": "업계 템플릿 라이브러리를 250+세트 / 19개 분류 / 2100+테이블로 확장: 재사용 도메인 블루프린트 + 생성 스크립트; 목록은 경량(테이블 상세 제외), 상세는 필요 시 로드, 분류 필터·검색 지원; 464/464 테스트 통과"
+      "V9.9": "업계 템플릿 라이브러리를 250+세트 / 19개 분류 / 2100+테이블로 확장: 재사용 도메인 블루프린트 + 생성 스크립트; 목록은 경량(테이블 상세 제외), 상세는 필요 시 로드, 분류 필터·검색 지원; 464/464 테스트 통과",
+      "V9.10": "업계 템플릿 필드 확장: 2191개 테이블에 테이블 의미에 맞는 비즈니스 필드(코드/전표번호/금액/연락처/기간/본문/정렬/상태/비고) 추가, 테이블당 평균 6.12 → 7.87열, 상태 100% / 비고 96% / 코드 82% 커버리지; 의미 동등 그룹으로 중복 열 방지; 처방전 create_time과 감사 열 충돌 수정; 465/465 테스트 통과"
     },
     "DE": {
       "V7.5": "Projekt-Sprachkonfiguration: 206-Sprachenliste / Standardsprache / aktivierte Sprachen, Injektion von lang & dir in die generierten Artefakte",
@@ -537,7 +552,8 @@
       "V8.1": "Qualitätshärtung: Offline-Contract-Harness (9 Modi, OFF Zero-Diff) + i18n-Core-Unit-Tests + CI-Gate + ehrliche README-Aufteilung (Framework 206 / übersetzt 8) + check-locale-keys.mjs",
       "V9.0": "Generierte Artefakte auf Vue 3 + Element Plus + Vite modernisiert; zur Laufzeit verifiziert (40/40 Assertions, erfolgreicher vite build, 14 Screenshots inkl. ar-SA RTL); 3 Laufzeitfehler gefunden & behoben",
       "V9.1": "Wartbarkeits-Refactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
-      "V9.9": "Branchenvorlagen-Bibliothek auf 250+ Pakete / 19 Kategorien / 2100+ Tabellen erweitert: wiederverwendbare Domänen-Bausteine + Generator-Skript; Vorlagenliste jetzt schlank (ohne Tabellendetails), Details bedarfsgerecht, Kategoriefilter + Suche; 464/464 Tests grün"
+      "V9.9": "Branchenvorlagen-Bibliothek auf 250+ Pakete / 19 Kategorien / 2100+ Tabellen erweitert: wiederverwendbare Domänen-Bausteine + Generator-Skript; Vorlagenliste jetzt schlank (ohne Tabellendetails), Details bedarfsgerecht, Kategoriefilter + Suche; 464/464 Tests grün",
+      "V9.10": "Branchenvorlagen-Felderweiterung: 2191 Tabellen um geschäftliche Felder nach Tabellensemantik ergänzt (Code/Belegnummer/Betrag/Kontakt/Zeitraum/Inhalt/Sortierung/Status/Bemerkung), Ø 6,12 → 7,87 Spalten pro Tabelle, Status 100 % / Bemerkung 96 % / Code 82 % Abdeckung; semantische Äquivalenzgruppen verhindern doppelte Spalten; Kollision von create_time mit Audit-Spalte in Rezept-Tabellen behoben; 465/465 Tests grün"
     },
     "FR": {
       "V7.5": "Configuration linguistique du projet : liste de 206 langues / langue par défaut / langues activées, injection de lang & dir dans les artefacts générés",
@@ -545,7 +561,8 @@
       "V8.1": "Durcissement qualité : harnais de contrat hors ligne (9 modes, zéro diff OFF) + tests unitaires i18n-core + porte CI + lecture honnête du README (framework 206 / traduites 8) + check-locale-keys.mjs",
       "V9.0": "Artefacts générés modernisés vers Vue 3 + Element Plus + Vite ; vérifiés à l'exécution (40/40 assertions, vite build réussi, 14 captures dont ar-SA RTL) ; 3 défauts d'exécution corrigés",
       "V9.1": "Refactorisation de maintenabilité · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
-      "V9.9": "Bibliothèque de modèles métier étendue à 250+ packs / 19 catégories / 2100+ tables : blocs de domaine réutilisables + script de génération ; liste allégée (sans détail des tables), détails à la demande, filtre par catégorie et recherche ; 464/464 tests verts"
+      "V9.9": "Bibliothèque de modèles métier étendue à 250+ packs / 19 catégories / 2100+ tables : blocs de domaine réutilisables + script de génération ; liste allégée (sans détail des tables), détails à la demande, filtre par catégorie et recherche ; 464/464 tests verts",
+      "V9.10": "Extension des champs des modèles métier : 2191 tables enrichies de champs métier selon leur sémantique (code / n° de document / montant / contact / période / contenu / tri / statut / remarque), moyenne 6,12 → 7,87 colonnes par table, couverture statut 100 % / remarque 96 % / code 82 % ; des groupes d’équivalence sémantique évitent les colonnes dupliquées ; collision de create_time avec la colonne d’audit dans les tables d’ordonnance corrigée ; 465/465 tests verts"
     },
     "ES": {
       "V7.5": "Configuración de idiomas del proyecto: lista de 206 idiomas / idioma predeterminado / idiomas habilitados, inyección de lang y dir en los generados",
@@ -553,7 +570,8 @@
       "V8.1": "Reforzamiento de calidad: arnés de contrato fuera de línea (9 modos, dif cero en OFF) + pruebas unitarias i18n-core + compuerta CI + división honesta del README (marco 206 / traducidos 8) + check-locale-keys.mjs",
       "V9.0": "Artefactos generados modernizados a Vue 3 + Element Plus + Vite; verificados en tiempo de ejecución (40/40 aserciones, vite build exitoso, 14 capturas incl. ar-SA RTL); 3 defectos de ejecución corregidos",
       "V9.1": "Refactorización de mantenibilidad · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
-      "V9.9": "Biblioteca de plantillas industriales ampliada a 250+ paquetes / 19 categorías / 2100+ tablas: bloques de dominio reutilizables + script generador; lista ligera (sin detalle de tablas), detalle bajo demanda, filtro por categoría y búsqueda; 464/464 pruebas en verde"
+      "V9.9": "Biblioteca de plantillas industriales ampliada a 250+ paquetes / 19 categorías / 2100+ tablas: bloques de dominio reutilizables + script generador; lista ligera (sin detalle de tablas), detalle bajo demanda, filtro por categoría y búsqueda; 464/464 pruebas en verde",
+      "V9.10": "Ampliación de campos de plantillas industriales: 2191 tablas enriquecidas con campos de negocio según su semántica (código / n.º de documento / importe / contacto / periodo / contenido / orden / estado / observación), media 6,12 → 7,87 columnas por tabla, cobertura estado 100 % / observación 96 % / código 82 %; grupos de equivalencia semántica evitan columnas duplicadas; corregida colisión de create_time con columna de auditoría en tablas de receta; 465/465 pruebas en verde"
     },
     "RU": {
       "V7.5": "Языковая конфигурация проекта: список 206 языков / язык по умолчанию / включённые языки, вставка lang и dir в генерируемые файлы",
@@ -561,7 +579,8 @@
       "V8.1": "Укрепление качества: офлайн-стенд контракта (9 режимов, нулевая разница OFF) + юнит-тесты i18n-core + CI-шлюз + честное разделение в README (каркас 206 / переведено 8) + check-locale-keys.mjs",
       "V9.0": "Генерируемые артефакты переведены на Vue 3 + Element Plus + Vite; проверено в рантайме (40/40 проверок, успешный vite build, 14 скриншотов вкл. ar-SA RTL); исправлены 3 рантайм-дефекта",
       "V9.1": "Рефакторинг ради удобства сопровождения · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
-      "V9.9": "Библиотека отраслевых шаблонов расширена до 250+ пакетов / 19 категорий / 2100+ таблиц: переиспользуемые доменные блоки + скрипт генерации; список стал лёгким (без деталей таблиц), детали по запросу, фильтр по категориям и поиск; 464/464 тестов зелёные"
+      "V9.9": "Библиотека отраслевых шаблонов расширена до 250+ пакетов / 19 категорий / 2100+ таблиц: переиспользуемые доменные блоки + скрипт генерации; список стал лёгким (без деталей таблиц), детали по запросу, фильтр по категориям и поиск; 464/464 тестов зелёные",
+      "V9.10": "Расширение полей отраслевых шаблонов: 2191 таблица дополнена бизнес-полями по семантике таблицы (код / номер документа / сумма / контакт / период / содержание / сортировка / статус / примечание), в среднем 6,12 → 7,87 столбцов на таблицу, покрытие статуса 100 % / примечания 96 % / кода 82 %; семантические группы эквивалентности предотвращают дублирование столбцов; исправлен конфликт create_time со служебным столбцом в таблицах рецептов; 465/465 тестов зелёные"
     },
     "PT": {
       "V7.5": "Configuração de idiomas do projeto: lista de 206 idiomas / idioma padrão / idiomas habilitados, injeção de lang e dir nos gerados",

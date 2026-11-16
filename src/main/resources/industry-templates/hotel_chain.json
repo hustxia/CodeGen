@@ -36,6 +36,26 @@
               "name": "image",
               "type": "varchar(512)",
               "comment": "图片"
+            },
+            {
+              "name": "type_code",
+              "type": "varchar(64)",
+              "comment": "房型编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -68,6 +88,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "房态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -110,6 +135,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -162,6 +192,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -194,6 +229,26 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "level_code",
+              "type": "varchar(64)",
+              "comment": "等级编码"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -241,6 +296,11 @@
               "name": "pay_time",
               "type": "datetime",
               "comment": "支付时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -278,6 +338,11 @@
               "name": "refund_time",
               "type": "datetime",
               "comment": "退款时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -315,6 +380,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -347,6 +417,16 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

@@ -41,6 +41,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -73,6 +78,21 @@
               "name": "file_url",
               "type": "varchar(512)",
               "comment": "文件地址"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "详细内容"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -120,6 +140,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -152,6 +177,16 @@
               "name": "description",
               "type": "varchar(255)",
               "comment": "描述"
+            },
+            {
+              "name": "bill_no",
+              "type": "varchar(64)",
+              "comment": "单据编号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
             }
           ]
         }
@@ -189,6 +224,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -221,6 +261,21 @@
               "name": "amount",
               "type": "decimal(12,2)",
               "comment": "金额"
+            },
+            {
+              "name": "goods_code",
+              "type": "varchar(64)",
+              "comment": "货物编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -258,6 +313,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -290,6 +350,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

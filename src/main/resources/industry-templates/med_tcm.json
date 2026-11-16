@@ -51,6 +51,21 @@
               "name": "blood_type",
               "type": "varchar(64)",
               "comment": "血型"
+            },
+            {
+              "name": "patient_code",
+              "type": "varchar(64)",
+              "comment": "编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -98,6 +113,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -150,6 +170,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -197,6 +222,16 @@
               "name": "stock_num",
               "type": "int",
               "comment": "库存"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -231,9 +266,14 @@
               "comment": "状态"
             },
             {
-              "name": "create_time",
+              "name": "prescription_time",
               "type": "datetime",
               "comment": "开方时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -266,6 +306,16 @@
               "name": "usage",
               "type": "varchar(128)",
               "comment": "用法用量"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -308,6 +358,16 @@
               "name": "vital_signs",
               "type": "varchar(255)",
               "comment": "生命体征"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

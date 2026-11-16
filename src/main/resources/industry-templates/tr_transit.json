@@ -41,6 +41,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -68,6 +73,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -110,6 +120,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -147,6 +162,16 @@
               "name": "purpose",
               "type": "varchar(255)",
               "comment": "用途"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -184,6 +209,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -216,6 +246,16 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

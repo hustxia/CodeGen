@@ -14,7 +14,9 @@
             {"name": "parent_id", "type": "bigint", "comment": "上级分类"},
             {"name": "category_name", "type": "varchar(64)", "comment": "分类名称"},
             {"name": "category_code", "type": "varchar(64)", "comment": "分类编码"},
-            {"name": "sort", "type": "int", "comment": "排序号"}
+            {"name": "sort", "type": "int", "comment": "排序号"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -24,7 +26,9 @@
             {"name": "id", "type": "bigint", "comment": "主键", "pk": true},
             {"name": "unit_name", "type": "varchar(32)", "comment": "单位名称"},
             {"name": "unit_code", "type": "varchar(32)", "comment": "单位编码"},
-            {"name": "conversion_rate", "type": "decimal(5,2)", "comment": "换算率"}
+            {"name": "conversion_rate", "type": "decimal(5,2)", "comment": "换算率"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -38,7 +42,8 @@
             {"name": "unit_id", "type": "bigint", "comment": "计量单位"},
             {"name": "spec", "type": "varchar(255)", "comment": "规格型号"},
             {"name": "safe_stock_num", "type": "int", "comment": "安全库存"},
-            {"name": "status", "type": "tinyint", "comment": "启用状态"}
+            {"name": "status", "type": "tinyint", "comment": "启用状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -56,7 +61,8 @@
             {"name": "contact_person", "type": "varchar(64)", "comment": "联系人"},
             {"name": "contact_phone", "type": "varchar(20)", "comment": "联系电话"},
             {"name": "address", "type": "text", "comment": "地址"},
-            {"name": "status", "type": "tinyint", "comment": "合作状态"}
+            {"name": "status", "type": "tinyint", "comment": "合作状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -69,7 +75,8 @@
             {"name": "buyer_id", "type": "bigint", "comment": "采购员"},
             {"name": "total_amount", "type": "decimal(12,2)", "comment": "采购总额"},
             {"name": "expect_date", "type": "date", "comment": "期望到货日"},
-            {"name": "status", "type": "tinyint", "comment": "单据状态"}
+            {"name": "status", "type": "tinyint", "comment": "单据状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -81,7 +88,10 @@
             {"name": "material_id", "type": "bigint", "comment": "物料"},
             {"name": "purchase_price", "type": "decimal(12,2)", "comment": "采购单价"},
             {"name": "quantity", "type": "int", "comment": "采购数量"},
-            {"name": "arrived_num", "type": "int", "comment": "已到货数量"}
+            {"name": "arrived_num", "type": "int", "comment": "已到货数量"},
+            {"name": "order_no", "type": "varchar(64)", "comment": "订单号"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -99,7 +109,8 @@
             {"name": "contact_person", "type": "varchar(64)", "comment": "联系人"},
             {"name": "contact_phone", "type": "varchar(20)", "comment": "联系电话"},
             {"name": "credit_level", "type": "tinyint", "comment": "信用等级"},
-            {"name": "status", "type": "tinyint", "comment": "合作状态"}
+            {"name": "status", "type": "tinyint", "comment": "合作状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -112,7 +123,8 @@
             {"name": "saler_id", "type": "bigint", "comment": "销售员"},
             {"name": "total_amount", "type": "decimal(12,2)", "comment": "销售总额"},
             {"name": "sign_date", "type": "date", "comment": "签约日期"},
-            {"name": "status", "type": "tinyint", "comment": "单据状态"}
+            {"name": "status", "type": "tinyint", "comment": "单据状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -124,7 +136,10 @@
             {"name": "material_id", "type": "bigint", "comment": "物料"},
             {"name": "sale_price", "type": "decimal(12,2)", "comment": "销售单价"},
             {"name": "quantity", "type": "int", "comment": "销售数量"},
-            {"name": "delivered_num", "type": "int", "comment": "已发货数量"}
+            {"name": "delivered_num", "type": "int", "comment": "已发货数量"},
+            {"name": "order_no", "type": "varchar(64)", "comment": "订单号"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -140,7 +155,9 @@
             {"name": "warehouse_name", "type": "varchar(128)", "comment": "仓库名称"},
             {"name": "warehouse_code", "type": "varchar(64)", "comment": "仓库编码"},
             {"name": "warehouse_type", "type": "tinyint", "comment": "仓库类型"},
-            {"name": "address", "type": "text", "comment": "仓库地址"}
+            {"name": "address", "type": "text", "comment": "仓库地址"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -151,7 +168,9 @@
             {"name": "material_id", "type": "bigint", "comment": "物料"},
             {"name": "warehouse_id", "type": "bigint", "comment": "仓库"},
             {"name": "stock_num", "type": "int", "comment": "库存数量"},
-            {"name": "lock_num", "type": "int", "comment": "锁定数量"}
+            {"name": "lock_num", "type": "int", "comment": "锁定数量"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -164,7 +183,9 @@
             {"name": "in_warehouse_id", "type": "bigint", "comment": "调入仓库"},
             {"name": "material_id", "type": "bigint", "comment": "物料"},
             {"name": "quantity", "type": "int", "comment": "调拨数量"},
-            {"name": "status", "type": "tinyint", "comment": "单据状态"}
+            {"name": "status", "type": "tinyint", "comment": "单据状态"},
+            {"name": "amount", "type": "decimal(12,2)", "comment": "金额"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -182,7 +203,8 @@
             {"name": "receivable_amount", "type": "decimal(12,2)", "comment": "应收金额"},
             {"name": "received_amount", "type": "decimal(12,2)", "comment": "已收金额"},
             {"name": "due_date", "type": "date", "comment": "到期日"},
-            {"name": "status", "type": "tinyint", "comment": "核销状态"}
+            {"name": "status", "type": "tinyint", "comment": "核销状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -195,7 +217,8 @@
             {"name": "payable_amount", "type": "decimal(12,2)", "comment": "应付金额"},
             {"name": "paid_amount", "type": "decimal(12,2)", "comment": "已付金额"},
             {"name": "due_date", "type": "date", "comment": "到期日"},
-            {"name": "status", "type": "tinyint", "comment": "核销状态"}
+            {"name": "status", "type": "tinyint", "comment": "核销状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]

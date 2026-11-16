@@ -36,6 +36,16 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -130,6 +140,16 @@
               "name": "stock_num",
               "type": "int",
               "comment": "库存数"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -172,6 +192,11 @@
               "name": "order_time",
               "type": "datetime",
               "comment": "下单时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -209,6 +234,21 @@
               "name": "amount",
               "type": "decimal(12,2)",
               "comment": "金额"
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "订单号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -251,6 +291,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -288,6 +333,16 @@
               "name": "lock_quantity",
               "type": "int",
               "comment": "锁定数"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -330,6 +385,16 @@
               "name": "flow_time",
               "type": "datetime",
               "comment": "发生时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -419,6 +484,21 @@
               "name": "amount",
               "type": "decimal(12,2)",
               "comment": "金额"
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "订单号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -461,6 +541,26 @@
               "name": "balance",
               "type": "decimal(12,2)",
               "comment": "余额"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -498,6 +598,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -530,6 +635,21 @@
               "name": "credit_amount",
               "type": "decimal(12,2)",
               "comment": "贷方金额"
+            },
+            {
+              "name": "voucher_no",
+              "type": "varchar(64)",
+              "comment": "凭证号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -567,6 +687,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -599,6 +724,16 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

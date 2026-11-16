@@ -51,6 +51,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -83,6 +88,26 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "level_code",
+              "type": "varchar(64)",
+              "comment": "等级编码"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -120,6 +145,16 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -214,6 +249,16 @@
               "name": "stock_num",
               "type": "int",
               "comment": "库存数"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -303,6 +348,21 @@
               "name": "amount",
               "type": "decimal(12,2)",
               "comment": "金额"
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "订单号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -350,6 +410,11 @@
               "name": "pay_time",
               "type": "datetime",
               "comment": "支付时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -387,6 +452,11 @@
               "name": "refund_time",
               "type": "datetime",
               "comment": "退款时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -439,6 +509,16 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -471,6 +551,16 @@
               "name": "favorite_time",
               "type": "datetime",
               "comment": "收藏时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -518,6 +608,11 @@
               "name": "description",
               "type": "text",
               "comment": "活动说明"
+            },
+            {
+              "name": "campaign_code",
+              "type": "varchar(64)",
+              "comment": "活动编码"
             }
           ]
         }
@@ -565,6 +660,16 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "coupon_code",
+              "type": "varchar(64)",
+              "comment": "券编码"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -602,6 +707,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

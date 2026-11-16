@@ -36,6 +36,21 @@
               "name": "stock_num",
               "type": "int",
               "comment": "库存"
+            },
+            {
+              "name": "material_code",
+              "type": "varchar(64)",
+              "comment": "农资编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -68,6 +83,16 @@
               "name": "flow_time",
               "type": "datetime",
               "comment": "时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

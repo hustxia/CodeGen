@@ -103,6 +103,16 @@
               "name": "stock_num",
               "type": "int",
               "comment": "库存"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -142,9 +152,14 @@
               "comment": "状态"
             },
             {
-              "name": "create_time",
+              "name": "prescription_time",
               "type": "datetime",
               "comment": "开方时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -177,6 +192,16 @@
               "name": "usage",
               "type": "varchar(128)",
               "comment": "用法用量"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -219,6 +244,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -256,6 +286,16 @@
               "name": "lock_quantity",
               "type": "int",
               "comment": "锁定数"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -298,6 +338,16 @@
               "name": "flow_time",
               "type": "datetime",
               "comment": "发生时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -387,6 +437,21 @@
               "name": "amount",
               "type": "decimal(12,2)",
               "comment": "金额"
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "订单号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -439,6 +504,11 @@
               "name": "invoice_time",
               "type": "datetime",
               "comment": "开票时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

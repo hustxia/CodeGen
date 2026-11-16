@@ -41,6 +41,21 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -78,6 +93,26 @@
               "name": "classroom",
               "type": "varchar(64)",
               "comment": "教室"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -125,6 +160,21 @@
               "name": "upload_time",
               "type": "datetime",
               "comment": "上传时间"
+            },
+            {
+              "name": "media_code",
+              "type": "varchar(64)",
+              "comment": "资源编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -162,6 +212,26 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "exam_code",
+              "type": "varchar(64)",
+              "comment": "考试编码"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -194,6 +264,26 @@
               "name": "grade",
               "type": "varchar(64)",
               "comment": "等级"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -241,6 +331,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -268,6 +363,26 @@
               "name": "head_teacher_id",
               "type": "bigint",
               "comment": "班主任"
+            },
+            {
+              "name": "class_code",
+              "type": "varchar(64)",
+              "comment": "班级编码"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -305,6 +420,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -337,6 +457,16 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

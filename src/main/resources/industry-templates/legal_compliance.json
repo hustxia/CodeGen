@@ -36,6 +36,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -83,6 +88,26 @@
               "name": "comment",
               "type": "varchar(512)",
               "comment": "审批意见"
+            },
+            {
+              "name": "task_code",
+              "type": "varchar(64)",
+              "comment": "任务编码"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -130,6 +155,16 @@
               "name": "operate_time",
               "type": "datetime",
               "comment": "操作时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -187,6 +222,11 @@
               "name": "content",
               "type": "text",
               "comment": "合同内容"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -219,6 +259,26 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "contract_no",
+              "type": "varchar(64)",
+              "comment": "合同编号"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -256,6 +316,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -288,6 +353,21 @@
               "name": "standard",
               "type": "varchar(128)",
               "comment": "标准"
+            },
+            {
+              "name": "item_code",
+              "type": "varchar(64)",
+              "comment": "项目编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -325,6 +405,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -357,6 +442,16 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

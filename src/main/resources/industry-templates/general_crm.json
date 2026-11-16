@@ -103,6 +103,21 @@
               "name": "is_primary",
               "type": "tinyint",
               "comment": "是否主联系人"
+            },
+            {
+              "name": "contact_code",
+              "type": "varchar(64)",
+              "comment": "联系人编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -160,6 +175,11 @@
               "name": "content",
               "type": "text",
               "comment": "合同内容"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -192,6 +212,26 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "contract_no",
+              "type": "varchar(64)",
+              "comment": "合同编号"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -281,6 +321,21 @@
               "name": "amount",
               "type": "decimal(12,2)",
               "comment": "金额"
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "订单号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -328,6 +383,16 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -360,6 +425,16 @@
               "name": "amount",
               "type": "decimal(12,2)",
               "comment": "金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -407,6 +482,11 @@
               "name": "description",
               "type": "text",
               "comment": "活动说明"
+            },
+            {
+              "name": "campaign_code",
+              "type": "varchar(64)",
+              "comment": "活动编码"
             }
           ]
         }
@@ -444,6 +524,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -476,6 +561,16 @@
               "name": "sort",
               "type": "int",
               "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

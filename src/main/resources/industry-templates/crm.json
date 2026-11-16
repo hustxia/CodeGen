@@ -16,7 +16,10 @@
             {"name": "industry_type", "type": "tinyint", "comment": "所属行业"},
             {"name": "owner_id", "type": "bigint", "comment": "负责人"},
             {"name": "source_channel", "type": "tinyint", "comment": "来源渠道"},
-            {"name": "remark", "type": "text", "comment": "客户备注"}
+            {"name": "remark", "type": "text", "comment": "客户备注"},
+            {"name": "customer_code", "type": "varchar(64)", "comment": "客户编码"},
+            {"name": "phone", "type": "varchar(64)", "comment": "联系电话"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"}
           ]
         },
         {
@@ -29,7 +32,10 @@
             {"name": "position", "type": "varchar(64)", "comment": "职位"},
             {"name": "contact_phone", "type": "varchar(20)", "comment": "手机号"},
             {"name": "email", "type": "varchar(128)", "comment": "邮箱"},
-            {"name": "is_main_flag", "type": "tinyint", "comment": "是否主联系人"}
+            {"name": "is_main_flag", "type": "tinyint", "comment": "是否主联系人"},
+            {"name": "contact_code", "type": "varchar(64)", "comment": "编码"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -41,7 +47,9 @@
             {"name": "contact_id", "type": "bigint", "comment": "联系人"},
             {"name": "follow_type", "type": "tinyint", "comment": "跟进方式"},
             {"name": "follow_content", "type": "text", "comment": "跟进内容"},
-            {"name": "next_follow_time", "type": "datetime", "comment": "下次跟进时间"}
+            {"name": "next_follow_time", "type": "datetime", "comment": "下次跟进时间"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -60,7 +68,10 @@
             {"name": "expect_sign_date", "type": "date", "comment": "预计签约日"},
             {"name": "win_rate", "type": "decimal(5,2)", "comment": "赢单概率"},
             {"name": "stage", "type": "tinyint", "comment": "商机阶段"},
-            {"name": "owner_id", "type": "bigint", "comment": "负责人"}
+            {"name": "owner_id", "type": "bigint", "comment": "负责人"},
+            {"name": "opportunity_code", "type": "varchar(64)", "comment": "商机编码"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -71,7 +82,9 @@
             {"name": "opportunity_id", "type": "bigint", "comment": "所属商机"},
             {"name": "from_stage", "type": "tinyint", "comment": "原阶段"},
             {"name": "to_stage", "type": "tinyint", "comment": "新阶段"},
-            {"name": "change_reason", "type": "text", "comment": "变更原因"}
+            {"name": "change_reason", "type": "text", "comment": "变更原因"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -91,7 +104,8 @@
             {"name": "contract_amount", "type": "decimal(12,2)", "comment": "合同金额"},
             {"name": "sign_date", "type": "date", "comment": "签约日期"},
             {"name": "end_date", "type": "date", "comment": "到期日期"},
-            {"name": "status", "type": "tinyint", "comment": "合同状态"}
+            {"name": "status", "type": "tinyint", "comment": "合同状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -104,7 +118,11 @@
             {"name": "plan_date", "type": "date", "comment": "计划回款日"},
             {"name": "actual_amount", "type": "decimal(12,2)", "comment": "实际回款额"},
             {"name": "actual_date", "type": "date", "comment": "实际回款日"},
-            {"name": "status", "type": "tinyint", "comment": "回款状态"}
+            {"name": "status", "type": "tinyint", "comment": "回款状态"},
+            {"name": "plan_no", "type": "varchar(64)", "comment": "计划编号"},
+            {"name": "start_time", "type": "datetime", "comment": "开始时间"},
+            {"name": "end_time", "type": "datetime", "comment": "结束时间"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]
@@ -124,7 +142,8 @@
             {"name": "priority", "type": "tinyint", "comment": "优先级"},
             {"name": "assignee_id", "type": "bigint", "comment": "处理人"},
             {"name": "finish_time", "type": "datetime", "comment": "完成时间"},
-            {"name": "status", "type": "tinyint", "comment": "工单状态"}
+            {"name": "status", "type": "tinyint", "comment": "工单状态"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         },
         {
@@ -135,7 +154,9 @@
             {"name": "ticket_id", "type": "bigint", "comment": "所属工单"},
             {"name": "reply_content", "type": "text", "comment": "回复内容"},
             {"name": "replier_id", "type": "bigint", "comment": "回复人"},
-            {"name": "reply_time", "type": "datetime", "comment": "回复时间"}
+            {"name": "reply_time", "type": "datetime", "comment": "回复时间"},
+            {"name": "status", "type": "tinyint", "comment": "状态（1启用 0停用）"},
+            {"name": "remark", "type": "varchar(512)", "comment": "备注"}
           ]
         }
       ]

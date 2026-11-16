@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -79,6 +80,45 @@ class IndustryTemplateRegistryTest {
                 }
             }
         }
+    }
+
+    /** V9.10：字段展开后，每张表业务列更完整，且业务列不得与 BaseEntity 审计列撞名 */
+    @Test
+    void expandedColumnsAreCompleteAndAuditSafe() {
+        Set<String> audit = Set.of("create_time", "update_time", "create_by", "update_by", "deleted");
+        int totalTables = 0;
+        int totalCols = 0;
+        int withStatus = 0;
+        int withRemark = 0;
+        for (GenAiTemplateVO light : registry.list()) {
+            GenAiTemplateVO t = registry.get(light.getKey());
+            for (GenAiTemplateVO.Module m : t.getModules()) {
+                for (GenPipelineAiVO.TableModel table : m.getTables()) {
+                    totalTables++;
+                    List<GenPipelineAiVO.Column> cols = table.getColumns();
+                    totalCols += cols.size();
+                    assertTrue(cols.size() >= 5, table.getTableName() + " 至少 5 列（id + 4 业务列）");
+                    Set<String> names = cols.stream().map(GenPipelineAiVO.Column::getName)
+                            .collect(Collectors.toSet());
+                    assertEquals(cols.size(), names.size(), table.getTableName() + " 不能有重复列");
+                    for (GenPipelineAiVO.Column c : cols) {
+                        assertFalse(audit.contains(c.getName()),
+                                table.getTableName() + " 业务列撞审计列：" + c.getName());
+                        assertNotNull(c.getComment(), table.getTableName() + "." + c.getName() + " 缺注释");
+                    }
+                    if (names.stream().anyMatch(n -> n.equals("status") || n.endsWith("_status"))) {
+                        withStatus++;
+                    }
+                    if (names.stream().anyMatch(n -> n.contains("remark"))) {
+                        withRemark++;
+                    }
+                }
+            }
+        }
+        assertTrue(totalCols * 1.0 / totalTables >= 7.0,
+                "平均每表业务列应 ≥7（展开前 6.12），实际 " + (totalCols * 1.0 / totalTables));
+        assertTrue(withStatus * 1.0 / totalTables >= 0.95, "状态列覆盖率应 ≥95%");
+        assertTrue(withRemark * 1.0 / totalTables >= 0.90, "备注列覆盖率应 ≥90%");
     }
 
     @Test

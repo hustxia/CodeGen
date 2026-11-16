@@ -36,6 +36,16 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "pharmacy_code",
+              "type": "varchar(64)",
+              "comment": "药房编码"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -68,6 +78,16 @@
               "name": "expire_date",
               "type": "date",
               "comment": "有效期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -115,6 +135,16 @@
               "name": "stock_num",
               "type": "int",
               "comment": "库存"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -154,9 +184,14 @@
               "comment": "状态"
             },
             {
-              "name": "create_time",
+              "name": "prescription_time",
               "type": "datetime",
               "comment": "开方时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -189,6 +224,16 @@
               "name": "usage",
               "type": "varchar(128)",
               "comment": "用法用量"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }

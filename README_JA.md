@@ -275,6 +275,7 @@ npm run serve
 | **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
 | **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
 | **V9.9** | **業界テンプレートライブラリを 250+  packs / 19 カテゴリ / 2100+ テーブルに拡張：再利用可能なドメイン青写真＋生成スクリプト；一覧は軽量（テーブル明細なし）で明細はオンデマンド、カテゴリ絞り込み・検索対応；464/464 テスト成功** | pending, **current** |
+| **V9.10** | **業界テンプレートのフィールド拡張：2191 テーブルに表の意味に応じた業務フィールド（コード/伝票番号/金額/連絡先/期間/本文/並び順/ステータス/備考）を追加、1 テーブル平均 6.12 → 7.87 列、ステータス 100% / 備考 96% / コード 82% カバー。意味的等価グループで重複列を防止；処方箋の create_time と監査列の衝突を修正；465/465 テスト成功** | pending, **current** |
 
 ---
 

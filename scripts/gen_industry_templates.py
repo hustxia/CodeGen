@@ -21,6 +21,9 @@ import json
 import os
 from collections import OrderedDict
 
+# V9.10：生成时同步展开业务字段（幂等，历史4套由 expand_template_fields.py CLI 原地展开）
+from expand_template_fields import expand_table
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.normpath(os.path.join(HERE, "..", "src", "main", "resources", "industry-templates"))
 SKIP_KEYS = {"ecommerce", "erp", "crm", "cms"}  # 历史 4 套原样保留
@@ -375,7 +378,7 @@ VBP("medicalrecord", "病历管理", T("medical_record", "就诊记录", C("pati
 VBP("prescription", "处方药品", T("drug", "药品目录", C("drug_name", V128, "药品名称"), C("drug_code", V64, "药品编码"),
     C("spec", V64, "规格"), C("unit", V64, "单位"), C("price", DEC, "价格"), C("stock_num", INT, "库存")),
     T("prescription", "处方", C("record_id", BIG, "就诊记录"), C("patient_id", BIG, "患者"),
-      C("prescription_no", V64, "处方号"), C("status", TINY, "状态"), C("create_time", DT, "开方时间")),
+      C("prescription_no", V64, "处方号"), C("status", TINY, "状态"), C("prescription_time", DT, "开方时间")),
     T("prescription_item", "处方明细", C("prescription_id", BIG, "处方"), C("drug_id", BIG, "药品"),
       C("quantity", INT, "数量"), C("usage", V128, "用法用量")))
 VBP("labtest", "检验检查", T("lab_test", "检验项目", C("test_name", V128, "项目名称"), C("test_code", V64, "项目编码"),
@@ -1141,6 +1144,11 @@ def main():
         vo["name"] = name
         vo["category"] = category
         vo["desc"] = "%s场景：%s等核心业务域" % (name, module_names)
+        # V9.10：写出前展开业务字段（幂等；不碰 BaseEntity 管理的审计列）
+        for module in modules:
+            for table in module["tables"]:
+                expand_table(table)
+
         vo["modules"] = modules
 
         if key in SKIP_KEYS:

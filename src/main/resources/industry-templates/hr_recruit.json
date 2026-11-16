@@ -36,6 +36,26 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "position_code",
+              "type": "varchar(64)",
+              "comment": "招聘岗位编码"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -78,6 +98,11 @@
               "name": "resume",
               "type": "text",
               "comment": "简历"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -135,6 +160,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -172,6 +202,21 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
@@ -214,6 +259,11 @@
               "name": "status",
               "type": "tinyint",
               "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         },
@@ -246,6 +296,21 @@
               "name": "score",
               "type": "decimal(12,2)",
               "comment": "得分"
+            },
+            {
+              "name": "item_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态（1启用 0停用）"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
             }
           ]
         }
