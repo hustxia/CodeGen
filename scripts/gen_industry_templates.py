@@ -22,7 +22,9 @@ import os
 from collections import OrderedDict
 
 # V9.10：生成时同步展开业务字段（幂等，历史4套由 expand_template_fields.py CLI 原地展开）
+# V9.11：生成时同步追加深化表（通用平台域 + 分类专属域 + 字段二次深化）
 from expand_template_fields import expand_table
+from deepen_templates import deepen_vo
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.normpath(os.path.join(HERE, "..", "src", "main", "resources", "industry-templates"))
@@ -1150,6 +1152,9 @@ def main():
                 expand_table(table)
 
         vo["modules"] = modules
+
+        # V9.11：追加通用平台域 + 分类专属业务域，并做字段二次深化（幂等）
+        deepen_vo(vo)
 
         if key in SKIP_KEYS:
             continue

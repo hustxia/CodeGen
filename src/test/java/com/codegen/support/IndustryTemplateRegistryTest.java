@@ -16,7 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * V9.9 行业模板注册表：250+ 套预置包必须全部加载、key 唯一、表结构与 AI 建模产物同形；
+ * V9.11 行业模板注册表：250+ 套预置包必须全部加载、key 唯一、表结构与 AI 建模产物同形；
+ * 每套模板必须是完整系统（≥25 表 / 每表 ≥8 列），不能是 8 表玩具；
  * 克隆必须深拷贝（模板常驻内存，编辑器改表不能污染模板资产）。
  */
 class IndustryTemplateRegistryTest {
@@ -117,8 +118,54 @@ class IndustryTemplateRegistryTest {
         }
         assertTrue(totalCols * 1.0 / totalTables >= 7.0,
                 "平均每表业务列应 ≥7（展开前 6.12），实际 " + (totalCols * 1.0 / totalTables));
-        assertTrue(withStatus * 1.0 / totalTables >= 0.95, "状态列覆盖率应 ≥95%");
-        assertTrue(withRemark * 1.0 / totalTables >= 0.90, "备注列覆盖率应 ≥90%");
+        // V9.11：日志/明细/关联等辅助表本身不需要 status，覆盖率目标随深化表扩充调整为 85%
+        assertTrue(withStatus * 1.0 / totalTables >= 0.85,
+                "状态列覆盖率应 ≥85%，实际 " + (withStatus * 1.0 / totalTables));
+        assertTrue(withRemark * 1.0 / totalTables >= 0.85,
+                "备注列覆盖率应 ≥85%，实际 " + (withRemark * 1.0 / totalTables));
+    }
+
+    /** V9.11：每套模板必须是"能用的系统"——通用平台域 + 分类专属域，禁止退回 8 表玩具 */
+    @Test
+    void allTemplatesAreFullSystems() {
+        Set<String> audit = Set.of("create_time", "update_time", "create_by", "update_by", "deleted");
+        int minTables = Integer.MAX_VALUE;
+        int minCols = Integer.MAX_VALUE;
+        int totalTables = 0;
+        long sumCols = 0;
+        for (GenAiTemplateVO light : registry.list()) {
+            GenAiTemplateVO t = registry.get(light.getKey());
+            assertTrue(t.getTableCount() >= 25,
+                    t.getKey() + " 表数不足（" + t.getTableCount() + "），生成的系统会是玩具");
+            minTables = Math.min(minTables, t.getTableCount());
+            totalTables += t.getTableCount();
+
+            Set<String> tableNames = new java.util.HashSet<>();
+            boolean hasCommon = false;
+            for (GenAiTemplateVO.Module m : t.getModules()) {
+                if ("平台通用能力".equals(m.getName())) {
+                    hasCommon = true;
+                    assertTrue(m.getTables().size() >= 12, t.getKey() + " 通用平台域缺失");
+                }
+                for (GenPipelineAiVO.TableModel table : m.getTables()) {
+                    assertTrue(tableNames.add(table.getTableName()),
+                            t.getKey() + " 重复表：" + table.getTableName());
+                    int n = table.getColumns().size();
+                    minCols = Math.min(minCols, n);
+                    sumCols += n;
+                    assertTrue(n >= 8, table.getTableName() + " 字段不足（" + n + "）");
+                    for (GenPipelineAiVO.Column c : table.getColumns()) {
+                        assertFalse(audit.contains(c.getName()),
+                                table.getTableName() + " 业务列撞审计列：" + c.getName());
+                    }
+                }
+            }
+            assertTrue(hasCommon, t.getKey() + " 缺少平台通用能力域");
+        }
+        assertTrue(minTables >= 25, "最小表数应 ≥25，实际 " + minTables);
+        assertTrue(minCols >= 8, "最小字段数应 ≥8，实际 " + minCols);
+        double avgCols = sumCols * 1.0 / totalTables;
+        assertTrue(avgCols >= 12.0, "平均每表字段应 ≥12，实际 " + avgCols);
     }
 
     @Test

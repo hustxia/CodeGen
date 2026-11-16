@@ -274,6 +274,7 @@ npm run serve
 | **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
 | **V9.9** | **업계 템플릿 라이브러리를 250+세트 / 19개 분류 / 2100+테이블로 확장: 재사용 도메인 블루프린트 + 생성 스크립트; 목록은 경량(테이블 상세 제외), 상세는 필요 시 로드, 분류 필터·검색 지원; 464/464 테스트 통과** | pending, **current** |
 | **V9.10** | **업계 템플릿 필드 확장: 2191개 테이블에 테이블 의미에 맞는 비즈니스 필드(코드/전표번호/금액/연락처/기간/본문/정렬/상태/비고) 추가, 테이블당 평균 6.12 → 7.87열, 상태 100% / 비고 96% / 코드 82% 커버리지; 의미 동등 그룹으로 중복 열 방지; 처방전 create_time과 감사 열 충돌 수정; 465/465 테스트 통과** | pending, **current** |
+| **V9.11** | **업계 템플릿을 완전한 시스템으로 업그레이드: 각 템플릿에 공통 플랫폼 테이블 15개(결재/첨부/로그/작업/메시지/사전/설정) + 해당 분야 전용 테이블 10~15개(19개 분류 총 248개) 추가. 템플릿당 29~45개 테이블(평균 34.8, 기존 8.6), 테이블당 10~20개 열(평균 14.25, 기존 7.87); 보조 테이블 의미를 고려한 필드 확장; 466/466 테스트 통과** | pending, **current** |
 
 ---
 

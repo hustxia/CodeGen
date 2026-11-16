@@ -56,6 +56,41 @@
               "name": "remark",
               "type": "varchar(512)",
               "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
             }
           ]
         },
@@ -108,6 +143,41 @@
               "name": "remark",
               "type": "varchar(512)",
               "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
             }
           ]
         }
@@ -160,6 +230,41 @@
               "name": "remark",
               "type": "varchar(512)",
               "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
             }
           ]
         },
@@ -207,6 +312,41 @@
               "name": "remark",
               "type": "varchar(512)",
               "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
             }
           ]
         }
@@ -264,6 +404,41 @@
               "name": "remark",
               "type": "varchar(512)",
               "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
             }
           ]
         },
@@ -321,6 +496,41 @@
               "name": "remark",
               "type": "varchar(512)",
               "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
             }
           ]
         }
@@ -363,6 +573,41 @@
               "name": "remark",
               "type": "varchar(512)",
               "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
             }
           ]
         },
@@ -405,6 +650,1996 @@
               "name": "remark",
               "type": "varchar(512)",
               "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "平台通用能力",
+      "tables": [
+        {
+          "tableName": "approval",
+          "tableComment": "审批单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "no",
+              "type": "varchar(64)",
+              "comment": "单号"
+            },
+            {
+              "name": "title",
+              "type": "varchar(255)",
+              "comment": "标题"
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "comment": "类型"
+            },
+            {
+              "name": "applicant_id",
+              "type": "bigint",
+              "comment": "申请人ID"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "部门ID"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "current_node",
+              "type": "varchar(64)",
+              "comment": "当前节点"
+            },
+            {
+              "name": "result",
+              "type": "varchar(512)",
+              "comment": "处理结果"
+            },
+            {
+              "name": "reason",
+              "type": "varchar(512)",
+              "comment": "原因"
+            },
+            {
+              "name": "submit_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "finish_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "approval_node",
+          "tableComment": "审批节点",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "approval_id",
+              "type": "bigint",
+              "comment": "审批ID"
+            },
+            {
+              "name": "node_name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "node_order",
+              "type": "varchar(64)",
+              "comment": "节点顺序"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "处理人ID"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "result",
+              "type": "varchar(512)",
+              "comment": "处理结果"
+            },
+            {
+              "name": "comment",
+              "type": "varchar(512)",
+              "comment": "意见"
+            },
+            {
+              "name": "handle_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "attachment",
+          "tableComment": "附件管理",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "file_name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "file_path",
+              "type": "varchar(512)",
+              "comment": "文件路径"
+            },
+            {
+              "name": "file_size",
+              "type": "bigint",
+              "comment": "文件大小"
+            },
+            {
+              "name": "file_type",
+              "type": "varchar(64)",
+              "comment": "文件类型"
+            },
+            {
+              "name": "upload_by",
+              "type": "varchar(64)",
+              "comment": "上传人"
+            },
+            {
+              "name": "upload_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            }
+          ]
+        },
+        {
+          "tableName": "operation_log",
+          "tableComment": "操作日志",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "operation",
+              "type": "varchar(64)",
+              "comment": "操作"
+            },
+            {
+              "name": "operator_id",
+              "type": "bigint",
+              "comment": "操作人ID"
+            },
+            {
+              "name": "operator_name",
+              "type": "varchar(64)",
+              "comment": "操作人名称"
+            },
+            {
+              "name": "before_data",
+              "type": "text",
+              "comment": "变更前数据"
+            },
+            {
+              "name": "after_data",
+              "type": "text",
+              "comment": "变更后数据"
+            },
+            {
+              "name": "ip",
+              "type": "varchar(64)",
+              "comment": "IP地址"
+            },
+            {
+              "name": "operate_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            }
+          ]
+        },
+        {
+          "tableName": "notice",
+          "tableComment": "通知公告",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(255)",
+              "comment": "标题"
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "comment": "类型"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "publisher_id",
+              "type": "bigint",
+              "comment": "发布人ID"
+            },
+            {
+              "name": "publish_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "expire_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "read_count",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "document",
+          "tableComment": "文档管理",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "no",
+              "type": "varchar(64)",
+              "comment": "单号"
+            },
+            {
+              "name": "title",
+              "type": "varchar(255)",
+              "comment": "标题"
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "comment": "类型"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "file_path",
+              "type": "varchar(512)",
+              "comment": "文件路径"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "业主ID"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "部门ID"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "日期"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "task",
+          "tableComment": "任务管理",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "no",
+              "type": "varchar(64)",
+              "comment": "单号"
+            },
+            {
+              "name": "title",
+              "type": "varchar(255)",
+              "comment": "标题"
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "comment": "类型"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "处理人ID"
+            },
+            {
+              "name": "creator_id",
+              "type": "bigint",
+              "comment": "创建人ID"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "due_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "progress",
+              "type": "int",
+              "comment": "进度"
+            },
+            {
+              "name": "result",
+              "type": "varchar(512)",
+              "comment": "处理结果"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "task_item",
+          "tableComment": "任务明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "task_id",
+              "type": "bigint",
+              "comment": "任务ID"
+            },
+            {
+              "name": "item_name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "处理人ID"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "due_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "finish_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            }
+          ]
+        },
+        {
+          "tableName": "feedback",
+          "tableComment": "意见反馈",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(255)",
+              "comment": "标题"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "用户ID"
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "comment": "类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "reply",
+              "type": "varchar(512)",
+              "comment": "回复"
+            },
+            {
+              "name": "reply_by",
+              "type": "varchar(64)",
+              "comment": "回复人"
+            },
+            {
+              "name": "reply_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "tag",
+          "tableComment": "标签管理",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "comment": "类型"
+            },
+            {
+              "name": "color",
+              "type": "varchar(32)",
+              "comment": "颜色"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "tag_ref",
+          "tableComment": "标签关联",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "tag_id",
+              "type": "bigint",
+              "comment": "标签ID"
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            }
+          ]
+        },
+        {
+          "tableName": "dict",
+          "tableComment": "数据字典",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "comment": "类型"
+            },
+            {
+              "name": "code",
+              "type": "varchar(64)",
+              "comment": "编码"
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "value",
+              "type": "varchar(512)",
+              "comment": "值"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            }
+          ]
+        },
+        {
+          "tableName": "config",
+          "tableComment": "系统配置",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "config_key",
+              "type": "varchar(64)",
+              "comment": "配置键"
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "value",
+              "type": "varchar(512)",
+              "comment": "值"
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "comment": "类型"
+            },
+            {
+              "name": "group_name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            }
+          ]
+        },
+        {
+          "tableName": "audit_trail",
+          "tableComment": "审计追踪",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "action",
+              "type": "varchar(64)",
+              "comment": "动作"
+            },
+            {
+              "name": "actor_id",
+              "type": "bigint",
+              "comment": "操作人ID"
+            },
+            {
+              "name": "actor_name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "detail",
+              "type": "varchar(512)",
+              "comment": "详情"
+            },
+            {
+              "name": "ip",
+              "type": "varchar(64)",
+              "comment": "IP地址"
+            },
+            {
+              "name": "action_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            }
+          ]
+        },
+        {
+          "tableName": "message",
+          "tableComment": "站内消息",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(255)",
+              "comment": "标题"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "sender_id",
+              "type": "bigint",
+              "comment": "发送人ID"
+            },
+            {
+              "name": "receiver_id",
+              "type": "bigint",
+              "comment": "接收人ID"
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "comment": "类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "read_time",
+              "type": "datetime",
+              "comment": "时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "教育培训业务深化",
+      "tables": [
+        {
+          "tableName": "school",
+          "tableComment": "学校管理",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "no",
+              "type": "varchar(64)",
+              "comment": "单号"
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "comment": "类型"
+            },
+            {
+              "name": "addr",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(20)",
+              "comment": "手机号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "class_info",
+          "tableComment": "班级管理",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "no",
+              "type": "varchar(64)",
+              "comment": "单号"
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "grade",
+              "type": "varchar(64)",
+              "comment": "年级"
+            },
+            {
+              "name": "teacher_id",
+              "type": "bigint",
+              "comment": "教师ID"
+            },
+            {
+              "name": "school_id",
+              "type": "bigint",
+              "comment": "学校ID"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "teacher",
+          "tableComment": "教师档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "no",
+              "type": "varchar(64)",
+              "comment": "单号"
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(20)",
+              "comment": "手机号"
+            },
+            {
+              "name": "email",
+              "type": "varchar(128)",
+              "comment": "邮箱"
+            },
+            {
+              "name": "subject",
+              "type": "varchar(255)",
+              "comment": "主题"
+            },
+            {
+              "name": "level",
+              "type": "tinyint",
+              "comment": "级别"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "enrollment",
+          "tableComment": "学籍注册",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "no",
+              "type": "varchar(64)",
+              "comment": "单号"
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学生ID"
+            },
+            {
+              "name": "class_id",
+              "type": "bigint",
+              "comment": "班级ID"
+            },
+            {
+              "name": "semester",
+              "type": "varchar(64)",
+              "comment": "学期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "attendance",
+          "tableComment": "考勤记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学生ID"
+            },
+            {
+              "name": "course_id",
+              "type": "bigint",
+              "comment": "课程ID"
+            },
+            {
+              "name": "date",
+              "type": "date",
+              "comment": "日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "homework",
+          "tableComment": "作业管理",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "no",
+              "type": "varchar(64)",
+              "comment": "单号"
+            },
+            {
+              "name": "course_id",
+              "type": "bigint",
+              "comment": "课程ID"
+            },
+            {
+              "name": "teacher_id",
+              "type": "bigint",
+              "comment": "教师ID"
+            },
+            {
+              "name": "title",
+              "type": "varchar(255)",
+              "comment": "标题"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "deadline",
+              "type": "datetime",
+              "comment": "截止时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "homework_submit",
+          "tableComment": "作业提交",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "homework_id",
+              "type": "bigint",
+              "comment": "作业ID"
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学生ID"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "file",
+              "type": "varchar(512)",
+              "comment": "文件路径"
+            },
+            {
+              "name": "score",
+              "type": "decimal(5,2)",
+              "comment": "评分"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "grade",
+          "tableComment": "成绩单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "no",
+              "type": "varchar(64)",
+              "comment": "单号"
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学生ID"
+            },
+            {
+              "name": "semester",
+              "type": "varchar(64)",
+              "comment": "学期"
+            },
+            {
+              "name": "subject",
+              "type": "varchar(255)",
+              "comment": "主题"
+            },
+            {
+              "name": "score",
+              "type": "decimal(5,2)",
+              "comment": "评分"
+            },
+            {
+              "name": "level",
+              "type": "tinyint",
+              "comment": "级别"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "textbook",
+          "tableComment": "教材管理",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "no",
+              "type": "varchar(64)",
+              "comment": "单号"
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "type",
+              "type": "varchar(64)",
+              "comment": "类型"
+            },
+            {
+              "name": "publisher",
+              "type": "varchar(64)",
+              "comment": "发布人"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "单价"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "effective_date",
+              "type": "date",
+              "comment": "生效日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "失效日期"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
+            }
+          ]
+        },
+        {
+          "tableName": "schedule",
+          "tableComment": "课表管理",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "course_id",
+              "type": "bigint",
+              "comment": "课程ID"
+            },
+            {
+              "name": "teacher_id",
+              "type": "bigint",
+              "comment": "教师ID"
+            },
+            {
+              "name": "class_id",
+              "type": "bigint",
+              "comment": "班级ID"
+            },
+            {
+              "name": "weekday",
+              "type": "varchar(64)",
+              "comment": "星期"
+            },
+            {
+              "name": "period",
+              "type": "varchar(64)",
+              "comment": "期间"
+            },
+            {
+              "name": "room",
+              "type": "varchar(64)",
+              "comment": "房间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "责任人ID"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "source",
+              "type": "varchar(64)",
+              "comment": "来源"
+            },
+            {
+              "name": "version",
+              "type": "varchar(32)",
+              "comment": "版本"
+            },
+            {
+              "name": "attachment_count",
+              "type": "int",
+              "comment": "附件数"
             }
           ]
         }
