@@ -280,7 +280,7 @@ Frontenden körs som standard på port **9530**, proxyrar `/dev-api` till backen
 
 ## 13. Projektstatus
 
-- Den nuvarande planerade versionslinjen har nått **V9.2** (kapaciteter fortsätter iterera: AI-modellering, frödataförbättring, kapacitetspaketsystem, etc.).
+- Den nuvarande planerade versionslinjen har nått **V9.8** (kapaciteter fortsätter iterera: AI-modellering, frödataförbättring, kapacitetspaketsystem, etc.).
 - Ett medföljande demo-projekt `demo_admin` (backend 8140 / frontend 9040) täcker träd / CRUD / master-detail / skrivskyddad / utskriftsscenarier och kör fristående för verifiering.
 - Båda repositorierna hostas på Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

@@ -279,7 +279,7 @@ Frontend-ul folosește implicit portul **9530**, proxind `/dev-api` către portu
 
 ## 13. Starea proiectului
 
-- Linia de versiune planificată curentă a ajuns la **V9.2** (capacitățile continuă să evolueze: modelare AI, îmbunătățire seed-data, sistem de pachete de capacități etc.).
+- Linia de versiune planificată curentă a ajuns la **V9.8** (capacitățile continuă să evolueze: modelare AI, îmbunătățire seed-data, sistem de pachete de capacități etc.).
 - Un proiect demo însoțitor `demo_admin` (backend 8140 / frontend 9040) acoperă scenariile arbore / CRUD / stăpân-detail / doar-citire / tipărire și rulează independent pentru verificare.
 - Ambele depozite sunt găzduite pe Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

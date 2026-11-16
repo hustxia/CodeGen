@@ -280,7 +280,7 @@ Il front-end usa di default la porta **9530**, con proxy di `/dev-api` alla port
 
 ## 13. Stato del progetto
 
-- La linea di versione pianificata corrente ha raggiunto **V9.2** (le capacità continuano a iterare: modellazione AI, miglioramento seed-data, sistema di pacchetti capacità, ecc.).
+- La linea di versione pianificata corrente ha raggiunto **V9.8** (le capacità continuano a iterare: modellazione AI, miglioramento seed-data, sistema di pacchetti capacità, ecc.).
 - Un progetto demo compagno `demo_admin` (back-end 8140 / front-end 9040) copre scenari albero / CRUD / master-detail / sola lettura / stampa ed è eseguibile in autonomia per la verifica.
 - Entrambi i repository sono ospitati su Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

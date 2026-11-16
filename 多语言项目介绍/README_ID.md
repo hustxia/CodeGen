@@ -281,7 +281,7 @@ Front-end menggunakan port **9530** secara default, mem-proksi `/dev-api` ke por
 
 ## 13. Status Proyek
 
-- Garis versi yang direncanakan saat ini telah mencapai **V9.2** (kapabilitas terus beriterasi: pemodelan AI, peningkatan data-bibit, sistem paket-kapabilitas, dll.).
+- Garis versi yang direncanakan saat ini telah mencapai **V9.8** (kapabilitas terus beriterasi: pemodelan AI, peningkatan data-bibit, sistem paket-kapabilitas, dll.).
 - Proyek demo pendamping `demo_admin` (back-end 8140 / front-end 9040) mencakup skenario pohon / CRUD / master-detail / hanya-baca / cetak dan berjalan mandiri untuk verifikasi.
 - Kedua repositori dihosting di Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

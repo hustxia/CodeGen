@@ -279,7 +279,7 @@ Front-end mặc định dùng port **9530**, proxy `/dev-api` tới port 8120 c�
 
 ## 13. Trạng thái dự án
 
-- Dòng phiên bản đã lên kế hoạch hiện tại đã đạt **V9.2** (năng lực tiếp tục lặp: mô hình hóa AI, tăng cường dữ liệu hạt giống, hệ thống gói năng lực,...).
+- Dòng phiên bản đã lên kế hoạch hiện tại đã đạt **V9.8** (năng lực tiếp tục lặp: mô hình hóa AI, tăng cường dữ liệu hạt giống, hệ thống gói năng lực,...).
 - Dự án demo đi kèm `demo_admin` (back-end 8140 / front-end 9040) bao phủ các kịch bản cây / CRUD / cha-con / chỉ đọc / in, chạy độc lập để xác minh.
 - Cả hai kho đều được host trên Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

@@ -282,7 +282,7 @@ Le front-end écoute par défaut sur le port **9530**, avec `/dev-api` proxifié
 
 ## 13. État du projet
 
-- La ligne de versions planifiée atteint aujourd'hui **V9.2** ; les capacités continuent d'évoluer (modélisation IA, enrichissement des données de seed, système de packs de capacités, etc.).
+- La ligne de versions planifiée atteint aujourd'hui **V9.8** ; les capacités continuent d'évoluer (modélisation IA, enrichissement des données de seed, système de packs de capacités, etc.).
 - Un projet de démonstration d'accompagnement `demo_admin` (back-end 8140 / front-end 9040) est disponible : il couvre les scénarios arborescent / CRUD / maître-détail / lecture seule / impression et peut être lancé indépendamment pour vérification.
 - Les deux dépôts sont hébergés sur Gitee : `https://gitee.com/hustxiayuhong/CodeGen.git`
 
