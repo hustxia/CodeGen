@@ -1,0 +1,272 @@
+{
+  "key": "logistics_coldchain",
+  "name": "冷链物流",
+  "category": "物流供应链",
+  "desc": "冷链物流场景：冷链温控、仓库档案、库存管理、配送管理等核心业务域",
+  "modules": [
+    {
+      "name": "冷链温控",
+      "tables": [
+        {
+          "tableName": "cold_chain",
+          "tableComment": "冷链设备",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "device_no",
+              "type": "varchar(64)",
+              "comment": "设备编号"
+            },
+            {
+              "name": "device_name",
+              "type": "varchar(128)",
+              "comment": "设备名称"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "temperature_record",
+          "tableComment": "温度记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "device_id",
+              "type": "bigint",
+              "comment": "设备"
+            },
+            {
+              "name": "temperature",
+              "type": "decimal(12,2)",
+              "comment": "温度"
+            },
+            {
+              "name": "humidity",
+              "type": "decimal(12,2)",
+              "comment": "湿度"
+            },
+            {
+              "name": "record_time",
+              "type": "datetime",
+              "comment": "采集时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "仓库档案",
+      "tables": [
+        {
+          "tableName": "warehouse",
+          "tableComment": "仓库档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_name",
+              "type": "varchar(64)",
+              "comment": "仓库名称"
+            },
+            {
+              "name": "warehouse_code",
+              "type": "varchar(64)",
+              "comment": "仓库编码"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "manager_id",
+              "type": "bigint",
+              "comment": "负责人"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "库存管理",
+      "tables": [
+        {
+          "tableName": "stock",
+          "tableComment": "库存台账",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_id",
+              "type": "bigint",
+              "comment": "仓库"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "库存数"
+            },
+            {
+              "name": "safe_quantity",
+              "type": "int",
+              "comment": "安全库存"
+            },
+            {
+              "name": "lock_quantity",
+              "type": "int",
+              "comment": "锁定数"
+            }
+          ]
+        },
+        {
+          "tableName": "stock_flow",
+          "tableComment": "出入库流水",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_id",
+              "type": "bigint",
+              "comment": "仓库"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "flow_type",
+              "type": "tinyint",
+              "comment": "出入库类型"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "related_no",
+              "type": "varchar(64)",
+              "comment": "关联单号"
+            },
+            {
+              "name": "flow_time",
+              "type": "datetime",
+              "comment": "发生时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "配送管理",
+      "tables": [
+        {
+          "tableName": "delivery",
+          "tableComment": "配送单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delivery_no",
+              "type": "varchar(64)",
+              "comment": "配送单号"
+            },
+            {
+              "name": "order_id",
+              "type": "bigint",
+              "comment": "订单"
+            },
+            {
+              "name": "driver_id",
+              "type": "bigint",
+              "comment": "配送员"
+            },
+            {
+              "name": "delivery_time",
+              "type": "datetime",
+              "comment": "配送时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "delivery_item",
+          "tableComment": "配送明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delivery_id",
+              "type": "bigint",
+              "comment": "配送单"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

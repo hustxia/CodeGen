@@ -1,0 +1,292 @@
+{
+  "key": "general_meeting",
+  "name": "会议管理",
+  "category": "通用企业",
+  "desc": "会议管理场景：会议管理、客房档案、公告通知、日程日历等核心业务域",
+  "modules": [
+    {
+      "name": "会议管理",
+      "tables": [
+        {
+          "tableName": "meeting_room",
+          "tableComment": "会议室",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "room_name",
+              "type": "varchar(64)",
+              "comment": "会议室名称"
+            },
+            {
+              "name": "capacity",
+              "type": "int",
+              "comment": "容纳人数"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "meeting_booking",
+          "tableComment": "会议预订",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "room_id",
+              "type": "bigint",
+              "comment": "会议室"
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "会议主题"
+            },
+            {
+              "name": "book_user_id",
+              "type": "bigint",
+              "comment": "预订人"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "客房档案",
+      "tables": [
+        {
+          "tableName": "room",
+          "tableComment": "客房档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "room_no",
+              "type": "varchar(64)",
+              "comment": "房号"
+            },
+            {
+              "name": "type_id",
+              "type": "bigint",
+              "comment": "房型"
+            },
+            {
+              "name": "floor",
+              "type": "varchar(64)",
+              "comment": "楼层"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "房态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "公告通知",
+      "tables": [
+        {
+          "tableName": "notice",
+          "tableComment": "公告通知",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "标题"
+            },
+            {
+              "name": "notice_type",
+              "type": "tinyint",
+              "comment": "类型"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "publish_time",
+              "type": "datetime",
+              "comment": "发布时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "notice_read",
+          "tableComment": "公告阅读记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "notice_id",
+              "type": "bigint",
+              "comment": "公告"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "用户"
+            },
+            {
+              "name": "read_time",
+              "type": "datetime",
+              "comment": "阅读时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "日程日历",
+      "tables": [
+        {
+          "tableName": "schedule",
+          "tableComment": "日程安排",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "日程标题"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "所属人"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "地点"
+            },
+            {
+              "name": "remind_flag",
+              "type": "tinyint",
+              "comment": "是否提醒"
+            },
+            {
+              "name": "description",
+              "type": "varchar(512)",
+              "comment": "说明"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "日志审计",
+      "tables": [
+        {
+          "tableName": "audit_log",
+          "tableComment": "操作审计日志",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "module",
+              "type": "varchar(64)",
+              "comment": "模块"
+            },
+            {
+              "name": "operation",
+              "type": "varchar(64)",
+              "comment": "操作"
+            },
+            {
+              "name": "operator_id",
+              "type": "bigint",
+              "comment": "操作人"
+            },
+            {
+              "name": "biz_id",
+              "type": "varchar(64)",
+              "comment": "业务ID"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "operate_time",
+              "type": "datetime",
+              "comment": "操作时间"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

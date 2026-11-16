@@ -1,0 +1,220 @@
+{
+  "key": "con_safety",
+  "name": "施工安全",
+  "category": "房产建筑",
+  "desc": "施工安全场景：安全管理、施工管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "安全管理",
+      "tables": [
+        {
+          "tableName": "safety_check",
+          "tableComment": "安全检查",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_no",
+              "type": "varchar(64)",
+              "comment": "检查单号"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "检查位置"
+            },
+            {
+              "name": "checker_id",
+              "type": "bigint",
+              "comment": "检查人"
+            },
+            {
+              "name": "result",
+              "type": "tinyint",
+              "comment": "结果"
+            },
+            {
+              "name": "check_date",
+              "type": "date",
+              "comment": "检查日期"
+            }
+          ]
+        },
+        {
+          "tableName": "safety_issue",
+          "tableComment": "安全隐患",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_id",
+              "type": "bigint",
+              "comment": "检查单"
+            },
+            {
+              "name": "issue_desc",
+              "type": "varchar(255)",
+              "comment": "隐患描述"
+            },
+            {
+              "name": "severity",
+              "type": "tinyint",
+              "comment": "严重程度"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "整改状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "施工管理",
+      "tables": [
+        {
+          "tableName": "construction_site",
+          "tableComment": "施工现场",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "site_name",
+              "type": "varchar(128)",
+              "comment": "工地名称"
+            },
+            {
+              "name": "project_id",
+              "type": "bigint",
+              "comment": "所属项目"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "construction_log",
+          "tableComment": "施工日志",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "site_id",
+              "type": "bigint",
+              "comment": "工地"
+            },
+            {
+              "name": "log_date",
+              "type": "date",
+              "comment": "日志日期"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "施工内容"
+            },
+            {
+              "name": "recorder_id",
+              "type": "bigint",
+              "comment": "记录人"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

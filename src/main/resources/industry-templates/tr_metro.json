@@ -1,0 +1,220 @@
+{
+  "key": "tr_metro",
+  "name": "地铁运营",
+  "category": "交通出行",
+  "desc": "地铁运营场景：地铁运营、车辆管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "地铁运营",
+      "tables": [
+        {
+          "tableName": "metro_line",
+          "tableComment": "地铁线路",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "line_name",
+              "type": "varchar(64)",
+              "comment": "线路名称"
+            },
+            {
+              "name": "line_code",
+              "type": "varchar(64)",
+              "comment": "线路编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "metro_station",
+          "tableComment": "地铁站",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "line_id",
+              "type": "bigint",
+              "comment": "线路"
+            },
+            {
+              "name": "station_name",
+              "type": "varchar(64)",
+              "comment": "站名"
+            },
+            {
+              "name": "station_no",
+              "type": "int",
+              "comment": "站序"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "车辆管理",
+      "tables": [
+        {
+          "tableName": "vehicle",
+          "tableComment": "车辆档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "plate_no",
+              "type": "varchar(64)",
+              "comment": "车牌号"
+            },
+            {
+              "name": "vehicle_type",
+              "type": "varchar(64)",
+              "comment": "车辆类型"
+            },
+            {
+              "name": "brand",
+              "type": "varchar(64)",
+              "comment": "品牌型号"
+            },
+            {
+              "name": "driver_id",
+              "type": "bigint",
+              "comment": "驾驶员"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "vehicle_use",
+          "tableComment": "用车记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "vehicle_id",
+              "type": "bigint",
+              "comment": "车辆"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "使用人"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "purpose",
+              "type": "varchar(255)",
+              "comment": "用途"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

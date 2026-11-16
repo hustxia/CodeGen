@@ -1,0 +1,235 @@
+{
+  "key": "tr_charging",
+  "name": "充电站",
+  "category": "交通出行",
+  "desc": "充电站场景：充电站、支付管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "充电站",
+      "tables": [
+        {
+          "tableName": "charging_station",
+          "tableComment": "充电站",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "station_name",
+              "type": "varchar(64)",
+              "comment": "站点名称"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "pile_count",
+              "type": "int",
+              "comment": "充电桩数"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "charging_order",
+          "tableComment": "充电订单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "station_id",
+              "type": "bigint",
+              "comment": "充电站"
+            },
+            {
+              "name": "plate_no",
+              "type": "varchar(64)",
+              "comment": "车牌号"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "支付管理",
+      "tables": [
+        {
+          "tableName": "payment",
+          "tableComment": "支付记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "pay_no",
+              "type": "varchar(64)",
+              "comment": "支付单号"
+            },
+            {
+              "name": "biz_no",
+              "type": "varchar(64)",
+              "comment": "业务单号"
+            },
+            {
+              "name": "pay_type",
+              "type": "tinyint",
+              "comment": "支付方式"
+            },
+            {
+              "name": "pay_amount",
+              "type": "decimal(12,2)",
+              "comment": "支付金额"
+            },
+            {
+              "name": "pay_status",
+              "type": "tinyint",
+              "comment": "支付状态"
+            },
+            {
+              "name": "pay_time",
+              "type": "datetime",
+              "comment": "支付时间"
+            }
+          ]
+        },
+        {
+          "tableName": "payment_refund",
+          "tableComment": "退款记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "payment_id",
+              "type": "bigint",
+              "comment": "支付记录"
+            },
+            {
+              "name": "refund_no",
+              "type": "varchar(64)",
+              "comment": "退款单号"
+            },
+            {
+              "name": "refund_amount",
+              "type": "decimal(12,2)",
+              "comment": "退款金额"
+            },
+            {
+              "name": "refund_status",
+              "type": "tinyint",
+              "comment": "退款状态"
+            },
+            {
+              "name": "refund_time",
+              "type": "datetime",
+              "comment": "退款时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,517 @@
+{
+  "key": "retail_crossborder",
+  "name": "跨境电商",
+  "category": "电商零售",
+  "desc": "跨境电商场景：商品管理、订单管理、支付管理、报关管理等核心业务域",
+  "modules": [
+    {
+      "name": "商品管理",
+      "tables": [
+        {
+          "tableName": "product_category",
+          "tableComment": "商品分类",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级分类"
+            },
+            {
+              "name": "category_name",
+              "type": "varchar(64)",
+              "comment": "分类名称"
+            },
+            {
+              "name": "category_code",
+              "type": "varchar(64)",
+              "comment": "分类编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        },
+        {
+          "tableName": "product",
+          "tableComment": "商品档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "product_name",
+              "type": "varchar(128)",
+              "comment": "商品名称"
+            },
+            {
+              "name": "product_code",
+              "type": "varchar(64)",
+              "comment": "商品编码"
+            },
+            {
+              "name": "category_id",
+              "type": "bigint",
+              "comment": "商品分类"
+            },
+            {
+              "name": "spec",
+              "type": "varchar(128)",
+              "comment": "规格型号"
+            },
+            {
+              "name": "unit",
+              "type": "varchar(64)",
+              "comment": "单位"
+            },
+            {
+              "name": "sale_price",
+              "type": "decimal(12,2)",
+              "comment": "销售价"
+            },
+            {
+              "name": "cost_price",
+              "type": "decimal(12,2)",
+              "comment": "成本价"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "product_sku",
+          "tableComment": "商品SKU",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "sku_code",
+              "type": "varchar(64)",
+              "comment": "SKU编码"
+            },
+            {
+              "name": "sku_name",
+              "type": "varchar(128)",
+              "comment": "SKU名称"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "价格"
+            },
+            {
+              "name": "stock_num",
+              "type": "int",
+              "comment": "库存数"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "订单管理",
+      "tables": [
+        {
+          "tableName": "sales_order",
+          "tableComment": "销售订单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "订单号"
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "order_amount",
+              "type": "decimal(12,2)",
+              "comment": "订单金额"
+            },
+            {
+              "name": "order_status",
+              "type": "tinyint",
+              "comment": "订单状态"
+            },
+            {
+              "name": "pay_status",
+              "type": "tinyint",
+              "comment": "支付状态"
+            },
+            {
+              "name": "order_time",
+              "type": "datetime",
+              "comment": "下单时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "sales_order_item",
+          "tableComment": "订单明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_id",
+              "type": "bigint",
+              "comment": "订单"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "unit_price",
+              "type": "decimal(12,2)",
+              "comment": "单价"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "支付管理",
+      "tables": [
+        {
+          "tableName": "payment",
+          "tableComment": "支付记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "pay_no",
+              "type": "varchar(64)",
+              "comment": "支付单号"
+            },
+            {
+              "name": "biz_no",
+              "type": "varchar(64)",
+              "comment": "业务单号"
+            },
+            {
+              "name": "pay_type",
+              "type": "tinyint",
+              "comment": "支付方式"
+            },
+            {
+              "name": "pay_amount",
+              "type": "decimal(12,2)",
+              "comment": "支付金额"
+            },
+            {
+              "name": "pay_status",
+              "type": "tinyint",
+              "comment": "支付状态"
+            },
+            {
+              "name": "pay_time",
+              "type": "datetime",
+              "comment": "支付时间"
+            }
+          ]
+        },
+        {
+          "tableName": "payment_refund",
+          "tableComment": "退款记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "payment_id",
+              "type": "bigint",
+              "comment": "支付记录"
+            },
+            {
+              "name": "refund_no",
+              "type": "varchar(64)",
+              "comment": "退款单号"
+            },
+            {
+              "name": "refund_amount",
+              "type": "decimal(12,2)",
+              "comment": "退款金额"
+            },
+            {
+              "name": "refund_status",
+              "type": "tinyint",
+              "comment": "退款状态"
+            },
+            {
+              "name": "refund_time",
+              "type": "datetime",
+              "comment": "退款时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "报关管理",
+      "tables": [
+        {
+          "tableName": "customs_declaration",
+          "tableComment": "报关单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "declaration_no",
+              "type": "varchar(64)",
+              "comment": "报关单号"
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "订单号"
+            },
+            {
+              "name": "goods_name",
+              "type": "varchar(128)",
+              "comment": "货物名称"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "申报金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "trade_document",
+          "tableComment": "外贸单证",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "declaration_id",
+              "type": "bigint",
+              "comment": "报关单"
+            },
+            {
+              "name": "doc_type",
+              "type": "varchar(64)",
+              "comment": "单证类型"
+            },
+            {
+              "name": "doc_no",
+              "type": "varchar(64)",
+              "comment": "单证编号"
+            },
+            {
+              "name": "file_url",
+              "type": "varchar(512)",
+              "comment": "文件地址"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "发票管理",
+      "tables": [
+        {
+          "tableName": "invoice",
+          "tableComment": "发票档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "invoice_no",
+              "type": "varchar(64)",
+              "comment": "发票号码"
+            },
+            {
+              "name": "invoice_code",
+              "type": "varchar(64)",
+              "comment": "发票代码"
+            },
+            {
+              "name": "invoice_type",
+              "type": "tinyint",
+              "comment": "发票类型"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "tax_amount",
+              "type": "decimal(12,2)",
+              "comment": "税额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "invoice_time",
+              "type": "datetime",
+              "comment": "开票时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "物流运单",
+      "tables": [
+        {
+          "tableName": "waybill",
+          "tableComment": "运单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "waybill_no",
+              "type": "varchar(64)",
+              "comment": "运单号"
+            },
+            {
+              "name": "sender_id",
+              "type": "bigint",
+              "comment": "寄件人"
+            },
+            {
+              "name": "receiver_id",
+              "type": "bigint",
+              "comment": "收件人"
+            },
+            {
+              "name": "goods_name",
+              "type": "varchar(128)",
+              "comment": "货物名称"
+            },
+            {
+              "name": "weight",
+              "type": "decimal(12,2)",
+              "comment": "重量"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "waybill_track",
+          "tableComment": "物流轨迹",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "waybill_id",
+              "type": "bigint",
+              "comment": "运单"
+            },
+            {
+              "name": "track_time",
+              "type": "datetime",
+              "comment": "轨迹时间"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "description",
+              "type": "varchar(255)",
+              "comment": "描述"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,408 @@
+{
+  "key": "logistics_express",
+  "name": "快递物流",
+  "category": "物流供应链",
+  "desc": "快递物流场景：物流运单、配送管理、车辆管理、客户管理等核心业务域",
+  "modules": [
+    {
+      "name": "物流运单",
+      "tables": [
+        {
+          "tableName": "waybill",
+          "tableComment": "运单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "waybill_no",
+              "type": "varchar(64)",
+              "comment": "运单号"
+            },
+            {
+              "name": "sender_id",
+              "type": "bigint",
+              "comment": "寄件人"
+            },
+            {
+              "name": "receiver_id",
+              "type": "bigint",
+              "comment": "收件人"
+            },
+            {
+              "name": "goods_name",
+              "type": "varchar(128)",
+              "comment": "货物名称"
+            },
+            {
+              "name": "weight",
+              "type": "decimal(12,2)",
+              "comment": "重量"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "waybill_track",
+          "tableComment": "物流轨迹",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "waybill_id",
+              "type": "bigint",
+              "comment": "运单"
+            },
+            {
+              "name": "track_time",
+              "type": "datetime",
+              "comment": "轨迹时间"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "description",
+              "type": "varchar(255)",
+              "comment": "描述"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "配送管理",
+      "tables": [
+        {
+          "tableName": "delivery",
+          "tableComment": "配送单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delivery_no",
+              "type": "varchar(64)",
+              "comment": "配送单号"
+            },
+            {
+              "name": "order_id",
+              "type": "bigint",
+              "comment": "订单"
+            },
+            {
+              "name": "driver_id",
+              "type": "bigint",
+              "comment": "配送员"
+            },
+            {
+              "name": "delivery_time",
+              "type": "datetime",
+              "comment": "配送时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "delivery_item",
+          "tableComment": "配送明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delivery_id",
+              "type": "bigint",
+              "comment": "配送单"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "车辆管理",
+      "tables": [
+        {
+          "tableName": "vehicle",
+          "tableComment": "车辆档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "plate_no",
+              "type": "varchar(64)",
+              "comment": "车牌号"
+            },
+            {
+              "name": "vehicle_type",
+              "type": "varchar(64)",
+              "comment": "车辆类型"
+            },
+            {
+              "name": "brand",
+              "type": "varchar(64)",
+              "comment": "品牌型号"
+            },
+            {
+              "name": "driver_id",
+              "type": "bigint",
+              "comment": "驾驶员"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "vehicle_use",
+          "tableComment": "用车记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "vehicle_id",
+              "type": "bigint",
+              "comment": "车辆"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "使用人"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "purpose",
+              "type": "varchar(255)",
+              "comment": "用途"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "客户管理",
+      "tables": [
+        {
+          "tableName": "customer",
+          "tableComment": "客户档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "customer_name",
+              "type": "varchar(128)",
+              "comment": "客户名称"
+            },
+            {
+              "name": "customer_code",
+              "type": "varchar(64)",
+              "comment": "客户编码"
+            },
+            {
+              "name": "customer_type",
+              "type": "tinyint",
+              "comment": "客户类型"
+            },
+            {
+              "name": "level_id",
+              "type": "bigint",
+              "comment": "客户等级"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "email",
+              "type": "varchar(128)",
+              "comment": "邮箱"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "customer_contact",
+          "tableComment": "客户联系人",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "电话"
+            },
+            {
+              "name": "position",
+              "type": "varchar(64)",
+              "comment": "职务"
+            },
+            {
+              "name": "is_primary",
+              "type": "tinyint",
+              "comment": "是否主联系人"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

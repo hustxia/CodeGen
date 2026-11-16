@@ -1,0 +1,245 @@
+{
+  "key": "med_blood",
+  "name": "血站管理",
+  "category": "医疗健康",
+  "desc": "血站管理场景：患者管理、检验检查、库存台账、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "患者管理",
+      "tables": [
+        {
+          "tableName": "patient",
+          "tableComment": "患者档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "id_card",
+              "type": "varchar(64)",
+              "comment": "身份证号"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "birth_date",
+              "type": "date",
+              "comment": "出生日期"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "blood_type",
+              "type": "varchar(64)",
+              "comment": "血型"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "检验检查",
+      "tables": [
+        {
+          "tableName": "lab_test",
+          "tableComment": "检验项目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "test_name",
+              "type": "varchar(128)",
+              "comment": "项目名称"
+            },
+            {
+              "name": "test_code",
+              "type": "varchar(64)",
+              "comment": "项目编码"
+            },
+            {
+              "name": "test_type",
+              "type": "tinyint",
+              "comment": "项目类型"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "价格"
+            }
+          ]
+        },
+        {
+          "tableName": "lab_result",
+          "tableComment": "检验结果",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "test_id",
+              "type": "bigint",
+              "comment": "检验项目"
+            },
+            {
+              "name": "result_value",
+              "type": "varchar(255)",
+              "comment": "结果值"
+            },
+            {
+              "name": "reference_range",
+              "type": "varchar(128)",
+              "comment": "参考范围"
+            },
+            {
+              "name": "test_time",
+              "type": "datetime",
+              "comment": "检验时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "库存台账",
+      "tables": [
+        {
+          "tableName": "stock",
+          "tableComment": "库存台账",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_id",
+              "type": "bigint",
+              "comment": "仓库"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "库存数"
+            },
+            {
+              "name": "safe_quantity",
+              "type": "int",
+              "comment": "安全库存"
+            },
+            {
+              "name": "lock_quantity",
+              "type": "int",
+              "comment": "锁定数"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "key": "media_ad",
+  "name": "广告传媒",
+  "category": "文旅传媒",
+  "desc": "广告传媒场景：广告管理、客户管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "广告管理",
+      "tables": [
+        {
+          "tableName": "ad_position",
+          "tableComment": "广告位",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "position_name",
+              "type": "varchar(64)",
+              "comment": "广告位名称"
+            },
+            {
+              "name": "position_code",
+              "type": "varchar(64)",
+              "comment": "广告位编码"
+            },
+            {
+              "name": "size",
+              "type": "varchar(64)",
+              "comment": "尺寸"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "ad_material",
+          "tableComment": "广告素材",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "position_id",
+              "type": "bigint",
+              "comment": "广告位"
+            },
+            {
+              "name": "material_name",
+              "type": "varchar(128)",
+              "comment": "素材名称"
+            },
+            {
+              "name": "material_url",
+              "type": "varchar(512)",
+              "comment": "素材地址"
+            },
+            {
+              "name": "link_url",
+              "type": "varchar(512)",
+              "comment": "跳转链接"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "客户管理",
+      "tables": [
+        {
+          "tableName": "customer",
+          "tableComment": "客户档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "customer_name",
+              "type": "varchar(128)",
+              "comment": "客户名称"
+            },
+            {
+              "name": "customer_code",
+              "type": "varchar(64)",
+              "comment": "客户编码"
+            },
+            {
+              "name": "customer_type",
+              "type": "tinyint",
+              "comment": "客户类型"
+            },
+            {
+              "name": "level_id",
+              "type": "bigint",
+              "comment": "客户等级"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "email",
+              "type": "varchar(128)",
+              "comment": "邮箱"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "customer_contact",
+          "tableComment": "客户联系人",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "电话"
+            },
+            {
+              "name": "position",
+              "type": "varchar(64)",
+              "comment": "职务"
+            },
+            {
+              "name": "is_primary",
+              "type": "tinyint",
+              "comment": "是否主联系人"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

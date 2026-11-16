@@ -1,0 +1,282 @@
+{
+  "key": "edu_preschool",
+  "name": "幼儿园",
+  "category": "教育培训",
+  "desc": "幼儿园场景：学生管理、课程管理、护理管理、缴费管理等核心业务域",
+  "modules": [
+    {
+      "name": "学生管理",
+      "tables": [
+        {
+          "tableName": "student",
+          "tableComment": "学生档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "student_no",
+              "type": "varchar(64)",
+              "comment": "学号"
+            },
+            {
+              "name": "student_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "class_id",
+              "type": "bigint",
+              "comment": "班级"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "student_class",
+          "tableComment": "班级档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "class_name",
+              "type": "varchar(64)",
+              "comment": "班级名称"
+            },
+            {
+              "name": "grade",
+              "type": "varchar(64)",
+              "comment": "年级"
+            },
+            {
+              "name": "head_teacher_id",
+              "type": "bigint",
+              "comment": "班主任"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "课程管理",
+      "tables": [
+        {
+          "tableName": "course",
+          "tableComment": "课程档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "course_name",
+              "type": "varchar(128)",
+              "comment": "课程名称"
+            },
+            {
+              "name": "course_code",
+              "type": "varchar(64)",
+              "comment": "课程编码"
+            },
+            {
+              "name": "credit",
+              "type": "decimal(12,2)",
+              "comment": "学分"
+            },
+            {
+              "name": "teacher_id",
+              "type": "bigint",
+              "comment": "授课教师"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "course_schedule",
+          "tableComment": "课程表",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "course_id",
+              "type": "bigint",
+              "comment": "课程"
+            },
+            {
+              "name": "class_id",
+              "type": "bigint",
+              "comment": "班级"
+            },
+            {
+              "name": "weekday",
+              "type": "tinyint",
+              "comment": "星期"
+            },
+            {
+              "name": "period",
+              "type": "varchar(64)",
+              "comment": "节次"
+            },
+            {
+              "name": "classroom",
+              "type": "varchar(64)",
+              "comment": "教室"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "护理管理",
+      "tables": [
+        {
+          "tableName": "nursing_record",
+          "tableComment": "护理记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "nurse_id",
+              "type": "bigint",
+              "comment": "护士"
+            },
+            {
+              "name": "record_time",
+              "type": "datetime",
+              "comment": "记录时间"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "护理内容"
+            },
+            {
+              "name": "vital_signs",
+              "type": "varchar(255)",
+              "comment": "生命体征"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "缴费管理",
+      "tables": [
+        {
+          "tableName": "tuition_bill",
+          "tableComment": "缴费账单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "bill_no",
+              "type": "varchar(64)",
+              "comment": "账单号"
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学生"
+            },
+            {
+              "name": "fee_type",
+              "type": "varchar(64)",
+              "comment": "费用类型"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "应收金额"
+            },
+            {
+              "name": "paid_amount",
+              "type": "decimal(12,2)",
+              "comment": "已收金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "tuition_payment",
+          "tableComment": "缴费记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "bill_id",
+              "type": "bigint",
+              "comment": "账单"
+            },
+            {
+              "name": "pay_amount",
+              "type": "decimal(12,2)",
+              "comment": "缴费金额"
+            },
+            {
+              "name": "pay_time",
+              "type": "datetime",
+              "comment": "缴费时间"
+            },
+            {
+              "name": "pay_type",
+              "type": "tinyint",
+              "comment": "支付方式"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

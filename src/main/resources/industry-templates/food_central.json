@@ -1,0 +1,504 @@
+{
+  "key": "food_central",
+  "name": "中央厨房",
+  "category": "餐饮酒店",
+  "desc": "中央厨房场景：菜品管理、采购管理、库存管理、生产计划等核心业务域",
+  "modules": [
+    {
+      "name": "菜品管理",
+      "tables": [
+        {
+          "tableName": "dish_category",
+          "tableComment": "菜品分类",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "category_name",
+              "type": "varchar(64)",
+              "comment": "分类名称"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        },
+        {
+          "tableName": "dish",
+          "tableComment": "菜品档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dish_name",
+              "type": "varchar(64)",
+              "comment": "菜品名称"
+            },
+            {
+              "name": "category_id",
+              "type": "bigint",
+              "comment": "菜品分类"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "价格"
+            },
+            {
+              "name": "image",
+              "type": "varchar(512)",
+              "comment": "图片"
+            },
+            {
+              "name": "description",
+              "type": "varchar(255)",
+              "comment": "描述"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "采购管理",
+      "tables": [
+        {
+          "tableName": "purchase_order",
+          "tableComment": "采购订单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "采购单号"
+            },
+            {
+              "name": "supplier_id",
+              "type": "bigint",
+              "comment": "供应商"
+            },
+            {
+              "name": "total_amount",
+              "type": "decimal(12,2)",
+              "comment": "采购金额"
+            },
+            {
+              "name": "order_status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "order_time",
+              "type": "datetime",
+              "comment": "下单时间"
+            }
+          ]
+        },
+        {
+          "tableName": "purchase_order_item",
+          "tableComment": "采购明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_id",
+              "type": "bigint",
+              "comment": "采购订单"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "unit_price",
+              "type": "decimal(12,2)",
+              "comment": "单价"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "库存管理",
+      "tables": [
+        {
+          "tableName": "warehouse",
+          "tableComment": "仓库档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_name",
+              "type": "varchar(64)",
+              "comment": "仓库名称"
+            },
+            {
+              "name": "warehouse_code",
+              "type": "varchar(64)",
+              "comment": "仓库编码"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "manager_id",
+              "type": "bigint",
+              "comment": "负责人"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "stock",
+          "tableComment": "库存台账",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_id",
+              "type": "bigint",
+              "comment": "仓库"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "库存数"
+            },
+            {
+              "name": "safe_quantity",
+              "type": "int",
+              "comment": "安全库存"
+            },
+            {
+              "name": "lock_quantity",
+              "type": "int",
+              "comment": "锁定数"
+            }
+          ]
+        },
+        {
+          "tableName": "stock_flow",
+          "tableComment": "出入库流水",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_id",
+              "type": "bigint",
+              "comment": "仓库"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "flow_type",
+              "type": "tinyint",
+              "comment": "出入库类型"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "related_no",
+              "type": "varchar(64)",
+              "comment": "关联单号"
+            },
+            {
+              "name": "flow_time",
+              "type": "datetime",
+              "comment": "发生时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "生产计划",
+      "tables": [
+        {
+          "tableName": "production_plan",
+          "tableComment": "生产计划",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "plan_no",
+              "type": "varchar(64)",
+              "comment": "计划号"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "产品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "计划数量"
+            },
+            {
+              "name": "plan_date",
+              "type": "date",
+              "comment": "计划日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "production_order",
+          "tableComment": "生产工单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "plan_id",
+              "type": "bigint",
+              "comment": "生产计划"
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "工单号"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "workshop_id",
+              "type": "bigint",
+              "comment": "车间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "配送管理",
+      "tables": [
+        {
+          "tableName": "delivery",
+          "tableComment": "配送单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delivery_no",
+              "type": "varchar(64)",
+              "comment": "配送单号"
+            },
+            {
+              "name": "order_id",
+              "type": "bigint",
+              "comment": "订单"
+            },
+            {
+              "name": "driver_id",
+              "type": "bigint",
+              "comment": "配送员"
+            },
+            {
+              "name": "delivery_time",
+              "type": "datetime",
+              "comment": "配送时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "delivery_item",
+          "tableComment": "配送明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delivery_id",
+              "type": "bigint",
+              "comment": "配送单"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "质量管理",
+      "tables": [
+        {
+          "tableName": "quality_check",
+          "tableComment": "质量检验",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_no",
+              "type": "varchar(64)",
+              "comment": "检验单号"
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "check_result",
+              "type": "tinyint",
+              "comment": "检验结果"
+            },
+            {
+              "name": "checker_id",
+              "type": "bigint",
+              "comment": "检验员"
+            },
+            {
+              "name": "check_time",
+              "type": "datetime",
+              "comment": "检验时间"
+            }
+          ]
+        },
+        {
+          "tableName": "quality_issue",
+          "tableComment": "质量问题",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_id",
+              "type": "bigint",
+              "comment": "检验单"
+            },
+            {
+              "name": "issue_desc",
+              "type": "varchar(255)",
+              "comment": "问题描述"
+            },
+            {
+              "name": "severity",
+              "type": "tinyint",
+              "comment": "严重程度"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

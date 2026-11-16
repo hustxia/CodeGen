@@ -1,0 +1,220 @@
+{
+  "key": "agr_irrigation",
+  "name": "灌溉管理",
+  "category": "农业环保",
+  "desc": "灌溉管理场景：地块管理、能源表计、能耗读数、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "地块管理",
+      "tables": [
+        {
+          "tableName": "land_parcel",
+          "tableComment": "地块档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parcel_no",
+              "type": "varchar(64)",
+              "comment": "地块编号"
+            },
+            {
+              "name": "parcel_name",
+              "type": "varchar(64)",
+              "comment": "地块名称"
+            },
+            {
+              "name": "area",
+              "type": "decimal(12,2)",
+              "comment": "面积(亩)"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "承包人"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "crop_plan",
+          "tableComment": "种植计划",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parcel_id",
+              "type": "bigint",
+              "comment": "地块"
+            },
+            {
+              "name": "crop_name",
+              "type": "varchar(64)",
+              "comment": "作物名称"
+            },
+            {
+              "name": "plant_date",
+              "type": "date",
+              "comment": "种植日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "能源表计",
+      "tables": [
+        {
+          "tableName": "energy_meter",
+          "tableComment": "能源表计",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "meter_no",
+              "type": "varchar(64)",
+              "comment": "表计编号"
+            },
+            {
+              "name": "meter_type",
+              "type": "tinyint",
+              "comment": "能源类型"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "能耗读数",
+      "tables": [
+        {
+          "tableName": "energy_reading",
+          "tableComment": "能耗读数",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "meter_id",
+              "type": "bigint",
+              "comment": "表计"
+            },
+            {
+              "name": "reading",
+              "type": "decimal(12,2)",
+              "comment": "读数"
+            },
+            {
+              "name": "reading_time",
+              "type": "datetime",
+              "comment": "采集时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

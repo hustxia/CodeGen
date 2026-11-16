@@ -1,0 +1,223 @@
+{
+  "key": "med_rehab",
+  "name": "康复中心",
+  "category": "医疗健康",
+  "desc": "康复中心场景：患者管理、康复管理、病历管理、护理管理等核心业务域",
+  "modules": [
+    {
+      "name": "患者管理",
+      "tables": [
+        {
+          "tableName": "patient",
+          "tableComment": "患者档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "id_card",
+              "type": "varchar(64)",
+              "comment": "身份证号"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "birth_date",
+              "type": "date",
+              "comment": "出生日期"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "blood_type",
+              "type": "varchar(64)",
+              "comment": "血型"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "康复管理",
+      "tables": [
+        {
+          "tableName": "rehab_plan",
+          "tableComment": "康复方案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "plan_name",
+              "type": "varchar(128)",
+              "comment": "方案名称"
+            },
+            {
+              "name": "start_date",
+              "type": "date",
+              "comment": "开始日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "rehab_record",
+          "tableComment": "康复记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "plan_id",
+              "type": "bigint",
+              "comment": "康复方案"
+            },
+            {
+              "name": "record_time",
+              "type": "datetime",
+              "comment": "记录时间"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "康复内容"
+            },
+            {
+              "name": "therapist_id",
+              "type": "bigint",
+              "comment": "治疗师"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "病历管理",
+      "tables": [
+        {
+          "tableName": "medical_record",
+          "tableComment": "就诊记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "visit_date",
+              "type": "datetime",
+              "comment": "就诊时间"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "科室"
+            },
+            {
+              "name": "doctor_id",
+              "type": "bigint",
+              "comment": "医生"
+            },
+            {
+              "name": "chief_complaint",
+              "type": "text",
+              "comment": "主诉"
+            },
+            {
+              "name": "diagnosis",
+              "type": "text",
+              "comment": "诊断"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "护理管理",
+      "tables": [
+        {
+          "tableName": "nursing_record",
+          "tableComment": "护理记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "nurse_id",
+              "type": "bigint",
+              "comment": "护士"
+            },
+            {
+              "name": "record_time",
+              "type": "datetime",
+              "comment": "记录时间"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "护理内容"
+            },
+            {
+              "name": "vital_signs",
+              "type": "varchar(255)",
+              "comment": "生命体征"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,235 @@
+{
+  "key": "sci_paper",
+  "name": "论文成果",
+  "category": "科研IT",
+  "desc": "论文成果场景：论文成果、科研课题、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "论文成果",
+      "tables": [
+        {
+          "tableName": "paper",
+          "tableComment": "论文",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "paper_title",
+              "type": "varchar(255)",
+              "comment": "论文标题"
+            },
+            {
+              "name": "author_id",
+              "type": "bigint",
+              "comment": "作者"
+            },
+            {
+              "name": "journal",
+              "type": "varchar(128)",
+              "comment": "期刊"
+            },
+            {
+              "name": "publish_date",
+              "type": "date",
+              "comment": "发表日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "patent",
+          "tableComment": "专利",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patent_name",
+              "type": "varchar(128)",
+              "comment": "专利名称"
+            },
+            {
+              "name": "patent_no",
+              "type": "varchar(64)",
+              "comment": "专利号"
+            },
+            {
+              "name": "applicant_id",
+              "type": "bigint",
+              "comment": "申请人"
+            },
+            {
+              "name": "apply_date",
+              "type": "date",
+              "comment": "申请日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "科研课题",
+      "tables": [
+        {
+          "tableName": "research_project",
+          "tableComment": "科研课题",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "project_name",
+              "type": "varchar(128)",
+              "comment": "课题名称"
+            },
+            {
+              "name": "project_code",
+              "type": "varchar(64)",
+              "comment": "课题编号"
+            },
+            {
+              "name": "leader_id",
+              "type": "bigint",
+              "comment": "负责人"
+            },
+            {
+              "name": "fund_amount",
+              "type": "decimal(12,2)",
+              "comment": "经费"
+            },
+            {
+              "name": "start_date",
+              "type": "date",
+              "comment": "开始日期"
+            },
+            {
+              "name": "end_date",
+              "type": "date",
+              "comment": "结束日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "research_member",
+          "tableComment": "课题成员",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "project_id",
+              "type": "bigint",
+              "comment": "课题"
+            },
+            {
+              "name": "member_id",
+              "type": "bigint",
+              "comment": "成员"
+            },
+            {
+              "name": "role",
+              "type": "varchar(64)",
+              "comment": "角色"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

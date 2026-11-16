@@ -1,0 +1,470 @@
+{
+  "key": "fin_bank",
+  "name": "银行核心",
+  "category": "金融财税",
+  "desc": "银行核心场景：客户管理、信贷管理、财务管理、发票管理等核心业务域",
+  "modules": [
+    {
+      "name": "客户管理",
+      "tables": [
+        {
+          "tableName": "customer",
+          "tableComment": "客户档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "customer_name",
+              "type": "varchar(128)",
+              "comment": "客户名称"
+            },
+            {
+              "name": "customer_code",
+              "type": "varchar(64)",
+              "comment": "客户编码"
+            },
+            {
+              "name": "customer_type",
+              "type": "tinyint",
+              "comment": "客户类型"
+            },
+            {
+              "name": "level_id",
+              "type": "bigint",
+              "comment": "客户等级"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "email",
+              "type": "varchar(128)",
+              "comment": "邮箱"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "customer_contact",
+          "tableComment": "客户联系人",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "电话"
+            },
+            {
+              "name": "position",
+              "type": "varchar(64)",
+              "comment": "职务"
+            },
+            {
+              "name": "is_primary",
+              "type": "tinyint",
+              "comment": "是否主联系人"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "信贷管理",
+      "tables": [
+        {
+          "tableName": "loan",
+          "tableComment": "贷款档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "loan_no",
+              "type": "varchar(64)",
+              "comment": "贷款账号"
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "loan_amount",
+              "type": "decimal(12,2)",
+              "comment": "贷款金额"
+            },
+            {
+              "name": "term_months",
+              "type": "int",
+              "comment": "期限(月)"
+            },
+            {
+              "name": "interest_rate",
+              "type": "decimal(12,2)",
+              "comment": "利率"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "loan_repayment",
+          "tableComment": "还款记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "loan_id",
+              "type": "bigint",
+              "comment": "贷款"
+            },
+            {
+              "name": "repay_amount",
+              "type": "decimal(12,2)",
+              "comment": "还款金额"
+            },
+            {
+              "name": "repay_date",
+              "type": "date",
+              "comment": "还款日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "财务管理",
+      "tables": [
+        {
+          "tableName": "finance_account",
+          "tableComment": "财务科目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级科目"
+            },
+            {
+              "name": "account_code",
+              "type": "varchar(64)",
+              "comment": "科目编码"
+            },
+            {
+              "name": "account_name",
+              "type": "varchar(64)",
+              "comment": "科目名称"
+            },
+            {
+              "name": "account_type",
+              "type": "tinyint",
+              "comment": "科目类型"
+            },
+            {
+              "name": "balance",
+              "type": "decimal(12,2)",
+              "comment": "余额"
+            }
+          ]
+        },
+        {
+          "tableName": "finance_voucher",
+          "tableComment": "记账凭证",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "voucher_no",
+              "type": "varchar(64)",
+              "comment": "凭证号"
+            },
+            {
+              "name": "voucher_date",
+              "type": "date",
+              "comment": "凭证日期"
+            },
+            {
+              "name": "summary",
+              "type": "varchar(255)",
+              "comment": "摘要"
+            },
+            {
+              "name": "total_amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "finance_voucher_item",
+          "tableComment": "凭证明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "voucher_id",
+              "type": "bigint",
+              "comment": "凭证"
+            },
+            {
+              "name": "account_id",
+              "type": "bigint",
+              "comment": "科目"
+            },
+            {
+              "name": "debit_amount",
+              "type": "decimal(12,2)",
+              "comment": "借方金额"
+            },
+            {
+              "name": "credit_amount",
+              "type": "decimal(12,2)",
+              "comment": "贷方金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "发票管理",
+      "tables": [
+        {
+          "tableName": "invoice",
+          "tableComment": "发票档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "invoice_no",
+              "type": "varchar(64)",
+              "comment": "发票号码"
+            },
+            {
+              "name": "invoice_code",
+              "type": "varchar(64)",
+              "comment": "发票代码"
+            },
+            {
+              "name": "invoice_type",
+              "type": "tinyint",
+              "comment": "发票类型"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "tax_amount",
+              "type": "decimal(12,2)",
+              "comment": "税额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "invoice_time",
+              "type": "datetime",
+              "comment": "开票时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "日志审计",
+      "tables": [
+        {
+          "tableName": "audit_log",
+          "tableComment": "操作审计日志",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "module",
+              "type": "varchar(64)",
+              "comment": "模块"
+            },
+            {
+              "name": "operation",
+              "type": "varchar(64)",
+              "comment": "操作"
+            },
+            {
+              "name": "operator_id",
+              "type": "bigint",
+              "comment": "操作人"
+            },
+            {
+              "name": "biz_id",
+              "type": "varchar(64)",
+              "comment": "业务ID"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "operate_time",
+              "type": "datetime",
+              "comment": "操作时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

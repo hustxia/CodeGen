@@ -1,0 +1,215 @@
+{
+  "key": "legal_trademark",
+  "name": "商标管理",
+  "category": "法律法务",
+  "desc": "商标管理场景：知识产权、数据统计、数据字典等核心业务域",
+  "modules": [
+    {
+      "name": "知识产权",
+      "tables": [
+        {
+          "tableName": "ip_asset",
+          "tableComment": "知识产权",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "asset_name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "asset_type",
+              "type": "tinyint",
+              "comment": "类型"
+            },
+            {
+              "name": "reg_no",
+              "type": "varchar(64)",
+              "comment": "登记号"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "权利人"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "ip_application",
+          "tableComment": "申请记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "asset_id",
+              "type": "bigint",
+              "comment": "知识产权"
+            },
+            {
+              "name": "apply_no",
+              "type": "varchar(64)",
+              "comment": "申请号"
+            },
+            {
+              "name": "apply_date",
+              "type": "date",
+              "comment": "申请日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据字典",
+      "tables": [
+        {
+          "tableName": "dict_type",
+          "tableComment": "字典类型",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dict_name",
+              "type": "varchar(64)",
+              "comment": "字典名称"
+            },
+            {
+              "name": "dict_code",
+              "type": "varchar(64)",
+              "comment": "字典编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "dict_item",
+          "tableComment": "字典项",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dict_type_id",
+              "type": "bigint",
+              "comment": "字典类型"
+            },
+            {
+              "name": "item_label",
+              "type": "varchar(64)",
+              "comment": "显示名"
+            },
+            {
+              "name": "item_value",
+              "type": "varchar(64)",
+              "comment": "值"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

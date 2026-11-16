@@ -1,0 +1,203 @@
+{
+  "key": "edu_canteen",
+  "name": "校园食堂",
+  "category": "教育培训",
+  "desc": "校园食堂场景：食堂管理、供应商管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "食堂管理",
+      "tables": [
+        {
+          "tableName": "canteen",
+          "tableComment": "食堂档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "canteen_name",
+              "type": "varchar(64)",
+              "comment": "食堂名称"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "manager_id",
+              "type": "bigint",
+              "comment": "负责人"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "canteen_stock",
+          "tableComment": "食堂库存",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "canteen_id",
+              "type": "bigint",
+              "comment": "食堂"
+            },
+            {
+              "name": "material_name",
+              "type": "varchar(64)",
+              "comment": "食材名称"
+            },
+            {
+              "name": "quantity",
+              "type": "decimal(12,2)",
+              "comment": "数量"
+            },
+            {
+              "name": "unit",
+              "type": "varchar(64)",
+              "comment": "单位"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "供应商管理",
+      "tables": [
+        {
+          "tableName": "supplier",
+          "tableComment": "供应商档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "supplier_name",
+              "type": "varchar(128)",
+              "comment": "供应商名称"
+            },
+            {
+              "name": "supplier_code",
+              "type": "varchar(64)",
+              "comment": "供应商编码"
+            },
+            {
+              "name": "supplier_type",
+              "type": "tinyint",
+              "comment": "供应商类型"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "bank_account",
+              "type": "varchar(128)",
+              "comment": "银行账号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

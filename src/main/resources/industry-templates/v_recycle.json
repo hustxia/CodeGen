@@ -1,0 +1,228 @@
+{
+  "key": "v_recycle",
+  "name": "再生资源",
+  "category": "垂直行业",
+  "desc": "再生资源场景：再生资源、供应商管理、支付管理等核心业务域",
+  "modules": [
+    {
+      "name": "再生资源",
+      "tables": [
+        {
+          "tableName": "recycle_order",
+          "tableComment": "回收订单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "订单号"
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "material_type",
+              "type": "varchar(64)",
+              "comment": "回收品类"
+            },
+            {
+              "name": "weight",
+              "type": "decimal(12,2)",
+              "comment": "重量"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "recycle_item",
+          "tableComment": "回收明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_id",
+              "type": "bigint",
+              "comment": "回收订单"
+            },
+            {
+              "name": "item_name",
+              "type": "varchar(64)",
+              "comment": "品名"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "供应商管理",
+      "tables": [
+        {
+          "tableName": "supplier",
+          "tableComment": "供应商档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "supplier_name",
+              "type": "varchar(128)",
+              "comment": "供应商名称"
+            },
+            {
+              "name": "supplier_code",
+              "type": "varchar(64)",
+              "comment": "供应商编码"
+            },
+            {
+              "name": "supplier_type",
+              "type": "tinyint",
+              "comment": "供应商类型"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "bank_account",
+              "type": "varchar(128)",
+              "comment": "银行账号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "支付管理",
+      "tables": [
+        {
+          "tableName": "payment",
+          "tableComment": "支付记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "pay_no",
+              "type": "varchar(64)",
+              "comment": "支付单号"
+            },
+            {
+              "name": "biz_no",
+              "type": "varchar(64)",
+              "comment": "业务单号"
+            },
+            {
+              "name": "pay_type",
+              "type": "tinyint",
+              "comment": "支付方式"
+            },
+            {
+              "name": "pay_amount",
+              "type": "decimal(12,2)",
+              "comment": "支付金额"
+            },
+            {
+              "name": "pay_status",
+              "type": "tinyint",
+              "comment": "支付状态"
+            },
+            {
+              "name": "pay_time",
+              "type": "datetime",
+              "comment": "支付时间"
+            }
+          ]
+        },
+        {
+          "tableName": "payment_refund",
+          "tableComment": "退款记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "payment_id",
+              "type": "bigint",
+              "comment": "支付记录"
+            },
+            {
+              "name": "refund_no",
+              "type": "varchar(64)",
+              "comment": "退款单号"
+            },
+            {
+              "name": "refund_amount",
+              "type": "decimal(12,2)",
+              "comment": "退款金额"
+            },
+            {
+              "name": "refund_status",
+              "type": "tinyint",
+              "comment": "退款状态"
+            },
+            {
+              "name": "refund_time",
+              "type": "datetime",
+              "comment": "退款时间"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

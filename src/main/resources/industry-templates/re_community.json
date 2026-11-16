@@ -1,0 +1,294 @@
+{
+  "key": "re_community",
+  "name": "社区管理",
+  "category": "房产建筑",
+  "desc": "社区管理场景：网格管理、常住人口、财务管理、公告通知等核心业务域",
+  "modules": [
+    {
+      "name": "网格管理",
+      "tables": [
+        {
+          "tableName": "grid",
+          "tableComment": "网格划分",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "grid_name",
+              "type": "varchar(64)",
+              "comment": "网格名称"
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级网格"
+            },
+            {
+              "name": "manager_id",
+              "type": "bigint",
+              "comment": "网格员"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "grid_member",
+          "tableComment": "网格居民",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "grid_id",
+              "type": "bigint",
+              "comment": "网格"
+            },
+            {
+              "name": "name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "电话"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "常住人口",
+      "tables": [
+        {
+          "tableName": "resident",
+          "tableComment": "常住人口",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "household_id",
+              "type": "bigint",
+              "comment": "户籍"
+            },
+            {
+              "name": "name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "id_card",
+              "type": "varchar(64)",
+              "comment": "身份证号"
+            },
+            {
+              "name": "relation",
+              "type": "varchar(64)",
+              "comment": "与户主关系"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "财务管理",
+      "tables": [
+        {
+          "tableName": "finance_account",
+          "tableComment": "财务科目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级科目"
+            },
+            {
+              "name": "account_code",
+              "type": "varchar(64)",
+              "comment": "科目编码"
+            },
+            {
+              "name": "account_name",
+              "type": "varchar(64)",
+              "comment": "科目名称"
+            },
+            {
+              "name": "account_type",
+              "type": "tinyint",
+              "comment": "科目类型"
+            },
+            {
+              "name": "balance",
+              "type": "decimal(12,2)",
+              "comment": "余额"
+            }
+          ]
+        },
+        {
+          "tableName": "finance_voucher",
+          "tableComment": "记账凭证",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "voucher_no",
+              "type": "varchar(64)",
+              "comment": "凭证号"
+            },
+            {
+              "name": "voucher_date",
+              "type": "date",
+              "comment": "凭证日期"
+            },
+            {
+              "name": "summary",
+              "type": "varchar(255)",
+              "comment": "摘要"
+            },
+            {
+              "name": "total_amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "finance_voucher_item",
+          "tableComment": "凭证明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "voucher_id",
+              "type": "bigint",
+              "comment": "凭证"
+            },
+            {
+              "name": "account_id",
+              "type": "bigint",
+              "comment": "科目"
+            },
+            {
+              "name": "debit_amount",
+              "type": "decimal(12,2)",
+              "comment": "借方金额"
+            },
+            {
+              "name": "credit_amount",
+              "type": "decimal(12,2)",
+              "comment": "贷方金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "公告通知",
+      "tables": [
+        {
+          "tableName": "notice",
+          "tableComment": "公告通知",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "标题"
+            },
+            {
+              "name": "notice_type",
+              "type": "tinyint",
+              "comment": "类型"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "publish_time",
+              "type": "datetime",
+              "comment": "发布时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "notice_read",
+          "tableComment": "公告阅读记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "notice_id",
+              "type": "bigint",
+              "comment": "公告"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "用户"
+            },
+            {
+              "name": "read_time",
+              "type": "datetime",
+              "comment": "阅读时间"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

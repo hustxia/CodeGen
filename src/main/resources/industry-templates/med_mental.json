@@ -1,0 +1,307 @@
+{
+  "key": "med_mental",
+  "name": "心理咨询",
+  "category": "医疗健康",
+  "desc": "心理咨询场景：患者管理、病历管理、护理管理、问卷调查等核心业务域",
+  "modules": [
+    {
+      "name": "患者管理",
+      "tables": [
+        {
+          "tableName": "patient",
+          "tableComment": "患者档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "id_card",
+              "type": "varchar(64)",
+              "comment": "身份证号"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "birth_date",
+              "type": "date",
+              "comment": "出生日期"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "blood_type",
+              "type": "varchar(64)",
+              "comment": "血型"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "病历管理",
+      "tables": [
+        {
+          "tableName": "medical_record",
+          "tableComment": "就诊记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "visit_date",
+              "type": "datetime",
+              "comment": "就诊时间"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "科室"
+            },
+            {
+              "name": "doctor_id",
+              "type": "bigint",
+              "comment": "医生"
+            },
+            {
+              "name": "chief_complaint",
+              "type": "text",
+              "comment": "主诉"
+            },
+            {
+              "name": "diagnosis",
+              "type": "text",
+              "comment": "诊断"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "护理管理",
+      "tables": [
+        {
+          "tableName": "nursing_record",
+          "tableComment": "护理记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "nurse_id",
+              "type": "bigint",
+              "comment": "护士"
+            },
+            {
+              "name": "record_time",
+              "type": "datetime",
+              "comment": "记录时间"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "护理内容"
+            },
+            {
+              "name": "vital_signs",
+              "type": "varchar(255)",
+              "comment": "生命体征"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "问卷调查",
+      "tables": [
+        {
+          "tableName": "questionnaire",
+          "tableComment": "问卷定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "问卷标题"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            }
+          ]
+        },
+        {
+          "tableName": "question",
+          "tableComment": "题目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "questionnaire_id",
+              "type": "bigint",
+              "comment": "问卷"
+            },
+            {
+              "name": "question_title",
+              "type": "varchar(255)",
+              "comment": "题目标题"
+            },
+            {
+              "name": "question_type",
+              "type": "tinyint",
+              "comment": "题型"
+            },
+            {
+              "name": "options",
+              "type": "text",
+              "comment": "选项(JSON)"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        },
+        {
+          "tableName": "questionnaire_answer",
+          "tableComment": "问卷答卷",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "questionnaire_id",
+              "type": "bigint",
+              "comment": "问卷"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "答卷人"
+            },
+            {
+              "name": "answers",
+              "type": "text",
+              "comment": "答案(JSON)"
+            },
+            {
+              "name": "submit_time",
+              "type": "datetime",
+              "comment": "提交时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "预约挂号",
+      "tables": [
+        {
+          "tableName": "appointment",
+          "tableComment": "预约挂号",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "科室"
+            },
+            {
+              "name": "doctor_id",
+              "type": "bigint",
+              "comment": "医生"
+            },
+            {
+              "name": "appointment_date",
+              "type": "date",
+              "comment": "预约日期"
+            },
+            {
+              "name": "time_slot",
+              "type": "varchar(64)",
+              "comment": "时段"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

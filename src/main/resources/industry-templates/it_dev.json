@@ -1,0 +1,235 @@
+{
+  "key": "it_dev",
+  "name": "软件研发",
+  "category": "科研IT",
+  "desc": "软件研发场景：软件研发、测试管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "软件研发",
+      "tables": [
+        {
+          "tableName": "dev_project",
+          "tableComment": "研发项目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "project_name",
+              "type": "varchar(128)",
+              "comment": "项目名称"
+            },
+            {
+              "name": "project_code",
+              "type": "varchar(64)",
+              "comment": "项目编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "description",
+              "type": "text",
+              "comment": "描述"
+            }
+          ]
+        },
+        {
+          "tableName": "dev_issue",
+          "tableComment": "研发问题",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "project_id",
+              "type": "bigint",
+              "comment": "项目"
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "问题标题"
+            },
+            {
+              "name": "issue_type",
+              "type": "tinyint",
+              "comment": "问题类型"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "处理人"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "测试管理",
+      "tables": [
+        {
+          "tableName": "test_suite",
+          "tableComment": "测试套件",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "suite_name",
+              "type": "varchar(128)",
+              "comment": "套件名称"
+            },
+            {
+              "name": "project_id",
+              "type": "bigint",
+              "comment": "项目"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "test_case",
+          "tableComment": "测试用例",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "suite_id",
+              "type": "bigint",
+              "comment": "套件"
+            },
+            {
+              "name": "case_title",
+              "type": "varchar(128)",
+              "comment": "用例标题"
+            },
+            {
+              "name": "case_type",
+              "type": "tinyint",
+              "comment": "用例类型"
+            },
+            {
+              "name": "precondition",
+              "type": "text",
+              "comment": "前置条件"
+            },
+            {
+              "name": "steps",
+              "type": "text",
+              "comment": "步骤"
+            },
+            {
+              "name": "expected",
+              "type": "text",
+              "comment": "预期结果"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

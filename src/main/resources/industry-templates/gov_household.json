@@ -1,0 +1,294 @@
+{
+  "key": "gov_household",
+  "name": "户籍管理",
+  "category": "政务民生",
+  "desc": "户籍管理场景：户籍管理、审批流程、数据统计、数据字典等核心业务域",
+  "modules": [
+    {
+      "name": "户籍管理",
+      "tables": [
+        {
+          "tableName": "household",
+          "tableComment": "户籍档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "household_no",
+              "type": "varchar(64)",
+              "comment": "户号"
+            },
+            {
+              "name": "head_name",
+              "type": "varchar(64)",
+              "comment": "户主"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "住址"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "resident",
+          "tableComment": "常住人口",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "household_id",
+              "type": "bigint",
+              "comment": "户籍"
+            },
+            {
+              "name": "name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "id_card",
+              "type": "varchar(64)",
+              "comment": "身份证号"
+            },
+            {
+              "name": "relation",
+              "type": "varchar(64)",
+              "comment": "与户主关系"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "审批流程",
+      "tables": [
+        {
+          "tableName": "approval_flow",
+          "tableComment": "审批流程定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_name",
+              "type": "varchar(64)",
+              "comment": "流程名称"
+            },
+            {
+              "name": "flow_code",
+              "type": "varchar(64)",
+              "comment": "流程编码"
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "approval_task",
+          "tableComment": "审批任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_id",
+              "type": "bigint",
+              "comment": "流程"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "task_name",
+              "type": "varchar(64)",
+              "comment": "任务名称"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "审批人"
+            },
+            {
+              "name": "task_status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "approve_time",
+              "type": "datetime",
+              "comment": "审批时间"
+            },
+            {
+              "name": "comment",
+              "type": "varchar(512)",
+              "comment": "审批意见"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据字典",
+      "tables": [
+        {
+          "tableName": "dict_type",
+          "tableComment": "字典类型",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dict_name",
+              "type": "varchar(64)",
+              "comment": "字典名称"
+            },
+            {
+              "name": "dict_code",
+              "type": "varchar(64)",
+              "comment": "字典编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "dict_item",
+          "tableComment": "字典项",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dict_type_id",
+              "type": "bigint",
+              "comment": "字典类型"
+            },
+            {
+              "name": "item_label",
+              "type": "varchar(64)",
+              "comment": "显示名"
+            },
+            {
+              "name": "item_value",
+              "type": "varchar(64)",
+              "comment": "值"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

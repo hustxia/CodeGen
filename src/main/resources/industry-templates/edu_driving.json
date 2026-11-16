@@ -1,0 +1,220 @@
+{
+  "key": "edu_driving",
+  "name": "驾校管理",
+  "category": "教育培训",
+  "desc": "驾校管理场景：驾校管理、学生管理、考试管理等核心业务域",
+  "modules": [
+    {
+      "name": "驾校管理",
+      "tables": [
+        {
+          "tableName": "driving_school",
+          "tableComment": "驾校档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "school_name",
+              "type": "varchar(64)",
+              "comment": "驾校名称"
+            },
+            {
+              "name": "school_code",
+              "type": "varchar(64)",
+              "comment": "编码"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "driving_appointment",
+          "tableComment": "练车预约",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学员"
+            },
+            {
+              "name": "coach_id",
+              "type": "bigint",
+              "comment": "教练"
+            },
+            {
+              "name": "appointment_date",
+              "type": "date",
+              "comment": "预约日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "学生管理",
+      "tables": [
+        {
+          "tableName": "student",
+          "tableComment": "学生档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "student_no",
+              "type": "varchar(64)",
+              "comment": "学号"
+            },
+            {
+              "name": "student_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "class_id",
+              "type": "bigint",
+              "comment": "班级"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "student_class",
+          "tableComment": "班级档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "class_name",
+              "type": "varchar(64)",
+              "comment": "班级名称"
+            },
+            {
+              "name": "grade",
+              "type": "varchar(64)",
+              "comment": "年级"
+            },
+            {
+              "name": "head_teacher_id",
+              "type": "bigint",
+              "comment": "班主任"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "考试管理",
+      "tables": [
+        {
+          "tableName": "exam",
+          "tableComment": "考试",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "exam_name",
+              "type": "varchar(128)",
+              "comment": "考试名称"
+            },
+            {
+              "name": "course_id",
+              "type": "bigint",
+              "comment": "课程"
+            },
+            {
+              "name": "exam_time",
+              "type": "datetime",
+              "comment": "考试时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "exam_score",
+          "tableComment": "考试成绩",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "exam_id",
+              "type": "bigint",
+              "comment": "考试"
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学生"
+            },
+            {
+              "name": "score",
+              "type": "decimal(12,2)",
+              "comment": "分数"
+            },
+            {
+              "name": "grade",
+              "type": "varchar(64)",
+              "comment": "等级"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+{
+  "key": "it_devops",
+  "name": "DevOps",
+  "category": "科研IT",
+  "desc": "DevOps场景：运维监控、研发问题、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "运维监控",
+      "tables": [
+        {
+          "tableName": "monitor_target",
+          "tableComment": "监控对象",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "target_name",
+              "type": "varchar(128)",
+              "comment": "对象名称"
+            },
+            {
+              "name": "target_type",
+              "type": "tinyint",
+              "comment": "对象类型"
+            },
+            {
+              "name": "endpoint",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "monitor_alert",
+          "tableComment": "告警记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "target_id",
+              "type": "bigint",
+              "comment": "监控对象"
+            },
+            {
+              "name": "alert_level",
+              "type": "tinyint",
+              "comment": "告警级别"
+            },
+            {
+              "name": "alert_content",
+              "type": "varchar(512)",
+              "comment": "告警内容"
+            },
+            {
+              "name": "alert_time",
+              "type": "datetime",
+              "comment": "告警时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "研发问题",
+      "tables": [
+        {
+          "tableName": "dev_issue",
+          "tableComment": "研发问题",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "project_id",
+              "type": "bigint",
+              "comment": "项目"
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "问题标题"
+            },
+            {
+              "name": "issue_type",
+              "type": "tinyint",
+              "comment": "问题类型"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "处理人"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

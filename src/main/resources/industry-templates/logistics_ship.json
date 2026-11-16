@@ -1,0 +1,299 @@
+{
+  "key": "logistics_ship",
+  "name": "船运管理",
+  "category": "物流供应链",
+  "desc": "船运管理场景：航运管理、物流运单、配送管理、港口管理等核心业务域",
+  "modules": [
+    {
+      "name": "航运管理",
+      "tables": [
+        {
+          "tableName": "vessel",
+          "tableComment": "船舶档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "vessel_name",
+              "type": "varchar(64)",
+              "comment": "船名"
+            },
+            {
+              "name": "imo_no",
+              "type": "varchar(64)",
+              "comment": "IMO号"
+            },
+            {
+              "name": "vessel_type",
+              "type": "varchar(64)",
+              "comment": "船型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "voyage",
+          "tableComment": "航次",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "vessel_id",
+              "type": "bigint",
+              "comment": "船舶"
+            },
+            {
+              "name": "voyage_no",
+              "type": "varchar(64)",
+              "comment": "航次号"
+            },
+            {
+              "name": "departure",
+              "type": "varchar(128)",
+              "comment": "出发港"
+            },
+            {
+              "name": "destination",
+              "type": "varchar(128)",
+              "comment": "目的港"
+            },
+            {
+              "name": "sail_date",
+              "type": "date",
+              "comment": "开航日期"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "物流运单",
+      "tables": [
+        {
+          "tableName": "waybill",
+          "tableComment": "运单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "waybill_no",
+              "type": "varchar(64)",
+              "comment": "运单号"
+            },
+            {
+              "name": "sender_id",
+              "type": "bigint",
+              "comment": "寄件人"
+            },
+            {
+              "name": "receiver_id",
+              "type": "bigint",
+              "comment": "收件人"
+            },
+            {
+              "name": "goods_name",
+              "type": "varchar(128)",
+              "comment": "货物名称"
+            },
+            {
+              "name": "weight",
+              "type": "decimal(12,2)",
+              "comment": "重量"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "waybill_track",
+          "tableComment": "物流轨迹",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "waybill_id",
+              "type": "bigint",
+              "comment": "运单"
+            },
+            {
+              "name": "track_time",
+              "type": "datetime",
+              "comment": "轨迹时间"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "description",
+              "type": "varchar(255)",
+              "comment": "描述"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "配送管理",
+      "tables": [
+        {
+          "tableName": "delivery",
+          "tableComment": "配送单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delivery_no",
+              "type": "varchar(64)",
+              "comment": "配送单号"
+            },
+            {
+              "name": "order_id",
+              "type": "bigint",
+              "comment": "订单"
+            },
+            {
+              "name": "driver_id",
+              "type": "bigint",
+              "comment": "配送员"
+            },
+            {
+              "name": "delivery_time",
+              "type": "datetime",
+              "comment": "配送时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "delivery_item",
+          "tableComment": "配送明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delivery_id",
+              "type": "bigint",
+              "comment": "配送单"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "港口管理",
+      "tables": [
+        {
+          "tableName": "port",
+          "tableComment": "港口档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "port_name",
+              "type": "varchar(64)",
+              "comment": "港口名称"
+            },
+            {
+              "name": "port_code",
+              "type": "varchar(64)",
+              "comment": "港口编码"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "berth",
+          "tableComment": "泊位",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "port_id",
+              "type": "bigint",
+              "comment": "港口"
+            },
+            {
+              "name": "berth_no",
+              "type": "varchar(64)",
+              "comment": "泊位号"
+            },
+            {
+              "name": "capacity",
+              "type": "decimal(12,2)",
+              "comment": "吞吐能力"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

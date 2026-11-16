@@ -26,6 +26,9 @@ public class GenAiTemplateVO {
     @Schema(description = "一句话说明", example = "商品、订单、购物车、售后等电商核心域")
     private String desc;
 
+    @Schema(description = "行业分类（前端按此分组/筛选）", example = "电商零售")
+    private String category;
+
     @Schema(description = "模块数（列表接口用）")
     private int moduleCount;
 

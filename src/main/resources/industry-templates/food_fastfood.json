@@ -1,0 +1,556 @@
+{
+  "key": "food_fastfood",
+  "name": "快餐管理",
+  "category": "餐饮酒店",
+  "desc": "快餐管理场景：菜品管理、点餐管理、商品管理、订单管理等核心业务域",
+  "modules": [
+    {
+      "name": "菜品管理",
+      "tables": [
+        {
+          "tableName": "dish_category",
+          "tableComment": "菜品分类",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "category_name",
+              "type": "varchar(64)",
+              "comment": "分类名称"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        },
+        {
+          "tableName": "dish",
+          "tableComment": "菜品档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dish_name",
+              "type": "varchar(64)",
+              "comment": "菜品名称"
+            },
+            {
+              "name": "category_id",
+              "type": "bigint",
+              "comment": "菜品分类"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "价格"
+            },
+            {
+              "name": "image",
+              "type": "varchar(512)",
+              "comment": "图片"
+            },
+            {
+              "name": "description",
+              "type": "varchar(255)",
+              "comment": "描述"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "点餐管理",
+      "tables": [
+        {
+          "tableName": "dining_table",
+          "tableComment": "餐桌",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "table_no",
+              "type": "varchar(64)",
+              "comment": "桌号"
+            },
+            {
+              "name": "capacity",
+              "type": "int",
+              "comment": "容纳人数"
+            },
+            {
+              "name": "area",
+              "type": "varchar(64)",
+              "comment": "区域"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "dining_order",
+          "tableComment": "点餐单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "单号"
+            },
+            {
+              "name": "table_id",
+              "type": "bigint",
+              "comment": "餐桌"
+            },
+            {
+              "name": "total_amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "order_time",
+              "type": "datetime",
+              "comment": "下单时间"
+            }
+          ]
+        },
+        {
+          "tableName": "dining_order_item",
+          "tableComment": "点餐明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_id",
+              "type": "bigint",
+              "comment": "点餐单"
+            },
+            {
+              "name": "dish_id",
+              "type": "bigint",
+              "comment": "菜品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "商品管理",
+      "tables": [
+        {
+          "tableName": "product_category",
+          "tableComment": "商品分类",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级分类"
+            },
+            {
+              "name": "category_name",
+              "type": "varchar(64)",
+              "comment": "分类名称"
+            },
+            {
+              "name": "category_code",
+              "type": "varchar(64)",
+              "comment": "分类编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        },
+        {
+          "tableName": "product",
+          "tableComment": "商品档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "product_name",
+              "type": "varchar(128)",
+              "comment": "商品名称"
+            },
+            {
+              "name": "product_code",
+              "type": "varchar(64)",
+              "comment": "商品编码"
+            },
+            {
+              "name": "category_id",
+              "type": "bigint",
+              "comment": "商品分类"
+            },
+            {
+              "name": "spec",
+              "type": "varchar(128)",
+              "comment": "规格型号"
+            },
+            {
+              "name": "unit",
+              "type": "varchar(64)",
+              "comment": "单位"
+            },
+            {
+              "name": "sale_price",
+              "type": "decimal(12,2)",
+              "comment": "销售价"
+            },
+            {
+              "name": "cost_price",
+              "type": "decimal(12,2)",
+              "comment": "成本价"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "product_sku",
+          "tableComment": "商品SKU",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "sku_code",
+              "type": "varchar(64)",
+              "comment": "SKU编码"
+            },
+            {
+              "name": "sku_name",
+              "type": "varchar(128)",
+              "comment": "SKU名称"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "价格"
+            },
+            {
+              "name": "stock_num",
+              "type": "int",
+              "comment": "库存数"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "订单管理",
+      "tables": [
+        {
+          "tableName": "sales_order",
+          "tableComment": "销售订单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "订单号"
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "order_amount",
+              "type": "decimal(12,2)",
+              "comment": "订单金额"
+            },
+            {
+              "name": "order_status",
+              "type": "tinyint",
+              "comment": "订单状态"
+            },
+            {
+              "name": "pay_status",
+              "type": "tinyint",
+              "comment": "支付状态"
+            },
+            {
+              "name": "order_time",
+              "type": "datetime",
+              "comment": "下单时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "sales_order_item",
+          "tableComment": "订单明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_id",
+              "type": "bigint",
+              "comment": "订单"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "unit_price",
+              "type": "decimal(12,2)",
+              "comment": "单价"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "支付管理",
+      "tables": [
+        {
+          "tableName": "payment",
+          "tableComment": "支付记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "pay_no",
+              "type": "varchar(64)",
+              "comment": "支付单号"
+            },
+            {
+              "name": "biz_no",
+              "type": "varchar(64)",
+              "comment": "业务单号"
+            },
+            {
+              "name": "pay_type",
+              "type": "tinyint",
+              "comment": "支付方式"
+            },
+            {
+              "name": "pay_amount",
+              "type": "decimal(12,2)",
+              "comment": "支付金额"
+            },
+            {
+              "name": "pay_status",
+              "type": "tinyint",
+              "comment": "支付状态"
+            },
+            {
+              "name": "pay_time",
+              "type": "datetime",
+              "comment": "支付时间"
+            }
+          ]
+        },
+        {
+          "tableName": "payment_refund",
+          "tableComment": "退款记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "payment_id",
+              "type": "bigint",
+              "comment": "支付记录"
+            },
+            {
+              "name": "refund_no",
+              "type": "varchar(64)",
+              "comment": "退款单号"
+            },
+            {
+              "name": "refund_amount",
+              "type": "decimal(12,2)",
+              "comment": "退款金额"
+            },
+            {
+              "name": "refund_status",
+              "type": "tinyint",
+              "comment": "退款状态"
+            },
+            {
+              "name": "refund_time",
+              "type": "datetime",
+              "comment": "退款时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

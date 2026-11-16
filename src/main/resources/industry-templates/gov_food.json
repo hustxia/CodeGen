@@ -1,0 +1,146 @@
+{
+  "key": "gov_food",
+  "name": "食品监管",
+  "category": "政务民生",
+  "desc": "食品监管场景：食品监管、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "食品监管",
+      "tables": [
+        {
+          "tableName": "food_business",
+          "tableComment": "食品经营主体",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "business_name",
+              "type": "varchar(128)",
+              "comment": "主体名称"
+            },
+            {
+              "name": "license_no",
+              "type": "varchar(64)",
+              "comment": "许可证号"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "food_check",
+          "tableComment": "食品检查",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "business_id",
+              "type": "bigint",
+              "comment": "经营主体"
+            },
+            {
+              "name": "check_date",
+              "type": "date",
+              "comment": "检查日期"
+            },
+            {
+              "name": "result",
+              "type": "tinyint",
+              "comment": "检查结果"
+            },
+            {
+              "name": "checker_id",
+              "type": "bigint",
+              "comment": "检查人"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

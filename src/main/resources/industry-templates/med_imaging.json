@@ -1,0 +1,248 @@
+{
+  "key": "med_imaging",
+  "name": "影像中心",
+  "category": "医疗健康",
+  "desc": "影像中心场景：患者管理、病历管理、媒体资源、检验结果等核心业务域",
+  "modules": [
+    {
+      "name": "患者管理",
+      "tables": [
+        {
+          "tableName": "patient",
+          "tableComment": "患者档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "id_card",
+              "type": "varchar(64)",
+              "comment": "身份证号"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "birth_date",
+              "type": "date",
+              "comment": "出生日期"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "blood_type",
+              "type": "varchar(64)",
+              "comment": "血型"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "病历管理",
+      "tables": [
+        {
+          "tableName": "medical_record",
+          "tableComment": "就诊记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "visit_date",
+              "type": "datetime",
+              "comment": "就诊时间"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "科室"
+            },
+            {
+              "name": "doctor_id",
+              "type": "bigint",
+              "comment": "医生"
+            },
+            {
+              "name": "chief_complaint",
+              "type": "text",
+              "comment": "主诉"
+            },
+            {
+              "name": "diagnosis",
+              "type": "text",
+              "comment": "诊断"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "媒体资源",
+      "tables": [
+        {
+          "tableName": "media_asset",
+          "tableComment": "媒体资源",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "media_name",
+              "type": "varchar(128)",
+              "comment": "资源名称"
+            },
+            {
+              "name": "media_url",
+              "type": "varchar(512)",
+              "comment": "资源地址"
+            },
+            {
+              "name": "media_type",
+              "type": "tinyint",
+              "comment": "资源类型"
+            },
+            {
+              "name": "file_size",
+              "type": "bigint",
+              "comment": "文件大小"
+            },
+            {
+              "name": "uploader_id",
+              "type": "bigint",
+              "comment": "上传人"
+            },
+            {
+              "name": "upload_time",
+              "type": "datetime",
+              "comment": "上传时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "检验结果",
+      "tables": [
+        {
+          "tableName": "lab_result",
+          "tableComment": "检验结果",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "test_id",
+              "type": "bigint",
+              "comment": "检验项目"
+            },
+            {
+              "name": "result_value",
+              "type": "varchar(255)",
+              "comment": "结果值"
+            },
+            {
+              "name": "reference_range",
+              "type": "varchar(128)",
+              "comment": "参考范围"
+            },
+            {
+              "name": "test_time",
+              "type": "datetime",
+              "comment": "检验时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "预约挂号",
+      "tables": [
+        {
+          "tableName": "appointment",
+          "tableComment": "预约挂号",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "科室"
+            },
+            {
+              "name": "doctor_id",
+              "type": "bigint",
+              "comment": "医生"
+            },
+            {
+              "name": "appointment_date",
+              "type": "date",
+              "comment": "预约日期"
+            },
+            {
+              "name": "time_slot",
+              "type": "varchar(64)",
+              "comment": "时段"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

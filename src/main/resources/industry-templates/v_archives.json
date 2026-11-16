@@ -1,0 +1,334 @@
+{
+  "key": "v_archives",
+  "name": "档案管理",
+  "category": "垂直行业",
+  "desc": "档案管理场景：文件附件、内容文章、数据字典、审批流程等核心业务域",
+  "modules": [
+    {
+      "name": "文件附件",
+      "tables": [
+        {
+          "tableName": "file_info",
+          "tableComment": "文件资源",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "file_name",
+              "type": "varchar(128)",
+              "comment": "文件名"
+            },
+            {
+              "name": "file_path",
+              "type": "varchar(512)",
+              "comment": "存储路径"
+            },
+            {
+              "name": "file_size",
+              "type": "bigint",
+              "comment": "文件大小"
+            },
+            {
+              "name": "file_type",
+              "type": "varchar(64)",
+              "comment": "文件类型"
+            },
+            {
+              "name": "uploader_id",
+              "type": "bigint",
+              "comment": "上传人"
+            },
+            {
+              "name": "upload_time",
+              "type": "datetime",
+              "comment": "上传时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "内容文章",
+      "tables": [
+        {
+          "tableName": "article_category",
+          "tableComment": "文章分类",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级分类"
+            },
+            {
+              "name": "category_name",
+              "type": "varchar(64)",
+              "comment": "分类名称"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        },
+        {
+          "tableName": "article",
+          "tableComment": "文章",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "标题"
+            },
+            {
+              "name": "category_id",
+              "type": "bigint",
+              "comment": "分类"
+            },
+            {
+              "name": "cover_image",
+              "type": "varchar(512)",
+              "comment": "封面图"
+            },
+            {
+              "name": "summary",
+              "type": "varchar(512)",
+              "comment": "摘要"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "正文"
+            },
+            {
+              "name": "view_num",
+              "type": "int",
+              "comment": "阅读量"
+            },
+            {
+              "name": "publish_time",
+              "type": "datetime",
+              "comment": "发布时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据字典",
+      "tables": [
+        {
+          "tableName": "dict_type",
+          "tableComment": "字典类型",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dict_name",
+              "type": "varchar(64)",
+              "comment": "字典名称"
+            },
+            {
+              "name": "dict_code",
+              "type": "varchar(64)",
+              "comment": "字典编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "dict_item",
+          "tableComment": "字典项",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dict_type_id",
+              "type": "bigint",
+              "comment": "字典类型"
+            },
+            {
+              "name": "item_label",
+              "type": "varchar(64)",
+              "comment": "显示名"
+            },
+            {
+              "name": "item_value",
+              "type": "varchar(64)",
+              "comment": "值"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "审批流程",
+      "tables": [
+        {
+          "tableName": "approval_flow",
+          "tableComment": "审批流程定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_name",
+              "type": "varchar(64)",
+              "comment": "流程名称"
+            },
+            {
+              "name": "flow_code",
+              "type": "varchar(64)",
+              "comment": "流程编码"
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "approval_task",
+          "tableComment": "审批任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_id",
+              "type": "bigint",
+              "comment": "流程"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "task_name",
+              "type": "varchar(64)",
+              "comment": "任务名称"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "审批人"
+            },
+            {
+              "name": "task_status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "approve_time",
+              "type": "datetime",
+              "comment": "审批时间"
+            },
+            {
+              "name": "comment",
+              "type": "varchar(512)",
+              "comment": "审批意见"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "日志审计",
+      "tables": [
+        {
+          "tableName": "audit_log",
+          "tableComment": "操作审计日志",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "module",
+              "type": "varchar(64)",
+              "comment": "模块"
+            },
+            {
+              "name": "operation",
+              "type": "varchar(64)",
+              "comment": "操作"
+            },
+            {
+              "name": "operator_id",
+              "type": "bigint",
+              "comment": "操作人"
+            },
+            {
+              "name": "biz_id",
+              "type": "varchar(64)",
+              "comment": "业务ID"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "operate_time",
+              "type": "datetime",
+              "comment": "操作时间"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

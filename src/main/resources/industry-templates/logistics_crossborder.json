@@ -1,0 +1,299 @@
+{
+  "key": "logistics_crossborder",
+  "name": "国际物流",
+  "category": "物流供应链",
+  "desc": "国际物流场景：报关管理、物流运单、保税仓、港口管理等核心业务域",
+  "modules": [
+    {
+      "name": "报关管理",
+      "tables": [
+        {
+          "tableName": "customs_declaration",
+          "tableComment": "报关单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "declaration_no",
+              "type": "varchar(64)",
+              "comment": "报关单号"
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "订单号"
+            },
+            {
+              "name": "goods_name",
+              "type": "varchar(128)",
+              "comment": "货物名称"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "申报金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "trade_document",
+          "tableComment": "外贸单证",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "declaration_id",
+              "type": "bigint",
+              "comment": "报关单"
+            },
+            {
+              "name": "doc_type",
+              "type": "varchar(64)",
+              "comment": "单证类型"
+            },
+            {
+              "name": "doc_no",
+              "type": "varchar(64)",
+              "comment": "单证编号"
+            },
+            {
+              "name": "file_url",
+              "type": "varchar(512)",
+              "comment": "文件地址"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "物流运单",
+      "tables": [
+        {
+          "tableName": "waybill",
+          "tableComment": "运单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "waybill_no",
+              "type": "varchar(64)",
+              "comment": "运单号"
+            },
+            {
+              "name": "sender_id",
+              "type": "bigint",
+              "comment": "寄件人"
+            },
+            {
+              "name": "receiver_id",
+              "type": "bigint",
+              "comment": "收件人"
+            },
+            {
+              "name": "goods_name",
+              "type": "varchar(128)",
+              "comment": "货物名称"
+            },
+            {
+              "name": "weight",
+              "type": "decimal(12,2)",
+              "comment": "重量"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "waybill_track",
+          "tableComment": "物流轨迹",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "waybill_id",
+              "type": "bigint",
+              "comment": "运单"
+            },
+            {
+              "name": "track_time",
+              "type": "datetime",
+              "comment": "轨迹时间"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "description",
+              "type": "varchar(255)",
+              "comment": "描述"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "保税仓",
+      "tables": [
+        {
+          "tableName": "bonded_warehouse",
+          "tableComment": "保税仓库",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_name",
+              "type": "varchar(64)",
+              "comment": "仓库名称"
+            },
+            {
+              "name": "warehouse_code",
+              "type": "varchar(64)",
+              "comment": "仓库编码"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "bonded_stock",
+          "tableComment": "保税库存",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_id",
+              "type": "bigint",
+              "comment": "仓库"
+            },
+            {
+              "name": "goods_name",
+              "type": "varchar(128)",
+              "comment": "货物名称"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "港口管理",
+      "tables": [
+        {
+          "tableName": "port",
+          "tableComment": "港口档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "port_name",
+              "type": "varchar(64)",
+              "comment": "港口名称"
+            },
+            {
+              "name": "port_code",
+              "type": "varchar(64)",
+              "comment": "港口编码"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "berth",
+          "tableComment": "泊位",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "port_id",
+              "type": "bigint",
+              "comment": "港口"
+            },
+            {
+              "name": "berth_no",
+              "type": "varchar(64)",
+              "comment": "泊位号"
+            },
+            {
+              "name": "capacity",
+              "type": "decimal(12,2)",
+              "comment": "吞吐能力"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

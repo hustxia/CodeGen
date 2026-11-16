@@ -1,0 +1,193 @@
+{
+  "key": "legal_ip",
+  "name": "知识产权",
+  "category": "法律法务",
+  "desc": "知识产权场景：知识产权、专利、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "知识产权",
+      "tables": [
+        {
+          "tableName": "ip_asset",
+          "tableComment": "知识产权",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "asset_name",
+              "type": "varchar(128)",
+              "comment": "名称"
+            },
+            {
+              "name": "asset_type",
+              "type": "tinyint",
+              "comment": "类型"
+            },
+            {
+              "name": "reg_no",
+              "type": "varchar(64)",
+              "comment": "登记号"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "权利人"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "ip_application",
+          "tableComment": "申请记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "asset_id",
+              "type": "bigint",
+              "comment": "知识产权"
+            },
+            {
+              "name": "apply_no",
+              "type": "varchar(64)",
+              "comment": "申请号"
+            },
+            {
+              "name": "apply_date",
+              "type": "date",
+              "comment": "申请日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "专利",
+      "tables": [
+        {
+          "tableName": "patent",
+          "tableComment": "专利",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patent_name",
+              "type": "varchar(128)",
+              "comment": "专利名称"
+            },
+            {
+              "name": "patent_no",
+              "type": "varchar(64)",
+              "comment": "专利号"
+            },
+            {
+              "name": "applicant_id",
+              "type": "bigint",
+              "comment": "申请人"
+            },
+            {
+              "name": "apply_date",
+              "type": "date",
+              "comment": "申请日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

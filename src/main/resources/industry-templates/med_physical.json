@@ -1,0 +1,235 @@
+{
+  "key": "med_physical",
+  "name": "体检中心",
+  "category": "医疗健康",
+  "desc": "体检中心场景：患者管理、体检中心、预约挂号、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "患者管理",
+      "tables": [
+        {
+          "tableName": "patient",
+          "tableComment": "患者档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "id_card",
+              "type": "varchar(64)",
+              "comment": "身份证号"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "birth_date",
+              "type": "date",
+              "comment": "出生日期"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "blood_type",
+              "type": "varchar(64)",
+              "comment": "血型"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "体检中心",
+      "tables": [
+        {
+          "tableName": "physical_exam",
+          "tableComment": "体检套餐",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "package_name",
+              "type": "varchar(128)",
+              "comment": "套餐名称"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "价格"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "exam_item",
+          "tableComment": "体检项目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "package_id",
+              "type": "bigint",
+              "comment": "套餐"
+            },
+            {
+              "name": "item_name",
+              "type": "varchar(128)",
+              "comment": "项目名称"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "预约挂号",
+      "tables": [
+        {
+          "tableName": "appointment",
+          "tableComment": "预约挂号",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "科室"
+            },
+            {
+              "name": "doctor_id",
+              "type": "bigint",
+              "comment": "医生"
+            },
+            {
+              "name": "appointment_date",
+              "type": "date",
+              "comment": "预约日期"
+            },
+            {
+              "name": "time_slot",
+              "type": "varchar(64)",
+              "comment": "时段"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

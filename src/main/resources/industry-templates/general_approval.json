@@ -1,0 +1,366 @@
+{
+  "key": "general_approval",
+  "name": "审批中心",
+  "category": "通用企业",
+  "desc": "审批中心场景：审批流程、公告通知、任务协作、日志审计等核心业务域",
+  "modules": [
+    {
+      "name": "审批流程",
+      "tables": [
+        {
+          "tableName": "approval_flow",
+          "tableComment": "审批流程定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_name",
+              "type": "varchar(64)",
+              "comment": "流程名称"
+            },
+            {
+              "name": "flow_code",
+              "type": "varchar(64)",
+              "comment": "流程编码"
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "approval_task",
+          "tableComment": "审批任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_id",
+              "type": "bigint",
+              "comment": "流程"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "task_name",
+              "type": "varchar(64)",
+              "comment": "任务名称"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "审批人"
+            },
+            {
+              "name": "task_status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "approve_time",
+              "type": "datetime",
+              "comment": "审批时间"
+            },
+            {
+              "name": "comment",
+              "type": "varchar(512)",
+              "comment": "审批意见"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "公告通知",
+      "tables": [
+        {
+          "tableName": "notice",
+          "tableComment": "公告通知",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "标题"
+            },
+            {
+              "name": "notice_type",
+              "type": "tinyint",
+              "comment": "类型"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "publish_time",
+              "type": "datetime",
+              "comment": "发布时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "notice_read",
+          "tableComment": "公告阅读记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "notice_id",
+              "type": "bigint",
+              "comment": "公告"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "用户"
+            },
+            {
+              "name": "read_time",
+              "type": "datetime",
+              "comment": "阅读时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "任务协作",
+      "tables": [
+        {
+          "tableName": "task",
+          "tableComment": "协作任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "任务标题"
+            },
+            {
+              "name": "project_id",
+              "type": "bigint",
+              "comment": "所属项目"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "负责人"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "due_date",
+              "type": "date",
+              "comment": "截止日期"
+            },
+            {
+              "name": "description",
+              "type": "text",
+              "comment": "任务描述"
+            }
+          ]
+        },
+        {
+          "tableName": "task_comment",
+          "tableComment": "任务评论",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "task_id",
+              "type": "bigint",
+              "comment": "任务"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "评论人"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "评论内容"
+            },
+            {
+              "name": "comment_time",
+              "type": "datetime",
+              "comment": "评论时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "日志审计",
+      "tables": [
+        {
+          "tableName": "audit_log",
+          "tableComment": "操作审计日志",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "module",
+              "type": "varchar(64)",
+              "comment": "模块"
+            },
+            {
+              "name": "operation",
+              "type": "varchar(64)",
+              "comment": "操作"
+            },
+            {
+              "name": "operator_id",
+              "type": "bigint",
+              "comment": "操作人"
+            },
+            {
+              "name": "biz_id",
+              "type": "varchar(64)",
+              "comment": "业务ID"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "operate_time",
+              "type": "datetime",
+              "comment": "操作时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "组织岗位",
+      "tables": [
+        {
+          "tableName": "department",
+          "tableComment": "部门档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级部门"
+            },
+            {
+              "name": "dept_name",
+              "type": "varchar(64)",
+              "comment": "部门名称"
+            },
+            {
+              "name": "dept_code",
+              "type": "varchar(64)",
+              "comment": "部门编码"
+            },
+            {
+              "name": "leader_id",
+              "type": "bigint",
+              "comment": "部门负责人"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        },
+        {
+          "tableName": "position",
+          "tableComment": "岗位档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "部门"
+            },
+            {
+              "name": "position_name",
+              "type": "varchar(64)",
+              "comment": "岗位名称"
+            },
+            {
+              "name": "position_code",
+              "type": "varchar(64)",
+              "comment": "岗位编码"
+            },
+            {
+              "name": "level",
+              "type": "varchar(64)",
+              "comment": "职级"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

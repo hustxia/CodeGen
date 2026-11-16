@@ -1,0 +1,428 @@
+{
+  "key": "hr_labor",
+  "name": "劳动关系",
+  "category": "人力资源",
+  "desc": "劳动关系场景：员工管理、合同管理、考勤管理、审批流程等核心业务域",
+  "modules": [
+    {
+      "name": "员工管理",
+      "tables": [
+        {
+          "tableName": "employee",
+          "tableComment": "员工档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_no",
+              "type": "varchar(64)",
+              "comment": "工号"
+            },
+            {
+              "name": "employee_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "department_id",
+              "type": "bigint",
+              "comment": "部门"
+            },
+            {
+              "name": "position_id",
+              "type": "bigint",
+              "comment": "岗位"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "手机"
+            },
+            {
+              "name": "email",
+              "type": "varchar(128)",
+              "comment": "邮箱"
+            },
+            {
+              "name": "entry_date",
+              "type": "date",
+              "comment": "入职日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "employee_contract",
+          "tableComment": "员工合同",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_id",
+              "type": "bigint",
+              "comment": "员工"
+            },
+            {
+              "name": "contract_no",
+              "type": "varchar(64)",
+              "comment": "合同编号"
+            },
+            {
+              "name": "start_date",
+              "type": "date",
+              "comment": "起始日期"
+            },
+            {
+              "name": "end_date",
+              "type": "date",
+              "comment": "终止日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "合同管理",
+      "tables": [
+        {
+          "tableName": "contract",
+          "tableComment": "合同档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "contract_no",
+              "type": "varchar(64)",
+              "comment": "合同编号"
+            },
+            {
+              "name": "contract_name",
+              "type": "varchar(128)",
+              "comment": "合同名称"
+            },
+            {
+              "name": "partner_id",
+              "type": "bigint",
+              "comment": "相对方"
+            },
+            {
+              "name": "contract_amount",
+              "type": "decimal(12,2)",
+              "comment": "合同金额"
+            },
+            {
+              "name": "sign_date",
+              "type": "date",
+              "comment": "签订日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "到期日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "合同内容"
+            }
+          ]
+        },
+        {
+          "tableName": "contract_item",
+          "tableComment": "合同条款",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "contract_id",
+              "type": "bigint",
+              "comment": "合同"
+            },
+            {
+              "name": "item_title",
+              "type": "varchar(128)",
+              "comment": "条款标题"
+            },
+            {
+              "name": "item_content",
+              "type": "text",
+              "comment": "条款内容"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "考勤管理",
+      "tables": [
+        {
+          "tableName": "attendance",
+          "tableComment": "考勤记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_id",
+              "type": "bigint",
+              "comment": "员工"
+            },
+            {
+              "name": "attendance_date",
+              "type": "date",
+              "comment": "考勤日期"
+            },
+            {
+              "name": "check_in",
+              "type": "datetime",
+              "comment": "上班打卡"
+            },
+            {
+              "name": "check_out",
+              "type": "datetime",
+              "comment": "下班打卡"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "考勤状态"
+            }
+          ]
+        },
+        {
+          "tableName": "leave_request",
+          "tableComment": "请假申请",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_id",
+              "type": "bigint",
+              "comment": "员工"
+            },
+            {
+              "name": "leave_type",
+              "type": "tinyint",
+              "comment": "请假类型"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "reason",
+              "type": "varchar(255)",
+              "comment": "事由"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "审批状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "审批流程",
+      "tables": [
+        {
+          "tableName": "approval_flow",
+          "tableComment": "审批流程定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_name",
+              "type": "varchar(64)",
+              "comment": "流程名称"
+            },
+            {
+              "name": "flow_code",
+              "type": "varchar(64)",
+              "comment": "流程编码"
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "approval_task",
+          "tableComment": "审批任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_id",
+              "type": "bigint",
+              "comment": "流程"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "task_name",
+              "type": "varchar(64)",
+              "comment": "任务名称"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "审批人"
+            },
+            {
+              "name": "task_status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "approve_time",
+              "type": "datetime",
+              "comment": "审批时间"
+            },
+            {
+              "name": "comment",
+              "type": "varchar(512)",
+              "comment": "审批意见"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

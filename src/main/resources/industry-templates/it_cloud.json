@@ -1,0 +1,378 @@
+{
+  "key": "it_cloud",
+  "name": "云资源管理",
+  "category": "科研IT",
+  "desc": "云资源管理场景：医疗器械、运维监控、预算管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "医疗器械",
+      "tables": [
+        {
+          "tableName": "medical_device",
+          "tableComment": "医疗器械",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "device_name",
+              "type": "varchar(128)",
+              "comment": "器械名称"
+            },
+            {
+              "name": "reg_no",
+              "type": "varchar(64)",
+              "comment": "注册证号"
+            },
+            {
+              "name": "device_class",
+              "type": "tinyint",
+              "comment": "管理类别"
+            },
+            {
+              "name": "manufacturer",
+              "type": "varchar(128)",
+              "comment": "生产企业"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "device_reg",
+          "tableComment": "器械备案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "device_id",
+              "type": "bigint",
+              "comment": "器械"
+            },
+            {
+              "name": "reg_no",
+              "type": "varchar(64)",
+              "comment": "备案号"
+            },
+            {
+              "name": "reg_date",
+              "type": "date",
+              "comment": "备案日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "运维监控",
+      "tables": [
+        {
+          "tableName": "monitor_target",
+          "tableComment": "监控对象",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "target_name",
+              "type": "varchar(128)",
+              "comment": "对象名称"
+            },
+            {
+              "name": "target_type",
+              "type": "tinyint",
+              "comment": "对象类型"
+            },
+            {
+              "name": "endpoint",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "monitor_alert",
+          "tableComment": "告警记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "target_id",
+              "type": "bigint",
+              "comment": "监控对象"
+            },
+            {
+              "name": "alert_level",
+              "type": "tinyint",
+              "comment": "告警级别"
+            },
+            {
+              "name": "alert_content",
+              "type": "varchar(512)",
+              "comment": "告警内容"
+            },
+            {
+              "name": "alert_time",
+              "type": "datetime",
+              "comment": "告警时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "预算管理",
+      "tables": [
+        {
+          "tableName": "budget",
+          "tableComment": "预算",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "budget_name",
+              "type": "varchar(128)",
+              "comment": "预算名称"
+            },
+            {
+              "name": "budget_year",
+              "type": "varchar(64)",
+              "comment": "预算年度"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "部门"
+            },
+            {
+              "name": "total_amount",
+              "type": "decimal(12,2)",
+              "comment": "预算金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "budget_item",
+          "tableComment": "预算明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "budget_id",
+              "type": "bigint",
+              "comment": "预算"
+            },
+            {
+              "name": "item_name",
+              "type": "varchar(64)",
+              "comment": "项目"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "used_amount",
+              "type": "decimal(12,2)",
+              "comment": "已使用"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "固定资产",
+      "tables": [
+        {
+          "tableName": "asset_category",
+          "tableComment": "资产分类",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级分类"
+            },
+            {
+              "name": "category_name",
+              "type": "varchar(64)",
+              "comment": "分类名称"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        },
+        {
+          "tableName": "asset",
+          "tableComment": "固定资产",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "asset_no",
+              "type": "varchar(64)",
+              "comment": "资产编号"
+            },
+            {
+              "name": "asset_name",
+              "type": "varchar(128)",
+              "comment": "资产名称"
+            },
+            {
+              "name": "category_id",
+              "type": "bigint",
+              "comment": "资产分类"
+            },
+            {
+              "name": "purchase_date",
+              "type": "date",
+              "comment": "购置日期"
+            },
+            {
+              "name": "original_value",
+              "type": "decimal(12,2)",
+              "comment": "原值"
+            },
+            {
+              "name": "department_id",
+              "type": "bigint",
+              "comment": "使用部门"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

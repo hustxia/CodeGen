@@ -1,0 +1,435 @@
+{
+  "key": "re_property",
+  "name": "物业管理",
+  "category": "房产建筑",
+  "desc": "物业管理场景：工单管理、财务管理、维修服务、门禁访客等核心业务域",
+  "modules": [
+    {
+      "name": "工单管理",
+      "tables": [
+        {
+          "tableName": "work_order",
+          "tableComment": "工单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "工单号"
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "工单标题"
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "处理人"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "description",
+              "type": "text",
+              "comment": "问题描述"
+            }
+          ]
+        },
+        {
+          "tableName": "work_order_log",
+          "tableComment": "工单日志",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "work_order_id",
+              "type": "bigint",
+              "comment": "工单"
+            },
+            {
+              "name": "operator_id",
+              "type": "bigint",
+              "comment": "操作人"
+            },
+            {
+              "name": "action",
+              "type": "varchar(64)",
+              "comment": "操作"
+            },
+            {
+              "name": "content",
+              "type": "varchar(512)",
+              "comment": "内容"
+            },
+            {
+              "name": "log_time",
+              "type": "datetime",
+              "comment": "操作时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "财务管理",
+      "tables": [
+        {
+          "tableName": "finance_account",
+          "tableComment": "财务科目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级科目"
+            },
+            {
+              "name": "account_code",
+              "type": "varchar(64)",
+              "comment": "科目编码"
+            },
+            {
+              "name": "account_name",
+              "type": "varchar(64)",
+              "comment": "科目名称"
+            },
+            {
+              "name": "account_type",
+              "type": "tinyint",
+              "comment": "科目类型"
+            },
+            {
+              "name": "balance",
+              "type": "decimal(12,2)",
+              "comment": "余额"
+            }
+          ]
+        },
+        {
+          "tableName": "finance_voucher",
+          "tableComment": "记账凭证",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "voucher_no",
+              "type": "varchar(64)",
+              "comment": "凭证号"
+            },
+            {
+              "name": "voucher_date",
+              "type": "date",
+              "comment": "凭证日期"
+            },
+            {
+              "name": "summary",
+              "type": "varchar(255)",
+              "comment": "摘要"
+            },
+            {
+              "name": "total_amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "finance_voucher_item",
+          "tableComment": "凭证明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "voucher_id",
+              "type": "bigint",
+              "comment": "凭证"
+            },
+            {
+              "name": "account_id",
+              "type": "bigint",
+              "comment": "科目"
+            },
+            {
+              "name": "debit_amount",
+              "type": "decimal(12,2)",
+              "comment": "借方金额"
+            },
+            {
+              "name": "credit_amount",
+              "type": "decimal(12,2)",
+              "comment": "贷方金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "维修服务",
+      "tables": [
+        {
+          "tableName": "repairman",
+          "tableComment": "维修师傅",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "电话"
+            },
+            {
+              "name": "skill",
+              "type": "varchar(128)",
+              "comment": "擅长"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "repair_order",
+          "tableComment": "维修工单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "工单号"
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "repairman_id",
+              "type": "bigint",
+              "comment": "维修师傅"
+            },
+            {
+              "name": "fault_desc",
+              "type": "text",
+              "comment": "故障描述"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "费用"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "门禁访客",
+      "tables": [
+        {
+          "tableName": "visitor",
+          "tableComment": "访客登记",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "visitor_name",
+              "type": "varchar(64)",
+              "comment": "访客姓名"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "visit_company",
+              "type": "varchar(128)",
+              "comment": "来访单位"
+            },
+            {
+              "name": "interviewee_id",
+              "type": "bigint",
+              "comment": "被访人"
+            },
+            {
+              "name": "visit_time",
+              "type": "datetime",
+              "comment": "来访时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "access_record",
+          "tableComment": "通行记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "person_id",
+              "type": "bigint",
+              "comment": "人员"
+            },
+            {
+              "name": "gate",
+              "type": "varchar(64)",
+              "comment": "门禁点"
+            },
+            {
+              "name": "access_time",
+              "type": "datetime",
+              "comment": "通行时间"
+            },
+            {
+              "name": "access_type",
+              "type": "tinyint",
+              "comment": "通行类型"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "key": "hr_recruit",
+  "name": "招聘管理",
+  "category": "人力资源",
+  "desc": "招聘管理场景：招聘管理、员工管理、绩效考核等核心业务域",
+  "modules": [
+    {
+      "name": "招聘管理",
+      "tables": [
+        {
+          "tableName": "recruit_plan",
+          "tableComment": "招聘计划",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "position_name",
+              "type": "varchar(64)",
+              "comment": "招聘岗位"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "用人部门"
+            },
+            {
+              "name": "headcount",
+              "type": "int",
+              "comment": "招聘人数"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "candidate",
+          "tableComment": "候选人",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "手机"
+            },
+            {
+              "name": "email",
+              "type": "varchar(128)",
+              "comment": "邮箱"
+            },
+            {
+              "name": "position",
+              "type": "varchar(64)",
+              "comment": "应聘岗位"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "resume",
+              "type": "text",
+              "comment": "简历"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "员工管理",
+      "tables": [
+        {
+          "tableName": "employee",
+          "tableComment": "员工档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_no",
+              "type": "varchar(64)",
+              "comment": "工号"
+            },
+            {
+              "name": "employee_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "department_id",
+              "type": "bigint",
+              "comment": "部门"
+            },
+            {
+              "name": "position_id",
+              "type": "bigint",
+              "comment": "岗位"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "手机"
+            },
+            {
+              "name": "email",
+              "type": "varchar(128)",
+              "comment": "邮箱"
+            },
+            {
+              "name": "entry_date",
+              "type": "date",
+              "comment": "入职日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "employee_contract",
+          "tableComment": "员工合同",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_id",
+              "type": "bigint",
+              "comment": "员工"
+            },
+            {
+              "name": "contract_no",
+              "type": "varchar(64)",
+              "comment": "合同编号"
+            },
+            {
+              "name": "start_date",
+              "type": "date",
+              "comment": "起始日期"
+            },
+            {
+              "name": "end_date",
+              "type": "date",
+              "comment": "终止日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "绩效考核",
+      "tables": [
+        {
+          "tableName": "performance",
+          "tableComment": "绩效考核",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_id",
+              "type": "bigint",
+              "comment": "员工"
+            },
+            {
+              "name": "period",
+              "type": "varchar(64)",
+              "comment": "考核周期"
+            },
+            {
+              "name": "score",
+              "type": "decimal(12,2)",
+              "comment": "得分"
+            },
+            {
+              "name": "grade",
+              "type": "varchar(64)",
+              "comment": "等级"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "performance_item",
+          "tableComment": "考核指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "performance_id",
+              "type": "bigint",
+              "comment": "考核记录"
+            },
+            {
+              "name": "item_name",
+              "type": "varchar(128)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "weight",
+              "type": "decimal(12,2)",
+              "comment": "权重"
+            },
+            {
+              "name": "score",
+              "type": "decimal(12,2)",
+              "comment": "得分"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

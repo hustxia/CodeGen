@@ -1,0 +1,230 @@
+{
+  "key": "con_quality",
+  "name": "工程质量",
+  "category": "房产建筑",
+  "desc": "工程质量场景：质量管理、检验检测、工程项目等核心业务域",
+  "modules": [
+    {
+      "name": "质量管理",
+      "tables": [
+        {
+          "tableName": "quality_check",
+          "tableComment": "质量检验",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_no",
+              "type": "varchar(64)",
+              "comment": "检验单号"
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "check_result",
+              "type": "tinyint",
+              "comment": "检验结果"
+            },
+            {
+              "name": "checker_id",
+              "type": "bigint",
+              "comment": "检验员"
+            },
+            {
+              "name": "check_time",
+              "type": "datetime",
+              "comment": "检验时间"
+            }
+          ]
+        },
+        {
+          "tableName": "quality_issue",
+          "tableComment": "质量问题",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_id",
+              "type": "bigint",
+              "comment": "检验单"
+            },
+            {
+              "name": "issue_desc",
+              "type": "varchar(255)",
+              "comment": "问题描述"
+            },
+            {
+              "name": "severity",
+              "type": "tinyint",
+              "comment": "严重程度"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "检验检测",
+      "tables": [
+        {
+          "tableName": "inspection",
+          "tableComment": "检测委托",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delegate_no",
+              "type": "varchar(64)",
+              "comment": "委托号"
+            },
+            {
+              "name": "client_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "sample_name",
+              "type": "varchar(128)",
+              "comment": "样品名称"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "inspection_item",
+          "tableComment": "检测项目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "inspection_id",
+              "type": "bigint",
+              "comment": "检测委托"
+            },
+            {
+              "name": "item_name",
+              "type": "varchar(128)",
+              "comment": "项目"
+            },
+            {
+              "name": "result",
+              "type": "varchar(255)",
+              "comment": "结果"
+            },
+            {
+              "name": "standard",
+              "type": "varchar(128)",
+              "comment": "标准"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "工程项目",
+      "tables": [
+        {
+          "tableName": "engineering_project",
+          "tableComment": "工程项目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "project_name",
+              "type": "varchar(128)",
+              "comment": "项目名称"
+            },
+            {
+              "name": "project_code",
+              "type": "varchar(64)",
+              "comment": "项目编码"
+            },
+            {
+              "name": "manager_id",
+              "type": "bigint",
+              "comment": "项目负责人"
+            },
+            {
+              "name": "budget",
+              "type": "decimal(12,2)",
+              "comment": "预算"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "engineering_task",
+          "tableComment": "工程任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "project_id",
+              "type": "bigint",
+              "comment": "项目"
+            },
+            {
+              "name": "task_name",
+              "type": "varchar(128)",
+              "comment": "任务名称"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "due_date",
+              "type": "date",
+              "comment": "截止日期"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

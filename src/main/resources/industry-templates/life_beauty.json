@@ -1,0 +1,297 @@
+{
+  "key": "life_beauty",
+  "name": "美容美发",
+  "category": "生活服务",
+  "desc": "美容美发场景：美容服务、预约到店、会员管理、支付管理等核心业务域",
+  "modules": [
+    {
+      "name": "美容服务",
+      "tables": [
+        {
+          "tableName": "beauty_service",
+          "tableComment": "美容项目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "service_name",
+              "type": "varchar(64)",
+              "comment": "项目名称"
+            },
+            {
+              "name": "service_type",
+              "type": "tinyint",
+              "comment": "项目类型"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "价格"
+            },
+            {
+              "name": "duration",
+              "type": "int",
+              "comment": "时长(分钟)"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "beautician",
+          "tableComment": "技师档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "电话"
+            },
+            {
+              "name": "skill",
+              "type": "varchar(128)",
+              "comment": "擅长项目"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "预约到店",
+      "tables": [
+        {
+          "tableName": "shop_appointment",
+          "tableComment": "到店预约",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "appointment_no",
+              "type": "varchar(64)",
+              "comment": "预约号"
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "service_id",
+              "type": "bigint",
+              "comment": "服务项目"
+            },
+            {
+              "name": "staff_id",
+              "type": "bigint",
+              "comment": "服务人员"
+            },
+            {
+              "name": "appointment_time",
+              "type": "datetime",
+              "comment": "预约时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "会员管理",
+      "tables": [
+        {
+          "tableName": "member",
+          "tableComment": "会员档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "member_no",
+              "type": "varchar(64)",
+              "comment": "会员编号"
+            },
+            {
+              "name": "member_name",
+              "type": "varchar(64)",
+              "comment": "会员姓名"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "手机号"
+            },
+            {
+              "name": "level_id",
+              "type": "bigint",
+              "comment": "会员等级"
+            },
+            {
+              "name": "points",
+              "type": "int",
+              "comment": "积分"
+            },
+            {
+              "name": "balance",
+              "type": "decimal(12,2)",
+              "comment": "余额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "member_level",
+          "tableComment": "会员等级",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "level_name",
+              "type": "varchar(64)",
+              "comment": "等级名称"
+            },
+            {
+              "name": "min_points",
+              "type": "int",
+              "comment": "所需积分"
+            },
+            {
+              "name": "discount",
+              "type": "decimal(12,2)",
+              "comment": "折扣"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "支付管理",
+      "tables": [
+        {
+          "tableName": "payment",
+          "tableComment": "支付记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "pay_no",
+              "type": "varchar(64)",
+              "comment": "支付单号"
+            },
+            {
+              "name": "biz_no",
+              "type": "varchar(64)",
+              "comment": "业务单号"
+            },
+            {
+              "name": "pay_type",
+              "type": "tinyint",
+              "comment": "支付方式"
+            },
+            {
+              "name": "pay_amount",
+              "type": "decimal(12,2)",
+              "comment": "支付金额"
+            },
+            {
+              "name": "pay_status",
+              "type": "tinyint",
+              "comment": "支付状态"
+            },
+            {
+              "name": "pay_time",
+              "type": "datetime",
+              "comment": "支付时间"
+            }
+          ]
+        },
+        {
+          "tableName": "payment_refund",
+          "tableComment": "退款记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "payment_id",
+              "type": "bigint",
+              "comment": "支付记录"
+            },
+            {
+              "name": "refund_no",
+              "type": "varchar(64)",
+              "comment": "退款单号"
+            },
+            {
+              "name": "refund_amount",
+              "type": "decimal(12,2)",
+              "comment": "退款金额"
+            },
+            {
+              "name": "refund_status",
+              "type": "tinyint",
+              "comment": "退款状态"
+            },
+            {
+              "name": "refund_time",
+              "type": "datetime",
+              "comment": "退款时间"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

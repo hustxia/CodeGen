@@ -1,0 +1,245 @@
+{
+  "key": "gov_notary",
+  "name": "公证服务",
+  "category": "政务民生",
+  "desc": "公证服务场景：公证服务、审批流程、文件附件、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "公证服务",
+      "tables": [
+        {
+          "tableName": "notarization",
+          "tableComment": "公证事项",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "case_no",
+              "type": "varchar(64)",
+              "comment": "公证编号"
+            },
+            {
+              "name": "applicant_id",
+              "type": "bigint",
+              "comment": "申请人"
+            },
+            {
+              "name": "notary_type",
+              "type": "varchar(64)",
+              "comment": "公证类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "审批流程",
+      "tables": [
+        {
+          "tableName": "approval_flow",
+          "tableComment": "审批流程定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_name",
+              "type": "varchar(64)",
+              "comment": "流程名称"
+            },
+            {
+              "name": "flow_code",
+              "type": "varchar(64)",
+              "comment": "流程编码"
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "approval_task",
+          "tableComment": "审批任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_id",
+              "type": "bigint",
+              "comment": "流程"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "task_name",
+              "type": "varchar(64)",
+              "comment": "任务名称"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "审批人"
+            },
+            {
+              "name": "task_status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "approve_time",
+              "type": "datetime",
+              "comment": "审批时间"
+            },
+            {
+              "name": "comment",
+              "type": "varchar(512)",
+              "comment": "审批意见"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "文件附件",
+      "tables": [
+        {
+          "tableName": "file_info",
+          "tableComment": "文件资源",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "file_name",
+              "type": "varchar(128)",
+              "comment": "文件名"
+            },
+            {
+              "name": "file_path",
+              "type": "varchar(512)",
+              "comment": "存储路径"
+            },
+            {
+              "name": "file_size",
+              "type": "bigint",
+              "comment": "文件大小"
+            },
+            {
+              "name": "file_type",
+              "type": "varchar(64)",
+              "comment": "文件类型"
+            },
+            {
+              "name": "uploader_id",
+              "type": "bigint",
+              "comment": "上传人"
+            },
+            {
+              "name": "upload_time",
+              "type": "datetime",
+              "comment": "上传时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

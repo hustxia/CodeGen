@@ -1,0 +1,435 @@
+{
+  "key": "agr_cooperative",
+  "name": "合作社",
+  "category": "农业环保",
+  "desc": "合作社场景：地块管理、客户管理、农资管理、财务管理等核心业务域",
+  "modules": [
+    {
+      "name": "地块管理",
+      "tables": [
+        {
+          "tableName": "land_parcel",
+          "tableComment": "地块档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parcel_no",
+              "type": "varchar(64)",
+              "comment": "地块编号"
+            },
+            {
+              "name": "parcel_name",
+              "type": "varchar(64)",
+              "comment": "地块名称"
+            },
+            {
+              "name": "area",
+              "type": "decimal(12,2)",
+              "comment": "面积(亩)"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "承包人"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "crop_plan",
+          "tableComment": "种植计划",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parcel_id",
+              "type": "bigint",
+              "comment": "地块"
+            },
+            {
+              "name": "crop_name",
+              "type": "varchar(64)",
+              "comment": "作物名称"
+            },
+            {
+              "name": "plant_date",
+              "type": "date",
+              "comment": "种植日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "客户管理",
+      "tables": [
+        {
+          "tableName": "customer",
+          "tableComment": "客户档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "customer_name",
+              "type": "varchar(128)",
+              "comment": "客户名称"
+            },
+            {
+              "name": "customer_code",
+              "type": "varchar(64)",
+              "comment": "客户编码"
+            },
+            {
+              "name": "customer_type",
+              "type": "tinyint",
+              "comment": "客户类型"
+            },
+            {
+              "name": "level_id",
+              "type": "bigint",
+              "comment": "客户等级"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "email",
+              "type": "varchar(128)",
+              "comment": "邮箱"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "customer_contact",
+          "tableComment": "客户联系人",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "电话"
+            },
+            {
+              "name": "position",
+              "type": "varchar(64)",
+              "comment": "职务"
+            },
+            {
+              "name": "is_primary",
+              "type": "tinyint",
+              "comment": "是否主联系人"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "农资管理",
+      "tables": [
+        {
+          "tableName": "agricultural_material",
+          "tableComment": "农资档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "material_name",
+              "type": "varchar(128)",
+              "comment": "农资名称"
+            },
+            {
+              "name": "material_type",
+              "type": "tinyint",
+              "comment": "农资类型"
+            },
+            {
+              "name": "spec",
+              "type": "varchar(64)",
+              "comment": "规格"
+            },
+            {
+              "name": "stock_num",
+              "type": "int",
+              "comment": "库存"
+            }
+          ]
+        },
+        {
+          "tableName": "material_stock",
+          "tableComment": "农资出入库",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "material_id",
+              "type": "bigint",
+              "comment": "农资"
+            },
+            {
+              "name": "flow_type",
+              "type": "tinyint",
+              "comment": "出入库类型"
+            },
+            {
+              "name": "quantity",
+              "type": "decimal(12,2)",
+              "comment": "数量"
+            },
+            {
+              "name": "flow_time",
+              "type": "datetime",
+              "comment": "时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "财务管理",
+      "tables": [
+        {
+          "tableName": "finance_account",
+          "tableComment": "财务科目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级科目"
+            },
+            {
+              "name": "account_code",
+              "type": "varchar(64)",
+              "comment": "科目编码"
+            },
+            {
+              "name": "account_name",
+              "type": "varchar(64)",
+              "comment": "科目名称"
+            },
+            {
+              "name": "account_type",
+              "type": "tinyint",
+              "comment": "科目类型"
+            },
+            {
+              "name": "balance",
+              "type": "decimal(12,2)",
+              "comment": "余额"
+            }
+          ]
+        },
+        {
+          "tableName": "finance_voucher",
+          "tableComment": "记账凭证",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "voucher_no",
+              "type": "varchar(64)",
+              "comment": "凭证号"
+            },
+            {
+              "name": "voucher_date",
+              "type": "date",
+              "comment": "凭证日期"
+            },
+            {
+              "name": "summary",
+              "type": "varchar(255)",
+              "comment": "摘要"
+            },
+            {
+              "name": "total_amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "finance_voucher_item",
+          "tableComment": "凭证明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "voucher_id",
+              "type": "bigint",
+              "comment": "凭证"
+            },
+            {
+              "name": "account_id",
+              "type": "bigint",
+              "comment": "科目"
+            },
+            {
+              "name": "debit_amount",
+              "type": "decimal(12,2)",
+              "comment": "借方金额"
+            },
+            {
+              "name": "credit_amount",
+              "type": "decimal(12,2)",
+              "comment": "贷方金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

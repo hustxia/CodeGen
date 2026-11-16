@@ -1,0 +1,277 @@
+{
+  "key": "it_security",
+  "name": "信息安全",
+  "category": "科研IT",
+  "desc": "信息安全场景：日志审计、门禁访客、运维监控、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "日志审计",
+      "tables": [
+        {
+          "tableName": "audit_log",
+          "tableComment": "操作审计日志",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "module",
+              "type": "varchar(64)",
+              "comment": "模块"
+            },
+            {
+              "name": "operation",
+              "type": "varchar(64)",
+              "comment": "操作"
+            },
+            {
+              "name": "operator_id",
+              "type": "bigint",
+              "comment": "操作人"
+            },
+            {
+              "name": "biz_id",
+              "type": "varchar(64)",
+              "comment": "业务ID"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "operate_time",
+              "type": "datetime",
+              "comment": "操作时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "门禁访客",
+      "tables": [
+        {
+          "tableName": "visitor",
+          "tableComment": "访客登记",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "visitor_name",
+              "type": "varchar(64)",
+              "comment": "访客姓名"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "visit_company",
+              "type": "varchar(128)",
+              "comment": "来访单位"
+            },
+            {
+              "name": "interviewee_id",
+              "type": "bigint",
+              "comment": "被访人"
+            },
+            {
+              "name": "visit_time",
+              "type": "datetime",
+              "comment": "来访时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "access_record",
+          "tableComment": "通行记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "person_id",
+              "type": "bigint",
+              "comment": "人员"
+            },
+            {
+              "name": "gate",
+              "type": "varchar(64)",
+              "comment": "门禁点"
+            },
+            {
+              "name": "access_time",
+              "type": "datetime",
+              "comment": "通行时间"
+            },
+            {
+              "name": "access_type",
+              "type": "tinyint",
+              "comment": "通行类型"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "运维监控",
+      "tables": [
+        {
+          "tableName": "monitor_target",
+          "tableComment": "监控对象",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "target_name",
+              "type": "varchar(128)",
+              "comment": "对象名称"
+            },
+            {
+              "name": "target_type",
+              "type": "tinyint",
+              "comment": "对象类型"
+            },
+            {
+              "name": "endpoint",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "monitor_alert",
+          "tableComment": "告警记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "target_id",
+              "type": "bigint",
+              "comment": "监控对象"
+            },
+            {
+              "name": "alert_level",
+              "type": "tinyint",
+              "comment": "告警级别"
+            },
+            {
+              "name": "alert_content",
+              "type": "varchar(512)",
+              "comment": "告警内容"
+            },
+            {
+              "name": "alert_time",
+              "type": "datetime",
+              "comment": "告警时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

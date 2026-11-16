@@ -1,0 +1,319 @@
+{
+  "key": "v_certification",
+  "name": "认证咨询",
+  "category": "垂直行业",
+  "desc": "认证咨询场景：认证管理、客户管理、检验检测、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "认证管理",
+      "tables": [
+        {
+          "tableName": "certification",
+          "tableComment": "认证项目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "cert_name",
+              "type": "varchar(128)",
+              "comment": "认证名称"
+            },
+            {
+              "name": "cert_type",
+              "type": "varchar(64)",
+              "comment": "认证类型"
+            },
+            {
+              "name": "company_id",
+              "type": "bigint",
+              "comment": "企业"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "cert_audit",
+          "tableComment": "认证审核",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "cert_id",
+              "type": "bigint",
+              "comment": "认证项目"
+            },
+            {
+              "name": "audit_date",
+              "type": "date",
+              "comment": "审核日期"
+            },
+            {
+              "name": "result",
+              "type": "tinyint",
+              "comment": "审核结果"
+            },
+            {
+              "name": "auditor_id",
+              "type": "bigint",
+              "comment": "审核员"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "客户管理",
+      "tables": [
+        {
+          "tableName": "customer",
+          "tableComment": "客户档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "customer_name",
+              "type": "varchar(128)",
+              "comment": "客户名称"
+            },
+            {
+              "name": "customer_code",
+              "type": "varchar(64)",
+              "comment": "客户编码"
+            },
+            {
+              "name": "customer_type",
+              "type": "tinyint",
+              "comment": "客户类型"
+            },
+            {
+              "name": "level_id",
+              "type": "bigint",
+              "comment": "客户等级"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "email",
+              "type": "varchar(128)",
+              "comment": "邮箱"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "customer_contact",
+          "tableComment": "客户联系人",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "电话"
+            },
+            {
+              "name": "position",
+              "type": "varchar(64)",
+              "comment": "职务"
+            },
+            {
+              "name": "is_primary",
+              "type": "tinyint",
+              "comment": "是否主联系人"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "检验检测",
+      "tables": [
+        {
+          "tableName": "inspection",
+          "tableComment": "检测委托",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delegate_no",
+              "type": "varchar(64)",
+              "comment": "委托号"
+            },
+            {
+              "name": "client_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "sample_name",
+              "type": "varchar(128)",
+              "comment": "样品名称"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "inspection_item",
+          "tableComment": "检测项目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "inspection_id",
+              "type": "bigint",
+              "comment": "检测委托"
+            },
+            {
+              "name": "item_name",
+              "type": "varchar(128)",
+              "comment": "项目"
+            },
+            {
+              "name": "result",
+              "type": "varchar(255)",
+              "comment": "结果"
+            },
+            {
+              "name": "standard",
+              "type": "varchar(128)",
+              "comment": "标准"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

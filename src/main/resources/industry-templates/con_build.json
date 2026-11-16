@@ -1,0 +1,225 @@
+{
+  "key": "con_build",
+  "name": "施工管理",
+  "category": "房产建筑",
+  "desc": "施工管理场景：施工管理、工程项目、安全管理等核心业务域",
+  "modules": [
+    {
+      "name": "施工管理",
+      "tables": [
+        {
+          "tableName": "construction_site",
+          "tableComment": "施工现场",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "site_name",
+              "type": "varchar(128)",
+              "comment": "工地名称"
+            },
+            {
+              "name": "project_id",
+              "type": "bigint",
+              "comment": "所属项目"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "construction_log",
+          "tableComment": "施工日志",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "site_id",
+              "type": "bigint",
+              "comment": "工地"
+            },
+            {
+              "name": "log_date",
+              "type": "date",
+              "comment": "日志日期"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "施工内容"
+            },
+            {
+              "name": "recorder_id",
+              "type": "bigint",
+              "comment": "记录人"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "工程项目",
+      "tables": [
+        {
+          "tableName": "engineering_project",
+          "tableComment": "工程项目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "project_name",
+              "type": "varchar(128)",
+              "comment": "项目名称"
+            },
+            {
+              "name": "project_code",
+              "type": "varchar(64)",
+              "comment": "项目编码"
+            },
+            {
+              "name": "manager_id",
+              "type": "bigint",
+              "comment": "项目负责人"
+            },
+            {
+              "name": "budget",
+              "type": "decimal(12,2)",
+              "comment": "预算"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "engineering_task",
+          "tableComment": "工程任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "project_id",
+              "type": "bigint",
+              "comment": "项目"
+            },
+            {
+              "name": "task_name",
+              "type": "varchar(128)",
+              "comment": "任务名称"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "due_date",
+              "type": "date",
+              "comment": "截止日期"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "安全管理",
+      "tables": [
+        {
+          "tableName": "safety_check",
+          "tableComment": "安全检查",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_no",
+              "type": "varchar(64)",
+              "comment": "检查单号"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "检查位置"
+            },
+            {
+              "name": "checker_id",
+              "type": "bigint",
+              "comment": "检查人"
+            },
+            {
+              "name": "result",
+              "type": "tinyint",
+              "comment": "结果"
+            },
+            {
+              "name": "check_date",
+              "type": "date",
+              "comment": "检查日期"
+            }
+          ]
+        },
+        {
+          "tableName": "safety_issue",
+          "tableComment": "安全隐患",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_id",
+              "type": "bigint",
+              "comment": "检查单"
+            },
+            {
+              "name": "issue_desc",
+              "type": "varchar(255)",
+              "comment": "隐患描述"
+            },
+            {
+              "name": "severity",
+              "type": "tinyint",
+              "comment": "严重程度"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "整改状态"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "key": "agr_agri",
+  "name": "农资管理",
+  "category": "农业环保",
+  "desc": "农资管理场景：农资管理、供应商管理等核心业务域",
+  "modules": [
+    {
+      "name": "农资管理",
+      "tables": [
+        {
+          "tableName": "agricultural_material",
+          "tableComment": "农资档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "material_name",
+              "type": "varchar(128)",
+              "comment": "农资名称"
+            },
+            {
+              "name": "material_type",
+              "type": "tinyint",
+              "comment": "农资类型"
+            },
+            {
+              "name": "spec",
+              "type": "varchar(64)",
+              "comment": "规格"
+            },
+            {
+              "name": "stock_num",
+              "type": "int",
+              "comment": "库存"
+            }
+          ]
+        },
+        {
+          "tableName": "material_stock",
+          "tableComment": "农资出入库",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "material_id",
+              "type": "bigint",
+              "comment": "农资"
+            },
+            {
+              "name": "flow_type",
+              "type": "tinyint",
+              "comment": "出入库类型"
+            },
+            {
+              "name": "quantity",
+              "type": "decimal(12,2)",
+              "comment": "数量"
+            },
+            {
+              "name": "flow_time",
+              "type": "datetime",
+              "comment": "时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "供应商管理",
+      "tables": [
+        {
+          "tableName": "supplier",
+          "tableComment": "供应商档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "supplier_name",
+              "type": "varchar(128)",
+              "comment": "供应商名称"
+            },
+            {
+              "name": "supplier_code",
+              "type": "varchar(64)",
+              "comment": "供应商编码"
+            },
+            {
+              "name": "supplier_type",
+              "type": "tinyint",
+              "comment": "供应商类型"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "bank_account",
+              "type": "varchar(128)",
+              "comment": "银行账号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

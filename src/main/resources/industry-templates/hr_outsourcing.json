@@ -1,0 +1,369 @@
+{
+  "key": "hr_outsourcing",
+  "name": "劳务外包",
+  "category": "人力资源",
+  "desc": "劳务外包场景：员工管理、供应商管理、合同管理、薪资管理等核心业务域",
+  "modules": [
+    {
+      "name": "员工管理",
+      "tables": [
+        {
+          "tableName": "employee",
+          "tableComment": "员工档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_no",
+              "type": "varchar(64)",
+              "comment": "工号"
+            },
+            {
+              "name": "employee_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "department_id",
+              "type": "bigint",
+              "comment": "部门"
+            },
+            {
+              "name": "position_id",
+              "type": "bigint",
+              "comment": "岗位"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "手机"
+            },
+            {
+              "name": "email",
+              "type": "varchar(128)",
+              "comment": "邮箱"
+            },
+            {
+              "name": "entry_date",
+              "type": "date",
+              "comment": "入职日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "employee_contract",
+          "tableComment": "员工合同",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_id",
+              "type": "bigint",
+              "comment": "员工"
+            },
+            {
+              "name": "contract_no",
+              "type": "varchar(64)",
+              "comment": "合同编号"
+            },
+            {
+              "name": "start_date",
+              "type": "date",
+              "comment": "起始日期"
+            },
+            {
+              "name": "end_date",
+              "type": "date",
+              "comment": "终止日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "供应商管理",
+      "tables": [
+        {
+          "tableName": "supplier",
+          "tableComment": "供应商档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "supplier_name",
+              "type": "varchar(128)",
+              "comment": "供应商名称"
+            },
+            {
+              "name": "supplier_code",
+              "type": "varchar(64)",
+              "comment": "供应商编码"
+            },
+            {
+              "name": "supplier_type",
+              "type": "tinyint",
+              "comment": "供应商类型"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "bank_account",
+              "type": "varchar(128)",
+              "comment": "银行账号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "合同管理",
+      "tables": [
+        {
+          "tableName": "contract",
+          "tableComment": "合同档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "contract_no",
+              "type": "varchar(64)",
+              "comment": "合同编号"
+            },
+            {
+              "name": "contract_name",
+              "type": "varchar(128)",
+              "comment": "合同名称"
+            },
+            {
+              "name": "partner_id",
+              "type": "bigint",
+              "comment": "相对方"
+            },
+            {
+              "name": "contract_amount",
+              "type": "decimal(12,2)",
+              "comment": "合同金额"
+            },
+            {
+              "name": "sign_date",
+              "type": "date",
+              "comment": "签订日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "到期日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "合同内容"
+            }
+          ]
+        },
+        {
+          "tableName": "contract_item",
+          "tableComment": "合同条款",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "contract_id",
+              "type": "bigint",
+              "comment": "合同"
+            },
+            {
+              "name": "item_title",
+              "type": "varchar(128)",
+              "comment": "条款标题"
+            },
+            {
+              "name": "item_content",
+              "type": "text",
+              "comment": "条款内容"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "薪资管理",
+      "tables": [
+        {
+          "tableName": "salary",
+          "tableComment": "薪资记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_id",
+              "type": "bigint",
+              "comment": "员工"
+            },
+            {
+              "name": "salary_month",
+              "type": "varchar(64)",
+              "comment": "薪资月份"
+            },
+            {
+              "name": "base_salary",
+              "type": "decimal(12,2)",
+              "comment": "基本工资"
+            },
+            {
+              "name": "bonus",
+              "type": "decimal(12,2)",
+              "comment": "奖金"
+            },
+            {
+              "name": "deduct",
+              "type": "decimal(12,2)",
+              "comment": "扣款"
+            },
+            {
+              "name": "actual_salary",
+              "type": "decimal(12,2)",
+              "comment": "实发工资"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

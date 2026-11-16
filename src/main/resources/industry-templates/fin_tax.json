@@ -1,0 +1,245 @@
+{
+  "key": "fin_tax",
+  "name": "税务管理",
+  "category": "金融财税",
+  "desc": "税务管理场景：税务管理、发票管理、财务管理等核心业务域",
+  "modules": [
+    {
+      "name": "税务管理",
+      "tables": [
+        {
+          "tableName": "tax_declaration",
+          "tableComment": "纳税申报",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "declaration_no",
+              "type": "varchar(64)",
+              "comment": "申报号"
+            },
+            {
+              "name": "tax_type",
+              "type": "varchar(64)",
+              "comment": "税种"
+            },
+            {
+              "name": "tax_period",
+              "type": "varchar(64)",
+              "comment": "税款所属期"
+            },
+            {
+              "name": "tax_amount",
+              "type": "decimal(12,2)",
+              "comment": "税额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "tax_item",
+          "tableComment": "申报明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "declaration_id",
+              "type": "bigint",
+              "comment": "申报"
+            },
+            {
+              "name": "item_name",
+              "type": "varchar(64)",
+              "comment": "项目"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "tax_rate",
+              "type": "decimal(12,2)",
+              "comment": "税率"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "发票管理",
+      "tables": [
+        {
+          "tableName": "invoice",
+          "tableComment": "发票档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "invoice_no",
+              "type": "varchar(64)",
+              "comment": "发票号码"
+            },
+            {
+              "name": "invoice_code",
+              "type": "varchar(64)",
+              "comment": "发票代码"
+            },
+            {
+              "name": "invoice_type",
+              "type": "tinyint",
+              "comment": "发票类型"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "tax_amount",
+              "type": "decimal(12,2)",
+              "comment": "税额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "invoice_time",
+              "type": "datetime",
+              "comment": "开票时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "财务管理",
+      "tables": [
+        {
+          "tableName": "finance_account",
+          "tableComment": "财务科目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级科目"
+            },
+            {
+              "name": "account_code",
+              "type": "varchar(64)",
+              "comment": "科目编码"
+            },
+            {
+              "name": "account_name",
+              "type": "varchar(64)",
+              "comment": "科目名称"
+            },
+            {
+              "name": "account_type",
+              "type": "tinyint",
+              "comment": "科目类型"
+            },
+            {
+              "name": "balance",
+              "type": "decimal(12,2)",
+              "comment": "余额"
+            }
+          ]
+        },
+        {
+          "tableName": "finance_voucher",
+          "tableComment": "记账凭证",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "voucher_no",
+              "type": "varchar(64)",
+              "comment": "凭证号"
+            },
+            {
+              "name": "voucher_date",
+              "type": "date",
+              "comment": "凭证日期"
+            },
+            {
+              "name": "summary",
+              "type": "varchar(255)",
+              "comment": "摘要"
+            },
+            {
+              "name": "total_amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "finance_voucher_item",
+          "tableComment": "凭证明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "voucher_id",
+              "type": "bigint",
+              "comment": "凭证"
+            },
+            {
+              "name": "account_id",
+              "type": "bigint",
+              "comment": "科目"
+            },
+            {
+              "name": "debit_amount",
+              "type": "decimal(12,2)",
+              "comment": "借方金额"
+            },
+            {
+              "name": "credit_amount",
+              "type": "decimal(12,2)",
+              "comment": "贷方金额"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

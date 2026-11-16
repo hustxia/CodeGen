@@ -1,0 +1,220 @@
+{
+  "key": "gov_fire",
+  "name": "消防管理",
+  "category": "政务民生",
+  "desc": "消防管理场景：消防管理、安全管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "消防管理",
+      "tables": [
+        {
+          "tableName": "fire_facility",
+          "tableComment": "消防设施",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "facility_no",
+              "type": "varchar(64)",
+              "comment": "设施编号"
+            },
+            {
+              "name": "facility_name",
+              "type": "varchar(64)",
+              "comment": "设施名称"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "fire_check",
+          "tableComment": "消防检查",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "facility_id",
+              "type": "bigint",
+              "comment": "设施"
+            },
+            {
+              "name": "check_date",
+              "type": "date",
+              "comment": "检查日期"
+            },
+            {
+              "name": "result",
+              "type": "tinyint",
+              "comment": "检查结果"
+            },
+            {
+              "name": "checker_id",
+              "type": "bigint",
+              "comment": "检查人"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "安全管理",
+      "tables": [
+        {
+          "tableName": "safety_check",
+          "tableComment": "安全检查",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_no",
+              "type": "varchar(64)",
+              "comment": "检查单号"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "检查位置"
+            },
+            {
+              "name": "checker_id",
+              "type": "bigint",
+              "comment": "检查人"
+            },
+            {
+              "name": "result",
+              "type": "tinyint",
+              "comment": "结果"
+            },
+            {
+              "name": "check_date",
+              "type": "date",
+              "comment": "检查日期"
+            }
+          ]
+        },
+        {
+          "tableName": "safety_issue",
+          "tableComment": "安全隐患",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_id",
+              "type": "bigint",
+              "comment": "检查单"
+            },
+            {
+              "name": "issue_desc",
+              "type": "varchar(255)",
+              "comment": "隐患描述"
+            },
+            {
+              "name": "severity",
+              "type": "tinyint",
+              "comment": "严重程度"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "整改状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

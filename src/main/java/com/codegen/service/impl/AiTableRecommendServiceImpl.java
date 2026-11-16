@@ -195,6 +195,21 @@ public class AiTableRecommendServiceImpl implements AiTableRecommendService {
     }
 
     @Override
+    public java.util.List<String> templateCategories() {
+        return templateRegistry.categories();
+    }
+
+    @Override
+    public com.codegen.vo.GenAiTemplateVO templateDetail(String key) {
+        com.codegen.vo.GenAiTemplateVO template = templateRegistry.get(key);
+        if (template == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(),
+                    "行业模板不存在：" + key);
+        }
+        return template;
+    }
+
+    @Override
     public GenAiBuildPlanVO planFromTemplate(com.codegen.dto.GenAiTemplatePlanDTO dto) {
         com.codegen.vo.GenAiTemplateVO template = templateRegistry.get(dto.getTemplateKey());
         if (template == null) {

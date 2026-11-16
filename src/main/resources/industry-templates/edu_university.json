@@ -1,0 +1,467 @@
+{
+  "key": "edu_university",
+  "name": "高校管理",
+  "category": "教育培训",
+  "desc": "高校管理场景：学生管理、课程管理、考试管理、科研课题等核心业务域",
+  "modules": [
+    {
+      "name": "学生管理",
+      "tables": [
+        {
+          "tableName": "student",
+          "tableComment": "学生档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "student_no",
+              "type": "varchar(64)",
+              "comment": "学号"
+            },
+            {
+              "name": "student_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "class_id",
+              "type": "bigint",
+              "comment": "班级"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "student_class",
+          "tableComment": "班级档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "class_name",
+              "type": "varchar(64)",
+              "comment": "班级名称"
+            },
+            {
+              "name": "grade",
+              "type": "varchar(64)",
+              "comment": "年级"
+            },
+            {
+              "name": "head_teacher_id",
+              "type": "bigint",
+              "comment": "班主任"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "课程管理",
+      "tables": [
+        {
+          "tableName": "course",
+          "tableComment": "课程档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "course_name",
+              "type": "varchar(128)",
+              "comment": "课程名称"
+            },
+            {
+              "name": "course_code",
+              "type": "varchar(64)",
+              "comment": "课程编码"
+            },
+            {
+              "name": "credit",
+              "type": "decimal(12,2)",
+              "comment": "学分"
+            },
+            {
+              "name": "teacher_id",
+              "type": "bigint",
+              "comment": "授课教师"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "course_schedule",
+          "tableComment": "课程表",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "course_id",
+              "type": "bigint",
+              "comment": "课程"
+            },
+            {
+              "name": "class_id",
+              "type": "bigint",
+              "comment": "班级"
+            },
+            {
+              "name": "weekday",
+              "type": "tinyint",
+              "comment": "星期"
+            },
+            {
+              "name": "period",
+              "type": "varchar(64)",
+              "comment": "节次"
+            },
+            {
+              "name": "classroom",
+              "type": "varchar(64)",
+              "comment": "教室"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "考试管理",
+      "tables": [
+        {
+          "tableName": "exam",
+          "tableComment": "考试",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "exam_name",
+              "type": "varchar(128)",
+              "comment": "考试名称"
+            },
+            {
+              "name": "course_id",
+              "type": "bigint",
+              "comment": "课程"
+            },
+            {
+              "name": "exam_time",
+              "type": "datetime",
+              "comment": "考试时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "exam_score",
+          "tableComment": "考试成绩",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "exam_id",
+              "type": "bigint",
+              "comment": "考试"
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学生"
+            },
+            {
+              "name": "score",
+              "type": "decimal(12,2)",
+              "comment": "分数"
+            },
+            {
+              "name": "grade",
+              "type": "varchar(64)",
+              "comment": "等级"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "科研课题",
+      "tables": [
+        {
+          "tableName": "research_project",
+          "tableComment": "科研课题",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "project_name",
+              "type": "varchar(128)",
+              "comment": "课题名称"
+            },
+            {
+              "name": "project_code",
+              "type": "varchar(64)",
+              "comment": "课题编号"
+            },
+            {
+              "name": "leader_id",
+              "type": "bigint",
+              "comment": "负责人"
+            },
+            {
+              "name": "fund_amount",
+              "type": "decimal(12,2)",
+              "comment": "经费"
+            },
+            {
+              "name": "start_date",
+              "type": "date",
+              "comment": "开始日期"
+            },
+            {
+              "name": "end_date",
+              "type": "date",
+              "comment": "结束日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "research_member",
+          "tableComment": "课题成员",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "project_id",
+              "type": "bigint",
+              "comment": "课题"
+            },
+            {
+              "name": "member_id",
+              "type": "bigint",
+              "comment": "成员"
+            },
+            {
+              "name": "role",
+              "type": "varchar(64)",
+              "comment": "角色"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "论文成果",
+      "tables": [
+        {
+          "tableName": "paper",
+          "tableComment": "论文",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "paper_title",
+              "type": "varchar(255)",
+              "comment": "论文标题"
+            },
+            {
+              "name": "author_id",
+              "type": "bigint",
+              "comment": "作者"
+            },
+            {
+              "name": "journal",
+              "type": "varchar(128)",
+              "comment": "期刊"
+            },
+            {
+              "name": "publish_date",
+              "type": "date",
+              "comment": "发表日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "patent",
+          "tableComment": "专利",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patent_name",
+              "type": "varchar(128)",
+              "comment": "专利名称"
+            },
+            {
+              "name": "patent_no",
+              "type": "varchar(64)",
+              "comment": "专利号"
+            },
+            {
+              "name": "applicant_id",
+              "type": "bigint",
+              "comment": "申请人"
+            },
+            {
+              "name": "apply_date",
+              "type": "date",
+              "comment": "申请日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "缴费管理",
+      "tables": [
+        {
+          "tableName": "tuition_bill",
+          "tableComment": "缴费账单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "bill_no",
+              "type": "varchar(64)",
+              "comment": "账单号"
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学生"
+            },
+            {
+              "name": "fee_type",
+              "type": "varchar(64)",
+              "comment": "费用类型"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "应收金额"
+            },
+            {
+              "name": "paid_amount",
+              "type": "decimal(12,2)",
+              "comment": "已收金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "tuition_payment",
+          "tableComment": "缴费记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "bill_id",
+              "type": "bigint",
+              "comment": "账单"
+            },
+            {
+              "name": "pay_amount",
+              "type": "decimal(12,2)",
+              "comment": "缴费金额"
+            },
+            {
+              "name": "pay_time",
+              "type": "datetime",
+              "comment": "缴费时间"
+            },
+            {
+              "name": "pay_type",
+              "type": "tinyint",
+              "comment": "支付方式"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "key": "hr_attendance",
+  "name": "考勤管理",
+  "category": "人力资源",
+  "desc": "考勤管理场景：考勤管理、员工管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "考勤管理",
+      "tables": [
+        {
+          "tableName": "attendance",
+          "tableComment": "考勤记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_id",
+              "type": "bigint",
+              "comment": "员工"
+            },
+            {
+              "name": "attendance_date",
+              "type": "date",
+              "comment": "考勤日期"
+            },
+            {
+              "name": "check_in",
+              "type": "datetime",
+              "comment": "上班打卡"
+            },
+            {
+              "name": "check_out",
+              "type": "datetime",
+              "comment": "下班打卡"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "考勤状态"
+            }
+          ]
+        },
+        {
+          "tableName": "leave_request",
+          "tableComment": "请假申请",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_id",
+              "type": "bigint",
+              "comment": "员工"
+            },
+            {
+              "name": "leave_type",
+              "type": "tinyint",
+              "comment": "请假类型"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "reason",
+              "type": "varchar(255)",
+              "comment": "事由"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "审批状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "员工管理",
+      "tables": [
+        {
+          "tableName": "employee",
+          "tableComment": "员工档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_no",
+              "type": "varchar(64)",
+              "comment": "工号"
+            },
+            {
+              "name": "employee_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "department_id",
+              "type": "bigint",
+              "comment": "部门"
+            },
+            {
+              "name": "position_id",
+              "type": "bigint",
+              "comment": "岗位"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "手机"
+            },
+            {
+              "name": "email",
+              "type": "varchar(128)",
+              "comment": "邮箱"
+            },
+            {
+              "name": "entry_date",
+              "type": "date",
+              "comment": "入职日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "employee_contract",
+          "tableComment": "员工合同",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "employee_id",
+              "type": "bigint",
+              "comment": "员工"
+            },
+            {
+              "name": "contract_no",
+              "type": "varchar(64)",
+              "comment": "合同编号"
+            },
+            {
+              "name": "start_date",
+              "type": "date",
+              "comment": "起始日期"
+            },
+            {
+              "name": "end_date",
+              "type": "date",
+              "comment": "终止日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

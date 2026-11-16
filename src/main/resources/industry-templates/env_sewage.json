@@ -1,0 +1,257 @@
+{
+  "key": "env_sewage",
+  "name": "污水处理",
+  "category": "农业环保",
+  "desc": "污水处理场景：环境监测、能源表计、数据统计、检验检测等核心业务域",
+  "modules": [
+    {
+      "name": "环境监测",
+      "tables": [
+        {
+          "tableName": "env_monitor_point",
+          "tableComment": "监测点位",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "point_name",
+              "type": "varchar(64)",
+              "comment": "点位名称"
+            },
+            {
+              "name": "point_code",
+              "type": "varchar(64)",
+              "comment": "点位编码"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "env_monitor_record",
+          "tableComment": "监测数据",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "point_id",
+              "type": "bigint",
+              "comment": "监测点位"
+            },
+            {
+              "name": "pm25",
+              "type": "decimal(12,2)",
+              "comment": "PM2.5"
+            },
+            {
+              "name": "pm10",
+              "type": "decimal(12,2)",
+              "comment": "PM10"
+            },
+            {
+              "name": "noise",
+              "type": "decimal(12,2)",
+              "comment": "噪声"
+            },
+            {
+              "name": "record_time",
+              "type": "datetime",
+              "comment": "采集时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "能源表计",
+      "tables": [
+        {
+          "tableName": "energy_meter",
+          "tableComment": "能源表计",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "meter_no",
+              "type": "varchar(64)",
+              "comment": "表计编号"
+            },
+            {
+              "name": "meter_type",
+              "type": "tinyint",
+              "comment": "能源类型"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "检验检测",
+      "tables": [
+        {
+          "tableName": "inspection",
+          "tableComment": "检测委托",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delegate_no",
+              "type": "varchar(64)",
+              "comment": "委托号"
+            },
+            {
+              "name": "client_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "sample_name",
+              "type": "varchar(128)",
+              "comment": "样品名称"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "inspection_item",
+          "tableComment": "检测项目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "inspection_id",
+              "type": "bigint",
+              "comment": "检测委托"
+            },
+            {
+              "name": "item_name",
+              "type": "varchar(128)",
+              "comment": "项目"
+            },
+            {
+              "name": "result",
+              "type": "varchar(255)",
+              "comment": "结果"
+            },
+            {
+              "name": "standard",
+              "type": "varchar(128)",
+              "comment": "标准"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

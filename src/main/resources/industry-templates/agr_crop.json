@@ -1,0 +1,289 @@
+{
+  "key": "agr_crop",
+  "name": "种植管理",
+  "category": "农业环保",
+  "desc": "种植管理场景：地块管理、农资管理、农产品溯源、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "地块管理",
+      "tables": [
+        {
+          "tableName": "land_parcel",
+          "tableComment": "地块档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parcel_no",
+              "type": "varchar(64)",
+              "comment": "地块编号"
+            },
+            {
+              "name": "parcel_name",
+              "type": "varchar(64)",
+              "comment": "地块名称"
+            },
+            {
+              "name": "area",
+              "type": "decimal(12,2)",
+              "comment": "面积(亩)"
+            },
+            {
+              "name": "owner_id",
+              "type": "bigint",
+              "comment": "承包人"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "crop_plan",
+          "tableComment": "种植计划",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parcel_id",
+              "type": "bigint",
+              "comment": "地块"
+            },
+            {
+              "name": "crop_name",
+              "type": "varchar(64)",
+              "comment": "作物名称"
+            },
+            {
+              "name": "plant_date",
+              "type": "date",
+              "comment": "种植日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "农资管理",
+      "tables": [
+        {
+          "tableName": "agricultural_material",
+          "tableComment": "农资档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "material_name",
+              "type": "varchar(128)",
+              "comment": "农资名称"
+            },
+            {
+              "name": "material_type",
+              "type": "tinyint",
+              "comment": "农资类型"
+            },
+            {
+              "name": "spec",
+              "type": "varchar(64)",
+              "comment": "规格"
+            },
+            {
+              "name": "stock_num",
+              "type": "int",
+              "comment": "库存"
+            }
+          ]
+        },
+        {
+          "tableName": "material_stock",
+          "tableComment": "农资出入库",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "material_id",
+              "type": "bigint",
+              "comment": "农资"
+            },
+            {
+              "name": "flow_type",
+              "type": "tinyint",
+              "comment": "出入库类型"
+            },
+            {
+              "name": "quantity",
+              "type": "decimal(12,2)",
+              "comment": "数量"
+            },
+            {
+              "name": "flow_time",
+              "type": "datetime",
+              "comment": "时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "农产品溯源",
+      "tables": [
+        {
+          "tableName": "trace_batch",
+          "tableComment": "溯源批次",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "batch_no",
+              "type": "varchar(64)",
+              "comment": "批次号"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "产品"
+            },
+            {
+              "name": "produce_date",
+              "type": "date",
+              "comment": "生产日期"
+            },
+            {
+              "name": "origin",
+              "type": "varchar(128)",
+              "comment": "产地"
+            }
+          ]
+        },
+        {
+          "tableName": "trace_record",
+          "tableComment": "溯源环节",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "batch_id",
+              "type": "bigint",
+              "comment": "批次"
+            },
+            {
+              "name": "link_type",
+              "type": "varchar(64)",
+              "comment": "环节类型"
+            },
+            {
+              "name": "link_content",
+              "type": "varchar(512)",
+              "comment": "环节内容"
+            },
+            {
+              "name": "link_time",
+              "type": "datetime",
+              "comment": "环节时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

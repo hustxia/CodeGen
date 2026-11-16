@@ -1,0 +1,220 @@
+{
+  "key": "v_metrology",
+  "name": "计量检定",
+  "category": "垂直行业",
+  "desc": "计量检定场景：检验检测、医疗器械、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "检验检测",
+      "tables": [
+        {
+          "tableName": "inspection",
+          "tableComment": "检测委托",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "delegate_no",
+              "type": "varchar(64)",
+              "comment": "委托号"
+            },
+            {
+              "name": "client_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "sample_name",
+              "type": "varchar(128)",
+              "comment": "样品名称"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "inspection_item",
+          "tableComment": "检测项目",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "inspection_id",
+              "type": "bigint",
+              "comment": "检测委托"
+            },
+            {
+              "name": "item_name",
+              "type": "varchar(128)",
+              "comment": "项目"
+            },
+            {
+              "name": "result",
+              "type": "varchar(255)",
+              "comment": "结果"
+            },
+            {
+              "name": "standard",
+              "type": "varchar(128)",
+              "comment": "标准"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "医疗器械",
+      "tables": [
+        {
+          "tableName": "medical_device",
+          "tableComment": "医疗器械",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "device_name",
+              "type": "varchar(128)",
+              "comment": "器械名称"
+            },
+            {
+              "name": "reg_no",
+              "type": "varchar(64)",
+              "comment": "注册证号"
+            },
+            {
+              "name": "device_class",
+              "type": "tinyint",
+              "comment": "管理类别"
+            },
+            {
+              "name": "manufacturer",
+              "type": "varchar(128)",
+              "comment": "生产企业"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "device_reg",
+          "tableComment": "器械备案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "device_id",
+              "type": "bigint",
+              "comment": "器械"
+            },
+            {
+              "name": "reg_no",
+              "type": "varchar(64)",
+              "comment": "备案号"
+            },
+            {
+              "name": "reg_date",
+              "type": "date",
+              "comment": "备案日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "key": "med_pharmacy",
+  "name": "药房管理",
+  "category": "医疗健康",
+  "desc": "药房管理场景：药房管理、药品目录、处方药品、供应商管理等核心业务域",
+  "modules": [
+    {
+      "name": "药房管理",
+      "tables": [
+        {
+          "tableName": "pharmacy",
+          "tableComment": "药房",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "pharmacy_name",
+              "type": "varchar(64)",
+              "comment": "药房名称"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "manager_id",
+              "type": "bigint",
+              "comment": "负责人"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "drug_stock",
+          "tableComment": "药品库存",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "pharmacy_id",
+              "type": "bigint",
+              "comment": "药房"
+            },
+            {
+              "name": "drug_id",
+              "type": "bigint",
+              "comment": "药品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "库存数"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "有效期"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "药品目录",
+      "tables": [
+        {
+          "tableName": "drug",
+          "tableComment": "药品目录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "drug_name",
+              "type": "varchar(128)",
+              "comment": "药品名称"
+            },
+            {
+              "name": "drug_code",
+              "type": "varchar(64)",
+              "comment": "药品编码"
+            },
+            {
+              "name": "spec",
+              "type": "varchar(64)",
+              "comment": "规格"
+            },
+            {
+              "name": "unit",
+              "type": "varchar(64)",
+              "comment": "单位"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "价格"
+            },
+            {
+              "name": "stock_num",
+              "type": "int",
+              "comment": "库存"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "处方药品",
+      "tables": [
+        {
+          "tableName": "prescription",
+          "tableComment": "处方",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "record_id",
+              "type": "bigint",
+              "comment": "就诊记录"
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "prescription_no",
+              "type": "varchar(64)",
+              "comment": "处方号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "开方时间"
+            }
+          ]
+        },
+        {
+          "tableName": "prescription_item",
+          "tableComment": "处方明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "prescription_id",
+              "type": "bigint",
+              "comment": "处方"
+            },
+            {
+              "name": "drug_id",
+              "type": "bigint",
+              "comment": "药品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "usage",
+              "type": "varchar(128)",
+              "comment": "用法用量"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "供应商管理",
+      "tables": [
+        {
+          "tableName": "supplier",
+          "tableComment": "供应商档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "supplier_name",
+              "type": "varchar(128)",
+              "comment": "供应商名称"
+            },
+            {
+              "name": "supplier_code",
+              "type": "varchar(64)",
+              "comment": "供应商编码"
+            },
+            {
+              "name": "supplier_type",
+              "type": "tinyint",
+              "comment": "供应商类型"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "bank_account",
+              "type": "varchar(128)",
+              "comment": "银行账号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

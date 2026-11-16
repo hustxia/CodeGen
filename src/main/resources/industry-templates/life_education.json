@@ -1,0 +1,388 @@
+{
+  "key": "life_education",
+  "name": "亲子教育",
+  "category": "生活服务",
+  "desc": "亲子教育场景：学生管理、课程管理、考试管理、赛事管理等核心业务域",
+  "modules": [
+    {
+      "name": "学生管理",
+      "tables": [
+        {
+          "tableName": "student",
+          "tableComment": "学生档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "student_no",
+              "type": "varchar(64)",
+              "comment": "学号"
+            },
+            {
+              "name": "student_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "class_id",
+              "type": "bigint",
+              "comment": "班级"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "student_class",
+          "tableComment": "班级档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "class_name",
+              "type": "varchar(64)",
+              "comment": "班级名称"
+            },
+            {
+              "name": "grade",
+              "type": "varchar(64)",
+              "comment": "年级"
+            },
+            {
+              "name": "head_teacher_id",
+              "type": "bigint",
+              "comment": "班主任"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "课程管理",
+      "tables": [
+        {
+          "tableName": "course",
+          "tableComment": "课程档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "course_name",
+              "type": "varchar(128)",
+              "comment": "课程名称"
+            },
+            {
+              "name": "course_code",
+              "type": "varchar(64)",
+              "comment": "课程编码"
+            },
+            {
+              "name": "credit",
+              "type": "decimal(12,2)",
+              "comment": "学分"
+            },
+            {
+              "name": "teacher_id",
+              "type": "bigint",
+              "comment": "授课教师"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "course_schedule",
+          "tableComment": "课程表",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "course_id",
+              "type": "bigint",
+              "comment": "课程"
+            },
+            {
+              "name": "class_id",
+              "type": "bigint",
+              "comment": "班级"
+            },
+            {
+              "name": "weekday",
+              "type": "tinyint",
+              "comment": "星期"
+            },
+            {
+              "name": "period",
+              "type": "varchar(64)",
+              "comment": "节次"
+            },
+            {
+              "name": "classroom",
+              "type": "varchar(64)",
+              "comment": "教室"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "考试管理",
+      "tables": [
+        {
+          "tableName": "exam",
+          "tableComment": "考试",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "exam_name",
+              "type": "varchar(128)",
+              "comment": "考试名称"
+            },
+            {
+              "name": "course_id",
+              "type": "bigint",
+              "comment": "课程"
+            },
+            {
+              "name": "exam_time",
+              "type": "datetime",
+              "comment": "考试时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "exam_score",
+          "tableComment": "考试成绩",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "exam_id",
+              "type": "bigint",
+              "comment": "考试"
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学生"
+            },
+            {
+              "name": "score",
+              "type": "decimal(12,2)",
+              "comment": "分数"
+            },
+            {
+              "name": "grade",
+              "type": "varchar(64)",
+              "comment": "等级"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "赛事管理",
+      "tables": [
+        {
+          "tableName": "event",
+          "tableComment": "赛事活动",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "event_name",
+              "type": "varchar(128)",
+              "comment": "赛事名称"
+            },
+            {
+              "name": "event_type",
+              "type": "tinyint",
+              "comment": "赛事类型"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "地点"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "event_registration",
+          "tableComment": "赛事报名",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "event_id",
+              "type": "bigint",
+              "comment": "赛事"
+            },
+            {
+              "name": "name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "电话"
+            },
+            {
+              "name": "register_time",
+              "type": "datetime",
+              "comment": "报名时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "缴费管理",
+      "tables": [
+        {
+          "tableName": "tuition_bill",
+          "tableComment": "缴费账单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "bill_no",
+              "type": "varchar(64)",
+              "comment": "账单号"
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学生"
+            },
+            {
+              "name": "fee_type",
+              "type": "varchar(64)",
+              "comment": "费用类型"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "应收金额"
+            },
+            {
+              "name": "paid_amount",
+              "type": "decimal(12,2)",
+              "comment": "已收金额"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "tuition_payment",
+          "tableComment": "缴费记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "bill_id",
+              "type": "bigint",
+              "comment": "账单"
+            },
+            {
+              "name": "pay_amount",
+              "type": "decimal(12,2)",
+              "comment": "缴费金额"
+            },
+            {
+              "name": "pay_time",
+              "type": "datetime",
+              "comment": "缴费时间"
+            },
+            {
+              "name": "pay_type",
+              "type": "tinyint",
+              "comment": "支付方式"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

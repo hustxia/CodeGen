@@ -1,0 +1,176 @@
+{
+  "key": "med_elderly",
+  "name": "养老机构",
+  "category": "医疗健康",
+  "desc": "养老机构场景：养老护理、护理管理、患者管理等核心业务域",
+  "modules": [
+    {
+      "name": "养老护理",
+      "tables": [
+        {
+          "tableName": "elderly",
+          "tableComment": "老人档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "id_card",
+              "type": "varchar(64)",
+              "comment": "身份证号"
+            },
+            {
+              "name": "health_status",
+              "type": "varchar(64)",
+              "comment": "健康状况"
+            },
+            {
+              "name": "emergency_contact",
+              "type": "varchar(64)",
+              "comment": "紧急联系人"
+            }
+          ]
+        },
+        {
+          "tableName": "care_record",
+          "tableComment": "护理记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "elderly_id",
+              "type": "bigint",
+              "comment": "老人"
+            },
+            {
+              "name": "nurse_id",
+              "type": "bigint",
+              "comment": "护理员"
+            },
+            {
+              "name": "care_time",
+              "type": "datetime",
+              "comment": "护理时间"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "护理内容"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "护理管理",
+      "tables": [
+        {
+          "tableName": "nursing_record",
+          "tableComment": "护理记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "nurse_id",
+              "type": "bigint",
+              "comment": "护士"
+            },
+            {
+              "name": "record_time",
+              "type": "datetime",
+              "comment": "记录时间"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "护理内容"
+            },
+            {
+              "name": "vital_signs",
+              "type": "varchar(255)",
+              "comment": "生命体征"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "患者管理",
+      "tables": [
+        {
+          "tableName": "patient",
+          "tableComment": "患者档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "id_card",
+              "type": "varchar(64)",
+              "comment": "身份证号"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "birth_date",
+              "type": "date",
+              "comment": "出生日期"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "blood_type",
+              "type": "varchar(64)",
+              "comment": "血型"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

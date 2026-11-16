@@ -1,0 +1,277 @@
+{
+  "key": "agr_trace",
+  "name": "农产品溯源",
+  "category": "农业环保",
+  "desc": "农产品溯源场景：农产品溯源、商品管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "农产品溯源",
+      "tables": [
+        {
+          "tableName": "trace_batch",
+          "tableComment": "溯源批次",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "batch_no",
+              "type": "varchar(64)",
+              "comment": "批次号"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "产品"
+            },
+            {
+              "name": "produce_date",
+              "type": "date",
+              "comment": "生产日期"
+            },
+            {
+              "name": "origin",
+              "type": "varchar(128)",
+              "comment": "产地"
+            }
+          ]
+        },
+        {
+          "tableName": "trace_record",
+          "tableComment": "溯源环节",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "batch_id",
+              "type": "bigint",
+              "comment": "批次"
+            },
+            {
+              "name": "link_type",
+              "type": "varchar(64)",
+              "comment": "环节类型"
+            },
+            {
+              "name": "link_content",
+              "type": "varchar(512)",
+              "comment": "环节内容"
+            },
+            {
+              "name": "link_time",
+              "type": "datetime",
+              "comment": "环节时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "商品管理",
+      "tables": [
+        {
+          "tableName": "product_category",
+          "tableComment": "商品分类",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级分类"
+            },
+            {
+              "name": "category_name",
+              "type": "varchar(64)",
+              "comment": "分类名称"
+            },
+            {
+              "name": "category_code",
+              "type": "varchar(64)",
+              "comment": "分类编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        },
+        {
+          "tableName": "product",
+          "tableComment": "商品档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "product_name",
+              "type": "varchar(128)",
+              "comment": "商品名称"
+            },
+            {
+              "name": "product_code",
+              "type": "varchar(64)",
+              "comment": "商品编码"
+            },
+            {
+              "name": "category_id",
+              "type": "bigint",
+              "comment": "商品分类"
+            },
+            {
+              "name": "spec",
+              "type": "varchar(128)",
+              "comment": "规格型号"
+            },
+            {
+              "name": "unit",
+              "type": "varchar(64)",
+              "comment": "单位"
+            },
+            {
+              "name": "sale_price",
+              "type": "decimal(12,2)",
+              "comment": "销售价"
+            },
+            {
+              "name": "cost_price",
+              "type": "decimal(12,2)",
+              "comment": "成本价"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "product_sku",
+          "tableComment": "商品SKU",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "sku_code",
+              "type": "varchar(64)",
+              "comment": "SKU编码"
+            },
+            {
+              "name": "sku_name",
+              "type": "varchar(128)",
+              "comment": "SKU名称"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "价格"
+            },
+            {
+              "name": "stock_num",
+              "type": "int",
+              "comment": "库存数"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

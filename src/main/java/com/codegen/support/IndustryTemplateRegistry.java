@@ -41,6 +41,8 @@ public class IndustryTemplateRegistry {
         Resource[] resources = resolver.getResources("classpath:industry-templates/*.json");
         Arrays.sort(resources, Comparator.comparing(Resource::getFilename));
         Set<String> seen = new HashSet<>();
+        int loaded = 0;
+        int tables = 0;
         for (Resource r : resources) {
             try {
                 GenAiTemplateVO vo = objectMapper.readValue(r.getInputStream(), GenAiTemplateVO.class);
@@ -51,19 +53,51 @@ public class IndustryTemplateRegistry {
                 if (!seen.add(vo.getKey())) {
                     throw new IllegalStateException("行业模板 key 冲突：" + vo.getKey());
                 }
+                // 历史 4 套（ecommerce/erp/crm/cms）无 category，归入通用分类
+                if (vo.getCategory() == null || vo.getCategory().isBlank()) {
+                    vo.setCategory("通用企业");
+                }
                 fillCounts(vo);
                 templates.put(vo.getKey(), vo);
-                log.info("V9.7 行业模板已加载：{}（{}）模块 {} 表 {} 张",
-                        vo.getKey(), vo.getName(), vo.getModuleCount(), vo.getTableCount());
+                loaded++;
+                tables += vo.getTableCount();
             } catch (Exception e) {
                 log.warn("行业模板加载失败（跳过）：{} - {}", r.getFilename(), e.getMessage());
             }
         }
+        log.info("V9.9 行业模板库已加载：{} 套 / {} 张表（分类 {} 个）",
+                loaded, tables, categories().size());
     }
 
-    /** 模板清单（列表接口：key/name/desc/模块数/表数，不含表结构明细） */
+    /**
+     * 模板清单（列表接口：key/name/desc/category/模块数/表数，<b>不含</b>表结构明细）。
+     *
+     * <p>V9.9 模板扩到 250+ 套后，清单若带 modules 明细会有数 MB 的 payload；
+     * 这里返回去掉 modules 的浅拷贝，明细走 {@link #get(String)} 按需取。
+     */
     public List<GenAiTemplateVO> list() {
-        return new ArrayList<>(templates.values());
+        List<GenAiTemplateVO> out = new ArrayList<>(templates.size());
+        for (GenAiTemplateVO t : templates.values()) {
+            GenAiTemplateVO light = new GenAiTemplateVO();
+            light.setKey(t.getKey());
+            light.setName(t.getName());
+            light.setDesc(t.getDesc());
+            light.setCategory(t.getCategory());
+            light.setModuleCount(t.getModuleCount());
+            light.setTableCount(t.getTableCount());
+            out.add(light);
+        }
+        return out;
+    }
+
+    /** 全部行业分类（去重、按名称排序），供前端分组下拉 */
+    public List<String> categories() {
+        return templates.values().stream()
+                .map(GenAiTemplateVO::getCategory)
+                .filter(c -> c != null && !c.isBlank())
+                .distinct()
+                .sorted()
+                .toList();
     }
 
     /** 取单个模板；不存在抛业务侧可识别的空（服务层转 BusinessException） */

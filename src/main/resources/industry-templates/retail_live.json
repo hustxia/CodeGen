@@ -1,0 +1,569 @@
+{
+  "key": "retail_live",
+  "name": "直播带货",
+  "category": "电商零售",
+  "desc": "直播带货场景：商品管理、媒体资源、订单管理、支付管理等核心业务域",
+  "modules": [
+    {
+      "name": "商品管理",
+      "tables": [
+        {
+          "tableName": "product_category",
+          "tableComment": "商品分类",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级分类"
+            },
+            {
+              "name": "category_name",
+              "type": "varchar(64)",
+              "comment": "分类名称"
+            },
+            {
+              "name": "category_code",
+              "type": "varchar(64)",
+              "comment": "分类编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        },
+        {
+          "tableName": "product",
+          "tableComment": "商品档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "product_name",
+              "type": "varchar(128)",
+              "comment": "商品名称"
+            },
+            {
+              "name": "product_code",
+              "type": "varchar(64)",
+              "comment": "商品编码"
+            },
+            {
+              "name": "category_id",
+              "type": "bigint",
+              "comment": "商品分类"
+            },
+            {
+              "name": "spec",
+              "type": "varchar(128)",
+              "comment": "规格型号"
+            },
+            {
+              "name": "unit",
+              "type": "varchar(64)",
+              "comment": "单位"
+            },
+            {
+              "name": "sale_price",
+              "type": "decimal(12,2)",
+              "comment": "销售价"
+            },
+            {
+              "name": "cost_price",
+              "type": "decimal(12,2)",
+              "comment": "成本价"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "product_sku",
+          "tableComment": "商品SKU",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "sku_code",
+              "type": "varchar(64)",
+              "comment": "SKU编码"
+            },
+            {
+              "name": "sku_name",
+              "type": "varchar(128)",
+              "comment": "SKU名称"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "价格"
+            },
+            {
+              "name": "stock_num",
+              "type": "int",
+              "comment": "库存数"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "媒体资源",
+      "tables": [
+        {
+          "tableName": "media_asset",
+          "tableComment": "媒体资源",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "media_name",
+              "type": "varchar(128)",
+              "comment": "资源名称"
+            },
+            {
+              "name": "media_url",
+              "type": "varchar(512)",
+              "comment": "资源地址"
+            },
+            {
+              "name": "media_type",
+              "type": "tinyint",
+              "comment": "资源类型"
+            },
+            {
+              "name": "file_size",
+              "type": "bigint",
+              "comment": "文件大小"
+            },
+            {
+              "name": "uploader_id",
+              "type": "bigint",
+              "comment": "上传人"
+            },
+            {
+              "name": "upload_time",
+              "type": "datetime",
+              "comment": "上传时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "订单管理",
+      "tables": [
+        {
+          "tableName": "sales_order",
+          "tableComment": "销售订单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "订单号"
+            },
+            {
+              "name": "customer_id",
+              "type": "bigint",
+              "comment": "客户"
+            },
+            {
+              "name": "order_amount",
+              "type": "decimal(12,2)",
+              "comment": "订单金额"
+            },
+            {
+              "name": "order_status",
+              "type": "tinyint",
+              "comment": "订单状态"
+            },
+            {
+              "name": "pay_status",
+              "type": "tinyint",
+              "comment": "支付状态"
+            },
+            {
+              "name": "order_time",
+              "type": "datetime",
+              "comment": "下单时间"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "sales_order_item",
+          "tableComment": "订单明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "order_id",
+              "type": "bigint",
+              "comment": "订单"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "unit_price",
+              "type": "decimal(12,2)",
+              "comment": "单价"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "支付管理",
+      "tables": [
+        {
+          "tableName": "payment",
+          "tableComment": "支付记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "pay_no",
+              "type": "varchar(64)",
+              "comment": "支付单号"
+            },
+            {
+              "name": "biz_no",
+              "type": "varchar(64)",
+              "comment": "业务单号"
+            },
+            {
+              "name": "pay_type",
+              "type": "tinyint",
+              "comment": "支付方式"
+            },
+            {
+              "name": "pay_amount",
+              "type": "decimal(12,2)",
+              "comment": "支付金额"
+            },
+            {
+              "name": "pay_status",
+              "type": "tinyint",
+              "comment": "支付状态"
+            },
+            {
+              "name": "pay_time",
+              "type": "datetime",
+              "comment": "支付时间"
+            }
+          ]
+        },
+        {
+          "tableName": "payment_refund",
+          "tableComment": "退款记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "payment_id",
+              "type": "bigint",
+              "comment": "支付记录"
+            },
+            {
+              "name": "refund_no",
+              "type": "varchar(64)",
+              "comment": "退款单号"
+            },
+            {
+              "name": "refund_amount",
+              "type": "decimal(12,2)",
+              "comment": "退款金额"
+            },
+            {
+              "name": "refund_status",
+              "type": "tinyint",
+              "comment": "退款状态"
+            },
+            {
+              "name": "refund_time",
+              "type": "datetime",
+              "comment": "退款时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "营销活动",
+      "tables": [
+        {
+          "tableName": "marketing_campaign",
+          "tableComment": "营销活动",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "campaign_name",
+              "type": "varchar(128)",
+              "comment": "活动名称"
+            },
+            {
+              "name": "campaign_type",
+              "type": "tinyint",
+              "comment": "活动类型"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "description",
+              "type": "text",
+              "comment": "活动说明"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "售后服务",
+      "tables": [
+        {
+          "tableName": "after_sale",
+          "tableComment": "售后申请",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "apply_no",
+              "type": "varchar(64)",
+              "comment": "申请单号"
+            },
+            {
+              "name": "order_id",
+              "type": "bigint",
+              "comment": "订单"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "用户"
+            },
+            {
+              "name": "apply_type",
+              "type": "tinyint",
+              "comment": "售后类型"
+            },
+            {
+              "name": "reason",
+              "type": "varchar(255)",
+              "comment": "申请原因"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "after_sale_item",
+          "tableComment": "售后明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "after_sale_id",
+              "type": "bigint",
+              "comment": "售后申请"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "评论互动",
+      "tables": [
+        {
+          "tableName": "comment",
+          "tableComment": "评论",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "父级评论"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "评论人"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "评论内容"
+            },
+            {
+              "name": "like_num",
+              "type": "int",
+              "comment": "点赞数"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "favorite_record",
+          "tableComment": "收藏记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "用户"
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "favorite_time",
+              "type": "datetime",
+              "comment": "收藏时间"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

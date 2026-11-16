@@ -1,0 +1,250 @@
+{
+  "key": "med_vaccine",
+  "name": "疫苗接种",
+  "category": "医疗健康",
+  "desc": "疫苗接种场景：疫苗管理、患者管理、预约挂号、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "疫苗管理",
+      "tables": [
+        {
+          "tableName": "vaccine",
+          "tableComment": "疫苗目录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "vaccine_name",
+              "type": "varchar(128)",
+              "comment": "疫苗名称"
+            },
+            {
+              "name": "vaccine_code",
+              "type": "varchar(64)",
+              "comment": "疫苗编码"
+            },
+            {
+              "name": "batch_no",
+              "type": "varchar(64)",
+              "comment": "批号"
+            },
+            {
+              "name": "stock_num",
+              "type": "int",
+              "comment": "库存"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "有效期"
+            }
+          ]
+        },
+        {
+          "tableName": "vaccination",
+          "tableComment": "接种记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "person_id",
+              "type": "bigint",
+              "comment": "接种人"
+            },
+            {
+              "name": "vaccine_id",
+              "type": "bigint",
+              "comment": "疫苗"
+            },
+            {
+              "name": "vaccinate_date",
+              "type": "date",
+              "comment": "接种日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "患者管理",
+      "tables": [
+        {
+          "tableName": "patient",
+          "tableComment": "患者档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "id_card",
+              "type": "varchar(64)",
+              "comment": "身份证号"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "birth_date",
+              "type": "date",
+              "comment": "出生日期"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "blood_type",
+              "type": "varchar(64)",
+              "comment": "血型"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "预约挂号",
+      "tables": [
+        {
+          "tableName": "appointment",
+          "tableComment": "预约挂号",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "patient_id",
+              "type": "bigint",
+              "comment": "患者"
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "科室"
+            },
+            {
+              "name": "doctor_id",
+              "type": "bigint",
+              "comment": "医生"
+            },
+            {
+              "name": "appointment_date",
+              "type": "date",
+              "comment": "预约日期"
+            },
+            {
+              "name": "time_slot",
+              "type": "varchar(64)",
+              "comment": "时段"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

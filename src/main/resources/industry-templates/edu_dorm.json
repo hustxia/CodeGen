@@ -1,0 +1,220 @@
+{
+  "key": "edu_dorm",
+  "name": "宿舍管理",
+  "category": "教育培训",
+  "desc": "宿舍管理场景：宿舍管理、学生管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "宿舍管理",
+      "tables": [
+        {
+          "tableName": "dormitory",
+          "tableComment": "宿舍档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dorm_no",
+              "type": "varchar(64)",
+              "comment": "宿舍号"
+            },
+            {
+              "name": "building",
+              "type": "varchar(64)",
+              "comment": "楼栋"
+            },
+            {
+              "name": "capacity",
+              "type": "int",
+              "comment": "容纳人数"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "dorm_checkin",
+          "tableComment": "住宿登记",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dorm_id",
+              "type": "bigint",
+              "comment": "宿舍"
+            },
+            {
+              "name": "student_id",
+              "type": "bigint",
+              "comment": "学生"
+            },
+            {
+              "name": "checkin_date",
+              "type": "date",
+              "comment": "入住日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "学生管理",
+      "tables": [
+        {
+          "tableName": "student",
+          "tableComment": "学生档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "student_no",
+              "type": "varchar(64)",
+              "comment": "学号"
+            },
+            {
+              "name": "student_name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "gender",
+              "type": "tinyint",
+              "comment": "性别"
+            },
+            {
+              "name": "class_id",
+              "type": "bigint",
+              "comment": "班级"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "student_class",
+          "tableComment": "班级档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "class_name",
+              "type": "varchar(64)",
+              "comment": "班级名称"
+            },
+            {
+              "name": "grade",
+              "type": "varchar(64)",
+              "comment": "年级"
+            },
+            {
+              "name": "head_teacher_id",
+              "type": "bigint",
+              "comment": "班主任"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

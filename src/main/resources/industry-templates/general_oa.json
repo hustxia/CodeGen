@@ -1,0 +1,534 @@
+{
+  "key": "general_oa",
+  "name": "通用OA办公",
+  "category": "通用企业",
+  "desc": "通用OA办公场景：公告通知、会议管理、文件附件、日程日历等核心业务域",
+  "modules": [
+    {
+      "name": "公告通知",
+      "tables": [
+        {
+          "tableName": "notice",
+          "tableComment": "公告通知",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "标题"
+            },
+            {
+              "name": "notice_type",
+              "type": "tinyint",
+              "comment": "类型"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "publish_time",
+              "type": "datetime",
+              "comment": "发布时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "notice_read",
+          "tableComment": "公告阅读记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "notice_id",
+              "type": "bigint",
+              "comment": "公告"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "用户"
+            },
+            {
+              "name": "read_time",
+              "type": "datetime",
+              "comment": "阅读时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "会议管理",
+      "tables": [
+        {
+          "tableName": "meeting_room",
+          "tableComment": "会议室",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "room_name",
+              "type": "varchar(64)",
+              "comment": "会议室名称"
+            },
+            {
+              "name": "capacity",
+              "type": "int",
+              "comment": "容纳人数"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "位置"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "meeting_booking",
+          "tableComment": "会议预订",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "room_id",
+              "type": "bigint",
+              "comment": "会议室"
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "会议主题"
+            },
+            {
+              "name": "book_user_id",
+              "type": "bigint",
+              "comment": "预订人"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "文件附件",
+      "tables": [
+        {
+          "tableName": "file_info",
+          "tableComment": "文件资源",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "file_name",
+              "type": "varchar(128)",
+              "comment": "文件名"
+            },
+            {
+              "name": "file_path",
+              "type": "varchar(512)",
+              "comment": "存储路径"
+            },
+            {
+              "name": "file_size",
+              "type": "bigint",
+              "comment": "文件大小"
+            },
+            {
+              "name": "file_type",
+              "type": "varchar(64)",
+              "comment": "文件类型"
+            },
+            {
+              "name": "uploader_id",
+              "type": "bigint",
+              "comment": "上传人"
+            },
+            {
+              "name": "upload_time",
+              "type": "datetime",
+              "comment": "上传时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "日程日历",
+      "tables": [
+        {
+          "tableName": "schedule",
+          "tableComment": "日程安排",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "日程标题"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "所属人"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "comment": "开始时间"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "comment": "结束时间"
+            },
+            {
+              "name": "location",
+              "type": "varchar(128)",
+              "comment": "地点"
+            },
+            {
+              "name": "remind_flag",
+              "type": "tinyint",
+              "comment": "是否提醒"
+            },
+            {
+              "name": "description",
+              "type": "varchar(512)",
+              "comment": "说明"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "任务协作",
+      "tables": [
+        {
+          "tableName": "task",
+          "tableComment": "协作任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "title",
+              "type": "varchar(128)",
+              "comment": "任务标题"
+            },
+            {
+              "name": "project_id",
+              "type": "bigint",
+              "comment": "所属项目"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "负责人"
+            },
+            {
+              "name": "priority",
+              "type": "tinyint",
+              "comment": "优先级"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "due_date",
+              "type": "date",
+              "comment": "截止日期"
+            },
+            {
+              "name": "description",
+              "type": "text",
+              "comment": "任务描述"
+            }
+          ]
+        },
+        {
+          "tableName": "task_comment",
+          "tableComment": "任务评论",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "task_id",
+              "type": "bigint",
+              "comment": "任务"
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "评论人"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "评论内容"
+            },
+            {
+              "name": "comment_time",
+              "type": "datetime",
+              "comment": "评论时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "审批流程",
+      "tables": [
+        {
+          "tableName": "approval_flow",
+          "tableComment": "审批流程定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_name",
+              "type": "varchar(64)",
+              "comment": "流程名称"
+            },
+            {
+              "name": "flow_code",
+              "type": "varchar(64)",
+              "comment": "流程编码"
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "approval_task",
+          "tableComment": "审批任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "flow_id",
+              "type": "bigint",
+              "comment": "流程"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "task_name",
+              "type": "varchar(64)",
+              "comment": "任务名称"
+            },
+            {
+              "name": "assignee_id",
+              "type": "bigint",
+              "comment": "审批人"
+            },
+            {
+              "name": "task_status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "approve_time",
+              "type": "datetime",
+              "comment": "审批时间"
+            },
+            {
+              "name": "comment",
+              "type": "varchar(512)",
+              "comment": "审批意见"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "日志审计",
+      "tables": [
+        {
+          "tableName": "audit_log",
+          "tableComment": "操作审计日志",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "module",
+              "type": "varchar(64)",
+              "comment": "模块"
+            },
+            {
+              "name": "operation",
+              "type": "varchar(64)",
+              "comment": "操作"
+            },
+            {
+              "name": "operator_id",
+              "type": "bigint",
+              "comment": "操作人"
+            },
+            {
+              "name": "biz_id",
+              "type": "varchar(64)",
+              "comment": "业务ID"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "内容"
+            },
+            {
+              "name": "operate_time",
+              "type": "datetime",
+              "comment": "操作时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据字典",
+      "tables": [
+        {
+          "tableName": "dict_type",
+          "tableComment": "字典类型",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dict_name",
+              "type": "varchar(64)",
+              "comment": "字典名称"
+            },
+            {
+              "name": "dict_code",
+              "type": "varchar(64)",
+              "comment": "字典编码"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "dict_item",
+          "tableComment": "字典项",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dict_type_id",
+              "type": "bigint",
+              "comment": "字典类型"
+            },
+            {
+              "name": "item_label",
+              "type": "varchar(64)",
+              "comment": "显示名"
+            },
+            {
+              "name": "item_value",
+              "type": "varchar(64)",
+              "comment": "值"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

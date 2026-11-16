@@ -1,0 +1,292 @@
+{
+  "key": "legal_arbitration",
+  "name": "仲裁管理",
+  "category": "法律法务",
+  "desc": "仲裁管理场景：仲裁管理、案件管理、合同管理、数据统计等核心业务域",
+  "modules": [
+    {
+      "name": "仲裁管理",
+      "tables": [
+        {
+          "tableName": "arbitration",
+          "tableComment": "仲裁案件",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "case_no",
+              "type": "varchar(64)",
+              "comment": "案号"
+            },
+            {
+              "name": "case_name",
+              "type": "varchar(128)",
+              "comment": "案件名称"
+            },
+            {
+              "name": "applicant_id",
+              "type": "bigint",
+              "comment": "申请人"
+            },
+            {
+              "name": "respondent_id",
+              "type": "bigint",
+              "comment": "被申请人"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "案件管理",
+      "tables": [
+        {
+          "tableName": "legal_case",
+          "tableComment": "案件档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "case_no",
+              "type": "varchar(64)",
+              "comment": "案号"
+            },
+            {
+              "name": "case_name",
+              "type": "varchar(128)",
+              "comment": "案件名称"
+            },
+            {
+              "name": "case_type",
+              "type": "tinyint",
+              "comment": "案件类型"
+            },
+            {
+              "name": "client_id",
+              "type": "bigint",
+              "comment": "委托人"
+            },
+            {
+              "name": "lawyer_id",
+              "type": "bigint",
+              "comment": "承办律师"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "description",
+              "type": "text",
+              "comment": "案情"
+            }
+          ]
+        },
+        {
+          "tableName": "case_participant",
+          "tableComment": "案件参与人",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "case_id",
+              "type": "bigint",
+              "comment": "案件"
+            },
+            {
+              "name": "name",
+              "type": "varchar(64)",
+              "comment": "姓名"
+            },
+            {
+              "name": "role",
+              "type": "varchar(64)",
+              "comment": "诉讼地位"
+            },
+            {
+              "name": "phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "合同管理",
+      "tables": [
+        {
+          "tableName": "contract",
+          "tableComment": "合同档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "contract_no",
+              "type": "varchar(64)",
+              "comment": "合同编号"
+            },
+            {
+              "name": "contract_name",
+              "type": "varchar(128)",
+              "comment": "合同名称"
+            },
+            {
+              "name": "partner_id",
+              "type": "bigint",
+              "comment": "相对方"
+            },
+            {
+              "name": "contract_amount",
+              "type": "decimal(12,2)",
+              "comment": "合同金额"
+            },
+            {
+              "name": "sign_date",
+              "type": "date",
+              "comment": "签订日期"
+            },
+            {
+              "name": "expire_date",
+              "type": "date",
+              "comment": "到期日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "content",
+              "type": "text",
+              "comment": "合同内容"
+            }
+          ]
+        },
+        {
+          "tableName": "contract_item",
+          "tableComment": "合同条款",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "contract_id",
+              "type": "bigint",
+              "comment": "合同"
+            },
+            {
+              "name": "item_title",
+              "type": "varchar(128)",
+              "comment": "条款标题"
+            },
+            {
+              "name": "item_content",
+              "type": "text",
+              "comment": "条款内容"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据统计",
+      "tables": [
+        {
+          "tableName": "report",
+          "tableComment": "报表定义",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_name",
+              "type": "varchar(128)",
+              "comment": "报表名称"
+            },
+            {
+              "name": "report_code",
+              "type": "varchar(64)",
+              "comment": "报表编码"
+            },
+            {
+              "name": "report_type",
+              "type": "tinyint",
+              "comment": "报表类型"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "report_metric",
+          "tableComment": "报表指标",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "report_id",
+              "type": "bigint",
+              "comment": "报表"
+            },
+            {
+              "name": "metric_name",
+              "type": "varchar(64)",
+              "comment": "指标名称"
+            },
+            {
+              "name": "metric_code",
+              "type": "varchar(64)",
+              "comment": "指标编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

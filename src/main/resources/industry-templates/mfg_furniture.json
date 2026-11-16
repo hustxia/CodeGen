@@ -1,0 +1,544 @@
+{
+  "key": "mfg_furniture",
+  "name": "家具制造",
+  "category": "制造工业",
+  "desc": "家具制造场景：商品管理、BOM管理、生产计划、质量管理等核心业务域",
+  "modules": [
+    {
+      "name": "商品管理",
+      "tables": [
+        {
+          "tableName": "product_category",
+          "tableComment": "商品分类",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级分类"
+            },
+            {
+              "name": "category_name",
+              "type": "varchar(64)",
+              "comment": "分类名称"
+            },
+            {
+              "name": "category_code",
+              "type": "varchar(64)",
+              "comment": "分类编码"
+            },
+            {
+              "name": "sort",
+              "type": "int",
+              "comment": "排序"
+            }
+          ]
+        },
+        {
+          "tableName": "product",
+          "tableComment": "商品档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "product_name",
+              "type": "varchar(128)",
+              "comment": "商品名称"
+            },
+            {
+              "name": "product_code",
+              "type": "varchar(64)",
+              "comment": "商品编码"
+            },
+            {
+              "name": "category_id",
+              "type": "bigint",
+              "comment": "商品分类"
+            },
+            {
+              "name": "spec",
+              "type": "varchar(128)",
+              "comment": "规格型号"
+            },
+            {
+              "name": "unit",
+              "type": "varchar(64)",
+              "comment": "单位"
+            },
+            {
+              "name": "sale_price",
+              "type": "decimal(12,2)",
+              "comment": "销售价"
+            },
+            {
+              "name": "cost_price",
+              "type": "decimal(12,2)",
+              "comment": "成本价"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        },
+        {
+          "tableName": "product_sku",
+          "tableComment": "商品SKU",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "sku_code",
+              "type": "varchar(64)",
+              "comment": "SKU编码"
+            },
+            {
+              "name": "sku_name",
+              "type": "varchar(128)",
+              "comment": "SKU名称"
+            },
+            {
+              "name": "price",
+              "type": "decimal(12,2)",
+              "comment": "价格"
+            },
+            {
+              "name": "stock_num",
+              "type": "int",
+              "comment": "库存数"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BOM管理",
+      "tables": [
+        {
+          "tableName": "bom",
+          "tableComment": "物料清单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "成品"
+            },
+            {
+              "name": "bom_no",
+              "type": "varchar(64)",
+              "comment": "BOM编号"
+            },
+            {
+              "name": "version",
+              "type": "varchar(64)",
+              "comment": "版本"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "bom_item",
+          "tableComment": "BOM明细",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "bom_id",
+              "type": "bigint",
+              "comment": "BOM"
+            },
+            {
+              "name": "material_id",
+              "type": "bigint",
+              "comment": "物料"
+            },
+            {
+              "name": "quantity",
+              "type": "decimal(12,2)",
+              "comment": "用量"
+            },
+            {
+              "name": "loss_rate",
+              "type": "decimal(12,2)",
+              "comment": "损耗率"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "生产计划",
+      "tables": [
+        {
+          "tableName": "production_plan",
+          "tableComment": "生产计划",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "plan_no",
+              "type": "varchar(64)",
+              "comment": "计划号"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "产品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "计划数量"
+            },
+            {
+              "name": "plan_date",
+              "type": "date",
+              "comment": "计划日期"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "production_order",
+          "tableComment": "生产工单",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "plan_id",
+              "type": "bigint",
+              "comment": "生产计划"
+            },
+            {
+              "name": "order_no",
+              "type": "varchar(64)",
+              "comment": "工单号"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "workshop_id",
+              "type": "bigint",
+              "comment": "车间"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "质量管理",
+      "tables": [
+        {
+          "tableName": "quality_check",
+          "tableComment": "质量检验",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_no",
+              "type": "varchar(64)",
+              "comment": "检验单号"
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(64)",
+              "comment": "业务类型"
+            },
+            {
+              "name": "biz_id",
+              "type": "bigint",
+              "comment": "业务ID"
+            },
+            {
+              "name": "check_result",
+              "type": "tinyint",
+              "comment": "检验结果"
+            },
+            {
+              "name": "checker_id",
+              "type": "bigint",
+              "comment": "检验员"
+            },
+            {
+              "name": "check_time",
+              "type": "datetime",
+              "comment": "检验时间"
+            }
+          ]
+        },
+        {
+          "tableName": "quality_issue",
+          "tableComment": "质量问题",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "check_id",
+              "type": "bigint",
+              "comment": "检验单"
+            },
+            {
+              "name": "issue_desc",
+              "type": "varchar(255)",
+              "comment": "问题描述"
+            },
+            {
+              "name": "severity",
+              "type": "tinyint",
+              "comment": "严重程度"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "库存管理",
+      "tables": [
+        {
+          "tableName": "warehouse",
+          "tableComment": "仓库档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_name",
+              "type": "varchar(64)",
+              "comment": "仓库名称"
+            },
+            {
+              "name": "warehouse_code",
+              "type": "varchar(64)",
+              "comment": "仓库编码"
+            },
+            {
+              "name": "address",
+              "type": "varchar(255)",
+              "comment": "地址"
+            },
+            {
+              "name": "manager_id",
+              "type": "bigint",
+              "comment": "负责人"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            }
+          ]
+        },
+        {
+          "tableName": "stock",
+          "tableComment": "库存台账",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_id",
+              "type": "bigint",
+              "comment": "仓库"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "库存数"
+            },
+            {
+              "name": "safe_quantity",
+              "type": "int",
+              "comment": "安全库存"
+            },
+            {
+              "name": "lock_quantity",
+              "type": "int",
+              "comment": "锁定数"
+            }
+          ]
+        },
+        {
+          "tableName": "stock_flow",
+          "tableComment": "出入库流水",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "warehouse_id",
+              "type": "bigint",
+              "comment": "仓库"
+            },
+            {
+              "name": "product_id",
+              "type": "bigint",
+              "comment": "商品"
+            },
+            {
+              "name": "flow_type",
+              "type": "tinyint",
+              "comment": "出入库类型"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "comment": "数量"
+            },
+            {
+              "name": "related_no",
+              "type": "varchar(64)",
+              "comment": "关联单号"
+            },
+            {
+              "name": "flow_time",
+              "type": "datetime",
+              "comment": "发生时间"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "供应商管理",
+      "tables": [
+        {
+          "tableName": "supplier",
+          "tableComment": "供应商档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "supplier_name",
+              "type": "varchar(128)",
+              "comment": "供应商名称"
+            },
+            {
+              "name": "supplier_code",
+              "type": "varchar(64)",
+              "comment": "供应商编码"
+            },
+            {
+              "name": "supplier_type",
+              "type": "tinyint",
+              "comment": "供应商类型"
+            },
+            {
+              "name": "contact_name",
+              "type": "varchar(64)",
+              "comment": "联系人"
+            },
+            {
+              "name": "contact_phone",
+              "type": "varchar(64)",
+              "comment": "联系电话"
+            },
+            {
+              "name": "bank_account",
+              "type": "varchar(128)",
+              "comment": "银行账号"
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态"
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "备注"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
