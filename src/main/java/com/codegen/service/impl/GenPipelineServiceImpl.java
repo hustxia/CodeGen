@@ -47,18 +47,17 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 /**
  * 流水线编排实现。
  *
- * <p>并发策略：单线程执行器 + 运行标记，天然满足 M1「同一时刻仅 1 条运行中」；
- * run 接口只负责置状态和投递，执行体在后台线程，HTTP 请求立即返回。
+ * <p>并发策略（V9.8）：固定线程池（大小 = {@code gen.pipeline.max-running}）+ 运行闸门
+ * {@link com.codegen.support.PipelineRunGate}，多条流水线跨系统并行、同系统串行；
+ * run 接口只负责占闸门、置状态和投递，执行体在后台线程，HTTP 请求立即返回。
  */
 @Slf4j
 @Service
@@ -100,14 +99,24 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     @Autowired
     private com.codegen.monitor.MonitorMetrics monitorMetrics;
 
-    /** 单线程执行器：M1 只允许一条流水线在跑，排队即拒绝 */
-    private final ExecutorService runner = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "pipeline-runner");
-        t.setDaemon(true);
-        return t;
-    });
+    /** 固定线程池（V9.8）：大小 = gen.pipeline.max-running，@PostConstruct 按配置创建 */
+    private ExecutorService runner;
 
-    private final AtomicBoolean running = new AtomicBoolean(false);
+    /** V9.8 并发闸门：全局上限 + 同系统互斥（共用生成目录/目标库，不能并行） */
+    private com.codegen.support.PipelineRunGate runGate;
+
+    @jakarta.annotation.PostConstruct
+    void initRunner() {
+        int max = Math.max(1, props.getMaxRunning());
+        AtomicInteger seq = new AtomicInteger();
+        this.runner = Executors.newFixedThreadPool(max, r -> {
+            Thread t = new Thread(r, "pipeline-runner-" + seq.incrementAndGet());
+            t.setDaemon(true);
+            return t;
+        });
+        this.runGate = new com.codegen.support.PipelineRunGate(max);
+        log.info("V9.8 流水线并发运行：max-running={}", max);
+    }
 
     // ==================== 查询 ====================
 
@@ -350,36 +359,42 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         if (pipeline.getProjectId() == null) {
             throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "请先完成建库建表");
         }
-        // 端口预分配并回填：失败时任务留在原状态，可改端口后重试
-        if (pipeline.getBackendPort() == null) {
-            pipeline.setBackendPort(allocatePort(props.getBackendPortBase()));
-        }
-        if (pipeline.getFrontendPort() == null) {
-            pipeline.setFrontendPort(allocatePort(props.getFrontendPortBase()));
-        }
-        pipelineMapper.updateById(pipeline);
-
-        // 先投递任务再置位标记的窗口里可能被并发钻空子，但 M1 单用户场景可接受；
-        // 关键约束是：submit 失败必须回滚标记，否则运行标记永久卡死
-        if (!running.compareAndSet(false, true)) {
-            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "已有流水线在运行中，请稍后再试");
-        }
-        pipeline.setStatus("running");
-        pipelineMapper.updateById(pipeline);
-        push(pipeline);
+        // V9.8 先占闸门再分配端口：被拒绝时不产生任何副作用（不写库、不占端口）
+        final Long projectId = pipeline.getProjectId();
         try {
+            runGate.acquire(id, projectId);
+        } catch (IllegalStateException e) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), e.getMessage());
+        }
+        try {
+            // 端口预分配并回填：失败时任务留在原状态，可改端口后重试
+            if (pipeline.getBackendPort() == null) {
+                pipeline.setBackendPort(allocatePort(props.getBackendPortBase()));
+            }
+            if (pipeline.getFrontendPort() == null) {
+                pipeline.setFrontendPort(allocatePort(props.getFrontendPortBase()));
+            }
+            pipelineMapper.updateById(pipeline);
+
+            pipeline.setStatus("running");
+            pipelineMapper.updateById(pipeline);
+            push(pipeline);
             runner.submit(() -> {
                 try {
                     executor.execute(id);
                 } finally {
-                    running.set(false);
+                    runGate.release(id, projectId);
                 }
             });
         } catch (RuntimeException e) {
-            running.set(false);
-            pipeline.setStatus("failed");
-            pipeline.setFailReason("流水线投递失败：" + e.getMessage());
-            pipelineMapper.updateById(pipeline);
+            // 端口分配失败/投递失败：释放闸门。端口失败时状态未变，留在原状态可重试；
+            // 已置 running 的（投递被拒）置 failed
+            runGate.release(id, projectId);
+            if ("running".equals(pipeline.getStatus())) {
+                pipeline.setStatus("failed");
+                pipeline.setFailReason("流水线投递失败：" + e.getMessage());
+                pipelineMapper.updateById(pipeline);
+            }
             throw e;
         }
         return detail(id);
@@ -640,7 +655,9 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     /**
      * 端口分配：从起点顺延找第一个空闲端口，并避开平台自身端口。
      */
-    private Integer allocatePort(int base) {
+    private synchronized Integer allocatePort(int base) {
+        // synchronized：并发 run 时两个线程可能同时选中同一空闲端口（彼此都还没落库），
+        // 服务内串行化这个决策，DB 查重仍是第二道防线
         int ownPort = 8120;
         for (int port = base; port < base + 200; port++) {
             final int candidate = port;
