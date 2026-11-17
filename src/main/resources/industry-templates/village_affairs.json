@@ -30,7 +30,7 @@
             {
               "name": "parent_id",
               "type": "bigint",
-              "comment": "上级ID"
+              "comment": "上级节点"
             },
             {
               "name": "area_level",
@@ -162,12 +162,12 @@
             {
               "name": "village_id",
               "type": "bigint",
-              "comment": "villageID"
+              "comment": "所属村"
             },
             {
               "name": "grid_id",
               "type": "bigint",
-              "comment": "gridID"
+              "comment": "所属网格"
             },
             {
               "name": "status",
@@ -269,17 +269,17 @@
             {
               "name": "household_id",
               "type": "bigint",
-              "comment": "householdID"
+              "comment": "所属户籍户"
             },
             {
               "name": "village_id",
               "type": "bigint",
-              "comment": "villageID"
+              "comment": "所属村"
             },
             {
               "name": "grid_id",
               "type": "bigint",
-              "comment": "gridID"
+              "comment": "所属网格"
             },
             {
               "name": "status",
@@ -341,12 +341,12 @@
             {
               "name": "resident_id",
               "type": "bigint",
-              "comment": "residentID"
+              "comment": "关联村民"
             },
             {
               "name": "household_id",
               "type": "bigint",
-              "comment": "householdID"
+              "comment": "所属户籍户"
             },
             {
               "name": "relation",
@@ -428,7 +428,7 @@
             {
               "name": "resident_id",
               "type": "bigint",
-              "comment": "residentID"
+              "comment": "关联村民"
             },
             {
               "name": "change_type",
@@ -520,7 +520,7 @@
             {
               "name": "resident_id",
               "type": "bigint",
-              "comment": "residentID"
+              "comment": "关联村民"
             },
             {
               "name": "group_type",
@@ -724,7 +724,7 @@
             {
               "name": "household_id",
               "type": "bigint",
-              "comment": "householdID"
+              "comment": "所属户籍户"
             },
             {
               "name": "addr",
@@ -866,7 +866,7 @@
             {
               "name": "owner_id",
               "type": "bigint",
-              "comment": "业主ID"
+              "comment": "产权人"
             },
             {
               "name": "status",
@@ -928,7 +928,7 @@
             {
               "name": "parcel_id",
               "type": "bigint",
-              "comment": "parcelID"
+              "comment": "关联地块"
             },
             {
               "name": "contractor",
@@ -938,7 +938,7 @@
             {
               "name": "contractor_id",
               "type": "bigint",
-              "comment": "contractorID"
+              "comment": "承包方"
             },
             {
               "name": "area",
@@ -1035,7 +1035,7 @@
             {
               "name": "parcel_id",
               "type": "bigint",
-              "comment": "parcelID"
+              "comment": "关联地块"
             },
             {
               "name": "transfer_from",
@@ -1142,7 +1142,7 @@
             {
               "name": "village_id",
               "type": "bigint",
-              "comment": "villageID"
+              "comment": "所属村"
             },
             {
               "name": "grid_head",
@@ -1234,7 +1234,7 @@
             {
               "name": "grid_id",
               "type": "bigint",
-              "comment": "gridID"
+              "comment": "所属网格"
             },
             {
               "name": "member_name",
@@ -1331,7 +1331,7 @@
             {
               "name": "grid_id",
               "type": "bigint",
-              "comment": "gridID"
+              "comment": "所属网格"
             },
             {
               "name": "event_type",
@@ -1366,7 +1366,7 @@
             {
               "name": "handler_id",
               "type": "bigint",
-              "comment": "处理人ID"
+              "comment": "处理人"
             },
             {
               "name": "level",
@@ -1530,7 +1530,7 @@
             {
               "name": "archive_id",
               "type": "bigint",
-              "comment": "archiveID"
+              "comment": "关联档案"
             },
             {
               "name": "file_name",
@@ -1617,7 +1617,7 @@
             {
               "name": "archive_id",
               "type": "bigint",
-              "comment": "archiveID"
+              "comment": "关联档案"
             },
             {
               "name": "borrower",
@@ -1642,7 +1642,7 @@
             {
               "name": "approver_id",
               "type": "bigint",
-              "comment": "审批人ID"
+              "comment": "审批人"
             },
             {
               "name": "status",
@@ -1714,12 +1714,12 @@
             {
               "name": "parent_id",
               "type": "bigint",
-              "comment": "上级ID"
+              "comment": "上级节点"
             },
             {
               "name": "village_id",
               "type": "bigint",
-              "comment": "villageID"
+              "comment": "所属村"
             },
             {
               "name": "secretary",
@@ -1846,7 +1846,7 @@
             {
               "name": "org_id",
               "type": "bigint",
-              "comment": "组织ID"
+              "comment": "所属党组织"
             },
             {
               "name": "status",
@@ -1908,7 +1908,7 @@
             {
               "name": "member_id",
               "type": "bigint",
-              "comment": "会员ID"
+              "comment": "关联党员"
             },
             {
               "name": "change_type",
@@ -1918,12 +1918,12 @@
             {
               "name": "from_org_id",
               "type": "bigint",
-              "comment": "from_orgID"
+              "comment": "来源组织"
             },
             {
               "name": "to_org_id",
               "type": "bigint",
-              "comment": "to_orgID"
+              "comment": "目标组织"
             },
             {
               "name": "change_date",
@@ -2301,7 +2301,7 @@
             {
               "name": "member_id",
               "type": "bigint",
-              "comment": "会员ID"
+              "comment": "关联党员"
             },
             {
               "name": "fee_month",
@@ -2388,7 +2388,7 @@
             {
               "name": "member_id",
               "type": "bigint",
-              "comment": "会员ID"
+              "comment": "关联党员"
             },
             {
               "name": "year",
@@ -2485,12 +2485,12 @@
             {
               "name": "activity_id",
               "type": "bigint",
-              "comment": "activityID"
+              "comment": "关联活动"
             },
             {
               "name": "member_id",
               "type": "bigint",
-              "comment": "会员ID"
+              "comment": "关联党员"
             },
             {
               "name": "service_type",
@@ -2602,7 +2602,7 @@
             {
               "name": "publisher_id",
               "type": "bigint",
-              "comment": "发布人ID"
+              "comment": "发布人"
             },
             {
               "name": "publish_time",
@@ -2669,7 +2669,7 @@
             {
               "name": "disclosure_id",
               "type": "bigint",
-              "comment": "disclosureID"
+              "comment": "关联公开信息"
             },
             {
               "name": "file_name",
@@ -2756,12 +2756,12 @@
             {
               "name": "disclosure_id",
               "type": "bigint",
-              "comment": "disclosureID"
+              "comment": "关联公开信息"
             },
             {
               "name": "user_id",
               "type": "bigint",
-              "comment": "用户ID"
+              "comment": "关联用户"
             },
             {
               "name": "content",
@@ -2955,7 +2955,7 @@
             {
               "name": "meeting_id",
               "type": "bigint",
-              "comment": "meetingID"
+              "comment": "关联会议"
             },
             {
               "name": "title",
@@ -3047,7 +3047,7 @@
             {
               "name": "motion_id",
               "type": "bigint",
-              "comment": "motionID"
+              "comment": "关联议案"
             },
             {
               "name": "title",
@@ -3144,12 +3144,12 @@
             {
               "name": "vote_id",
               "type": "bigint",
-              "comment": "voteID"
+              "comment": "关联表决"
             },
             {
               "name": "voter_id",
               "type": "bigint",
-              "comment": "voterID"
+              "comment": "表决人"
             },
             {
               "name": "voter_name",
@@ -3390,12 +3390,12 @@
             {
               "name": "dispute_id",
               "type": "bigint",
-              "comment": "disputeID"
+              "comment": "关联纠纷"
             },
             {
               "name": "mediator_id",
               "type": "bigint",
-              "comment": "mediatorID"
+              "comment": "调解员"
             },
             {
               "name": "method",
@@ -3482,7 +3482,7 @@
             {
               "name": "dispute_id",
               "type": "bigint",
-              "comment": "disputeID"
+              "comment": "关联纠纷"
             },
             {
               "name": "visit_date",
@@ -3614,7 +3614,7 @@
             {
               "name": "custodian_id",
               "type": "bigint",
-              "comment": "保管人ID"
+              "comment": "保管人"
             },
             {
               "name": "location",
@@ -3676,7 +3676,7 @@
             {
               "name": "asset_id",
               "type": "bigint",
-              "comment": "资产ID"
+              "comment": "关联资产"
             },
             {
               "name": "change_type",
@@ -3706,7 +3706,7 @@
             {
               "name": "handler_id",
               "type": "bigint",
-              "comment": "处理人ID"
+              "comment": "处理人"
             },
             {
               "name": "status",
@@ -3768,7 +3768,7 @@
             {
               "name": "asset_id",
               "type": "bigint",
-              "comment": "资产ID"
+              "comment": "关联资产"
             },
             {
               "name": "inventory_date",
@@ -3778,7 +3778,7 @@
             {
               "name": "checker_id",
               "type": "bigint",
-              "comment": "检查人ID"
+              "comment": "检查人"
             },
             {
               "name": "actual_qty",
@@ -3880,7 +3880,7 @@
             {
               "name": "owner_id",
               "type": "bigint",
-              "comment": "业主ID"
+              "comment": "产权人"
             },
             {
               "name": "contract_status",
@@ -4054,7 +4054,7 @@
             {
               "name": "contract_id",
               "type": "bigint",
-              "comment": "合同ID"
+              "comment": "关联合同"
             },
             {
               "name": "payment_no",
@@ -4171,7 +4171,7 @@
             {
               "name": "owner_id",
               "type": "bigint",
-              "comment": "业主ID"
+              "comment": "产权人"
             },
             {
               "name": "open_date",
@@ -4238,7 +4238,7 @@
             {
               "name": "account_id",
               "type": "bigint",
-              "comment": "账户ID"
+              "comment": "资金账户"
             },
             {
               "name": "type",
@@ -4489,12 +4489,12 @@
             {
               "name": "item_id",
               "type": "bigint",
-              "comment": "itemID"
+              "comment": "关联服务事项"
             },
             {
               "name": "applicant_id",
               "type": "bigint",
-              "comment": "申请人ID"
+              "comment": "申请人"
             },
             {
               "name": "applicant_name",
@@ -4519,7 +4519,7 @@
             {
               "name": "handler_id",
               "type": "bigint",
-              "comment": "处理人ID"
+              "comment": "处理人"
             },
             {
               "name": "result",
@@ -4581,7 +4581,7 @@
             {
               "name": "apply_id",
               "type": "bigint",
-              "comment": "applyID"
+              "comment": "关联申请"
             },
             {
               "name": "material_name",
@@ -4611,7 +4611,7 @@
             {
               "name": "reviewer_id",
               "type": "bigint",
-              "comment": "评审人ID"
+              "comment": "评议人"
             },
             {
               "name": "status",
@@ -4668,7 +4668,7 @@
             {
               "name": "apply_id",
               "type": "bigint",
-              "comment": "applyID"
+              "comment": "关联申请"
             },
             {
               "name": "node_name",
@@ -4683,7 +4683,7 @@
             {
               "name": "handler_id",
               "type": "bigint",
-              "comment": "处理人ID"
+              "comment": "处理人"
             },
             {
               "name": "action",
@@ -4740,12 +4740,12 @@
             {
               "name": "apply_id",
               "type": "bigint",
-              "comment": "applyID"
+              "comment": "关联申请"
             },
             {
               "name": "user_id",
               "type": "bigint",
-              "comment": "用户ID"
+              "comment": "关联用户"
             },
             {
               "name": "score",
@@ -4842,7 +4842,7 @@
             {
               "name": "village_id",
               "type": "bigint",
-              "comment": "villageID"
+              "comment": "所属村"
             },
             {
               "name": "scope",
@@ -4934,7 +4934,7 @@
             {
               "name": "checker_id",
               "type": "bigint",
-              "comment": "检查人ID"
+              "comment": "检查人"
             },
             {
               "name": "inspect_date",
@@ -5036,12 +5036,12 @@
             {
               "name": "reporter_id",
               "type": "bigint",
-              "comment": "reporterID"
+              "comment": "上报人"
             },
             {
               "name": "handler_id",
               "type": "bigint",
-              "comment": "处理人ID"
+              "comment": "处理人"
             },
             {
               "name": "deadline",
@@ -5235,7 +5235,7 @@
             {
               "name": "custodian_id",
               "type": "bigint",
-              "comment": "保管人ID"
+              "comment": "保管人"
             },
             {
               "name": "condition",
@@ -5322,7 +5322,7 @@
             {
               "name": "assignee_id",
               "type": "bigint",
-              "comment": "处理人ID"
+              "comment": "处理人"
             },
             {
               "name": "start",
@@ -5394,17 +5394,17 @@
             {
               "name": "task_id",
               "type": "bigint",
-              "comment": "任务ID"
+              "comment": "关联任务"
             },
             {
               "name": "assignee_id",
               "type": "bigint",
-              "comment": "处理人ID"
+              "comment": "处理人"
             },
             {
               "name": "assigner_id",
               "type": "bigint",
-              "comment": "assignerID"
+              "comment": "派发人"
             },
             {
               "name": "assign_date",
@@ -5481,12 +5481,12 @@
             {
               "name": "task_id",
               "type": "bigint",
-              "comment": "任务ID"
+              "comment": "关联任务"
             },
             {
               "name": "user_id",
               "type": "bigint",
-              "comment": "用户ID"
+              "comment": "关联用户"
             },
             {
               "name": "content",
@@ -5563,7 +5563,7 @@
             {
               "name": "task_id",
               "type": "bigint",
-              "comment": "任务ID"
+              "comment": "关联任务"
             },
             {
               "name": "score",
@@ -5578,7 +5578,7 @@
             {
               "name": "reviewer_id",
               "type": "bigint",
-              "comment": "评审人ID"
+              "comment": "评议人"
             },
             {
               "name": "score_date",
@@ -5757,7 +5757,7 @@
             {
               "name": "metric_id",
               "type": "bigint",
-              "comment": "metricID"
+              "comment": "关联指标"
             },
             {
               "name": "value",
@@ -5839,7 +5839,7 @@
             {
               "name": "resident_id",
               "type": "bigint",
-              "comment": "residentID"
+              "comment": "关联村民"
             },
             {
               "name": "type",
@@ -5864,7 +5864,7 @@
             {
               "name": "reporter_id",
               "type": "bigint",
-              "comment": "reporterID"
+              "comment": "上报人"
             },
             {
               "name": "handle_status",
@@ -5916,12 +5916,12 @@
             {
               "name": "resident_id",
               "type": "bigint",
-              "comment": "residentID"
+              "comment": "关联村民"
             },
             {
               "name": "visitor_id",
               "type": "bigint",
-              "comment": "访客ID"
+              "comment": "回访人"
             },
             {
               "name": "visit_date",
@@ -6023,7 +6023,7 @@
             {
               "name": "resident_id",
               "type": "bigint",
-              "comment": "residentID"
+              "comment": "关联村民"
             },
             {
               "name": "color",
@@ -6192,12 +6192,12 @@
             {
               "name": "plan_id",
               "type": "bigint",
-              "comment": "计划ID"
+              "comment": "关联考核方案"
             },
             {
               "name": "target_id",
               "type": "bigint",
-              "comment": "targetID"
+              "comment": "关联对象"
             },
             {
               "name": "target_name",
@@ -6217,7 +6217,7 @@
             {
               "name": "reviewer_id",
               "type": "bigint",
-              "comment": "评审人ID"
+              "comment": "评议人"
             },
             {
               "name": "assess_date",
@@ -6264,12 +6264,12 @@
             {
               "name": "plan_id",
               "type": "bigint",
-              "comment": "计划ID"
+              "comment": "关联考核方案"
             },
             {
               "name": "target_id",
               "type": "bigint",
-              "comment": "targetID"
+              "comment": "关联对象"
             },
             {
               "name": "target_name",
@@ -6381,7 +6381,7 @@
             {
               "name": "publisher_id",
               "type": "bigint",
-              "comment": "发布人ID"
+              "comment": "发布人"
             },
             {
               "name": "publish_time",
@@ -6493,7 +6493,7 @@
             {
               "name": "creator_id",
               "type": "bigint",
-              "comment": "创建人ID"
+              "comment": "创建人"
             },
             {
               "name": "status",
@@ -6570,12 +6570,12 @@
             {
               "name": "applicant_id",
               "type": "bigint",
-              "comment": "申请人ID"
+              "comment": "申请人"
             },
             {
               "name": "dept_id",
               "type": "bigint",
-              "comment": "部门ID"
+              "comment": "所属部门"
             },
             {
               "name": "amount",
@@ -6662,7 +6662,7 @@
             {
               "name": "approval_id",
               "type": "bigint",
-              "comment": "审批ID"
+              "comment": "关联审批"
             },
             {
               "name": "node_name",
@@ -6677,7 +6677,7 @@
             {
               "name": "assignee_id",
               "type": "bigint",
-              "comment": "处理人ID"
+              "comment": "处理人"
             },
             {
               "name": "status",
@@ -6754,7 +6754,7 @@
             {
               "name": "biz_id",
               "type": "bigint",
-              "comment": "业务ID"
+              "comment": "关联业务"
             },
             {
               "name": "file_name",
@@ -6826,7 +6826,7 @@
             {
               "name": "biz_id",
               "type": "bigint",
-              "comment": "业务ID"
+              "comment": "关联业务"
             },
             {
               "name": "operation",
@@ -6836,7 +6836,7 @@
             {
               "name": "operator_id",
               "type": "bigint",
-              "comment": "操作人ID"
+              "comment": "操作人"
             },
             {
               "name": "operator_name",
@@ -6908,7 +6908,7 @@
             {
               "name": "publisher_id",
               "type": "bigint",
-              "comment": "发布人ID"
+              "comment": "发布人"
             },
             {
               "name": "publish_time",
@@ -7005,12 +7005,12 @@
             {
               "name": "owner_id",
               "type": "bigint",
-              "comment": "业主ID"
+              "comment": "产权人"
             },
             {
               "name": "dept_id",
               "type": "bigint",
-              "comment": "部门ID"
+              "comment": "所属部门"
             },
             {
               "name": "status",
@@ -7082,12 +7082,12 @@
             {
               "name": "assignee_id",
               "type": "bigint",
-              "comment": "处理人ID"
+              "comment": "处理人"
             },
             {
               "name": "creator_id",
               "type": "bigint",
-              "comment": "创建人ID"
+              "comment": "创建人"
             },
             {
               "name": "start_time",
@@ -7159,7 +7159,7 @@
             {
               "name": "task_id",
               "type": "bigint",
-              "comment": "任务ID"
+              "comment": "关联任务"
             },
             {
               "name": "item_name",
@@ -7174,7 +7174,7 @@
             {
               "name": "assignee_id",
               "type": "bigint",
-              "comment": "处理人ID"
+              "comment": "处理人"
             },
             {
               "name": "status",
@@ -7231,7 +7231,7 @@
             {
               "name": "user_id",
               "type": "bigint",
-              "comment": "用户ID"
+              "comment": "关联用户"
             },
             {
               "name": "type",
@@ -7385,7 +7385,7 @@
             {
               "name": "tag_id",
               "type": "bigint",
-              "comment": "标签ID"
+              "comment": "关联标签"
             },
             {
               "name": "biz_type",
@@ -7395,7 +7395,7 @@
             {
               "name": "biz_id",
               "type": "bigint",
-              "comment": "业务ID"
+              "comment": "关联业务"
             },
             {
               "name": "remark",
@@ -7561,7 +7561,7 @@
             {
               "name": "biz_id",
               "type": "bigint",
-              "comment": "业务ID"
+              "comment": "关联业务"
             },
             {
               "name": "action",
@@ -7571,7 +7571,7 @@
             {
               "name": "actor_id",
               "type": "bigint",
-              "comment": "操作人ID"
+              "comment": "操作人"
             },
             {
               "name": "actor_name",
@@ -7633,12 +7633,12 @@
             {
               "name": "sender_id",
               "type": "bigint",
-              "comment": "发送人ID"
+              "comment": "发送人"
             },
             {
               "name": "receiver_id",
               "type": "bigint",
-              "comment": "接收人ID"
+              "comment": "接收人"
             },
             {
               "name": "type",

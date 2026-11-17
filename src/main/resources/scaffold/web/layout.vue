@@ -39,6 +39,8 @@
           :class="{ 'is-active': isGrpActive(grp) }"
           @click="openGroup(grp)"
         >
+          <el-icon v-if="grp.icon" class="group-icon"><component :is="grp.icon" /></el-icon>
+          <span v-else class="group-icon group-icon-fallback"><component :is="groupIconByIndex(grp)" /></span>
           <span class="group-name">{{ grp.title }}</span>
           <span class="group-count">{{ grp.children.length || 1 }}</span>
           <el-icon class="group-arrow"><ArrowRight /></el-icon>
@@ -121,6 +123,8 @@ function buildMenu(routes, parentPath) {
     list.push({
       path,
       title: resolveTitle(route.meta, route.name || path),
+      // 菜单美观：把路由 meta.icon 带进菜单树，二级业务域渲染专属图标
+      icon: (route.meta && route.meta.icon) || '',
       children
     })
   })
@@ -186,6 +190,12 @@ export default {
   methods: {
     sysIcon(i) {
       return ICONS[i % ICONS.length]
+    },
+    // 菜单美观：无 icon 的业务域按索引给一个稳定图标（兼容旧路由）
+    groupIconByIndex(grp) {
+      const list = (this.panelSys && this.panelSys.children) || []
+      const i = list.findIndex(g => g.path === grp.path)
+      return ICONS[(i < 0 ? 0 : i) % ICONS.length]
     },
     shortTitle(title) {
       // 侧栏较窄，"WMS 系统" → "WMS" 之外保留完整标题换行展示
@@ -412,6 +422,17 @@ export default {
   font-size: 13px;
   cursor: pointer;
   transition: background 0.16s ease, color 0.16s ease;
+}
+.group-icon {
+  flex: 0 0 auto;
+  width: 20px;
+  font-size: 15px;
+  text-align: center;
+  color: var(--app-primary);
+  opacity: 0.85;
+}
+.group-icon-fallback {
+  color: #8fa3c8;
 }
 .group-name {
   flex: 1;

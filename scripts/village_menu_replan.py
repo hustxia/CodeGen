@@ -33,6 +33,23 @@ ROUTES_REL = os.path.join("src", "router", "gen-routes.js")
 SYSTEM_PATH = "village_affairs"
 SYSTEM_TITLE = "智慧村务管理系统"
 
+# 二级业务域图标（Element Plus 图标组件名，须在 main.js 全局注册或按需导入）
+# Menu美观：二级面板每个业务域配专属图标，三级页面用统一色点，视觉上一眼可辨。
+DOMAIN_ICONS = {
+    "base": "OfficeBuilding",      # 基础数据
+    "land": "MapLocation",         # 房屋土地
+    "grid": "Location",            # 网格档案
+    "party": "Flag",               # 党建管理
+    "openness": "Document",        # 村务公开
+    "dispute": "ChatDotRound",     # 矛盾调解
+    "assets": "Wallet",            # 三资管理
+    "service": "Service",          # 便民服务
+    "env": "Sunrise",              # 人居环境
+    "supervise": "AlarmClock",     # 任务督办
+    "decision": "DataAnalysis",    # 决策分析
+    "system": "Setting",           # 系统管理
+}
+
 # 二级业务域：(code, 显示名, 表名前缀/精确表名列表)
 # 顺序即菜单显示顺序；每张 village_ 表恰好归入一个业务域。
 DOMAINS = [
@@ -124,7 +141,7 @@ def render(tables, table_to_domain):
             indent(6) + "{",
             indent(8) + "path: '%s'," % code,
             indent(8) + "component: GroupView,",
-            indent(8) + "meta: { title: '%s', i18nKey: 'menu.%s.%s' }," % (label, SYSTEM_PATH, code),
+            indent(8) + "meta: { title: '%s', i18nKey: 'menu.%s.%s', icon: '%s' }," % (label, SYSTEM_PATH, code, DOMAIN_ICONS.get(code, 'Menu')),
             indent(8) + "children: [",
             pages,
             indent(8) + "]",
