@@ -610,6 +610,54 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
     }
 
     /**
+     * V9.12：把磁盘上 scaffold 已落盘的基座测试源码（如 LoginStateTestSupport）显式加入编译单元。
+     *
+     * <p>坑 65 根因 3：产物测试类继承的基类由 scaffold 步骤写盘、不在本次 testSources 清单里；
+     * {@link #backendTestClasses} 只能找到 target/test-classes（产物尚未编译过，目录不存在），
+     * 于是 javac 报 cannot find symbol。这里由 testSources 反推各模块的 src/test/java 根，
+     * 遍历磁盘上已存在的 .java，解析全限定名后去重加入（本次预览同名类优先，见 classToPath）。
+     */
+    private void addScaffoldTestSources(List<JavaFileObject> units, Map<String, String> classToPath,
+                                        List<JavaSource> testSources, String backendRootOverride,
+                                        GenSelfCheckVO result) {
+        Set<Path> roots = new LinkedHashSet<>();
+        for (JavaSource source : testSources) {
+            String rel = source.path().replace('\\', '/');
+            int start = srcTestJavaStart(rel);
+            if (start < 0) {
+                continue;
+            }
+            Path moduleRoot = Path.of(effectiveBackendRoot(backendRootOverride), rel.substring(0, start));
+            Path testRoot = moduleRoot.resolve("src/test/java");
+            if (Files.isDirectory(testRoot)) {
+                roots.add(testRoot.toAbsolutePath().normalize());
+            }
+        }
+        for (Path root : roots) {
+            try (Stream<Path> walk = Files.walk(root)) {
+                List<Path> files = walk.filter(p -> p.toString().endsWith(".java")).toList();
+                for (Path p : files) {
+                    String content;
+                    try {
+                        content = Files.readString(p, StandardCharsets.UTF_8);
+                    } catch (Exception e) {
+                        continue;
+                    }
+                    String fqcn = classNameOfTestSource(content);
+                    if (fqcn == null || classToPath.containsKey(fqcn)) {
+                        continue;  // 本次预览里已有同名类，优先用预览版
+                    }
+                    units.add(new StringSource(fqcn, content));
+                    classToPath.put(fqcn, p.toString());
+                }
+            } catch (Exception e) {
+                result.addIssue(root.toString(), 0L, "WARNING",
+                        "读取 scaffold 基座测试源码失败（不影响本次产物自检）：" + e.getMessage());
+            }
+        }
+    }
+
+    /**
      * 产物测试编译（V7.3 P0-1）：与主编译隔离，单独用测试 classpath 编译 src/test/java。
      *
      * <p>取舍：测试类依赖 JUnit/MockMvc/H2 等 test-scope 包，基座快照通常没有。
@@ -679,6 +727,11 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
                 units.add(new StringSource(className, source.content()));
                 classToPath.put(className, source.path());
             }
+            // V9.12 坑 65 根因 3：产物测试继承的基座类（LoginStateTestSupport）由 scaffold 步骤落盘，
+            // 不在本次 testSources 里；target/test-classes 又从未编译过（产物还没 build），
+            // 只靠 classpath 隐式编译解析不到 → cannot find symbol。显式把磁盘上已有的基座源码
+            // 加入编译单元（坑 28 教训：参与注解处理的单元必须全部显式列出）。
+            addScaffoldTestSources(units, classToPath, testSources, backendRootOverride, result);
             if (units.isEmpty()) {
                 return;
             }
