@@ -139,6 +139,27 @@ final class ScaffoldSeedWriter {
                 + "INSERT IGNORE INTO sys_role (id, role_name, role_key, remark)\n"
                 + "VALUES (1, '超级管理员', 'admin', '内置角色：接口权限点直通');\n"
                 + "INSERT IGNORE INTO sys_user_role (user_id, role_id)\n"
-                + "SELECT u.id, 1 FROM sys_user u WHERE u.username = 'admin';\n";
+                + "SELECT u.id, 1 FROM sys_user u WHERE u.username = 'admin';\n\n"
+                // V9.12：系统管理菜单与权限点。id 段 9001-9099 避开业务菜单自增区间，
+                // 由 /sysUser、/sysRole、/sysMenu 三组接口的 perms 校验使用
+                + "INSERT IGNORE INTO sys_menu (id, parent_id, name, path, component, perms, type, sort, status, deleted) VALUES\n"
+                + "  (9001, 0, '系统管理', '/system', NULL, NULL, 1, 900, 1, 0),\n"
+                + "  (9002, 9001, '用户管理', '/system/user', 'system/user', 'sys_user:list', 2, 1, 1, 0),\n"
+                + "  (9003, 9001, '角色管理', '/system/role', 'system/role', 'sys_role:list', 2, 2, 1, 0),\n"
+                + "  (9004, 9001, '菜单管理', '/system/menu', 'system/menu', 'sys_menu:list', 2, 3, 1, 0),\n"
+                + "  (9011, 9002, '用户新增', NULL, NULL, 'sys_user:add', 3, 1, 1, 0),\n"
+                + "  (9012, 9002, '用户编辑', NULL, NULL, 'sys_user:edit', 3, 2, 1, 0),\n"
+                + "  (9013, 9002, '用户删除', NULL, NULL, 'sys_user:remove', 3, 3, 1, 0),\n"
+                + "  (9014, 9002, '重置密码', NULL, NULL, 'sys_user:resetPwd', 3, 4, 1, 0),\n"
+                + "  (9015, 9002, '分配角色', NULL, NULL, 'sys_user:assign', 3, 5, 1, 0),\n"
+                + "  (9021, 9003, '角色新增', NULL, NULL, 'sys_role:add', 3, 1, 1, 0),\n"
+                + "  (9022, 9003, '角色编辑', NULL, NULL, 'sys_role:edit', 3, 2, 1, 0),\n"
+                + "  (9023, 9003, '角色删除', NULL, NULL, 'sys_role:remove', 3, 3, 1, 0),\n"
+                + "  (9024, 9003, '分配菜单', NULL, NULL, 'sys_role:assign', 3, 4, 1, 0),\n"
+                + "  (9031, 9004, '菜单新增', NULL, NULL, 'sys_menu:add', 3, 1, 1, 0),\n"
+                + "  (9032, 9004, '菜单编辑', NULL, NULL, 'sys_menu:edit', 3, 2, 1, 0),\n"
+                + "  (9033, 9004, '菜单删除', NULL, NULL, 'sys_menu:remove', 3, 3, 1, 0);\n\n"
+                + "INSERT IGNORE INTO sys_role_menu (role_id, menu_id)\n"
+                + "SELECT 1, id FROM sys_menu WHERE id BETWEEN 9001 AND 9099;\n";
     }
 }

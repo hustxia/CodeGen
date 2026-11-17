@@ -139,7 +139,9 @@ export default {
     groups() {
       // 系统壳（/village_affairs）本身不作为一级菜单，它的 children 才是业务域
       const sys = this.menus.find(m => m.path !== '/' && m.path !== '/home' && m.children.length)
-      const all = sys ? sys.children : this.menus.filter(m => m.path !== '/' && m.path !== '/home')
+      const base = sys ? sys.children : this.menus.filter(m => m.path !== '/' && m.path !== '/home')
+      // V9.12：生成物内置的用户/角色/菜单管理固定在菜单末尾（路由为静态 /system 分组）
+      const all = base.concat(this.menus.filter(m => m.path === '/system'))
       const kw = this.keyword.trim().toLowerCase()
       if (!kw) return all
       return all.map(g => ({

@@ -259,6 +259,15 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             // V6.4 P0-4：登录日志只读查询接口
             write(commonRoot, pkgPath + "/system/LoginLogController.java",
                     ScaffoldAuthWriter.loginLogControllerJava(pkg), "backend", force, vo, counter);
+            // V9.12：RBAC 管理入口——此前只有登录接口，建出来的系统改角色只能手工连库
+            write(commonRoot, pkgPath + "/system/SysUserController.java",
+                    ScaffoldAuthWriter.sysUserControllerJava(pkg), "backend", force, vo, counter);
+            write(commonRoot, pkgPath + "/system/SysRoleController.java",
+                    ScaffoldAuthWriter.sysRoleControllerJava(pkg), "backend", force, vo, counter);
+            write(commonRoot, pkgPath + "/system/SysMenuController.java",
+                    ScaffoldAuthWriter.sysMenuControllerJava(pkg), "backend", force, vo, counter);
+            write(commonRoot, pkgPath + "/common/auth/SysApiPerms.java",
+                    ScaffoldAuthWriter.sysApiPermsJava(pkg), "backend", force, vo, counter);
             write(bootRoot, "db/init_sys_user.sql", seedSql(),
                     "backend", force, vo, counter);
         }
@@ -409,7 +418,18 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             write(frontendRoot, "src/views/index.vue", ScaffoldFrontendWriter.frontendHomeVue(appName), "frontend", force, vo, counter);
             // V5.0 F-07：登录页与路由守卫（401 跳转目标从 request.js 来）
             write(frontendRoot, "src/views/login.vue", ScaffoldFrontendWriter.frontendLoginVue(appName, appLogo, themeColor), "frontend", force, vo, counter);
-            write(frontendRoot, "src/router/index.js", ScaffoldFrontendWriter.frontendRouterJs(), "frontend", force, vo, counter);
+            write(frontendRoot, "src/router/index.js", ScaffoldFrontendWriter.frontendRouterJs(Boolean.TRUE.equals(dto.getWithAuth())), "frontend", force, vo, counter);
+            // V9.12：系统管理三页（用户/角色/菜单），接口与后端 SysXxxController 对齐
+            if (Boolean.TRUE.equals(dto.getWithAuth())) {
+                write(frontendRoot, "src/api/system.js", ScaffoldFrontendWriter.frontendApiSystemJs(),
+                        "frontend", force, vo, counter);
+                write(frontendRoot, "src/views/system/user.vue", ScaffoldFrontendWriter.frontendSystemUserVue(),
+                        "frontend", force, vo, counter);
+                write(frontendRoot, "src/views/system/role.vue", ScaffoldFrontendWriter.frontendSystemRoleVue(),
+                        "frontend", force, vo, counter);
+                write(frontendRoot, "src/views/system/menu.vue", ScaffoldFrontendWriter.frontendSystemMenuVue(),
+                        "frontend", force, vo, counter);
+            }
             // 占位：route-sync 未跑前保证 webpack 能解析 import（后续被 GenMenuServiceImpl 整文件重建）
             write(frontendRoot, "src/router/gen-routes.js",
                     "// 该文件由代码生成器自动维护，请勿手工编辑。\n"
