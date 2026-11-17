@@ -338,13 +338,13 @@ export default {
       this[tab + 'Rows'].push(factory ? factory() : {})
     },
     /**
-     * 打开某一行的下级明细。用 $set 保障数组存在，
+     * 打开某一行的下级明细。Vue3 下直接给不存在的属性赋值即可响应，无需 $set，
      * 因为后端返回的 VO 里该字段可能为 null（没有下级时）。
      */
     openGrandRows(childVar, gcVar, row) {
       const field = gcVar + 's'
       if (!row[field]) {
-        this.$set(row, field, [])
+        row[field] = []
       }
       this.grandRows = row[field]
       this.grandDialog = childVar + '.' + gcVar

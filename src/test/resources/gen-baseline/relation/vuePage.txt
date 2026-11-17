@@ -211,9 +211,9 @@ export default {
           // 直接走通用 request，不依赖宿主工程是否提供 @/api/dict；
           // 宿主没有字典接口时这里会抛错，下面 catch 把选项降级为空数组，页面照常可用
           const res = await request({ url: '/api/demo/system/dict/data/type/' + code, method: 'get' })
-          this.$set(this.dicts, code, (res && res.data) || [])
+          this.dicts[code] = (res && res.data) || []
         } catch (e) {
-          this.$set(this.dicts, code, [])
+          this.dicts[code] = []
         }
       }))
     },
@@ -248,14 +248,14 @@ export default {
       this.fetchList()
     },
     async searchRef(field, refTable, label, keyword) {
-      this.$set(this.refLoading, field, true)
+      this.refLoading[field] = true
       try {
         const res = await getDemoGoodsOptions(refTable, label, keyword)
-        this.$set(this.refOptions, field, res.data || [])
+        this.refOptions[field] = res.data || []
       } catch (e) {
-        this.$set(this.refOptions, field, [])
+        this.refOptions[field] = []
       } finally {
-        this.$set(this.refLoading, field, false)
+        this.refLoading[field] = false
       }
     },
     initRefs() {
@@ -274,9 +274,9 @@ export default {
         const res = await getDemoGoodsOptions(refTable, label, '')
         const map = {}
         ;(res.data || []).forEach(o => { map[String(o.id)] = o.label })
-        this.$set(this.refLabels, field, map)
+        this.refLabels[field] = map
       } catch (e) {
-        this.$set(this.refLabels, field, {})
+        this.refLabels[field] = {}
       }
     },
     /**
