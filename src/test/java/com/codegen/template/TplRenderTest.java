@@ -194,6 +194,10 @@ class TplRenderTest {
             has(out, "checkUniqueField", "查重接口");
             has(out, "checkUnique(dto, null);", "新增兜底查重");
             has(out, "checkUnique(dto, dto.getId());", "修改兜底查重");
+            // V9.12：@Tag 注解必须走全限定名——实体类名恰为 Tag 时（tag 表），
+            // import io.swagger...Tag 会与 com.xxx.entity.Tag 撞成 "reference to Tag is ambiguous"
+            hasNot(out, "import io.swagger.v3.oas.annotations.tags.Tag;", "不得 import Tag（与实体类同名冲突）");
+            has(out, "@io.swagger.v3.oas.annotations.tags.Tag(name =", "@Tag 注解用全限定名");
         }
 
         @Test

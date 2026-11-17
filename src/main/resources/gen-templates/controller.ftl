@@ -31,7 +31,6 @@ import ${rootPkg}.common.result.Result;
 <#if hasRef>import org.springframework.jdbc.core.JdbcTemplate;
 </#if>
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 <#if ctrlValid>import jakarta.validation.Valid;
 </#if>
 <#if ctrlAnyApi || genTree || hasChild>import org.springframework.beans.BeanUtils;
@@ -88,7 +87,7 @@ import java.time.LocalDateTime;
 /**
  * ${comment} Controller
  */
-@Tag(name = "${comment}管理", description = "${comment}管理")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "${comment}管理", description = "${comment}管理")
 @RestController
 @RequestMapping("/${moduleName}")
 public class ${className}Controller {

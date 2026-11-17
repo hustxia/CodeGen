@@ -11,7 +11,6 @@ import com.demo.vo.DemoLeaveVO;
 import com.codegen.common.result.Result;
 import com.codegen.common.log.Log;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -49,7 +48,7 @@ import java.time.LocalDateTime;
 /**
  * 请假单 Controller
  */
-@Tag(name = "请假单管理", description = "请假单管理")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "请假单管理", description = "请假单管理")
 @RestController
 @RequestMapping("/leave")
 public class DemoLeaveController {
