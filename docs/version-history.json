@@ -526,12 +526,12 @@
       "version": "V9.12",
       "highlight": true,
       "theme": {
-        "en": "Dedicated smart-village template: village_affairs (85 tables / 1414 columns) covering household registration, land rights, three-asset management, party governance, three-affairs disclosure, convenience services, human settlement and sentiment analytics; dedicated generator script with Chinese column-comment dictionary, idempotent and audit-safe; generic deepening scripts skip dedicated templates; 467/467 tests green",
-        "zh": "智慧村务专用模板：village_affairs（85 表 / 1414 字段），覆盖人口户籍、土地确权、三资管理、党建治理、三务公开、便民服务、人居环境、民情决策；专用生成脚本含中文列注释词库，幂等且不碰审计列；通用深化脚本跳过专用模板避免结构污染；467/467 单测全绿"
+        "en": "Dedicated smart-village template village_affairs (85 tables / 1414 columns) + full-chain generator fixes: Tag vs Swagger @Tag ambiguity, fat-jar self-check classpath, scaffold package placeholder & test base sources, pipeline absolute paths, Vue3 dev/vite deploy, stale failReason cleanup, Vue3 page legacy fixes. End-to-end: 12/12 pipeline steps success, generated system running (backend 8140 / frontend 9040), 90 .vue pages compile with 0 errors; 468/468 tests green",
+        "zh": "智慧村务专用模板 village_affairs（85 表/1414 字段）+ 生成器全链路修复：Tag 撞 Swagger @Tag 歧义、肥 jar 自检 classpath、scaffold 包占位符与测试基座编译单元、流水线路径绝对化、Vue3 dev/vite 部署、重跑残留 failReason 清理、Vue3 页面遗留修复。端到端：12/12 步骤全绿，生成系统已运行（后端 8140/前端 9040），90 个 .vue 页面 0 编译错误；468/468 单测全绿"
       },
       "commit": {
-        "en": "25e2dcc, **current**",
-        "zh": "25e2dcc, **当前版本**"
+        "en": "25e2dcc..3fabb7b, **current**",
+        "zh": "25e2dcc..3fabb7b, **当前版本**"
       }
     }
   ],
