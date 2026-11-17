@@ -74,7 +74,7 @@ export default {
       if (!url) {
         this.items.splice(idx, 1)
       } else {
-        this.$set(this.items, idx, url)
+        this.items[idx] = url
       }
       this.emitItems()
     },
