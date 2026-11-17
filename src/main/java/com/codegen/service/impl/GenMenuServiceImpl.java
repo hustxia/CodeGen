@@ -510,7 +510,9 @@ public class GenMenuServiceImpl implements GenMenuService {
             sb.append("import Layout from '@/layout/index.vue'\n");
             // 业务域分组层是纯容器：只透传 router-view，绝不能再挂 Layout，
             // 否则系统内每层都会渲染一份侧边栏，页面出现双重菜单
-            sb.append("const GroupView = { name: 'GroupView', render: h => h('router-view') }\n\n");
+            sb.append("import { h } from 'vue'\n");
+            sb.append("import { RouterView } from 'vue-router'\n");
+            sb.append("const GroupView = { name: 'GroupView', render: () => h(RouterView) }\n\n");
         }
         sb.append("export default [\n");
 
