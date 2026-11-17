@@ -265,11 +265,14 @@ def _dump_preserving_column_style(vo, path):
 
 
 def expand_all(directory=OUT_DIR, check_only=False):
+    skip_keys = {"village_affairs"}  # 专用模板由 gen_village_template.py 精确设计，通用展开不得改写
     files = sorted(glob.glob(os.path.join(directory, "*.json")))
     total_tables = total_added = 0
     for path in files:
         with open(path, encoding="utf-8") as f:
             vo = json.load(f)
+        if vo.get("key") in skip_keys:
+            continue
         added_here = 0
         for module in vo.get("modules", []):
             for table in module.get("tables", []):

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "currentVersion": "V9.11",
-    "updated": "2026-11-16",
+    "currentVersion": "V9.12",
+    "updated": "2026-11-17",
     "source": "README.md(en) + README_ZH.md(zh) 为权威源；sync-version-rows*.mjs 仅 harvest 其余语言的 V7.5~V9.1 译本",
     "note": "改动版本表只需编辑本文件，再运行 node scripts/render_version_history.mjs"
   },
@@ -518,8 +518,20 @@
         "zh": "行业模板升级为完整系统：每套追加 15 张平台通用表（审批流/附件/操作日志/任务/消息/字典/配置）+ 所属分类 10-15 张专属业务表（19 大类共 248 张）。每套模板 29-45 张表（平均 34.8，原 8.6）、每表 10-20 字段（平均 14.25，原 7.87）；字段二次深化按辅助表语义避免假字段；466/466 单测全绿"
       },
       "commit": {
-        "en": "16d39ec, **current**",
-        "zh": "16d39ec, **当前版本**"
+        "en": "16d39ec",
+        "zh": "16d39ec"
+      }
+    },
+    {
+      "version": "V9.12",
+      "highlight": true,
+      "theme": {
+        "en": "Dedicated smart-village template: village_affairs (85 tables / 1414 columns) covering household registration, land rights, three-asset management, party governance, three-affairs disclosure, convenience services, human settlement and sentiment analytics; dedicated generator script with Chinese column-comment dictionary, idempotent and audit-safe; generic deepening scripts skip dedicated templates; 467/467 tests green",
+        "zh": "智慧村务专用模板：village_affairs（85 表 / 1414 字段），覆盖人口户籍、土地确权、三资管理、党建治理、三务公开、便民服务、人居环境、民情决策；专用生成脚本含中文列注释词库，幂等且不碰审计列；通用深化脚本跳过专用模板避免结构污染；467/467 单测全绿"
+      },
+      "commit": {
+        "en": "pending, **current**",
+        "zh": "待提交, **当前版本**"
       }
     }
   ],

@@ -43,6 +43,63 @@ class IndustryTemplateRegistryTest {
                 "V9.9 新增行业模板应存在");
     }
 
+    /** V9.12：智慧村务专用模板——70 张村务表 + 15 张平台通用表，字段完整、无冲突 */
+    @Test
+    void villageAffairsTemplateIsFullSystem() {
+        GenAiTemplateVO v = registry.get("village_affairs");
+        assertNotNull(v, "智慧村务模板应存在");
+        assertEquals("智慧村务管理", v.getName());
+        assertEquals("政务民生", v.getCategory());
+        assertTrue(v.getTableCount() >= 70, "村务模板表数应 ≥70，实际 " + v.getTableCount());
+
+        Set<String> tables = v.getModules().stream()
+                .flatMap(m -> m.getTables().stream())
+                .map(GenPipelineAiVO.TableModel::getTableName)
+                .collect(Collectors.toSet());
+        assertEquals(v.getTableCount(), tables.size(), "村务模板不能有重复表");
+        // 四大业务域核心表必须在
+        assertTrue(tables.containsAll(Set.of(
+                "village_population_change", "village_land_contract",  // 基础数据底座
+                "village_party_member", "village_disclosure", "village_dispute",  // 党建治理
+                "village_fund_transaction", "village_service_apply", "village_env_issue",  // 业务监管
+                "village_dashboard_metric", "village_mood_log",  // 决策服务
+                "approval", "attachment", "operation_log")),  // 平台通用能力
+                "村务模板核心表缺失");
+
+        // 关键表字段完整性（按列名校验，而非硬编码数量）
+        GenPipelineAiVO.TableModel fund = v.getModules().stream()
+                .flatMap(m -> m.getTables().stream())
+                .filter(t -> "village_fund_transaction".equals(t.getTableName()))
+                .findFirst().orElseThrow();
+        Set<String> fundCols = fund.getColumns().stream()
+                .map(GenPipelineAiVO.Column::getName).collect(Collectors.toSet());
+        assertTrue(fundCols.containsAll(Set.of("account_id", "direction", "amount",
+                "before_balance", "after_balance", "status")),
+                "资金流水表缺关键字段");
+
+        GenPipelineAiVO.TableModel resident = v.getModules().stream()
+                .flatMap(m -> m.getTables().stream())
+                .filter(t -> "village_resident".equals(t.getTableName()))
+                .findFirst().orElseThrow();
+        Set<String> residentCols = resident.getColumns().stream()
+                .map(GenPipelineAiVO.Column::getName).collect(Collectors.toSet());
+        assertTrue(residentCols.containsAll(Set.of("id_card", "household_id",
+                "grid_id", "phone", "status")), "村民档案缺关键字段");
+
+        // 每表 ≥8 列、首列主键、业务列不撞审计列
+        Set<String> audit = Set.of("create_time", "update_time", "create_by", "update_by", "deleted");
+        for (GenAiTemplateVO.Module m : v.getModules()) {
+            for (GenPipelineAiVO.TableModel t : m.getTables()) {
+                assertTrue(t.getColumns().size() >= 8, t.getTableName() + " 字段不足");
+                assertTrue(t.getColumns().get(0).isPk(), t.getTableName() + " 首列非主键");
+                for (GenPipelineAiVO.Column c : t.getColumns()) {
+                    assertFalse(audit.contains(c.getName()), t.getTableName() + " 撞审计列");
+                    assertNotNull(c.getComment(), t.getTableName() + "." + c.getName() + " 缺注释");
+                }
+            }
+        }
+    }
+
     @Test
     void listIsLightweightAndCategoriesPresent() {
         for (GenAiTemplateVO t : registry.list()) {

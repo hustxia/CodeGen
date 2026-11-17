@@ -29,6 +29,10 @@ from collections import OrderedDict
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.normpath(os.path.join(HERE, "..", "src", "main", "resources", "industry-templates"))
 
+# 专用模板由各自 gen_*_template.py 精确设计（表结构/字段是定制的），
+# 通用深化脚本重跑时不得追加"政务民生业务深化"等表，否则会破坏既定结构。
+SKIP_KEYS = frozenset({"village_affairs"})
+
 # ---------- 紧凑字段 DSL ----------
 # token 规则：① 宏名直接用（类型+中文注释）② xxx_id → bigint ③ xxx_no → varchar(64)
 #             ④ xxx_time/date/code/amount/qty/name 等后缀推导 ⑤ a:b → 名字 a，类型取宏 b
@@ -621,6 +625,8 @@ def main():
     for path in files:
         with open(path, encoding="utf-8") as f:
             vo = json.load(f, object_pairs_hook=OrderedDict)
+        if vo.get("key") in SKIP_KEYS:
+            continue
         b_t, b_c = _count(vo)
         added_t, added_f = deepen_vo(vo)
         a_t, a_c = _count(vo)

@@ -277,6 +277,7 @@ npm run serve
 | **V9.9** | **業界テンプレートライブラリを 250+  packs / 19 カテゴリ / 2100+ テーブルに拡張：再利用可能なドメイン青写真＋生成スクリプト；一覧は軽量（テーブル明細なし）で明細はオンデマンド、カテゴリ絞り込み・検索対応；464/464 テスト成功** | pending, **current** |
 | **V9.10** | **業界テンプレートのフィールド拡張：2191 テーブルに表の意味に応じた業務フィールド（コード/伝票番号/金額/連絡先/期間/本文/並び順/ステータス/備考）を追加、1 テーブル平均 6.12 → 7.87 列、ステータス 100% / 備考 96% / コード 82% カバー。意味的等価グループで重複列を防止；処方箋の create_time と監査列の衝突を修正；465/465 テスト成功** | pending, **current** |
 | **V9.11** | **業界テンプレートを完全なシステムへ：各テンプレートに共通プラットフォーム表 15 枚（承認フロー/添付/操作ログ/タスク/メッセージ/辞書/設定）＋業界別表 10〜15 枚（19 カテゴリ計 248 枚）を追加。1 テンプレートあたり 29〜45 テーブル（平均 34.8、従来 8.6）、1 テーブルあたり 10〜20 列（平均 14.25、従来 7.87）；補助テーブルの意味を考慮したフィールド拡張；466/466 テスト成功** | pending, **current** |
+| **V9.12** | **Dedicated smart-village template: village_affairs (85 tables / 1414 columns) covering household registration, land rights, three-asset management, party governance, three-affairs disclosure, convenience services, human settlement and sentiment analytics; dedicated generator script with Chinese column-comment dictionary, idempotent and audit-safe; generic deepening scripts skip dedicated templates; 467/467 tests green** | pending, **current** |
 
 ---
 
