@@ -278,6 +278,7 @@ npm run serve
 | **V9.10** | **業界テンプレートのフィールド拡張：2191 テーブルに表の意味に応じた業務フィールド（コード/伝票番号/金額/連絡先/期間/本文/並び順/ステータス/備考）を追加、1 テーブル平均 6.12 → 7.87 列、ステータス 100% / 備考 96% / コード 82% カバー。意味的等価グループで重複列を防止；処方箋の create_time と監査列の衝突を修正；465/465 テスト成功** | pending, **current** |
 | **V9.11** | **業界テンプレートを完全なシステムへ：各テンプレートに共通プラットフォーム表 15 枚（承認フロー/添付/操作ログ/タスク/メッセージ/辞書/設定）＋業界別表 10〜15 枚（19 カテゴリ計 248 枚）を追加。1 テンプレートあたり 29〜45 テーブル（平均 34.8、従来 8.6）、1 テーブルあたり 10〜20 列（平均 14.25、従来 7.87）；補助テーブルの意味を考慮したフィールド拡張；466/466 テスト成功** | pending, **current** |
 | **V9.12** | **Dedicated smart-village template: village_affairs (85 tables / 1414 columns) covering household registration, land rights, three-asset management, party governance, three-affairs disclosure, convenience services, human settlement and sentiment analytics; dedicated generator script with Chinese column-comment dictionary, idempotent and audit-safe; generic deepening scripts skip dedicated templates; 467/467 tests green** | pending, **current** |
+| **V9.13** | **Smart-village system hardening: replan menu into 12 business domains (replacing 'Other/66 pages'); seed data for 28 tables (98 menus, 5 users, household/land/asset/party/service/flow data, all interlinked); full approval flow verified end-to-end (submit 0-1, approve 1-2, reject 1-3). Fixed two generator defects: flow tables sys_flow_def/sys_flow_task id missing AUTO_INCREMENT (submit 500), auth filter not injecting userId (approve 403, audit create_by null); 3 anti-regression tests, 468/468 green** | 049027a, **current** |
 
 ---
 

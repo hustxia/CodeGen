@@ -279,6 +279,7 @@ npm run serve
 | **V9.10** | **行業模板欄位展開：2191 張表依表語義補業務欄位（編碼/單號/金額/聯絡方式/時間區間/正文/排序/狀態/備註），平均每表 6.12 → 7.87 欄，狀態 100% / 備註 96% / 編碼 82% 覆蓋；語義等價組避免重複欄；修復處方表 create_time 與審計欄撞名；465/465 單測全綠** | pending, **current** |
 | **V9.11** | **行業模板升級為完整系統：每套追加 15 張平台通用表（審批流/附件/操作日誌/任務/訊息/字典/設定）+ 所屬分類 10-15 張專屬業務表（19 大類共 248 張）。每套 29-45 張表（平均 34.8，原 8.6）、每表 10-20 欄位（平均 14.25，原 7.87）；欄位深化依輔助表語義避免假欄位；466/466 單測全綠** | pending, **current** |
 | **V9.12** | **Dedicated smart-village template: village_affairs (85 tables / 1414 columns) covering household registration, land rights, three-asset management, party governance, three-affairs disclosure, convenience services, human settlement and sentiment analytics; dedicated generator script with Chinese column-comment dictionary, idempotent and audit-safe; generic deepening scripts skip dedicated templates; 467/467 tests green** | pending, **current** |
+| **V9.13** | **Smart-village system hardening: replan menu into 12 business domains (replacing 'Other/66 pages'); seed data for 28 tables (98 menus, 5 users, household/land/asset/party/service/flow data, all interlinked); full approval flow verified end-to-end (submit 0-1, approve 1-2, reject 1-3). Fixed two generator defects: flow tables sys_flow_def/sys_flow_task id missing AUTO_INCREMENT (submit 500), auth filter not injecting userId (approve 403, audit create_by null); 3 anti-regression tests, 468/468 green** | 049027a, **current** |
 
 ---
 

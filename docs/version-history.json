@@ -1,6 +1,6 @@
 {
   "meta": {
-    "currentVersion": "V9.12",
+    "currentVersion": "V9.13",
     "updated": "2026-11-17",
     "source": "README.md(en) + README_ZH.md(zh) 为权威源；sync-version-rows*.mjs 仅 harvest 其余语言的 V7.5~V9.1 译本",
     "note": "改动版本表只需编辑本文件，再运行 node scripts/render_version_history.mjs"
@@ -530,8 +530,20 @@
         "zh": "智慧村务专用模板 village_affairs（85 表/1414 字段）+ 生成器全链路修复：Tag 撞 Swagger @Tag 歧义、肥 jar 自检 classpath、scaffold 包占位符与测试基座编译单元、流水线路径绝对化、Vue3 dev/vite 部署、重跑残留 failReason 清理、Vue3 页面遗留修复。端到端：12/12 步骤全绿，生成系统已运行（后端 8140/前端 9040），90 个 .vue 页面 0 编译错误；468/468 单测全绿"
       },
       "commit": {
-        "en": "25e2dcc..3fabb7b, **current**",
-        "zh": "25e2dcc..3fabb7b, **当前版本**"
+        "en": "25e2dcc..3fabb7b",
+        "zh": "25e2dcc..3fabb7b"
+      }
+    },
+    {
+      "version": "V9.13",
+      "highlight": true,
+      "theme": {
+        "en": "Smart-village system hardening: replan menu into 12 business domains (replacing 'Other/66 pages'); seed data for 28 tables (98 menus, 5 users, household/land/asset/party/service/flow data, all interlinked); full approval flow verified end-to-end (submit 0-1, approve 1-2, reject 1-3). Fixed two generator defects: flow tables sys_flow_def/sys_flow_task id missing AUTO_INCREMENT (submit 500), auth filter not injecting userId (approve 403, audit create_by null); 3 anti-regression tests, 468/468 green",
+        "zh": "智慧村务系统完善：菜单重规划为 12 个村务业务域（替代「其他66页」）；28 张表种子数据（98菜单/5用户/户籍土地三资党建便民流程数据，全部关联）；审批流端到端跑通（提交0→1、通过1→2、驳回1→3）。修复两个生成器缺陷：流程表 id 未自增（submit 500）、鉴权过滤器未注入 userId（approve 403、审计 create_by 空）；3 项防回归测试，468/468 全绿"
+      },
+      "commit": {
+        "en": "049027a, **current**",
+        "zh": "049027a, **当前版本**"
       }
     }
   ],

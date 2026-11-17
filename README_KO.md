@@ -276,6 +276,7 @@ npm run serve
 | **V9.10** | **업계 템플릿 필드 확장: 2191개 테이블에 테이블 의미에 맞는 비즈니스 필드(코드/전표번호/금액/연락처/기간/본문/정렬/상태/비고) 추가, 테이블당 평균 6.12 → 7.87열, 상태 100% / 비고 96% / 코드 82% 커버리지; 의미 동등 그룹으로 중복 열 방지; 처방전 create_time과 감사 열 충돌 수정; 465/465 테스트 통과** | pending, **current** |
 | **V9.11** | **업계 템플릿을 완전한 시스템으로 업그레이드: 각 템플릿에 공통 플랫폼 테이블 15개(결재/첨부/로그/작업/메시지/사전/설정) + 해당 분야 전용 테이블 10~15개(19개 분류 총 248개) 추가. 템플릿당 29~45개 테이블(평균 34.8, 기존 8.6), 테이블당 10~20개 열(평균 14.25, 기존 7.87); 보조 테이블 의미를 고려한 필드 확장; 466/466 테스트 통과** | pending, **current** |
 | **V9.12** | **Dedicated smart-village template: village_affairs (85 tables / 1414 columns) covering household registration, land rights, three-asset management, party governance, three-affairs disclosure, convenience services, human settlement and sentiment analytics; dedicated generator script with Chinese column-comment dictionary, idempotent and audit-safe; generic deepening scripts skip dedicated templates; 467/467 tests green** | pending, **current** |
+| **V9.13** | **Smart-village system hardening: replan menu into 12 business domains (replacing 'Other/66 pages'); seed data for 28 tables (98 menus, 5 users, household/land/asset/party/service/flow data, all interlinked); full approval flow verified end-to-end (submit 0-1, approve 1-2, reject 1-3). Fixed two generator defects: flow tables sys_flow_def/sys_flow_task id missing AUTO_INCREMENT (submit 500), auth filter not injecting userId (approve 403, audit create_by null); 3 anti-regression tests, 468/468 green** | 049027a, **current** |
 
 ---
 
