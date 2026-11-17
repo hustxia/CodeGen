@@ -273,6 +273,7 @@ final class ScaffoldFrontendWriter {
                 : "";
         return "import { createApp } from 'vue'\n"
                 + "import ElementPlus from 'element-plus'\n"
+                + "import zhCn from 'element-plus/es/locale/lang/zh-cn'\n"
                 + "import 'element-plus/dist/index.css'\n"
                 + "import * as ElementPlusIconsVue from '@element-plus/icons-vue'\n"
                 + "import App from './App.vue'\n"
@@ -283,7 +284,7 @@ final class ScaffoldFrontendWriter {
                 + "for (const [key, component] of Object.entries(ElementPlusIconsVue)) {\n"
                 + "  app.component(key, component)\n"
                 + "}\n"
-                + "app.use(ElementPlus, { size: 'small' })\n"
+                + "app.use(ElementPlus, { size: 'small', locale: zhCn })\n"
                 + i18nInit
                 + "// V6.4 按钮级权限：v-hasPermi=\"['demo_fee:add']\"，命中任一即显示；超管 *:*:* 直通\n"
                 + "app.directive('hasPermi', {\n"
