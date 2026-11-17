@@ -1,6 +1,6 @@
 {
   "meta": {
-    "currentVersion": "V9.13",
+    "currentVersion": "V9.14",
     "updated": "2026-11-17",
     "source": "README.md(en) + README_ZH.md(zh) 为权威源；sync-version-rows*.mjs 仅 harvest 其余语言的 V7.5~V9.1 译本",
     "note": "改动版本表只需编辑本文件，再运行 node scripts/render_version_history.mjs"
@@ -542,8 +542,20 @@
         "zh": "智慧村务系统完善：菜单重规划为 12 个村务业务域（替代「其他66页」）；28 张表种子数据（98菜单/5用户/户籍土地三资党建便民流程数据，全部关联）；审批流端到端跑通（提交0→1、通过1→2、驳回1→3）。修复两个生成器缺陷：流程表 id 未自增（submit 500）、鉴权过滤器未注入 userId（approve 403、审计 create_by 空）；3 项防回归测试，468/468 全绿"
       },
       "commit": {
-        "en": "049027a, **current**",
-        "zh": "049027a, **当前版本**"
+        "en": "049027a..e4b9df2",
+        "zh": "049027a..e4b9df2"
+      }
+    },
+    {
+      "version": "V9.14",
+      "highlight": true,
+      "theme": {
+        "en": "Smart-village UI & data hardening: Chinese field labels (52 foreign-key comments fixed at source + 129 page labels synced), 12 business-domain menu icons, real-time dashboard stats (DashboardController whitelist COUNT + 12 stat cards), demo data for all 90 business tables (100% coverage, real foreign-key links). Fixed 3 script-level pitfalls (invalid Map icon, date-rule misfire, English-token comments); 3 new contract tests, 474/474 green",
+        "zh": "智慧村务界面与数据完善：字段中文名（源头修 52 个外键注释 + 同步 129 处页面 label）、12 业务域菜单图标、首页真实统计（DashboardController 白名单 COUNT + 12 统计卡片）、90 张业务表全部演示数据（100% 覆盖、真实外键关联）；修 3 个脚本层坑（Map 图标无效、日期规则误伤、英文 token 注释）；3 项契约测试，474/474 全绿"
+      },
+      "commit": {
+        "en": "039ae7e, **current**",
+        "zh": "039ae7e, **当前版本**"
       }
     }
   ],
