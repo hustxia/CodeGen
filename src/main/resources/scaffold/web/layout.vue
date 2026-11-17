@@ -1,105 +1,84 @@
 <template>
   <div class="layout">
-    <!-- 一级：系统栏，只展示系统本身 -->
-    <aside class="rail">
-      <div class="brand">
+    <!-- 仓储风格：左侧常驻树形菜单，一级=业务域，二级=功能页面 -->
+    <aside class="sidebar" :class="{ 'is-collapsed': collapsed }">
+      <div class="logo-bar">
         __BRAND_MARK__
+        <div v-show="!collapsed" class="logo-text">__PROJECT__</div>
       </div>
-      <div class="rail-list">
-        <div
-          v-for="(sys, i) in menus"
-          :key="sys.path"
-          class="rail-item"
-          :class="{ 'is-active': isSysActive(sys), 'is-open': panelSys && panelSys.path === sys.path }"
-          @click="toggleSys(sys)"
-        >
-          <el-icon class="rail-icon"><component :is="sysIcon(i)" /></el-icon>
-          <span class="rail-label">{{ shortTitle(sys.title) }}</span>
-        </div>
+
+      <div v-show="!collapsed" class="menu-search">
+        <el-input v-model="keyword" placeholder="搜索功能菜单" clearable size="small">
+          <template #prefix><el-icon><Search /></el-icon></template>
+        </el-input>
       </div>
-      <div class="rail-list rail-foot">
-        <div class="rail-item" :class="{ 'is-active': $route.path === '/home' }" @click="go('/home')">
-          <el-icon class="rail-icon"><HomeFilled /></el-icon>
-          <span class="rail-label">{{ homeLabel }}</span>
+
+      <div class="menu-scroll">
+        <div v-show="!collapsed" class="section-title">工作台</div>
+        <div class="menu-home" :class="{ 'is-active': $route.path === '/home' }" @click="go('/home')">
+          <el-icon><HomeFilled /></el-icon>
+          <span v-show="!collapsed">首页总览</span>
         </div>
+
+        <div v-show="!collapsed" class="section-title">业务导航</div>
+        <div v-for="grp in groups" :key="grp.path" class="menu-group">
+          <el-tooltip v-if="collapsed" :content="grp.title" placement="right">
+            <div class="group-title" :class="{ 'is-active': isGrpActive(grp), 'is-open': openKey === grp.path }" @click="toggleGroup(grp)">
+              <el-icon class="group-icon"><component :is="grp.icon || iconOf(grp)" /></el-icon>
+            </div>
+          </el-tooltip>
+          <div v-else class="group-title" :class="{ 'is-active': isGrpActive(grp), 'is-open': openKey === grp.path }" @click="toggleGroup(grp)">
+            <el-icon class="group-icon"><component :is="grp.icon || iconOf(grp)" /></el-icon>
+            <span class="group-text">{{ grp.title }}</span>
+            <span class="group-count">{{ grp.children.length }}</span>
+            <el-icon class="group-arrow" :class="{ 'is-rotated': openKey === grp.path }"><ArrowDown /></el-icon>
+          </div>
+          <el-collapse-transition>
+            <div v-show="openKey === grp.path && !collapsed" class="group-children">
+              <div
+                v-for="page in grp.children"
+                :key="page.path"
+                class="child-item"
+                :class="{ 'is-active': $route.path === page.path }"
+                @click="go(page.path)"
+              >
+                <span class="child-dot"></span>
+                <span class="child-text">{{ page.title }}</span>
+              </div>
+            </div>
+          </el-collapse-transition>
+        </div>
+        <div v-if="!groups.length && !collapsed" class="empty-tip">没有匹配的菜单</div>
+      </div>
+
+      <div class="collapse-bar" @click="collapsed = !collapsed">
+        <el-icon><component :is="collapsed ? 'Expand' : 'Fold'" /></el-icon>
+        <span v-show="!collapsed">收起菜单</span>
       </div>
     </aside>
 
-    <!-- 二级：业务域面板，从一级栏右侧滑出 -->
-    <div class="flyout flyout-sub" :class="{ 'is-open': !!panelSys }">
-      <div v-if="panelSys" class="flyout-head">
-        <div class="flyout-title">{{ panelSys.title }}</div>
-        <div class="flyout-desc">{{ businessModulesHint }}</div>
-      </div>
-      <div v-if="panelSys" class="flyout-body">
-        <div
-          v-for="grp in panelSys.children"
-          :key="grp.path"
-          class="group-item"
-          :class="{ 'is-active': isGrpActive(grp) }"
-          @click="openGroup(grp)"
-        >
-          <el-icon v-if="grp.icon" class="group-icon"><component :is="grp.icon" /></el-icon>
-          <span v-else class="group-icon group-icon-fallback"><component :is="groupIconByIndex(grp)" /></span>
-          <span class="group-name">{{ grp.title }}</span>
-          <span class="group-count">{{ grp.children.length || 1 }}</span>
-          <el-icon class="group-arrow"><ArrowRight /></el-icon>
-        </div>
-      </div>
-    </div>
-
-    <!-- 三级：页面面板，从二级面板右侧继续滑出 -->
-    <div class="flyout flyout-leaf" :class="{ 'is-open': !!panelGroup }">
-      <div v-if="panelGroup" class="flyout-head leaf-head">
-        <div class="leaf-crumb">{{ panelSys ? panelSys.title : '' }}</div>
-        <div class="leaf-title">{{ panelGroup.title }}</div>
-      </div>
-      <div v-if="panelGroup" class="flyout-body">
-        <div
-          v-for="page in panelGroup.children"
-          :key="page.path"
-          class="page-item"
-          :class="{ 'is-active': $route.path === page.path }"
-          @click="go(page.path)"
-        >
-          <span class="page-dot"></span>
-          <span class="page-name">{{ page.title }}</span>
-        </div>
-      </div>
-    </div>
-
     <div class="main">
-      <div class="header">
+      <header class="header">
         <div class="header-left">
           <el-breadcrumb separator="/" class="crumbs">
             <el-breadcrumb-item v-for="(crumb, i) in crumbs" :key="i">{{ crumb }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
         <div class="header-right">
-          <span class="env-tag">DEV</span>
-          <span class="user">{{ userName }}</span>__I18N_SWITCH__
+          <span class="today">{{ today }}</span>
+          <span class="split"></span>
+          <span class="user-name"><el-icon><UserFilled /></el-icon>{{ userName }}</span>__I18N_SWITCH__
         </div>
-      </div>
-      <div class="content" @click="closePanels">
-        <router-view />
-      </div>
+      </header>
+      <main class="content"><router-view /></main>
     </div>
   </div>
 </template>
 
 <script>
 /**
- * 三级菜单：系统 → 业务域 → 页面。
- * 菜单树直接从路由表推导（this.$router.options.routes），
- * 路由与菜单永远同源，不需要再维护一份菜单配置；
- * 也不能静态 import 路由表——gen-routes 与本组件互相引用会形成循环依赖，
- * 一旦加载顺序不利，Layout 会被解析成 undefined，所有生成页面直接白屏。
- */
-/**
- * V8.0 菜单国际化：把路由 meta 的中文 title 按当前语言解析。
- * - meta 带了 i18nKey 且运行时挂了 $t（开 i18n）：调用 $t(i18nKey, 中文)，缺译文回落中文。
- * - 没有 i18nKey（旧路由）或没挂 $t（关 i18n）：直接返回中文 title。
- * 第二参是中文回落源，保证 206 种语言里没预置译文的也能显示中文，不会空白。
+ * 仓储风格左侧菜单：菜单树直接由路由表推导，路由与菜单永远同源。
+ * 不在组件里静态 import 路由表——gen-routes.js 与本组件互相引用会形成循环依赖。
  */
 function resolveTitle(meta, fallback) {
   const raw = (meta && meta.title) || fallback
@@ -117,13 +96,11 @@ function buildMenu(routes, parentPath) {
       ? route.path
       : (parentPath + '/' + route.path).replace(/\/{2,}/g, '/')
     const children = buildMenu(route.children, path)
-    // 只保留「有子节点」或「有实际页面」的节点，Layout 壳子本身不进菜单
     const hasComponent = typeof route.component === 'function'
     if (!children.length && !hasComponent) return
     list.push({
       path,
       title: resolveTitle(route.meta, route.name || path),
-      // 菜单美观：把路由 meta.icon 带进菜单树，二级业务域渲染专属图标
       icon: (route.meta && route.meta.icon) || '',
       children
     })
@@ -132,12 +109,8 @@ function buildMenu(routes, parentPath) {
 }
 
 const ICONS = [
-  'Platform',
-  'Cooperation',
-  'Shop',
-  'DataAnalysis',
-  'Select',
-  'Setting'
+  'OfficeBuilding', 'House', 'Location', 'User', 'Connection', 'DataAnalysis',
+  'Flag', 'Document', 'ChatDotRound', 'Wallet', 'Tree', 'Setting'
 ]
 
 export default {
@@ -145,424 +118,161 @@ export default {
   data() {
     return {
       userName: '管理员',
-      panelSys: null,
-      panelGroup: null
+      keyword: '',
+      collapsed: false,
+      openKey: '',
+      today: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })
     }
   },
   computed: {
     menus() {
       return buildMenu(this.$router.options.routes, '')
-        // 顶层 '/' 是 Layout 壳（包首页），侧栏底部已单独有「首页」入口，这里不重复
-        .filter(m => m.path !== '/' && m.path !== '/home')
     },
-    // V8.0 菜单国际化：面包屑同样按当前语言解析；回落「首页」
+    groups() {
+      // 系统壳（如 /xxx）本身不作为一级菜单，它的 children 才是业务域
+      const sys = this.menus.find(m => m.path !== '/' && m.path !== '/home' && m.children.length)
+      const all = sys ? sys.children : this.menus.filter(m => m.path !== '/' && m.path !== '/home')
+      const kw = this.keyword.trim().toLowerCase()
+      if (!kw) return all
+      return all.map(g => ({
+        ...g,
+        children: (g.children || []).filter(p => p.title.toLowerCase().includes(kw))
+      })).filter(g => g.title.toLowerCase().includes(kw) || g.children.length)
+    },
     crumbs() {
       const list = this.$route.matched
         .map(item => resolveTitle(item.meta, ''))
-        .filter(Boolean)
-      return list.length ? list : [this.homeLabel]
-    },
-    // 「首页」入口文案：开 i18n 时取译文，关 i18n / 未挂 $t 时回落中文
-    homeLabel() {
-      return (typeof window.$t === 'function') ? window.$t('common.home') : '首页'
-    },
-    // 业务模块计数文案：开 i18n 时按 {count} 插值解析，关时回落「N 个业务模块」
-    businessModulesHint() {
-      const count = (this.panelSys && this.panelSys.children) ? this.panelSys.children.length : 0
-      if (typeof window.$t === 'function') {
-        return window.$t('common.businessModules', { count: count })
-      }
-      return count + ' 个业务模块'
+        .filter(t => t && t !== '__PROJECT__')
+      return list.length ? list : ['首页']
     }
   },
   watch: {
     '$route.path'() {
-      this.closePanels()
+      this.syncOpenGroup()
+    },
+    keyword(val) {
+      if (val) {
+        const first = this.groups.find(g => g.children.length)
+        if (first) this.openKey = first.path
+      }
     }
   },
   mounted() {
-    // URL 带 ?_menu=1 时自动展开当前系统与所在分组，便于演示与自动化验证
-    if (this.$route.query._menu) {
-      const sys = this.menus.find(s => this.isSysActive(s)) || this.menus[0]
-      if (sys) this.toggleSys(sys)
-    }
+    this.syncOpenGroup()
   },
   methods: {
-    sysIcon(i) {
-      return ICONS[i % ICONS.length]
-    },
-    // 菜单美观：无 icon 的业务域按索引给一个稳定图标（兼容旧路由）
-    groupIconByIndex(grp) {
-      const list = (this.panelSys && this.panelSys.children) || []
-      const i = list.findIndex(g => g.path === grp.path)
+    iconOf(grp) {
+      const i = this.groups.findIndex(g => g.path === grp.path)
       return ICONS[(i < 0 ? 0 : i) % ICONS.length]
-    },
-    shortTitle(title) {
-      // 侧栏较窄，"WMS 系统" → "WMS" 之外保留完整标题换行展示
-      return title || ''
-    },
-    isSysActive(sys) {
-      const p = this.$route.path
-      return p === sys.path || p.indexOf(sys.path + '/') === 0
     },
     isGrpActive(grp) {
       const p = this.$route.path
-      return p === grp.path || p.indexOf(grp.path + '/') === 0
+      return grp.path === p || p.indexOf(grp.path + '/') === 0
     },
-    toggleSys(sys) {
-      if (this.panelSys && this.panelSys.path === sys.path) {
-        this.closePanels()
+    toggleGroup(grp) {
+      if (this.collapsed) {
+        this.collapsed = false
+        this.openKey = grp.path
         return
       }
-      this.panelSys = sys
-      this.panelGroup = null
-      // 进入系统时自动展开当前所在分组，减少一次点击
-      const hit = (sys.children || []).find(g => this.isGrpActive(g))
-      if (hit && hit.children && hit.children.length) {
-        this.panelGroup = hit
-      }
+      this.openKey = this.openKey === grp.path ? '' : grp.path
     },
-    openGroup(grp) {
-      if (!grp.children || !grp.children.length) {
-        this.go(grp.path)
-        return
-      }
-      this.panelGroup = this.panelGroup && this.panelGroup.path === grp.path ? null : grp
+    syncOpenGroup() {
+      const p = this.$route.path
+      const hit = this.groups.find(g => g.path === p || p.indexOf(g.path + '/') === 0)
+      if (hit) this.openKey = hit.path
     },
     go(path) {
-      if (!path) return
-      this.closePanels()
-      if (this.$route.path !== path) this.$router.push(path)
-    },
-    closePanels() {
-      this.panelSys = null
-      this.panelGroup = null
+      if (path && this.$route.path !== path) this.$router.push(path)
     }
   }
 }
 </script>
 
 <style>
-/* V6.8 品牌主色：唯一来源是 sys_project.app_theme_color（空则 #e1251b），脚手架只替换这一个变量 */
-:root {
-  --app-primary: __THEME_COLOR__;
-}
-.layout {
-  position: relative;
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-  background: #f4f6fa;
-}
+:root { --app-primary: __THEME_COLOR__; }
+.layout { display: flex; height: 100vh; overflow: hidden; background: #f4f6fa; }
 
-/* ---------- 一级系统栏 ---------- */
-.rail {
-  position: relative;
-  z-index: 30;
-  flex: 0 0 86px;
-  width: 86px;
-  display: flex;
-  flex-direction: column;
-  background: #131a2b;
+/* ---------- 左侧菜单 ---------- */
+.sidebar {
+  position: relative; z-index: 20; flex: 0 0 224px; width: 224px;
+  display: flex; flex-direction: column; color: #c5d0e6;
+  background: linear-gradient(180deg, #1c2b49 0%, #14213a 100%);
+  transition: width 0.2s ease, flex-basis 0.2s ease;
 }
-.brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 56px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+.sidebar.is-collapsed { flex-basis: 64px; width: 64px; }
+.logo-bar {
+  height: 60px; flex: 0 0 60px; display: flex; align-items: center; gap: 10px;
+  padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.07); overflow: hidden;
 }
-.brand-mark {
-  width: 34px;
-  height: 34px;
-  line-height: 34px;
-  text-align: center;
-  border-radius: 10px;
-  background: var(--app-primary);
-  color: #fff;
-  font-weight: 700;
-  font-size: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+.logo-mark {
+  flex: 0 0 32px; width: 32px; height: 32px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #5b8cff, var(--app-primary)); color: #fff;
+  font-size: 16px; font-weight: 700; box-shadow: 0 3px 10px rgba(0,0,0,0.25);
 }
-.brand-logo {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  object-fit: contain;
-  background: #fff;
-  padding: 3px;
+.brand-logo { flex: 0 0 32px; width: 32px; height: 32px; border-radius: 9px; object-fit: contain; background: #fff; padding: 3px; }
+.logo-text { font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; letter-spacing: 1px; }
+.menu-search { padding: 12px 12px 6px; }
+.menu-search .el-input__wrapper {
+  background: rgba(255,255,255,0.08); box-shadow: none; border: 1px solid rgba(255,255,255,0.08);
 }
-.rail-list {
-  flex: 1;
-  padding: 8px 6px;
-  overflow-y: auto;
+.menu-search .el-input__inner { color: #e6edf8; }
+.menu-search .el-input__inner::placeholder { color: #7e8ca8; }
+.menu-scroll { flex: 1; overflow-y: auto; padding: 0 8px 12px; }
+.menu-scroll::-webkit-scrollbar { width: 4px; }
+.menu-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+.section-title {
+  padding: 12px 12px 6px; font-size: 11px; letter-spacing: 1px;
+  color: rgba(197,208,230,0.45); white-space: nowrap;
 }
-.rail-foot {
-  flex: 0 0 auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 8px 6px 12px;
+.menu-home, .group-title {
+  display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px;
+  margin-bottom: 2px; border-radius: 8px; font-size: 13px; cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease; white-space: nowrap;
 }
-.rail-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 10px 4px;
-  margin-bottom: 4px;
-  border-radius: 10px;
-  cursor: pointer;
-  color: #93a0bb;
-  transition: background 0.18s ease, color 0.18s ease;
-}
-.rail-icon {
-  font-size: 19px;
-}
-.rail-label {
-  font-size: 11px;
-  line-height: 1.25;
-  text-align: center;
-  max-width: 76px;
-  word-break: break-all;
-}
-.rail-item:hover {
-  background: rgba(255, 255, 255, 0.07);
-  color: #dbe3f3;
-}
-.rail-item.is-active {
-  color: #fff;
-}
-.rail-item.is-active::before,
-.rail-item.is-open::before {
-  content: '';
-  position: absolute;
-  left: -6px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 22px;
-  border-radius: 0 3px 3px 0;
-  background: linear-gradient(180deg, #6f8dff 0%, #4d7cfe 100%);
-}
-.rail-item.is-open {
-  background: rgba(77, 124, 254, 0.18);
-  color: #fff;
-}
-
-/* ---------- 二级 / 三级飞出面板 ---------- */
-.flyout {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  opacity: 0;
-  pointer-events: none;
-  transition: transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.16s ease;
-}
-.flyout-sub {
-  left: 86px;
-  width: 208px;
-  background: #1b2540;
-  box-shadow: 10px 0 26px rgba(8, 12, 24, 0.28);
-  transform: translateX(-14px);
-}
-.flyout-leaf {
-  left: 294px;
-  width: 244px;
-  background: #fff;
-  box-shadow: 14px 0 32px rgba(8, 12, 24, 0.12);
-  transform: translateX(-18px);
-}
-.flyout.is-open {
-  opacity: 1;
-  pointer-events: auto;
-}
-.flyout-sub.is-open,
-.flyout-leaf.is-open {
-  transform: translateX(0);
-}
-.flyout-head {
-  flex: 0 0 auto;
-  padding: 0 16px;
-  min-height: 56px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-}
-.flyout-title {
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-}
-.flyout-desc {
-  color: rgba(199, 210, 228, 0.55);
-  font-size: 11px;
-}
-.flyout-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
-}
-
-/* 二级项 */
-.group-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 38px;
-  padding: 0 10px;
-  margin-bottom: 2px;
-  border-radius: 8px;
-  color: #c3cee2;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.16s ease, color 0.16s ease;
-}
-.group-icon {
-  flex: 0 0 auto;
-  width: 20px;
-  font-size: 15px;
-  text-align: center;
-  color: var(--app-primary);
-  opacity: 0.85;
-}
-.group-icon-fallback {
-  color: #8fa3c8;
-}
-.group-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
+.menu-home:hover, .group-title:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.menu-home.is-active, .group-title.is-active { background: rgba(63,106,224,0.28); color: #fff; }
+.group-title.is-open { color: #fff; }
+.sidebar.is-collapsed .menu-home, .sidebar.is-collapsed .group-title { justify-content: center; padding: 0; }
+.group-icon { flex: 0 0 18px; font-size: 16px; color: #8fa8dc; }
+.group-text { flex: 1; overflow: hidden; text-overflow: ellipsis; }
 .group-count {
-  font-size: 11px;
-  color: rgba(199, 210, 228, 0.5);
+  font-size: 10px; min-width: 18px; text-align: center; padding: 1px 4px;
+  border-radius: 9px; background: rgba(255,255,255,0.09); color: #a9b9d8;
 }
-.group-arrow {
-  font-size: 11px;
-  opacity: 0;
-  transition: opacity 0.16s ease;
+.group-arrow { font-size: 11px; transition: transform 0.18s ease; opacity: 0.7; }
+.group-arrow.is-rotated { transform: rotate(180deg); }
+.group-children { padding: 2px 0 6px 0; }
+.child-item {
+  display: flex; align-items: center; gap: 9px; height: 34px; padding: 0 12px 0 30px;
+  margin-bottom: 1px; border-radius: 7px; font-size: 12.5px; color: #9fb0cf;
+  cursor: pointer; transition: background 0.14s ease, color 0.14s ease;
 }
-.group-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+.child-dot { width: 4px; height: 4px; border-radius: 50%; background: #63749a; flex: 0 0 4px; }
+.child-text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.child-item:hover { background: rgba(255,255,255,0.06); color: #e6edf8; }
+.child-item.is-active { background: var(--app-primary); color: #fff; font-weight: 500; }
+.child-item.is-active .child-dot { background: #fff; }
+.empty-tip { padding: 16px 12px; font-size: 12px; color: #8494b5; text-align: center; }
+.collapse-bar {
+  flex: 0 0 44px; height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  border-top: 1px solid rgba(255,255,255,0.07); font-size: 12px; cursor: pointer;
+  color: #8fa0c2; transition: color 0.16s ease, background 0.16s ease;
 }
-.group-item:hover .group-arrow {
-  opacity: 1;
-}
-.group-item.is-active {
-  background: rgba(77, 124, 254, 0.22);
-  color: #fff;
-}
-.group-item.is-active .group-count {
-  color: #9db4ff;
-}
-
-/* 三级项 */
-.leaf-head {
-  border-bottom: 1px solid #eef1f7;
-}
-.leaf-crumb {
-  font-size: 11px;
-  color: #98a2b8;
-}
-.leaf-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
-}
-.page-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 10px;
-  margin-bottom: 2px;
-  border-radius: 8px;
-  font-size: 13px;
-  color: #4b5563;
-  cursor: pointer;
-  transition: background 0.16s ease, color 0.16s ease;
-}
-.page-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #c8d1e2;
-  flex: 0 0 4px;
-}
-.page-name {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.page-item:hover {
-  background: #f3f6fc;
-  color: #1f2937;
-}
-.page-item:hover .page-dot {
-  background: #4d7cfe;
-}
-.page-item.is-active {
-  background: #eef2ff;
-  color: #3f6ae0;
-  font-weight: 500;
-}
-.page-item.is-active .page-dot {
-  background: #3f6ae0;
-}
+.collapse-bar:hover { color: #fff; background: rgba(255,255,255,0.06); }
 
 /* ---------- 主区域 ---------- */
-.main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
 .header {
-  flex: 0 0 56px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  background: #fff;
-  border-bottom: 1px solid #e8ecf3;
+  flex: 0 0 60px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 22px; background: #fff; border-bottom: 1px solid #e7ebf2;
 }
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.crumbs {
-  font-size: 13px;
-}
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  color: #5a6478;
-}
-.env-tag {
-  padding: 1px 8px;
-  border-radius: 10px;
-  background: #eef2ff;
-  color: #4d7cfe;
-  font-size: 11px;
-  font-weight: 600;
-}
-.content {
-  flex: 1;
-  padding: 18px 20px 24px;
-  overflow-y: auto;
-  background: #f4f6fa;
-}
+.crumbs { font-size: 13px; }
+.header-right { display: flex; align-items: center; gap: 14px; font-size: 12.5px; color: #6b768c; }
+.today { white-space: nowrap; }
+.split { width: 1px; height: 16px; background: #e3e8f0; }
+.user-name { display: inline-flex; align-items: center; gap: 6px; color: #33405c; font-weight: 500; }
+.user-name .el-icon { color: var(--app-primary); font-size: 15px; }
+.content { flex: 1; padding: 18px 20px 24px; overflow-y: auto; background: #f4f6fa; }
 </style>

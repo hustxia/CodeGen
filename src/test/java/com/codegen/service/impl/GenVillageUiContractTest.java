@@ -72,16 +72,33 @@ class GenVillageUiContractTest {
     }
 
     @Test
-    @DisplayName("layout 模板：菜单树带 icon 且二级面板渲染")
-    void layoutRendersMenuIcon() throws Exception {
+    @DisplayName("layout 模板：仓储风格侧边栏渲染业务域图标与页面树")
+    void layoutRendersWarehouseStyleMenu() throws Exception {
         String vue = src("src/main/resources/scaffold/web/layout.vue");
         assertTrue(vue.contains("icon: (route.meta && route.meta.icon)"),
                 "buildMenu 必须把 meta.icon 带进菜单树");
-        assertTrue(vue.contains("<component :is=\"grp.icon\" />"),
-                "二级业务域面板必须用 grp.icon 渲染图标");
-        assertTrue(vue.contains("groupIconByIndex"),
+        assertTrue(vue.contains("<component :is=\"grp.icon || iconOf(grp)\" />"),
+                "一级业务域必须用 grp.icon（无图标时兜底）渲染");
+        assertTrue(vue.contains("iconOf(grp)"),
                 "必须提供无图标时的兜底图标方法");
         assertTrue(vue.contains(".group-icon {"),
                 "必须定义 .group-icon 样式");
+        assertTrue(vue.contains("class=\"sidebar\"") && vue.contains("class=\"group-children\""),
+                "必须是左侧常驻树形菜单：sidebar + group-children");
+        assertTrue(vue.contains("el-collapse-transition"),
+                "业务域必须可展开/收起");
+    }
+
+    @Test
+    @DisplayName("脚手架：免登录打开即用（无登录路由 / 自动签发会话 / demo-login 白名单）")
+    void scaffoldIsLoginFree() throws Exception {
+        String writer = src("src/main/java/com/codegen/service/impl/ScaffoldFrontendWriter.java");
+        assertFalse(writer.contains("path: '/login'"), "路由表不得再注册登录页");
+        assertFalse(writer.contains("window.location.href = '/login'"), "401 不得跳登录页");
+        assertTrue(writer.contains("/auth/demo-login"), "前端启动必须自动签发演示会话");
+
+        String authWriter = src("src/main/java/com/codegen/service/impl/ScaffoldAuthWriter.java");
+        assertTrue(authWriter.contains("/auth/demo-login"), "后端必须放行 demo-login");
+        assertTrue(authWriter.contains("demo-login"), "后端必须提供 demo-login 接口");
     }
 }
