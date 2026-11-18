@@ -25,11 +25,41 @@ public final class GenMenuGroup {
 
     /**
      * 规则顺序有讲究：
+     * 0. 警务域规则排最前：stub 建模的表注释都是「&lt;域&gt;管理主表/明细/条目」这类泛化名，
+     *    若排在后面会被通用词抢走（如「基础数据参数配置」的「参数」会被基础资料命中，
+     *    同一模块的表就被拆散到不同分组）——警务域关键词必须整词优先；
      * 1. 出库/入库 必须排在「库存」之前，否则「入库通知」会被库存抢走；
      * 2. 客户/供应商 排在「基础资料」之前，避免「客户类型」掉进基础资料；
      * 3. 系统类（日志/字典/流程）排最后，避免「业务字典」这类词误判。
      */
     private static final List<Rule> RULES = List.of(
+            // ==== 警务域（智慧警务等公共安全系统，按领域整词分组） ====
+            new Rule(new Group("jccj", "接处警管理"),
+                    List.of("接处警", "警情")),
+            new Rule(new Group("ajgl", "案件管理"),
+                    List.of("案件")),
+            new Rule(new Group("zagl", "治安管理"),
+                    List.of("治安")),
+            new Rule(new Group("xlfk", "巡逻防控"),
+                    List.of("巡逻", "防控")),
+            new Rule(new Group("hzfw", "户政服务"),
+                    List.of("户政", "户籍")),
+            new Rule(new Group("jdgl", "禁毒管理"),
+                    List.of("禁毒", "毒品")),
+            new Rule(new Group("sqjw", "社区警务"),
+                    List.of("社区警务")),
+            new Rule(new Group("jtgl", "交通管理"),
+                    List.of("交通")),
+            new Rule(new Group("jjzh", "应急指挥"),
+                    List.of("应急")),
+            new Rule(new Group("jcfx", "决策分析"),
+                    List.of("决策", "研判")),
+            new Rule(new Group("jcsj", "基础数据"),
+                    List.of("基础数据")),
+            // 「系统管理」必须先于通用 base 规则（「参数」），否则「系统管理参数配置」被拆进基础资料
+            new Rule(new Group("system", "系统管理"),
+                    List.of("系统管理")),
+            // ==== 通用（电商/仓储/供应链等） ====
             new Rule(new Group("outbound", "出库管理"),
                     List.of("出库", "发货", "拣货", "outbound", "pick")),
             new Rule(new Group("inbound", "入库管理"),
