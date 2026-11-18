@@ -1,73 +1,14 @@
 # Majiang · Code Generator (CodeGen) — Project Introduction
 
-> Languages: [简体中文](多语言项目介绍/README_ZH.md) · [繁體中文](多语言项目介绍/README_ZH_TW.md) · **English** · [日本語](多语言项目介绍/README_JA.md) · [한국어](多语言项目介绍/README_KO.md) · [Türkçe](多语言项目介绍/README_TR.md) · [Русский](多语言项目介绍/README_RU.md) · [Tiếng Việt](多语言项目介绍/README_VI.md) · [ไทย](多语言项目介绍/README_TH.md) · [Deutsch](多语言项目介绍/README_DE.md) · [Español](多语言项目介绍/README_ES.md) · [Français](多语言项目介绍/README_FR.md) · [Українська](多语言项目介绍/README_UK.md) · [Polski](多语言项目介绍/README_PL.md) · [Português (Brasil)](多语言项目介绍/README_PT_BR.md) · [Português](多语言项目介绍/README_PT.md) · [العربية](多语言项目介绍/README_AR.md) · [فارسی](多语言项目介绍/README_FA.md) · [Bahasa Indonesia](多语言项目介绍/README_ID.md) · [Italiano](多语言项目介绍/README_IT.md) · [Ελληνικά](多语言项目介绍/README_EL.md) · [മലയാളം](多语言项目介绍/README_ML.md) · [Roman Urdu](多语言项目介绍/README_UR_ROMA.md) · [اردو](多语言项目介绍/README_UR.md) · [Română](多语言项目介绍/README_RO.md) · [Български](多语言项目介绍/README_BG.md) · [हिन्दी](多语言项目介绍/README_HI.md) · [বাংলা](多语言项目介绍/README_BN.md) · [Nederlands](多语言项目介绍/README_NL.md) · [Svenska](多语言项目介绍/README_SV.md) · [Dansk](多语言项目介绍/README_DA.md) · [Suomi](多语言项目介绍/README_FI.md) · [Norsk](多语言项目介绍/README_NO.md) · [Čeština](多语言项目介绍/README_CS.md) · [Magyar](多语言项目介绍/README_HU.md) · [Hrvatski](多语言项目介绍/README_HR.md) · [Slovenčina](多语言项目介绍/README_SK.md) · [Slovenščina](多语言项目介绍/README_SL.md) · [Eesti](多语言项目介绍/README_ET.md) · [עברית](多语言项目介绍/README_HE.md) · [தமிழ்](多语言项目介绍/README_TA.md) · [తెలుగు](多语言项目介绍/README_TE.md) · [မြန်မာ](多语言项目介绍/README_MY.md) · [ខ្មែរ](多语言项目介绍/README_KM.md) · [Filipino](多语言项目介绍/README_TL.md) · [Kiswahili](多语言项目介绍/README_SW.md) · [Հայերեն](多语言项目介绍/README_HY.md) · [ქართული](多语言项目介绍/README_KA.md)
+> Languages: [简体中文](README_ZH.md) · [繁體中文](README_ZH_TW.md) · **English** · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
 
 ---
+
+> **Language support**: generated systems ship with full-page internationalization built in. The framework supports switching and fallback across **206 languages**; **8 are professionally translated** (zh-CN, en-US, ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA), and all others fall back to Simplified Chinese. Want to contribute a translation? See [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md).
 
 > A multi-project code generator for **Spring Boot + Vue**: starting from database table structures, it produces **compilable, runnable, menu-and-permission-ready** front-end and back-end business code, and handles the full delivery loop of writing to disk, backup, ledgering and rollback.
 
 GitHub: https://github.com/hustxia/CodeGen
-> 各语言完整项目说明见 **[多语言项目介绍/](多语言项目介绍/)** 文件夹。
-
-
-> **Current release — V9.8 (Multi-pipeline concurrent runs + startup recovery) on top of V9.7 (fast table creation)**
-> **V9.8**: pipelines can now run concurrently — a `PipelineRunGate` enforces a global `max-running` cap
-> plus same-project mutual exclusion (cross-system parallel runs are safe; ports / logs / output dirs are
-> per-pipeline). A startup-recovery runner marks orphaned `running` pipelines as `failed` after a service
-> restart, so a restart can no longer leave a pipeline spinning forever. Full suite **462/462 green**.
->
-> **V9.7 — fast table creation (previous release)**
-> Two-phase skeleton generation: the AI only lists table / comment / column names; types and primary keys
-> are filled in by naming-semantics rules (`TableSkeletonExpander`), measured **3m13s → 54s (~3.6×)** on a
-> real local model. Plus an industry template library (e-commerce / ERP / CRM / CMS JSON packs) that clones
-> table structures in seconds with zero AI, through the same assemble funnel as the AI path.
->
-> **V9.6 — batched AI modeling jobs (previous release)**
-> For large / huge systems, modeling runs as a background job split into batches with a claim scheduler
-> (conditional-update claim, multi-worker, timeout reclaim & retry) and 2s polling progress in the console;
-> measured 11 batches / 70 tables / 8s (stub, 4 workers). Pipeline numbers gained a 4-digit sequence +
-> unique-key retry to eliminate second-timestamp collisions.
->
-> **V9.5 — AI table recommendation (previous release)**
-> Independent `/gen/ai-build` entry: AI recommends table structures → editable → same-source DDL preview →
-> confirm to draft / database; supplement mode diffs against the target system's existing tables with
-> server-side hard dedup.
->
-> **V9.4 — staged confirmation (previous release)**
-> One-sentence system building now goes through explicit stage gates: recommend (AI) → edit/preview
-> (read-only DDL sharing the exact `buildDdl` assembler used by execution) → confirm (draft / DB).
->
-> **V9.2/V9.3 — test center & verification hub (earlier releases)**
-> `/test` case center (7 tables) + `/tc/center` verification center (9 suites S1-S9, 409 single-run lock,
-> CI-shared `codegen.testcenter/v1` summary); artifact verification S10-S12 (S11/S12 honestly SKIPPED
-> without toolchain); generated-artifact runtime fixes and end-to-end one-sentence system run.
->
-> **V9.1 — maintainability refactor (earlier release)**
-> `GenScaffoldServiceImpl` was split from **5,072 → 931 lines** (914 orchestration + 17 reflection-compat
-> stubs) into 8 single-purpose writers
-> (Flow / Ops / Pom / Common / Auth / Seed / Frontend / TextSupport). Equivalence was proven by
-> building the old and new jar, generating the same two projects from both (119 + 62 files) and
-> diffing recursively — **zero byte differences**. Full suite **312/312 green** (13 legacy red
-> tests paid off), offline i18n contract still **9/9**.
->
-> **V9.0 — Vue 3 generated artifacts on top of V8.1 (quality gate)**
-> Generated projects now target **Vue 3 + Element Plus + Vite**: `package.json`, `vite.config.js`,
-> `main.js`, router, store and `request.js` are emitted Vue 3-native, and template mechanics were
-> migrated (`.sync` → `v-model`, `slot=` → `#`, `slot-scope` → `#default`, `.native` removed,
-> font icons → component icons, `size="mini"` → `small`). Verified end to end at runtime: Maven
-> build → API-driven generation → 40/40 contract assertions → `vite build` success → 14 Chrome
-> screenshots including ar-SA RTL; 3 real defects were caught and fixed at runtime. V8.1 adds the
-> quality gate behind it: an offline Freemarker contract harness (9 modes, OFF byte-zero-diff),
-> `i18n-core` unit tests, a CI gate, and `check-locale-keys.mjs` shipped inside generated projects.
->
-> **V8.0 - Full i18n for generated applications (including menus), 206 languages worldwide**
-> Once i18n is enabled in project settings and the default / supported languages are picked,
-> every generated page (buttons, table headers, field labels, dialog titles and menus) resolves
-> through the `$t` runtime. Eight hand-translated packs ship out of the box (zh-CN, en-US,
-> ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA); every other locale falls back through
-> `current locale -> zh-CN -> inline Chinese`, so nothing ever renders blank. The language
-> switcher lists all 206 locales and RTL languages mirror automatically. With the switch off,
-> generated output stays byte-for-byte unchanged.
 
 ## 1. What Is This
 
@@ -284,11 +225,10 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 | Document | Content |
 | --- | --- |
-| `codegen-server/docs/代码生成器-操作手册.md` (Chinese) | Deployment, 5-minute start, table config, batch intake, template management, ledger, API catalog, full pipeline (with screenshots) |
-| `codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
-| `多语言项目介绍/项目介绍.md` | Project introduction document, same source as this file |
-| `codegen-server/docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V9.3 |
-| `codegen-server/ROADMAP.md` | Release-by-release progress and verification records (V8.0 / V8.1 / V9.0 → V9.8) |
+| `docs/代码生成器-操作手册.md` (Chinese) | Deployment, 5-minute start, table config, batch intake, template management, ledger, API catalog, full pipeline (with screenshots) |
+| `docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
+| `docs/项目介绍.md` | Project introduction document, same source as this file |
+| `docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V7.3 |
 | `codegen-web/README.md` | Frontend console quick-start reference |
 
 ---
@@ -335,7 +275,13 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
 | **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
 | **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
-| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
+| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607 |
+| **V9.9** | **Industry template library scaled to 250+ packs / 19 categories / 2100+ tables: reusable domain blueprints + generator script (scripts/gen_industry_templates.py); templates list is now lightweight (no table detail) with on-demand detail endpoint + category filter/search; 464/464 tests green** | 7e16b72 (web 7a5d1c7) |
+| **V9.10** | **Industry template field expansion: 2191 tables enriched with business fields by table semantics (id code / doc no / amount / contact / time range / content / sort / status / remark), avg 6.12 → 7.87 columns, status 100% + remark 96% + code/no 82% coverage; semantic equivalence groups prevent duplicate columns; fixed legacy prescription create_time collision with audit column (would break DDL); 465/465 tests green** | 11efe55 |
+| **V9.11** | **Industry templates become full systems: +15 common platform tables (approval workflow, attachments, audit log, tasks, messages, dictionary, config) + 10-15 domain-specific tables per category (19 categories, 248 tables total). Every template now has 29-45 tables (avg 34.8, was 8.6) and 10-20 columns per table (avg 14.25, was 7.87); semantic field enrichment with auxiliary-table awareness; 466/466 tests green** | 16d39ec |
+| **V9.12** | **Dedicated smart-village template village_affairs (85 tables / 1414 columns) + full-chain generator fixes: Tag vs Swagger @Tag ambiguity, fat-jar self-check classpath, scaffold package placeholder & test base sources, pipeline absolute paths, Vue3 dev/vite deploy, stale failReason cleanup, Vue3 page legacy fixes. End-to-end: 12/12 pipeline steps success, generated system running (backend 8140 / frontend 9040), 90 .vue pages compile with 0 errors; 468/468 tests green** | 25e2dcc..3fabb7b |
+| **V9.13** | **Smart-village system hardening: replan menu into 12 business domains (replacing 'Other/66 pages'); seed data for 28 tables (98 menus, 5 users, household/land/asset/party/service/flow data, all interlinked); full approval flow verified end-to-end (submit 0-1, approve 1-2, reject 1-3). Fixed two generator defects: flow tables sys_flow_def/sys_flow_task id missing AUTO_INCREMENT (submit 500), auth filter not injecting userId (approve 403, audit create_by null); 3 anti-regression tests, 468/468 green** | 049027a..e4b9df2 |
+| **V9.14** | **Smart-village UI & data hardening: Chinese field labels (52 foreign-key comments fixed at source + 129 page labels synced), 12 business-domain menu icons, real-time dashboard stats (DashboardController whitelist COUNT + 12 stat cards), demo data for all 90 business tables (100% coverage, real foreign-key links). Fixed 3 script-level pitfalls (invalid Map icon, date-rule misfire, English-token comments); 3 new contract tests, 474/474 green** | 039ae7e, **current** |
 
 ---
 
@@ -343,7 +289,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ## 13. Project Status
 
-- The current released version is **V9.8** (multi-pipeline concurrent runs via `PipelineRunGate` — global `max-running` cap + same-project mutual exclusion — plus startup recovery that marks orphaned `running` pipelines `failed` after a restart). It builds on **V9.7** (fast table creation: two-phase skeleton generation, measured 3m13s → 54s, + industry template library), **V9.6** (batched AI modeling jobs for large/huge systems), **V9.5** (AI table recommendation with human confirmation), **V9.4** (staged confirmation), **V9.2/V9.3** (test center + verification hub), **V9.1** (byte-identical maintainability refactor), **V9.0** (Vue 3 + Element Plus + Vite generated artifacts), **V8.1** (quality gate) and **V8.0** (full-page i18n). Language support verified on 2026-11-14: 206/206 locales, 12 RTL, 8 translated word banks key-identical to zh-CN (60 keys each). Generated-artifact verification on 2026-11-14: real run PASSED with 20/20 S10 cases, S11/S12 honestly SKIPPED.
+- The current released version is **V9.8** (multi-pipeline concurrent runs via `PipelineRunGate` + startup recovery for orphaned `running` pipelines after restart). It builds on **V9.7** (fast table creation: two-phase skeleton generation + industry template library), **V9.6** (batched AI modeling jobs for large/huge systems), **V9.5** (AI table recommendation with human confirmation), **V9.4** (staged confirmation), **V9.2** (test center + verification hub), **V9.1** (byte-identical maintainability refactor), **V9.0** (Vue 3 + Element Plus + Vite generated artifacts), **V8.1** (quality gate) and **V8.0** (full-page i18n). Language support verified on 2026-11-13: 206/206 locales, 12 RTL, 8 translated word banks key-identical to zh-CN (60 keys each).
 - A companion demo project `demo_admin` (backend 8140 / frontend 9040) covers tree / CRUD / master-detail / read-only / print scenarios and runs standalone for verification.
 - Both repositories are hosted on Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
@@ -356,3 +302,39 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 - **Technical support**: please write your email **in Chinese**, including the problem description, runtime environment (JDK / MySQL / version) and reproduction steps
 
 > I read and reply to every email. Bug reports, feature requests and collaboration inquiries are all welcome.
+
+---
+
+## 15. How It Compares with Similar Tools
+
+CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
+
+### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
+
+Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
+
+CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
+
+### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
+
+**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
+
+CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
+
+### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
+
+Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
+
+CodeGen's **quality-gate chain** is its differentiator:
+
+| Step | What it actually does |
+| --- | --- |
+| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
+| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
+| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
+| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
+| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
+| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
+| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
+
+These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.
