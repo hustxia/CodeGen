@@ -2,6 +2,7 @@
 
 > Languages: [简体中文](README_ZH.md) · **繁體中文** · [English](README.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
 
+
 ---
 
 > **多語言支援**：生成的系統內建整頁國際化，框架涵蓋 **206 種語言**並可自動回退；其中 **8 種為專業翻譯**（zh-CN、en-US、ja-JP、ko-KR、fr-FR、de-DE、es-ES、ar-SA），其餘語言統一回退到簡體中文。想貢獻翻譯？見 [`多語言項目介紹/CONTRIBUTING.md`](多語言項目介紹/CONTRIBUTING.md)。
@@ -274,6 +275,12 @@ npm run serve
 | **V9.6** | **大型/超大型分批建模任務：任務/批次兩表落庫，條件更新認領調度（2s tick 多 worker 多實例安全），超時回收重試（900s/2 次），前端 2s 輪詢批次進度；實測 11 批/70 表/8s（stub 4 worker）；流水線號防撞（4 位序號 + uk_no 換號重試）** | 5a2bcac + ecbe2ba |
 | **V9.7** | **快速建表：兩段式骨架生成（AI 只列表名/註釋/欄位名，型別與主鍵由命名語義規則補全，真模型實測 3m13s → 54s，約 3.6 倍）+ 行業模板庫（電商/ERP/CRM/CMS 四套 JSON 模板包，與 AI 同收口克隆，秒級零 AI）** | d38ba7c + fd2440c |
 | **V9.8** | **多流水線並發執行：PipelineRunGate 閘門（全局 max-running 上限 + 同系統互斥，跨系統並行安全）取代單執行緒執行器 + 全域 AtomicBoolean；啟動恢復——服務重啟後 running 孤兒狀態自動置 failed（修復實際事故）；462/462 單測全綠** | 157f5ca + 07e8607, **目前版本** |
+| **V9.9** | **行業模板庫擴至 250+ 套 / 19 大類 / 2100+ 表：可複用領域藍圖 + 生成腳本；模板清單改為輕量（不含表明細），明細按需載入，支援分類篩選與搜尋；464/464 單測全綠** | pending, **current** |
+| **V9.10** | **行業模板欄位展開：2191 張表依表語義補業務欄位（編碼/單號/金額/聯絡方式/時間區間/正文/排序/狀態/備註），平均每表 6.12 → 7.87 欄，狀態 100% / 備註 96% / 編碼 82% 覆蓋；語義等價組避免重複欄；修復處方表 create_time 與審計欄撞名；465/465 單測全綠** | pending, **current** |
+| **V9.11** | **行業模板升級為完整系統：每套追加 15 張平台通用表（審批流/附件/操作日誌/任務/訊息/字典/設定）+ 所屬分類 10-15 張專屬業務表（19 大類共 248 張）。每套 29-45 張表（平均 34.8，原 8.6）、每表 10-20 欄位（平均 14.25，原 7.87）；欄位深化依輔助表語義避免假欄位；466/466 單測全綠** | pending, **current** |
+| **V9.12** | **Dedicated smart-village template: village_affairs (85 tables / 1414 columns) covering household registration, land rights, three-asset management, party governance, three-affairs disclosure, convenience services, human settlement and sentiment analytics; dedicated generator script with Chinese column-comment dictionary, idempotent and audit-safe; generic deepening scripts skip dedicated templates; 467/467 tests green** | pending, **current** |
+| **V9.13** | **Smart-village system hardening: replan menu into 12 business domains (replacing 'Other/66 pages'); seed data for 28 tables (98 menus, 5 users, household/land/asset/party/service/flow data, all interlinked); full approval flow verified end-to-end (submit 0-1, approve 1-2, reject 1-3). Fixed two generator defects: flow tables sys_flow_def/sys_flow_task id missing AUTO_INCREMENT (submit 500), auth filter not injecting userId (approve 403, audit create_by null); 3 anti-regression tests, 468/468 green** | 049027a, **current** |
+| **V9.14** | **Smart-village UI & data hardening: Chinese field labels (52 foreign-key comments fixed at source + 129 page labels synced), 12 business-domain menu icons, real-time dashboard stats (DashboardController whitelist COUNT + 12 stat cards), demo data for all 90 business tables (100% coverage, real foreign-key links). Fixed 3 script-level pitfalls (invalid Map icon, date-rule misfire, English-token comments); 3 new contract tests, 474/474 green** | 039ae7e, **current** |
 
 ---
 
