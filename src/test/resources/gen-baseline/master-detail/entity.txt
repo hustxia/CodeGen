@@ -1,0 +1,31 @@
+package com.demo.entity;
+
+import java.math.BigDecimal;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.codegen.common.entity.BaseEntity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * 订单
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("demo_order")
+public class DemoOrder extends BaseEntity {
+
+    // <gen:begin key="entity-fields">
+    /**
+     * 订单号
+     */
+    private String orderNo;
+
+    /**
+     * 金额
+     */
+    private BigDecimal amount;
+
+    // <gen:end key="entity-fields">
+    // ===== 以下为手写区：写在 gen:end 之后的内容，重新生成不会被覆盖 =====
+}

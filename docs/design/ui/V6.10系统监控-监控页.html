@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V6.10 平台可观测性 — 系统监控页效果图</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+  body { background:#f3f5fa; color:#1f2d50; display:flex; min-height:100vh; }
+
+  /* 侧边栏（对齐 codegen-web 暗色 aside） */
+  .aside { width:210px; flex:0 0 210px; background:linear-gradient(180deg,#152346,#0a1226); color:#a7b1c8; padding:18px 0; }
+  .brand { display:flex; align-items:center; gap:8px; padding:0 18px 18px; color:#fff; font-size:14px; font-weight:700; }
+  .brand i { width:26px; height:26px; border-radius:7px; background:linear-gradient(135deg,#3d6df5,#5c84f7); display:flex; align-items:center; justify-content:center; font-style:normal; font-size:12px; }
+  .nav-item { padding:10px 18px 10px 22px; font-size:13px; cursor:pointer; display:flex; gap:8px; align-items:center; }
+  .nav-item:hover { background:rgba(255,255,255,.08); }
+  .nav-item.active { background:rgba(61,109,245,.18); color:#fff; border-left:3px solid #3d6df5; padding-left:19px; }
+
+  /* 主区 */
+  .main { flex:1; min-width:0; }
+  .header { height:56px; background:#fff; border-bottom:1px solid #e9eef8; display:flex; align-items:center; padding:0 24px; gap:12px; }
+  .crumb { font-size:13px; color:#7c87a3; }
+  .crumb b { color:#1f2d50; font-weight:600; }
+  .header .right { margin-left:auto; display:flex; align-items:center; gap:14px; font-size:13px; color:#7c87a3; }
+  .stage { padding:20px 24px 32px; }
+
+  .card { background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(15,23,42,.06); padding:18px 20px; }
+  .btn { height:32px; padding:0 14px; border-radius:4px; border:1px solid #dde5f2; background:#fff; font-size:13px; color:#3b4867; cursor:pointer; }
+  .btn:hover { border-color:#3d6df5; color:#3d6df5; }
+  .btn-primary { background:#3d6df5; border-color:#3d6df5; color:#fff; font-weight:500; }
+  .btn-primary:hover { background:#5c84f7; border-color:#5c84f7; color:#fff; }
+  .spacer { flex:1; }
+
+  /* 状态条 */
+  .statusbar { display:flex; align-items:center; gap:14px; background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(15,23,42,.06); padding:11px 18px; margin-bottom:16px; font-size:13px; color:#5a6478; }
+  .pulse { width:8px; height:8px; border-radius:50%; background:#0f9d58; box-shadow:0 0 0 4px rgba(15,157,88,.14); }
+  .statusbar b { color:#1f2d50; font-weight:600; }
+  .badge { padding:2px 9px; border-radius:10px; font-size:12px; background:#fff4e6; color:#d97706; }
+  .badge-blue { background:#e8effd; color:#3d6df5; }
+  .badge-green { background:#e8f7ef; color:#0f9d58; }
+
+  /* 指标卡 */
+  .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:16px; }
+  .mcard { background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(15,23,42,.06); padding:16px 18px 14px; position:relative; overflow:hidden; }
+  .mcard .label { font-size:12.5px; color:#7c87a3; display:flex; align-items:center; gap:6px; }
+  .mcard .label .ico { width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .ico-blue { background:#e8effd; color:#3d6df5; }
+  .ico-green { background:#e8f7ef; color:#0f9d58; }
+  .ico-orange { background:#fff4e6; color:#d97706; }
+  .ico-red { background:#fdecec; color:#e5484d; }
+  .mcard .val { font-size:26px; font-weight:700; margin-top:8px; letter-spacing:.5px; }
+  .mcard .val small { font-size:12px; font-weight:500; color:#9fa8bd; margin-left:3px; }
+  .mcard .sub { font-size:11.5px; color:#9fa8bd; margin-top:4px; }
+  .mcard .sub em { font-style:normal; color:#0f9d58; }
+  .mcard .sub em.warn { color:#d97706; }
+  .bar { height:5px; border-radius:3px; background:#eef1f7; margin-top:10px; overflow:hidden; }
+  .bar i { display:block; height:100%; border-radius:3px; background:linear-gradient(90deg,#3d6df5,#5c84f7); }
+  .spark { position:absolute; right:12px; bottom:8px; opacity:.55; }
+
+  /* 区块标题 */
+  .sec { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .sec h3 { font-size:14px; font-weight:600; }
+  .sec .hint { font-size:11.5px; color:#9fa8bd; }
+  .sec .legend { margin-left:auto; display:flex; gap:14px; font-size:11.5px; color:#7c87a3; }
+  .sec .legend span { display:flex; align-items:center; gap:5px; }
+  .dot { width:7px; height:7px; border-radius:50%; }
+
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .chartbox { height:206px; }
+  .axis { font-size:10px; fill:#9fa8bd; }
+  .gridline { stroke:#eef1f7; stroke-width:1; }
+
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  th { text-align:left; background:#f7f9fc; color:#5a6478; font-weight:600; padding:9px 12px; border-bottom:1px solid #eef1f7; white-space:nowrap; }
+  td { padding:9px 12px; border-bottom:1px solid #f2f4f9; vertical-align:middle; }
+  tr:hover td { background:#f5f8fe; }
+  .mono { font-family:Consolas,Monaco,monospace; font-size:12px; color:#3b4867; }
+  .tag { display:inline-block; min-width:34px; text-align:center; padding:1px 7px; border-radius:9px; font-size:11px; }
+  .tag-get { background:#e8f7ef; color:#0f9d58; }
+  .tag-post { background:#e8effd; color:#3d6df5; }
+  .tag-put { background:#fff4e6; color:#d97706; }
+  .num { font-family:Consolas,Monaco,monospace; }
+  .num.warn { color:#d97706; }
+  .num.bad { color:#e5484d; }
+
+  /* 业务区 */
+  .biz { display:grid; grid-template-columns:1.1fr 1fr 1.2fr 1.1fr; gap:16px; }
+  .bcard { border:1px solid #eef1f7; border-radius:8px; padding:14px 16px; }
+  .bcard .t { font-size:12.5px; color:#7c87a3; margin-bottom:10px; }
+  .big { font-size:22px; font-weight:700; }
+  .big small { font-size:11px; color:#9fa8bd; font-weight:500; }
+  .donut { width:86px; height:86px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:2px auto 6px; }
+  .donut .inner { width:64px; height:64px; border-radius:50%; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .donut .inner b { font-size:16px; }
+  .donut .inner span { font-size:10px; color:#9fa8bd; }
+  .kv { display:flex; justify-content:space-between; font-size:12px; color:#5a6478; padding:4px 0; }
+  .kv b { color:#1f2d50; font-weight:600; }
+  .stack { display:flex; height:8px; border-radius:4px; overflow:hidden; margin:8px 0 10px; }
+  .stack i { display:block; height:100%; }
+  .steps div { display:flex; align-items:center; gap:8px; font-size:11.5px; color:#5a6478; margin-bottom:6px; }
+  .steps .name { width:112px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .steps .track { flex:1; height:6px; background:#eef1f7; border-radius:3px; overflow:hidden; }
+  .steps .track i { display:block; height:100%; background:#3d6df5; border-radius:3px; }
+  .steps .ms { width:44px; text-align:right; font-family:Consolas,monospace; color:#7c87a3; }
+
+  /* 告警态示意 */
+  .alert { display:flex; align-items:center; gap:10px; background:#fdf2f2; border:1px solid #f6d5d5; color:#b42318; border-radius:8px; padding:10px 14px; font-size:13px; }
+  .alert b { font-weight:600; }
+  .alert .btn { margin-left:auto; height:28px; font-size:12px; border-color:#f0c4c4; color:#b42318; }
+  .demo { margin-top:24px; padding-top:20px; border-top:1px dashed #dde5f2; }
+  .demo h4 { font-size:13px; color:#5a6478; margin-bottom:10px; font-weight:600; }
+  .demo .cap { font-size:11.5px; color:#9fa8bd; margin:8px 0 0; }
+</style>
+</head>
+<body>
+
+<div class="aside">
+  <div class="brand"><i>码</i>码匠 · CodeGen</div>
+  <div class="nav-item">▦ 代码生成</div>
+  <div class="nav-item">◈ 表格配置</div>
+  <div class="nav-item">📄 文档中心</div>
+  <div class="nav-item">⚙ 系统管理</div>
+  <div class="nav-item active">📈 系统监控</div>
+</div>
+
+<div class="main">
+  <div class="header">
+    <div class="crumb">首页 / <b>系统监控</b></div>
+    <div class="right">
+      <span>5s 自动刷新</span>
+      <span style="width:26px;height:26px;border-radius:50%;background:#ecf0fe;color:#3d6df5;display:flex;align-items:center;justify-content:center;font-size:12px;">A</span>
+    </div>
+  </div>
+
+  <div class="stage">
+
+    <!-- 状态条 -->
+    <div class="statusbar">
+      <span class="pulse"></span>
+      <span><b>采样正常</b> · 每 5 秒一次 · 最近采样 <span class="mono">15:04:05</span></span>
+      <span class="badge badge-blue">已采样 312 / 360 点</span>
+      <span class="badge">仅进程内 30 分钟 · 重启归零 · 多实例不共享</span>
+      <span class="spacer"></span>
+      <span style="color:#9fa8bd">JVM 当前进程 · UP 2 天 06:41</span>
+      <button class="btn">立即刷新</button>
+    </div>
+
+    <!-- 4 张指标卡 -->
+    <div class="cards">
+      <div class="mcard">
+        <div class="label"><span class="ico ico-blue">◧</span>堆内存使用率</div>
+        <div class="val">41.2<small>%</small></div>
+        <div class="sub">已用 412 MB / 上限 1024 MB</div>
+        <div class="bar"><i style="width:41%"></i></div>
+        <svg class="spark" width="74" height="26" viewBox="0 0 74 26">
+          <polyline fill="none" stroke="#5c84f7" stroke-width="1.6" points="0,18 8,16 16,19 24,12 32,14 40,9 48,11 56,8 64,10 72,7"/>
+        </svg>
+      </div>
+      <div class="mcard">
+        <div class="label"><span class="ico ico-green">⌁</span>活跃线程</div>
+        <div class="val">38<small>个</small></div>
+        <div class="sub">近 5 分钟 <em>+2</em> · 无阻塞告警</div>
+        <svg class="spark" width="74" height="26" viewBox="0 0 74 26">
+          <polyline fill="none" stroke="#0f9d58" stroke-width="1.6" points="0,16 8,16 16,14 24,15 32,13 40,14 48,11 56,12 64,12 72,10"/>
+        </svg>
+      </div>
+      <div class="mcard">
+        <div class="label"><span class="ico ico-orange">⇄</span>区间 QPS</div>
+        <div class="val">3.6<small>req/s</small></div>
+        <div class="sub">近 30 分钟峰值 <em class="warn">12.4</em> · 当前窗口 18 次请求</div>
+        <svg class="spark" width="74" height="26" viewBox="0 0 74 26">
+          <polyline fill="none" stroke="#d97706" stroke-width="1.6" points="0,20 8,17 16,19 24,10 32,14 40,8 48,16 56,12 64,18 72,15"/>
+        </svg>
+      </div>
+      <div class="mcard">
+        <div class="label"><span class="ico ico-red">◷</span>平均响应耗时</div>
+        <div class="val">86<small>ms</small></div>
+        <div class="sub">P95 <span class="num">214 ms</span> · P99 <span class="num warn">486 ms</span></div>
+        <div class="bar"><i style="width:22%;background:linear-gradient(90deg,#e5484d,#f2777a)"></i></div>
+      </div>
+    </div>
+
+    <!-- JVM 趋势 + HTTP 趋势 -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="sec">
+          <h3>JVM 趋势</h3><span class="hint">近 30 分钟 · 5s 采样</span>
+          <span class="legend">
+            <span><i class="dot" style="background:#3d6df5"></i>堆内存 (MB)</span>
+            <span><i class="dot" style="background:#0f9d58"></i>活跃线程</span>
+          </span>
+        </div>
+        <div class="chartbox">
+          <svg width="100%" height="200" viewBox="0 0 560 200" preserveAspectRatio="none">
+            <line class="gridline" x1="0" y1="40" x2="560" y2="40"/>
+            <line class="gridline" x1="0" y1="80" x2="560" y2="80"/>
+            <line class="gridline" x1="0" y1="120" x2="560" y2="120"/>
+            <line class="gridline" x1="0" y1="160" x2="560" y2="160"/>
+            <text class="axis" x="2" y="36">1024</text>
+            <text class="axis" x="2" y="76">768</text>
+            <text class="axis" x="2" y="116">512</text>
+            <text class="axis" x="2" y="156">256</text>
+            <polyline fill="none" stroke="#3d6df5" stroke-width="2"
+              points="18,132 60,126 102,138 144,120 186,124 228,110 270,116 312,104 354,108 396,98 438,102 480,96 522,100 552,94"/>
+            <polyline fill="none" stroke="#0f9d58" stroke-width="1.8" stroke-dasharray="4 3"
+              points="18,152 60,150 102,148 144,150 186,146 228,148 270,144 312,146 354,142 396,144 438,142 480,143 522,141 552,140"/>
+            <rect x="396" y="40" width="6" height="160" fill="rgba(61,109,245,.06)"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec">
+          <h3>HTTP 趋势</h3><span class="hint">近 30 分钟</span>
+          <span class="legend">
+            <span><i class="dot" style="background:#d97706"></i>QPS</span>
+            <span><i class="dot" style="background:#e5484d"></i>P95 (ms)</span>
+          </span>
+        </div>
+        <div class="chartbox">
+          <svg width="100%" height="200" viewBox="0 0 560 200" preserveAspectRatio="none">
+            <line class="gridline" x1="0" y1="40" x2="560" y2="40"/>
+            <line class="gridline" x1="0" y1="80" x2="560" y2="80"/>
+            <line class="gridline" x1="0" y1="120" x2="560" y2="120"/>
+            <line class="gridline" x1="0" y1="160" x2="560" y2="160"/>
+            <text class="axis" x="2" y="36">16</text>
+            <text class="axis" x="2" y="76">12</text>
+            <text class="axis" x="2" y="116">8</text>
+            <text class="axis" x="2" y="156">4</text>
+            <polyline fill="none" stroke="#d97706" stroke-width="2"
+              points="18,150 60,144 102,152 144,120 186,136 228,108 270,146 312,124 354,142 396,112 438,130 480,118 522,138 552,126"/>
+            <polyline fill="none" stroke="#e5484d" stroke-width="1.8" stroke-dasharray="4 3"
+              points="18,132 60,128 102,136 144,96 186,118 228,84 270,124 312,104 354,120 396,88 438,110 480,96 522,116 552,104"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 慢接口 Top N -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="sec">
+        <h3>慢接口 Top 10</h3><span class="hint">按区间平均耗时排序 · URI 为 Micrometer 模板</span>
+        <span class="spacer"></span>
+        <span class="badge badge-green">区间 4xx 0 · 5xx 1</span>
+      </div>
+      <table>
+        <tr>
+          <th style="width:42%">URI</th><th style="width:80px">方法</th>
+          <th style="width:80px">次数</th><th style="width:110px">平均耗时</th><th style="width:110px">最大耗时</th>
+        </tr>
+        <tr><td class="mono">/doc/preview/{id}</td><td><span class="tag tag-get">GET</span></td><td class="num">4</td><td class="num bad">4.82 s</td><td class="num">6.31 s</td></tr>
+        <tr><td class="mono">/gen/write</td><td><span class="tag tag-post">POST</span></td><td class="num">2</td><td class="num warn">3.16 s</td><td class="num">4.07 s</td></tr>
+        <tr><td class="mono">/gen/pipeline/{id}/run</td><td><span class="tag tag-post">POST</span></td><td class="num">1</td><td class="num warn">2.44 s</td><td class="num">2.44 s</td></tr>
+        <tr><td class="mono">/gen/table/page</td><td><span class="tag tag-post">POST</span></td><td class="num">27</td><td class="num">186 ms</td><td class="num">421 ms</td></tr>
+        <tr><td class="mono">/monitor/series</td><td><span class="tag tag-get">GET</span></td><td class="num">96</td><td class="num">12 ms</td><td class="num">38 ms</td></tr>
+      </table>
+    </div>
+
+    <!-- 业务区 -->
+    <div class="card">
+      <div class="sec"><h3>业务指标</h3><span class="hint">近 30 分钟 · 仅统计本进程</span></div>
+      <div class="biz">
+        <div class="bcard">
+          <div class="t">生成批次</div>
+          <div class="donut" style="background:conic-gradient(#0f9d58 0 93%, #f2f4f9 93% 100%)">
+            <div class="inner"><b>93%</b><span>成功率</span></div>
+          </div>
+          <div class="kv"><span>批次总数</span><b>14</b></div>
+          <div class="kv"><span>成功 / 失败</span><b>13 / <span class="num bad">1</span></b></div>
+          <div class="kv"><span>平均耗时</span><b>3.16 s</b></div>
+        </div>
+        <div class="bcard">
+          <div class="t">写盘文件数</div>
+          <div class="big">268 <small>个文件</small></div>
+          <div class="stack">
+            <i style="width:72%;background:#0f9d58"></i>
+            <i style="width:18%;background:#3d6df5"></i>
+            <i style="width:7%;background:#d97706"></i>
+            <i style="width:3%;background:#e5484d"></i>
+          </div>
+          <div class="kv"><span>WRITTEN 新增</span><b>193</b></div>
+          <div class="kv"><span>MERGED 合并</span><b>48</b></div>
+          <div class="kv"><span>SKIPPED / ERROR</span><b>19 / <span class="num bad">8</span></b></div>
+        </div>
+        <div class="bcard">
+          <div class="t">流水线状态分布</div>
+          <div class="big">5 <small>次运行</small></div>
+          <div class="stack">
+            <i style="width:60%;background:#0f9d58"></i>
+            <i style="width:20%;background:#e5484d"></i>
+            <i style="width:20%;background:#9fa8bd"></i>
+          </div>
+          <div class="kv"><span>成功</span><b>3</b></div>
+          <div class="kv"><span>失败</span><b>1</b></div>
+          <div class="kv"><span>已停止</span><b>1</b></div>
+          <div class="kv"><span>最慢步骤</span><b>package_backend 42.8 s</b></div>
+        </div>
+        <div class="bcard">
+          <div class="t">文档转换（LibreOffice）</div>
+          <div class="big">27 <small>次</small></div>
+          <div class="kv" style="margin-top:8px;"><span>缓存命中 hit</span><b>18</b></div>
+          <div class="kv"><span>实际转换 converted</span><b>8</b></div>
+          <div class="kv"><span>失败 failed</span><b class="num bad">1</b></div>
+          <div class="kv"><span>平均转换耗时</span><b>4.82 s</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 异常态示意（F-16） -->
+    <div class="demo">
+      <h4>异常态示意：采样停滞（超过 3 个采样周期 = 15s 未更新）</h4>
+      <div class="alert">
+        <b>⚠ 采样停滞</b>
+        <span>最近一次采样在 <span class="mono">15:03:20</span>，已 45 秒未更新。指标可能不再刷新，请检查后端调度线程或查看服务日志。</span>
+        <button class="btn">重新加载</button>
+      </div>
+      <p class="cap">正常态下该告警条不出现；状态条左侧圆点由绿色变为灰色，文案改为「采样停滞」。</p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

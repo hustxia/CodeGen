@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V7.5 效果图 - 系统编辑弹窗（项目语言配置）</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Helvetica Neue",Helvetica,"PingFang SC","Microsoft YaHei",sans-serif; background:#f0f2f5; padding:24px; font-size:14px; color:#303133; }
+  .panel { max-width:860px; margin:0 auto 20px; background:#fff; border-radius:4px; box-shadow:0 2px 12px rgba(0,0,0,.08); overflow:hidden; }
+  .panel-title { padding:14px 20px; border-bottom:1px solid #ebeef5; font-weight:600; font-size:15px; background:#fff; display:flex; align-items:center; gap:8px; }
+  .panel-title .badge { font-size:12px; font-weight:500; color:#409eff; background:#ecf5ff; border:1px solid #d9ecff; padding:1px 8px; border-radius:10px; }
+  .dialog-body { padding:20px 28px 12px; }
+  .el-form-item { display:flex; margin-bottom:18px; }
+  .el-form-item label { width:130px; text-align:right; padding-right:12px; color:#606266; line-height:36px; flex-shrink:0; }
+  .el-form-item label .req { color:#f56c6c; margin-right:4px; }
+  .el-input, .el-select-box { flex:1; }
+  .el-input input { width:100%; height:34px; border:1px solid #dcdfe6; border-radius:4px; padding:0 12px; color:#606266; line-height:32px; background:#fff; font-size:13px; }
+  .el-select-box { min-height:34px; border:1px solid #dcdfe6; border-radius:4px; padding:4px 10px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .el-select-box .arrow { color:#c0c4cc; font-size:12px; }
+  .tag { display:inline-block; background:#f4f4f5; border:1px solid #e9e9eb; color:#909399; border-radius:3px; padding:1px 7px; font-size:12px; margin:2px 4px 2px 0; }
+  .tag.primary { background:#ecf5ff; border-color:#d9ecff; color:#409eff; }
+  .tag.rtl { background:#fdf6ec; border-color:#faecd8; color:#e6a23c; }
+  .tip { font-size:12px; color:#909399; line-height:1.6; margin-top:5px; }
+  .highlight { outline:2px solid #67c23a; outline-offset:2px; border-radius:4px; position:relative; }
+  .new-tag { position:absolute; right:-46px; top:6px; font-size:11px; color:#67c23a; border:1px solid #67c23a; padding:0 6px; border-radius:3px; background:#f0f9eb; }
+  .list-card { padding:6px 28px 22px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; background:#fafafa; color:#909399; font-weight:500; padding:9px 10px; border-bottom:1px solid #ebeef5; }
+  td { padding:9px 10px; border-bottom:1px solid #ebeef5; color:#606266; }
+  td code { background:#f4f4f5; padding:1px 5px; border-radius:3px; font-family:Consolas,Menlo,monospace; color:#c7254e; }
+  .stat { display:flex; gap:10px; padding:14px 28px 4px; flex-wrap:wrap; }
+  .stat div { background:#f4f8ff; border:1px solid #d9e8ff; border-radius:4px; padding:8px 14px; font-size:12px; color:#606266; }
+  .stat b { color:#409eff; font-size:17px; margin-right:5px; }
+  .code { font-family:Consolas,Menlo,monospace; font-size:13px; line-height:1.8; background:#2d2d2d; color:#ccc; border-radius:6px; padding:14px 18px; margin:6px 28px 22px; }
+  .code .k { color:#66d9ef; } .code .v { color:#a6e22e; } .code .n { color:#888; }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <div class="panel-title">系统管理 / 编辑系统 <span class="badge">V7.5 新增「项目语言配置」</span></div>
+  <div class="dialog-body">
+    <div class="el-form-item"><label><span class="req">*</span>系统编码</label><div class="el-input"><input value="wms" readonly style="color:#909399;background:#f5f7fa"></div></div>
+    <div class="el-form-item"><label><span class="req">*</span>系统名称</label><div class="el-input"><input value="仓库管理系统"></div></div>
+    <div class="el-form-item"><label>应用显示名</label><div class="el-input"><input value="悦集仓储"></div></div>
+    <div class="el-form-item"><label>Logo 地址</label><div class="el-input"><input value="" placeholder="留空用内置 logo"></div></div>
+
+    <div class="el-form-item">
+      <label>默认语言</label>
+      <div class="highlight" style="flex:1">
+        <div class="el-select-box"><span>中文（简体） · zh-CN</span><span class="arrow">▼</span><span class="new-tag">新增</span></div>
+        <div class="tip">下拉共 206 项，支持输入过滤；生成物 <code style="background:#f4f4f5;padding:1px 4px">&lt;html lang&gt;</code> 取此值。留空回落 zh-CN，存量系统行为不变</div>
+      </div>
+    </div>
+
+    <div class="el-form-item">
+      <label>启用语言</label>
+      <div class="highlight" style="flex:1">
+        <div class="el-select-box">
+          <span>
+            <span class="tag primary">中文（简体）</span>
+            <span class="tag primary">English</span>
+            <span class="tag primary">العربية <span class="tag rtl" style="margin:0;padding:0 4px">RTL</span></span>
+            <span class="tag primary">日本語</span>
+            <span class="tag">+2</span>
+          </span>
+          <span class="arrow">▼</span>
+          <span class="new-tag">新增</span>
+        </div>
+        <div class="tip">多选，最多 206 项；留空 = 全部启用。选中 RTL 语言时生成物自动输出 <code style="background:#f4f4f5;padding:1px 4px">dir="rtl"</code>，代码块仍保持 LTR</div>
+      </div>
+    </div>
+
+    <div class="el-form-item"><label>状态</label><div class="el-input"><input value="启用" readonly style="width:120px"></div></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">语言清单（平台级只读配置，classpath: i18n/languages.json）</div>
+  <div class="stat">
+    <div><b>206</b>种语言</div>
+    <div><b>188</b>ISO 639-1</div>
+    <div><b>18</b>BCP47 变体</div>
+    <div><b>12</b>RTL 语言</div>
+    <div><b>48</b>已关联 README 译本</div>
+  </div>
+  <div class="list-card">
+    <table>
+      <thead><tr><th>code</th><th>locale</th><th>中文名</th><th>本地自称</th><th>script</th><th>dir</th><th>README 译本</th></tr></thead>
+      <tbody>
+        <tr><td><code>zh</code></td><td><code>zh-CN</code></td><td>中文</td><td>中文</td><td>Hans</td><td>ltr</td><td>README_ZH.md</td></tr>
+        <tr><td><code>en</code></td><td><code>en-US</code></td><td>英语</td><td>English</td><td>Latn</td><td>ltr</td><td>README.md</td></tr>
+        <tr><td><code>ar</code></td><td><code>ar-SA</code></td><td>阿拉伯语</td><td>العربية</td><td>Arab</td><td><span class="tag rtl">rtl</span></td><td>README_AR.md</td></tr>
+        <tr><td><code>fa</code></td><td><code>fa-IR</code></td><td>波斯语</td><td>فارسی</td><td>Arab</td><td><span class="tag rtl">rtl</span></td><td>README_FA.md</td></tr>
+        <tr><td><code>pt-BR</code></td><td><code>pt-BR</code></td><td>巴西葡萄牙语</td><td>Português (Brasil)</td><td>Latn</td><td>ltr</td><td>README_PT_BR.md</td></tr>
+        <tr><td><code>ru</code></td><td><code>ru-RU</code></td><td>俄语</td><td>русский</td><td>Cyrl</td><td>ltr</td><td>README_RU.md</td></tr>
+        <tr><td><code>sw</code></td><td><code>sw-TZ</code></td><td>斯瓦希里语</td><td>Kiswahili</td><td>Latn</td><td>ltr</td><td>README_SW.md</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">生成物注入结果（示例：默认语言切到 ar-SA）</div>
+  <div class="code">
+<span class="n">&lt;!-- 存量系统：未配置 → 回落 zh-CN，产物与改造前完全一致 --&gt;</span>
+&lt;html <span class="k">lang</span>=<span class="v">"zh-CN"</span>&gt;
+
+<span class="n">&lt;!-- 配置 defaultLanguage=ar-SA 后 --&gt;</span>
+&lt;html <span class="k">lang</span>=<span class="v">"ar-SA"</span> <span class="k">dir</span>=<span class="v">"rtl"</span>&gt;
+  </div>
+</div>
+
+</body>
+</html>

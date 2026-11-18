@@ -1,0 +1,13 @@
+{
+  path: 'tag',
+  name: 'DemoTag',
+  component: () => import('@/views/tag/index.vue'),
+  meta: { title: '标签' }
+},
+{
+  // V4.5 打印单据：无 layout 顶层路由，打印页必须脱离后台导航壳，否则打出来带侧边栏
+  path: '/print/tag/:id',
+  name: 'PrintDemoTag',
+  component: () => import('@/views/tag/print.vue'),
+  meta: { title: '标签打印' }
+},

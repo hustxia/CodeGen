@@ -1,0 +1,58 @@
+import request, { toPageData } from '@/utils/request'
+
+// 商品接口：demo_goods（经网关 /api/demo）
+// <gen:begin key="api-fns">
+function toPageQuery(params) {
+  const { page, size, ...query } = params || {}
+  return { pageNum: page || 1, pageSize: size || 10, ...query }
+}
+export function getDemoGoodsList(params) {
+  return request({
+    url: '/api/demo/goods/page',
+    method: 'post',
+    data: toPageQuery(params)
+  }).then(toPageData)
+}
+export function getDemoGoodsOptions(refTable, label, keyword) {
+  return request({
+    url: '/api/demo/goods/options',
+    method: 'get',
+    params: { refTable, label, keyword }
+  })
+}
+export function exportDemoGoods(params) {
+  return request({
+    url: '/api/demo/goods/export',
+    method: 'post',
+    data: params || {},
+    responseType: 'blob'
+  })
+}
+export function getDemoGoodsDetail(id) {
+  return request({
+    url: `/api/demo/goods/${id}`,
+    method: 'get'
+  })
+}
+export function createDemoGoods(data) {
+  return request({
+    url: '/api/demo/goods',
+    method: 'post',
+    data
+  })
+}
+export function updateDemoGoods(id, data) {
+  return request({
+    url: '/api/demo/goods',
+    method: 'put',
+    data: { ...data, id }
+  })
+}
+export function deleteDemoGoods(id) {
+  return request({
+    url: `/api/demo/goods/${id}`,
+    method: 'delete'
+  })
+}
+// <gen:end key="api-fns">
+// ===== 以下为手写区：自定义请求写在这里，重新生成不会被覆盖 =====
