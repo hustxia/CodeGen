@@ -1,139 +1,139 @@
-# 贡献代码指南
+# Code Contribution Guide
 
-感谢你关注并参与本项目！
+Thanks for your interest in and support of this project!
 
-如果你对 **Java / Vue** 技术非常有信心，非常欢迎贡献代码。为了保证代码质量、协作效率和功能可追溯性，请在提交代码前仔细阅读并遵循本指南。
-
----
-
-## 一、贡献流程总览
-
-贡献代码请按以下流程执行：
-
-1. 编写需求文档
-2. 编写前后端代码
-3. 跑后端全量单元测试，跑前端页面冒烟测试
-4. 确认功能没有问题、无已知 Bug
-5. 提交代码，并附带测试截图
-6. 审核通过后，代码合并入 GitHub 仓库
-
-> 请勿直接向主分支 `main` / `master` 推送代码，所有功能变更请通过 Pull Request 提交。
+If you are confident in **Java / Vue**, contributions are very welcome. To keep code quality, collaboration efficiency, and feature traceability high, please read and follow this guide before submitting code.
 
 ---
 
-## 二、分支规范
+## 1. Contribution Workflow Overview
 
-请从最新主分支创建个人开发分支：
+Follow this workflow when contributing code:
+
+1. Write a requirements document
+2. Implement the back-end and front-end code
+3. Run the full back-end unit test suite and front-end page smoke tests
+4. Confirm the feature works and there are no known bugs
+5. Commit the code and attach test screenshots
+6. After review approval, the code is merged into the GitHub repository
+
+> Do not push directly to the `main` / `master` branch. All feature changes must be submitted via a Pull Request.
+
+---
+
+## 2. Branch Naming
+
+Create a personal development branch from the latest main branch:
 
 ```bash
 git checkout main
 git pull origin main
-git checkout -b feature/你的功能名称
+git checkout -b feature/your-feature-name
 ```
 
-分支命名建议：
+Suggested branch naming:
 
-| 类型 | 命名示例 | 说明 |
+| Type | Example | Description |
 |---|---|---|
-| 新功能 | `feature/user-export` | 新增功能 |
-| Bug 修复 | `bugfix/login-error` | 修复缺陷 |
-| 文档更新 | `docs/contributing-guide` | 文档变更 |
-| 重构优化 | `refactor/order-service` | 不改变功能的代码优化 |
-| 测试补充 | `test/user-service` | 增加或修改测试 |
+| New feature | `feature/user-export` | Adds a new feature |
+| Bug fix | `bugfix/login-error` | Fixes a defect |
+| Documentation | `docs/contributing-guide` | Documentation changes |
+| Refactoring | `refactor/order-service` | Code optimization without behavior change |
+| Tests | `test/user-service` | Adds or modifies tests |
 
 ---
 
-## 三、1. 编写需求文档
+## 3. Step 1: Write the Requirements Document
 
-在开发前，请先明确需求，避免无效开发和反复返工。
+Define the requirements before development to avoid wasted effort and rework.
 
-需求文档建议放置在：
+Suggested location:
 
 ```text
 docs/requirements/
 ```
 
-需求文档命名建议：
+Suggested file name:
 
 ```text
-docs/requirements/功能名称.md
+docs/requirements/feature-name.md
 ```
 
-需求文档至少包含以下内容：
+The requirements document should contain at least the following:
 
 ```markdown
-# 需求名称
+# Requirement Name
 
-## 1. 背景
-说明为什么需要这个需求。
+## 1. Background
+Explain why this requirement exists.
 
-## 2. 目标
-说明本需求要达成的目标。
+## 2. Goal
+Describe what this requirement aims to achieve.
 
-## 3. 范围
-说明本次包含和不包含的内容。
+## 3. Scope
+Describe what is included and excluded.
 
-## 4. 功能说明
-详细描述功能流程、页面交互、接口变更、数据结构变更等。
+## 4. Feature Description
+Describe the feature flow, page interactions, API changes, and data structure changes in detail.
 
-## 5. 接口设计
-如有后端接口变更，请列出接口路径、请求方式、请求参数、响应结构。
+## 5. API Design
+If back-end APIs change, list the API path, HTTP method, request parameters, and response structure.
 
-## 6. 验收标准
-列出可验证的验收条件。
+## 6. Acceptance Criteria
+List verifiable acceptance conditions.
 
-## 7. 测试计划
-说明后端单元测试、前端冒烟测试和关键页面测试范围。
+## 7. Test Plan
+Describe the scope of back-end unit tests, front-end smoke tests, and key page tests.
 ```
 
 ---
 
-## 四、2. 编写前后端代码
+## 4. Step 2: Implement Back-End and Front-End Code
 
-### 后端 Java 代码要求
+### Back-End Java Requirements
 
-- 遵循项目现有代码结构和分层规范。
-- 保持命名清晰，避免重复代码和无效代码。
-- 新增或修改接口时，需同步更新接口文档或需求文档。
-- 涉及数据库变更时，需提供变更说明或迁移脚本。
-- 不得提交敏感信息，如密码、密钥、Token、生产配置等。
-- 新增业务逻辑应补充对应单元测试。
+- Follow the project's existing code structure and layering conventions.
+- Keep naming clear; avoid duplicate and dead code.
+- When adding or modifying an API, update the API documentation or requirements document accordingly.
+- For database changes, provide a change description or migration script.
+- Never commit sensitive information such as passwords, keys, tokens, or production configuration.
+- Add corresponding unit tests for new business logic.
 
-### 前端 Vue 代码要求
+### Front-End Vue Requirements
 
-- 遵循项目现有组件化、路由、状态管理规范。
-- 页面样式应与现有设计保持一致。
-- 避免提交调试代码、无用日志和临时文件。
-- 新增页面需补充必要的冒烟测试或手工测试说明。
-- 提交前请执行项目约定的代码检查与构建命令。
+- Follow the project's existing component, routing, and state-management conventions.
+- Keep page styling consistent with the existing design.
+- Avoid committing debug code, useless logs, and temporary files.
+- Add necessary smoke tests or manual test notes for new pages.
+- Run the project's lint and build commands before committing.
 
 ---
 
-## 五、3. 跑后端全量单元测试，跑前端页面冒烟测试
+## 5. Step 3: Run the Full Back-End Test Suite and Front-End Smoke Tests
 
-提交代码前，必须完成测试。
+Testing is mandatory before committing.
 
-### 后端全量单元测试
+### Full Back-End Unit Tests
 
-根据项目实际构建工具执行：
+Run according to the project's build tool:
 
 ```bash
-# Maven 项目
+# Maven project
 mvn test
 
-# Gradle 项目
+# Gradle project
 ./gradlew test
 ```
 
-要求：
+Requirements:
 
-- 后端全量单元测试必须通过。
-- 新增业务逻辑需有对应单元测试。
-- 如测试失败，请修复后再提交，不得跳过或忽略失败用例。
+- The full back-end unit test suite must pass.
+- New business logic must have corresponding unit tests.
+- If any test fails, fix it before committing; do not skip or ignore failing cases.
 
-### 前端页面冒烟测试
+### Front-End Page Smoke Tests
 
-根据项目实际脚本执行，例如：
+Run the project's scripts, for example:
 
 ```bash
 npm install
@@ -142,171 +142,171 @@ npm run build
 npm run test:smoke
 ```
 
-如果项目暂未配置自动化冒烟测试，请至少完成以下手工冒烟检查：
+If no automated smoke test is configured, complete at least the following manual checks:
 
-- 页面可以正常打开。
-- 路由跳转正常。
-- 新增或修改功能主流程可用。
-- 关键按钮、表单、弹窗交互正常。
-- 浏览器控制台无明显报错。
-- 页面无严重样式错乱。
-
----
-
-## 六、4. 确认功能没有问题、无已知 Bug
-
-提交 PR 前，请完成自测并确认：
-
-- 需求文档中的验收标准已满足。
-- 后端接口返回符合预期。
-- 前端页面交互符合预期。
-- 异常场景有基本处理。
-- 无明显性能问题。
-- 无已知未修复 Bug。
-- 不包含与本次需求无关的改动。
-
-如存在已知限制或未完成事项，请在 PR 描述中明确说明。
+- Pages open normally.
+- Route navigation works.
+- The main flow of the added or modified feature works.
+- Key buttons, forms, and dialogs interact correctly.
+- No obvious errors in the browser console.
+- No serious styling issues on the page.
 
 ---
 
-## 七、5. 提交代码并附带测试截图
+## 6. Step 4: Confirm the Feature Works and Has No Known Bugs
 
-### 提交信息规范
+Before submitting a PR, complete self-testing and confirm:
 
-提交信息建议使用以下格式：
+- Acceptance criteria in the requirements document are met.
+- Back-end API responses meet expectations.
+- Front-end page interactions meet expectations.
+- Edge cases are handled at a basic level.
+- No obvious performance issues.
+- No known unfixed bugs.
+- No changes unrelated to this requirement are included.
+
+If there are known limitations or unfinished items, state them clearly in the PR description.
+
+---
+
+## 7. Step 5: Commit Code and Attach Test Screenshots
+
+### Commit Message Convention
+
+Use the following format:
 
 ```text
-feat: 新增用户导出功能
-fix: 修复登录页验证码报错
-docs: 更新贡献指南
-refactor: 重构订单查询逻辑
-test: 补充用户服务单元测试
+feat: add user export feature
+fix: fix verification code error on login page
+docs: update contribution guide
+refactor: refactor order query logic
+test: add unit tests for user service
 ```
 
-常用类型：
+Common types:
 
-| 类型 | 说明 |
+| Type | Description |
 |---|---|
-| `feat` | 新功能 |
-| `fix` | Bug 修复 |
-| `docs` | 文档更新 |
-| `refactor` | 重构 |
-| `test` | 测试相关 |
-| `chore` | 构建、依赖、工具等杂项 |
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `docs` | Documentation update |
+| `refactor` | Refactoring |
+| `test` | Test-related |
+| `chore` | Miscellaneous build, dependency, or tooling changes |
 
-### 提交 Pull Request
+### Submit a Pull Request
 
-推送分支：
+Push the branch:
 
 ```bash
 git add .
-git commit -m "feat: 新增用户导出功能"
-git push origin feature/你的功能名称
+git commit -m "feat: add user export feature"
+git push origin feature/your-feature-name
 ```
 
-然后在 GitHub 创建 Pull Request，并在 PR 描述中附上测试截图。
+Then create a Pull Request on GitHub and attach test screenshots in the PR description.
 
-PR 描述建议使用以下模板：
+Suggested PR description template:
 
 ```markdown
-## 需求说明
+## Requirement Description
 
-关联需求文档：
-- docs/requirements/功能名称.md
+Related requirements document:
+- docs/requirements/feature-name.md
 
-## 变更内容
+## Changes
 
-- 后端：
-- 前端：
-- 文档：
+- Back-end:
+- Front-end:
+- Documentation:
 
-## 测试情况
+## Testing
 
-### 后端全量单元测试
+### Full Back-End Unit Tests
 
-- 执行命令：`mvn test`
-- 测试结果：通过
-- 截图：
+- Command: `mvn test`
+- Result: Passed
+- Screenshots:
 
-### 前端冒烟测试
+### Front-End Smoke Tests
 
-- 执行命令：`npm run build && npm run test:smoke`
-- 测试结果：通过
-- 页面截图：
+- Command: `npm run build && npm run test:smoke`
+- Result: Passed
+- Page screenshots:
 
-### 关键功能截图
+### Key Feature Screenshots
 
-请附上新增或修改功能的关键页面截图、接口测试截图或操作录屏。
+Attach screenshots of key pages, API test results, or a short recording of the added or modified feature.
 
-## 已知问题
+## Known Issues
 
-- 无 / 如有请说明
+- None / describe if any
 
-## 自检清单
+## Self-Check Checklist
 
-- [ ] 已编写或更新需求文档
-- [ ] 已完成前后端代码
-- [ ] 后端全量单元测试通过
-- [ ] 前端页面冒烟测试通过
-- [ ] 已确认功能无问题、无已知 Bug
-- [ ] 已附带测试截图
-- [ ] 未提交敏感信息
-- [ ] 未包含无关改动
+- [ ] Requirements document written or updated
+- [ ] Back-end and front-end code complete
+- [ ] Full back-end unit tests pass
+- [ ] Front-end smoke tests pass
+- [ ] Feature confirmed working with no known bugs
+- [ ] Test screenshots attached
+- [ ] No sensitive information committed
+- [ ] No unrelated changes included
 ```
 
 ---
 
-## 八、6. 审核通过后合并入 GitHub 仓库
+## 8. Step 6: Merge into the GitHub Repository After Review
 
-维护者会审核 Pull Request，重点检查：
+The maintainer reviews the Pull Request, focusing on:
 
-- 需求是否清晰、可追溯。
-- 代码是否符合项目规范。
-- 测试是否充分且通过。
-- 是否附带测试截图。
-- 是否存在安全风险或敏感信息。
-- 是否包含无关改动。
+- Whether the requirement is clear and traceable.
+- Whether the code follows project conventions.
+- Whether testing is sufficient and passing.
+- Whether test screenshots are attached.
+- Whether there are security risks or sensitive information.
+- Whether unrelated changes are included.
 
-审核通过后，由维护者将代码合并入 GitHub 仓库。
+After approval, the maintainer merges the code into the GitHub repository.
 
-如审核提出修改意见，请在同一分支继续提交修改：
+If review comments require changes, continue committing to the same branch:
 
 ```bash
 git add .
-git commit -m "fix: 根据审核意见调整实现"
-git push origin feature/你的功能名称
+git commit -m "fix: adjust implementation per review comments"
+git push origin feature/your-feature-name
 ```
 
-修改会自动更新到当前 Pull Request。
+The new commits automatically update the current Pull Request.
 
 ---
 
-## 九、提交前自检清单
+## 9. Pre-Submission Self-Check Checklist
 
-提交 PR 前请逐项确认：
+Confirm each item before submitting a PR:
 
-- [ ] 已阅读本贡献指南
-- [ ] 已从最新主分支创建功能分支
-- [ ] 已编写或更新需求文档
-- [ ] 已完成前后端代码
-- [ ] 后端全量单元测试通过
-- [ ] 前端页面冒烟测试通过
-- [ ] 已确认功能没有问题、无已知 Bug
-- [ ] 已提交代码并附带测试截图
-- [ ] PR 描述完整
-- [ ] 未提交密码、密钥、Token 等敏感信息
-- [ ] 未包含与本次需求无关的改动
-- [ ] 已知限制已在 PR 中说明
+- [ ] Have read this contribution guide
+- [ ] Created the feature branch from the latest main branch
+- [ ] Written or updated the requirements document
+- [ ] Completed the back-end and front-end code
+- [ ] Full back-end unit tests pass
+- [ ] Front-end smoke tests pass
+- [ ] Confirmed the feature works with no known bugs
+- [ ] Committed the code and attached test screenshots
+- [ ] PR description is complete
+- [ ] No passwords, keys, tokens, or other sensitive information committed
+- [ ] No unrelated changes included
+- [ ] Known limitations stated in the PR
 
 ---
 
-## 十、注意事项
+## 10. Notes
 
-1. 请保持提交范围聚焦，一个 PR 尽量只解决一个需求或一个问题。
-2. 请勿直接修改主分支。
-3. 请勿提交本地环境文件、构建产物、日志文件和临时文件。
-4. 如涉及接口变更、数据库变更或配置变更，请在 PR 中重点说明。
-5. 测试截图请保证清晰可辨，能够证明测试已执行并通过。
-6. 贡献代码即表示你同意本项目按照仓库许可证使用和分发你的贡献内容。
+1. Keep each PR focused — ideally one PR solves one requirement or one issue.
+2. Do not modify the main branch directly.
+3. Do not commit local environment files, build artifacts, logs, or temporary files.
+4. Highlight API, database, or configuration changes in the PR description.
+5. Make sure test screenshots are clear and legible, proving tests were executed and passed.
+6. By contributing code, you agree that your contribution will be used and distributed under the repository's license.
 
-再次感谢你的贡献！
+Thanks again for your contribution!

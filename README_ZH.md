@@ -231,7 +231,7 @@ npm run serve
 | `docs/项目介绍.md` | 与本文同源的项目介绍文档 |
 | `docs/代码生成器-Vx.x-规划.md` | V3.1 → V7.3 各版本规划与功能盘点 |
 | `codegen-web/README.md` | 前端控制台快速上手参考 |
-| `CONTRIBUTING.md` | 代码贡献指南：分支规范、测试要求、PR 模板与提交前自检清单 |
+| `CONTRIBUTING_ZH.md` (中文) / `CONTRIBUTING.md` (English) | 代码贡献指南：分支规范、测试要求、PR 模板与提交前自检清单 |
 
 ---
 
@@ -305,7 +305,7 @@ npm run serve
 
 > 所有邮件我都会看，看到就会回复。问题反馈、功能建议、合作洽谈都欢迎。
 
-> **想贡献代码？** 提交 Pull Request 前请先阅读[《代码贡献指南》](CONTRIBUTING.md)——其中包含贡献流程、分支规范、测试要求与 PR 模板。
+> **想贡献代码？** 提交 Pull Request 前请先阅读[《代码贡献指南》](CONTRIBUTING_ZH.md) (中文) / [Code Contribution Guide](CONTRIBUTING.md) (English)——其中包含贡献流程、分支规范、测试要求与 PR 模板。
 
 ---
 
