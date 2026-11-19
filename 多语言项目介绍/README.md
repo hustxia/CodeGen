@@ -10,6 +10,27 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+## The Name "Majiang" (Code Artisan)
+
+This project is named **Majiang (码匠)** — "ma" (码) means code, and "jiang" (匠) means artisan.
+
+> **Why "Majiang"?**
+> The name honors China's **spirit of craftsmanship** — the dedicated, focused, meticulous and excellence-seeking attitude and values formed through professional practice. It emphasizes both the ethics of "doing the job well" and continuous improvement and innovation.
+
+The spirit of craftsmanship comes down to five core values, which are also the principles this project follows in design and implementation:
+
+| Core Value | Meaning | In This Project |
+|---|---|---|
+| **Dedication & Focus** | Love your craft, specialize in it, and stay patient and composed | Focused on one thing — code generation — from DDL to a runnable project, deepening the entire delivery chain |
+| **Refinement** | Never settle for "good enough"; polish details for higher quality | Real `javac` self-check, four-state ledger, template baseline validation — every output must compile and run |
+| **Rigor** | Follow standards, processes and specifications; take responsibility for results | A 12-step pipeline, backups before writes, batch rollback — "never break your project" is built into the flow |
+| **Excellence** | Keep learning and improving; dare to aim higher | From templates to multi-project injection, from single-table CRUD to one-sentence system generation, continuously evolving |
+| **Integrity & Innovation** | Respect tradition and experience, but don't stick to old ways; solve problems with new methods | Built on mainstream Spring Boot + Vue, while introducing AI-assisted modeling, idempotent pipelines and safe merge strategies |
+
+"Majiang" is not a title but a promise: treat every generated line of code the way an artisan treats a craft — no shortcuts, no compromises, traceable and reversible.
+
+---
+
 ## 1. What Is This
 
 CodeGen is a "table-driven" code factory. Bring in your business tables (via database import or by pasting DDL), configure fields and generation switches, then click "Generate" — it produces the backend Entity/Mapper/Service/Controller/DTO/VO, the frontend `api.js` and Vue pages, menus and routes, even A4 print pages and integration-test skeletons, and safely writes them into your target project.
