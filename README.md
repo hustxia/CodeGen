@@ -230,7 +230,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | `docs/项目介绍.md` | Project introduction document, same source as this file |
 | `docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V7.3 |
 | `codegen-web/README.md` | Frontend console quick-start reference |
-| `CONTRIBUTING.md` | Code contribution guide: branch naming, tests, PR template and self-check checklist |
+| `CONTRIBUTING.md` (中文) / `CONTRIBUTING_EN.md` (English) | Code contribution guide: branch naming, tests, PR template and self-check checklist |
 
 ---
 
@@ -304,7 +304,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 > I read and reply to every email. Bug reports, feature requests and collaboration inquiries are all welcome.
 
-> **Want to contribute code?** Please read the [Code Contribution Guide](CONTRIBUTING.md) before opening a Pull Request — it covers the workflow, branch naming, required tests and the PR template.
+> **Want to contribute code?** Please read the [Code Contribution Guide](CONTRIBUTING_EN.md) (English) / [代码贡献指南](CONTRIBUTING.md) (中文) before opening a Pull Request — it covers the workflow, branch naming, required tests and the PR template.
 
 ---
 
