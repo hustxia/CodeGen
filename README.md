@@ -4,11 +4,26 @@
 
 ---
 
+## At a glance
+
+**CodeGen turns a database schema into a complete Spring Boot + Vue business system — code that compiles, runs, and ships with menus, permissions and i18n.**
+
+- **Table-driven, not prompt-driven** — import DDL or connect your DB; one click generates Entity / Mapper / Service / Controller / DTO / VO, Vue pages, routes and menus from the same metadata, so front end and back end never drift apart.
+- **Quality gates built in** — real `javac` self-check, structural contract checks, `.gen-backup` batch backups, marker-block merge that preserves hand-written code, and a four-state ledger with one-click rollback.
+- **One-sentence system build** — a 12-step pipeline takes you from a plain-language description to a running system: create DB → scaffold → generate → seed data → register menus.
+- **Proven across industries** — full systems generated end to end for public security, apparel ERP, HR and manufacturing MES (screenshots below); generated pages support 206 languages out of the box.
+
+**Jump to:** [Showcase](#showcase) · [Quick Start](#10-quick-start) · [Documentation](#11-documentation-map) · [Contributing](CONTRIBUTING.md)
+
+---
+
 > **Language support**: generated systems ship with full-page internationalization built in. The framework supports switching and fallback across **206 languages**; **8 are professionally translated** (zh-CN, en-US, ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA), and all others fall back to Simplified Chinese. Want to contribute a translation? See [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md).
 
 > A multi-project code generator for **Spring Boot + Vue**: starting from database table structures, it produces **compilable, runnable, menu-and-permission-ready** front-end and back-end business code, and handles the full delivery loop of writing to disk, backup, ledgering and rollback.
 
 GitHub: https://github.com/hustxia/CodeGen
+
+<a id="showcase"></a>
 
 ## Showcase · Systems Built with CodeGen
 
