@@ -36,4 +36,4 @@ This Code of Conduct applies within all project spaces (issues, discussions, pul
 
 Adapted from the Contributor Covenant, version 2.1: https://www.contributor-covenant.org/version/2/1/code_of_conduct.html
 
-中文摘要：尊重不同观点，拒绝人身攻击、骚扰与泄露他人隐私。发现问题请邮件联系维护者，所有投诉会被及时、公平处理。
+> 中文版本：[行为准则（中文）](CODE_OF_CONDUCT_ZH.md)

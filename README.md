@@ -337,6 +337,8 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | `docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V7.3 |
 | `codegen-web/README.md` | Frontend console quick-start reference |
 | `CONTRIBUTING.md` (English, 默认) / `CONTRIBUTING_ZH.md` (中文) | Code contribution guide: branch naming, tests, PR template and self-check checklist |
+| `CODE_OF_CONDUCT.md` (English) / `CODE_OF_CONDUCT_ZH.md` (中文) | Community behavior standards, reporting channel and enforcement process |
+| `SECURITY.md` | Supported versions and vulnerability reporting process |
 
 ---
 
