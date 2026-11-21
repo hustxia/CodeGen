@@ -17,7 +17,7 @@
 
 > **Language support**: generated systems ship with full-page internationalization built in. The framework supports switching and fallback across **206 languages**; **8 are professionally translated** (zh-CN, en-US, ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA), and all others fall back to Simplified Chinese. Want to contribute a translation? See [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md).
 
-> A multi-project code generator for **Spring Boot + Vue**: starting from database table structures, it produces **compilable, runnable, menu-and-permission-ready** front-end and back-end business code, and handles the full delivery loop of writing to disk, backup, ledgering and rollback.
+> A **code generator** and **low-code scaffold** for **Spring Boot 3 + Vue3**: starting from database table structures (DDL-to-code), it produces **compilable, runnable, menu-and-permission-ready** front-end and back-end CRUD, and supports a **one-sentence system build** — the full delivery loop of writing to disk, backup, ledgering and rollback.
 
 GitHub: https://github.com/hustxia/CodeGen
 
