@@ -10,6 +10,38 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+## Showcase · Systems Built with CodeGen
+
+> Real, runnable systems generated end-to-end by this generator — from database tables to front-end pages, menus and permissions. Not mockups: every list below is backed by live data. Click any image to view full size.
+
+**Public security · 64 pages / 79 tables** — one-sentence build from a functional design doc, with district data, police-calling records and key-place ledgers.
+
+| 110 dispatch & incident registration | Key-place register |
+| :---: | :---: |
+| [![110 dispatch](docs/images/showcase/police-110-dispatch.png)](docs/images/showcase/police-110-dispatch.png) | [![Key places](docs/images/showcase/police-key-places.png)](docs/images/showcase/police-key-places.png) |
+
+**Apparel ERP · 71 pages** — style/color/size matrix, BOM, dye-lot traceability and sell-through analytics.
+
+| Style-color-size SKU | Sell-through & replenishment analytics |
+| :---: | :---: |
+| [![SKU matrix](docs/images/showcase/garment-sku.png)](docs/images/showcase/garment-sku.png) | [![Sell-through](docs/images/showcase/garment-sellthrough.png)](docs/images/showcase/garment-sellthrough.png) |
+
+**Smart HR · 68 pages** — organization, recruiting, attendance, payroll and performance across 14 HR domains.
+
+| Payroll calculation | Interview scheduling |
+| :---: | :---: |
+| [![Payroll](docs/images/showcase/hr-payroll.png)](docs/images/showcase/hr-payroll.png) | [![Interview](docs/images/showcase/hr-interview.png)](docs/images/showcase/hr-interview.png) |
+
+**Manufacturing MES · 68 pages** — work orders, quality gates, equipment, batch/serial traceability and Andon.
+
+| Production work order | Batch traceability chain |
+| :---: | :---: |
+| [![Work order](docs/images/showcase/mes-work-order.png)](docs/images/showcase/mes-work-order.png) | [![Traceability](docs/images/showcase/mes-traceability.png)](docs/images/showcase/mes-traceability.png) |
+
+> Each system went through the same 12-step pipeline: DDL preview → build database → generate → seed data → full-page verification (zero empty lists, zero page errors). See the CSDN walkthroughs linked in [Documentation Map](#11-documentation-map).
+
+---
+
 ## 1. What Is This
 
 CodeGen is a "table-driven" code factory. Bring in your business tables (via database import or by pasting DDL), configure fields and generation switches, then click "Generate" — it produces the backend Entity/Mapper/Service/Controller/DTO/VO, the frontend `api.js` and Vue pages, menus and routes, even A4 print pages and integration-test skeletons, and safely writes them into your target project.
@@ -225,6 +257,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 | Document | Content |
 | --- | --- |
+| `docs/images/showcase/` | Real system screenshots — public security / apparel ERP / smart HR / manufacturing MES |
 | `docs/代码生成器-操作手册.md` (Chinese) | Deployment, 5-minute start, table config, batch intake, template management, ledger, API catalog, full pipeline (with screenshots) |
 | `docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
 | `docs/项目介绍.md` | Project introduction document, same source as this file |

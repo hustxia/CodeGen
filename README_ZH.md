@@ -12,6 +12,38 @@
 github 地址：https://github.com/hustxia/CodeGen
 
 
+## 实战截图 · 用 CodeGen 生成的系统
+
+> 以下都是本生成器端到端生成的**真实可运行系统**——从数据库建表到前端页面、菜单与权限一应俱全。绝非示意图：每张图对应的列表都灌有真实数据。点击图片可查看大图。
+
+**智慧警务 · 64 页 / 79 表** —— 依据功能设计文档一句话建系统，覆盖辖区数据、接处警记录、重点场所台账。
+
+| 110 接警与警情登记 | 重点场所台账 |
+| :---: | :---: |
+| [![110接警](docs/images/showcase/police-110-dispatch.png)](docs/images/showcase/police-110-dispatch.png) | [![重点场所](docs/images/showcase/police-key-places.png)](docs/images/showcase/police-key-places.png) |
+
+**服装 ERP · 71 页** —— 款色码矩阵、BOM 物料清单、缸号批次追溯、售罄率动销分析。
+
+| 款色码 SKU | 售罄率与翻单分析 |
+| :---: | :---: |
+| [![款色码SKU](docs/images/showcase/garment-sku.png)](docs/images/showcase/garment-sku.png) | [![售罄率](docs/images/showcase/garment-sellthrough.png)](docs/images/showcase/garment-sellthrough.png) |
+
+**智慧人力资源 · 68 页** —— 组织人事、招聘、考勤、薪酬、绩效共 14 个 HR 业务域。
+
+| 薪资核算 | 面试安排 |
+| :---: | :---: |
+| [![薪资核算](docs/images/showcase/hr-payroll.png)](docs/images/showcase/hr-payroll.png) | [![面试安排](docs/images/showcase/hr-interview.png)](docs/images/showcase/hr-interview.png) |
+
+**制造业 MES · 68 页** —— 生产工单、质量门禁、设备管理、批次序列号追溯、安灯异常。
+
+| 生产工单 | 批次追溯链路 |
+| :---: | :---: |
+| [![生产工单](docs/images/showcase/mes-work-order.png)](docs/images/showcase/mes-work-order.png) | [![追溯链路](docs/images/showcase/mes-traceability.png)](docs/images/showcase/mes-traceability.png) |
+
+> 每套系统都走过同一条 12 步流水线：DDL 预览 → 建库 → 生成 → 灌数据 → 全页验收（零空列表、零页面错误）。实战博文见[文档导航](#十一文档导航)。
+
+---
+
 ## 一、这是什么
 
 CodeGen 是一套“以表为源”的代码工厂。你只要把业务表接进来（连库导入或贴一段 DDL），配置好字段与生成开关，点一下“生成”，它就替你把后端 Entity/Mapper/Service/Controller/DTO/VO、前端 api.js 与 Vue 页面、菜单与路由、甚至 A4 打印页和集成测试骨架全部生成好，并安全地写进你的目标工程。
@@ -226,6 +258,7 @@ npm run serve
 
 | 文档 | 内容 |
 | --- | --- |
+| `docs/images/showcase/` | 真实系统实战截图——智慧警务 / 服装 ERP / 智慧人力 / 制造业 MES |
 | `docs/代码生成器-操作手册.md` | 部署、五分钟上手、表配置、批量接管、模板管理、台账、接口目录、流水线全流程（含实拍截图） |
 | `docs/典型场景操作指南-演示后台demo.md` | 6 张表覆盖 5 类典型场景，含可运行 demo 与实跑截图 |
 | `docs/项目介绍.md` | 与本文同源的项目介绍文档 |
