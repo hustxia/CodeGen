@@ -2,6 +2,17 @@
 
 > Languages: [简体中文](README_ZH.md) · [繁體中文](README_ZH_TW.md) · **English** · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
 
+## At a glance
+
+**CodeGen turns a database schema into a complete Spring Boot + Vue business system — code that compiles, runs, and ships with menus, permissions and i18n.**
+
+- **Table-driven, not prompt-driven** — import DDL or connect your DB; one click generates Entity / Mapper / Service / Controller / DTO / VO, Vue pages, routes and menus from the same metadata, so front end and back end never drift apart.
+- **Quality gates built in** — real `javac` self-check, structural contract checks, `.gen-backup` batch backups, marker-block merge that preserves hand-written code, and a four-state ledger with one-click rollback.
+- **One-sentence system build** — a 12-step pipeline takes you from a plain-language description to a running system: create DB → scaffold → generate → seed data → register menus.
+- **Proven across industries** — full systems generated end to end for public security, apparel ERP, HR and manufacturing MES (screenshots below); generated pages support 206 languages out of the box.
+
+**Jump to:** [Showcase](#showcase) · [Quick Start](#10-quick-start) · [Documentation](#11-documentation-map) · [Contributing](CONTRIBUTING.md)
+
 ---
 
 > **Language support**: generated systems ship with full-page internationalization built in. The framework supports switching and fallback across **206 languages**; **8 are professionally translated** (zh-CN, en-US, ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA), and all others fall back to Simplified Chinese. Want to contribute a translation? See [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md).
@@ -30,6 +41,8 @@ The spirit of craftsmanship comes down to five core values, which are also the p
 "Majiang" is not a title but a promise: treat every generated line of code the way an artisan treats a craft — no shortcuts, no compromises, traceable and reversible.
 
 ---
+
+<a id="showcase"></a>
 
 ## Showcase · Systems Built with CodeGen
 
