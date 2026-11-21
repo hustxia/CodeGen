@@ -13,6 +13,39 @@
 
 **Jump to:** [Showcase](#showcase) · [Quick Start](#10-quick-start) · [Documentation](#11-documentation-map) · [Contributing](CONTRIBUTING.md)
 
+**From DDL to a running system — real screenshots, no mockups:**
+
+[![CodeGen demo reel: 8 real generated systems](docs/images/showcase/demo.gif)](docs/images/showcase/demo.gif)
+
+<details>
+<summary><b>Why CodeGen? Comparison with other approaches</b></summary>
+
+| Dimension | Traditional CRUD generator | Low-code platform | Prompt-only tool | CodeGen |
+| --- | --- | --- | --- | --- |
+| Input | One-table config | Drag-and-drop model | Natural language | DDL / live DB connection |
+| Front/back consistency | Manually aligned | Platform-internal | Not guaranteed | Same metadata, zero drift |
+| Compile self-check | Rare | Platform-managed | None | Real `javac` self-check |
+| Merge with existing code | Overwrite risk | Platform lock-in | N/A | Marker-block merge preserves hand-written code |
+| Rollback | None | Platform snapshot | None | Four-state ledger + one-click rollback |
+| i18n | Separate work | Partial | Model-dependent | 206-language framework, 8 professionally translated |
+| Deliverable | Code snippets | Platform-only app | Text | Compilable, runnable full project |
+
+</details>
+
+**60-second quick start** (commands verified; full guide in [Quick Start](#10-quick-start)):
+
+```bash
+mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
+mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
+cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
+mvn package -DskipTests
+java -jar target/codegen-server.jar
+```
+
+Then `cd ../codegen-web && npm install && npm run serve`, open `http://localhost:9530`, login `admin / admin123`.
+
+> Stuck? Open a [Discussion](https://github.com/hustxia/CodeGen/discussions) with the full error message. If this saved you time, a Star helps other developers find it.
+
 ---
 
 > **Language support**: generated systems ship with full-page internationalization built in. The framework supports switching and fallback across **206 languages**; **8 are professionally translated** (zh-CN, en-US, ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA), and all others fall back to Simplified Chinese. Want to contribute a translation? See [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md).
@@ -291,7 +324,13 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 | Document | Content |
 | --- | --- |
+| `docs/images/showcase/demo.gif` | 8-frame demo reel built from the real screenshots below |
 | `docs/images/showcase/` | Real system screenshots — public security / apparel ERP / smart HR / manufacturing MES |
+| `docs/blog/智慧警务系统-CSDN博客.html` | Publish-ready CSDN HTML: 64-page public-security system, 12-step pipeline and pitfall notes |
+| `docs/blog/服装ERP系统-CSDN博客.html` | Publish-ready CSDN HTML: 71-table apparel ERP, SKU matrix and sell-through analytics |
+| `docs/blog/智慧人力资源系统-CSDN博客.html` | Publish-ready CSDN HTML: 83 tables → 68 pages, payroll and recruiting |
+| `docs/blog/制造业MES系统-CSDN博客.html` | Publish-ready CSDN HTML: 83 tables → 68 pages, work orders and traceability |
+| `docs/blog/代码生成器多行业落地-CSDN博客.html` | Publish-ready CSDN HTML: four-industry retrospective of the same pipeline |
 | `docs/代码生成器-操作手册.md` (Chinese) | Deployment, 5-minute start, table config, batch intake, template management, ledger, API catalog, full pipeline (with screenshots) |
 | `docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
 | `docs/项目介绍.md` | Project introduction document, same source as this file |
