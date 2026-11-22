@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>统一演示中心 · 代码生成器 V9.15</title>
+<style>
+  :root{--p:#2563eb;--p2:#60a5fa;--soft:#eff6ff;--ink:#1f2937;--muted:#6b7280;--line:#e5e7eb;--bg:#f5f7fa;--side:#111827}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+  a{color:var(--p);text-decoration:none}
+
+  .hero{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:30px 22px 26px}
+  .hero-in{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+  .hero h1{margin:0 0 6px;font-size:26px}
+  .hero p{margin:0;opacity:.9;font-size:13px}
+  .hero .link{margin-top:10px;display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px}
+  .hero .link:hover{background:rgba(255,255,255,.28)}
+
+  /* 工程切换标签 */
+  .tabs{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .tabs-in{max-width:1200px;margin:0 auto;display:flex;gap:4px;padding:0 22px;overflow-x:auto}
+  .tab{border:0;background:none;padding:15px 18px;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;font-family:inherit}
+  .tab:hover{color:var(--p)}
+  .tab.on{color:var(--p);font-weight:700;border-bottom-color:var(--p)}
+  .tab .n{font-size:11px;color:#fff;background:var(--p);border-radius:10px;padding:1px 7px;margin-left:6px}
+  .tab .old{background:#9ca3af}
+
+  .wrap{max-width:1200px;margin:0 auto;padding:24px 22px 60px}
+  .panel{display:none}
+  .panel.on{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .intro{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+  .intro h2{margin:0 0 4px;font-size:20px}
+  .intro p{margin:0;color:var(--muted);font-size:13px;max-width:760px}
+  .meta{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{font-size:12px;padding:5px 11px;border-radius:16px;background:var(--soft);color:var(--p)}
+  .pill.gray{background:#f3f4f6;color:var(--muted)}
+
+  /* 截图画廊 */
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+  .shot{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:box-shadow .2s,transform .2s}
+  .shot:hover{box-shadow:0 8px 24px rgba(0,0,0,.12);transform:translateY(-2px)}
+  .shot a.thumb{display:block;background:#eef2f7;aspect-ratio:16/10;overflow:hidden}
+  .shot img{width:100%;height:100%;object-fit:cover;object-position:top left;display:block}
+  .shot .cap{padding:12px 14px}
+  .shot .cap b{font-size:14px;display:block;margin-bottom:3px}
+  .shot .cap span{font-size:12px;color:var(--muted)}
+  .shot .cap code{display:block;font-size:11px;color:#9ca3af;margin-top:6px;word-break:break-all}
+  .featured{grid-column:1 / -1}
+  .featured a.thumb{aspect-ratio:auto;max-height:560px}
+  .featured img{object-fit:contain;object-position:top left;background:#fff}
+
+  .note{background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:18px}
+  .note.blue{background:var(--soft);border-color:#bfdbfe;color:#1e40af}
+
+  /* 灯箱 */
+  .lb{display:none;position:fixed;inset:0;background:rgba(15,23,42,.9);z-index:20;align-items:center;justify-content:center;padding:24px}
+  .lb.on{display:flex}
+  .lb img{max-width:100%;max-height:92vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .lb .close{position:absolute;top:18px;right:24px;color:#fff;font-size:32px;cursor:pointer;line-height:1}
+  .lb .close:hover{opacity:.7}
+
+  .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:34px}
+  @media(max-width:640px){.tabs-in{padding:0 8px}.tab{padding:13px 12px;font-size:13px}.gallery{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-in">
+    <div>
+      <h1>统一演示中心</h1>
+      <p>把分散的多套演示工程整合到一个页面：点上方标签切换工程，点截图放大查看真实界面。</p>
+      <a class="link" href="演示效果.html">→ 查看特性全景与 V9.15 图表说明</a>
+    </div>
+    <div style="text-align:right">
+      <span class="pill">当前版本 V9.15</span>
+      <span class="pill">4 套演示</span>
+      <span class="pill">真实界面截图</span>
+    </div>
+  </div>
+</div>
+
+<nav class="tabs">
+  <div class="tabs-in">
+    <button class="tab on" data-t="police">智慧警务 <span class="n">V9.15</span></button>
+    <button class="tab" data-t="village">智慧村务 <span class="n">V9.14</span></button>
+    <button class="tab" data-t="demo">典型场景 demo <span class="n old">V8.x</span></button>
+    <button class="tab" data-t="industry">行业模板 showcase <span class="n old">多版本</span></button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- 智慧警务 -->
+  <div class="panel on" id="police">
+    <div class="intro">
+      <div><h2>智慧警务系统</h2><p>84 张表、12 个业务域。<b>唯一完整落地 V9.15 数据可视化图表能力包</b>的演示工程：64 个每表 /stats 聚合接口 + ECharts 图卡 + 跨表看板。图表类型由列元数据自动推导。</p></div>
+      <div class="meta"><span class="pill">221 控制器</span><span class="pill">130 页面</span><span class="pill">64 StatsController</span></div>
+    </div>
+    <div class="note blue">数据看板是整个系统跨表聚合页（非单表生成）。图型推导：枚举列→饼图、数值列→柱状、日期列→折线、status→仪表盘。</div>
+    <div class="gallery">
+      <div class="shot featured">
+        <a class="thumb" href="#"><img src="design/ui/V9.15-看板-运行时验证.png" alt="V9.15 数据看板运行时" /></a>
+        <div class="cap"><b>V9.15 数据看板 · 真实运行时</b><span>饼图（层级分布）/ 柱状（经度排行）/ 仪表盘（状态分布）/ 折线（生效日期趋势）全部渲染，0 控制台错误</span><code>design/ui/V9.15-看板-运行时验证.png</code></div>
+      </div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/showcase/police-110-dispatch.png" alt="110接警记录" /></a><div class="cap"><b>接处警管理 · 110接警记录</b><span>完整菜单 + 查询筛选 + 分页表格 + 详情/编辑/删除</span><code>images/showcase/police-110-dispatch.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/showcase/police-key-places.png" alt="重点场所" /></a><div class="cap"><b>基础数据 · 重点场所</b><span>业务字典与基础台账维护</span><code>images/showcase/police-key-places.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="design/ui/V9.15-仪表盘-预览.png" alt="仪表盘效果图" /></a><div class="cap"><b>V9.15 仪表盘效果图</b><span>KPI 卡片 + 四类图表的静态设计稿</span><code>design/ui/V9.15-仪表盘-预览.png</code></div></div>
+    </div>
+  </div>
+
+  <!-- 智慧村务 -->
+  <div class="panel" id="village">
+    <div class="intro">
+      <div><h2>智慧村务管理平台</h2><p>85 张专用模板表、12 个业务域菜单。首页「村务数据总览」按业务域聚合核心指标，点击卡片下钻到对应模块。含真实外键关联演示数据。</p></div>
+      <div class="meta"><span class="pill">94 控制器</span><span class="pill">90 页面</span><span class="pill gray">V9.14 统计看板</span></div>
+    </div>
+    <div class="note">村务的首页统计是 V9.14 的 DashboardController 白名单 COUNT 实现，不是 V9.15 图表能力包——图表能力请看「智慧警务」标签。</div>
+    <div class="gallery">
+      <div class="shot featured">
+        <a class="thumb" href="#"><img src="images/village/menu-preview3.png" alt="村务数据总览" /></a>
+        <div class="cap"><b>首页 · 村务数据总览</b><span>12 业务域侧边菜单 + 核心指标卡（村民人口/户籍户数/承包地块/固定资产…），点击下钻</span><code>images/village/menu-preview3.png</code></div>
+      </div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/village/polish-final.png" alt="村民人口档案" /></a><div class="cap"><b>基础数据 · 村民人口档案</b><span>查询筛选 + 分页表格 + 详情/编辑/删除，8 条真实演示数据</span><code>images/village/polish-final.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/village/polish-final-wide.png" alt="村务宽屏界面" /></a><div class="cap"><b>业务列表 · 宽屏视图</b><span>中文字段标签、业务域图标</span><code>images/village/polish-final-wide.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/village/polish-resident2.png" alt="村务业务界面" /></a><div class="cap"><b>村务业务界面</b><span>表单联动、字典翻译、关联下拉真实效果</span><code>images/village/polish-resident2.png</code></div></div>
+    </div>
+  </div>
+
+  <!-- 典型场景 demo -->
+  <div class="panel" id="demo">
+    <div class="intro">
+      <div><h2>典型场景演示后台 demo_admin</h2><p>6 张表覆盖 5 类典型场景：树形表、关联下拉、CRUD、主子表、打印。演示账号 admin / admin123。操作详见「典型场景操作指南-演示后台demo.md」。</p></div>
+      <div class="meta"><span class="pill">10 控制器</span><span class="pill">8 页面</span><span class="pill gray">V8.x</span></div>
+    </div>
+    <div class="gallery">
+      <div class="shot"><a class="thumb" href="#"><img src="images/demo/02-category.png" alt="商品分类树" /></a><div class="cap"><b>树形表 · 商品分类</b><span>parent_id 自关联，按层级缩进展示</span><code>images/demo/02-category.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/demo/03-product.png" alt="商品管理" /></a><div class="cap"><b>商品管理</b><span>单表 CRUD + 分页 + 查询</span><code>images/demo/03-product.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/demo/04-customer.png" alt="客户管理" /></a><div class="cap"><b>客户管理</b><span>字典翻译、唯一性校验</span><code>images/demo/04-customer.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/demo/05-order-list.png" alt="销售订单列表" /></a><div class="cap"><b>销售订单 · 列表</b><span>关联下拉（客户）+ 状态字典 + 查询筛选</span><code>images/demo/05-order-list.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/demo/06-order-detail.png" alt="销售订单主子表" /></a><div class="cap"><b>销售订单 · 主子表详情</b><span>同事务保存 + 明细 Tab</span><code>images/demo/06-order-detail.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/demo/07-stock.png" alt="库存管理" /></a><div class="cap"><b>库存管理</b><span>数值字段、表单联动</span><code>images/demo/07-stock.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/demo/08-print.png" alt="A4打印" /></a><div class="cap"><b>A4 打印页</b><span>生成的打印模板效果</span><code>images/demo/08-print.png</code></div></div>
+    </div>
+  </div>
+
+  <!-- 行业 showcase -->
+  <div class="panel" id="industry">
+    <div class="intro">
+      <div><h2>行业模板 showcase</h2><p>不同行业按同一套生成器产出——电商、ERP、CRM、MES、HR、警务，说明能力包的通用性：换行业只换模板，不换代码。</p></div>
+      <div class="meta"><span class="pill">19 行业类目</span><span class="pill">250+ 模板</span><span class="pill">2100+ 表</span></div>
+    </div>
+    <div class="gallery">
+      <div class="shot"><a class="thumb" href="#"><img src="images/showcase/mes-work-order.png" alt="MES工单" /></a><div class="cap"><b>制造业 MES · 工单</b><span>生产工单与工序跟踪</span><code>images/showcase/mes-work-order.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/showcase/mes-traceability.png" alt="MES追溯" /></a><div class="cap"><b>制造业 MES · 溯源</b><span>批次追溯链路</span><code>images/showcase/mes-traceability.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/showcase/hr-payroll.png" alt="HR薪资" /></a><div class="cap"><b>智慧人力 · 薪资</b><span>薪资核算与发放记录</span><code>images/showcase/hr-payroll.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/showcase/hr-interview.png" alt="HR面试" /></a><div class="cap"><b>智慧人力 · 面试</b><span>招聘面试流程</span><code>images/showcase/hr-interview.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/showcase/garment-sku.png" alt="服装SKU" /></a><div class="cap"><b>服装 ERP · SKU</b><span>多规格 SKU 管理</span><code>images/showcase/garment-sku.png</code></div></div>
+      <div class="shot"><a class="thumb" href="#"><img src="images/showcase/garment-sellthrough.png" alt="服装动销" /></a><div class="cap"><b>服装 ERP · 动销</b><span>销售动销分析</span><code>images/showcase/garment-sellthrough.png</code></div></div>
+    </div>
+  </div>
+
+  <div class="foot">统一演示中心 · V9.15 · 所有截图均为代码生成器真实产物 · 点标签切换工程，点截图放大</div>
+</div>
+
+<!-- 灯箱 -->
+<div class="lb" id="lb"><span class="close" id="lbClose">×</span><img id="lbImg" src="" alt="" /></div>
+
+<script>
+(function(){
+  var tabs = document.querySelectorAll('.tab');
+  var panels = document.querySelectorAll('.panel');
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){
+      tabs.forEach(function(x){ x.classList.remove('on'); });
+      panels.forEach(function(p){ p.classList.remove('on'); });
+      t.classList.add('on');
+      var el = document.getElementById(t.getAttribute('data-t'));
+      if(el) el.classList.add('on');
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+  // 灯箱
+  var lb = document.getElementById('lb'), lbImg = document.getElementById('lbImg');
+  document.querySelectorAll('.shot a.thumb').forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      var img = a.querySelector('img');
+      if(!img) return;
+      lbImg.src = img.getAttribute('src');
+      lb.classList.add('on');
+    });
+  });
+  function closeLb(){ lb.classList.remove('on'); lbImg.src=''; }
+  document.getElementById('lbClose').addEventListener('click', closeLb);
+  lb.addEventListener('click', function(e){ if(e.target === lb) closeLb(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeLb(); });
+})();
+</script>
+</body>
+</html>
