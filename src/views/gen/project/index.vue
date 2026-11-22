@@ -347,6 +347,8 @@ const defaultForm = () => ({
   mobileEnabled: null,
   // V6.6 文件能力包：null=未配置（关）
   fileEnabled: null,
+  // V9.15 数据可视化图表：null=未配置（关）
+  chartEnabled: null,
   // V6.7 测试骨架：null=未配置（开）——方向与其它能力包相反，测试零运行时侵入
   testEnabled: null,
   // V6.8 品牌外观：全部可空，空=回落（项目名 / 内置 logo / #e1251b）
@@ -411,6 +413,11 @@ const triStateDefs = [
     key: 'fileEnabled',
     label: '文件能力包',
     tip: '开=生成文件上传下载基座（sys_file + /file 端点 + ImageUpload/FileUpload 组件），html_type=图片/文件上传 的列自动带控件；关=不生成；未配置=关'
+  },
+  {
+    key: 'chartEnabled',
+    label: '数据可视化图表',
+    tip: '开=生成数据看板（ChartCard + echarts + 每表 /stats 聚合接口，图型由列元数据自动推导）；关=不生成；未配置=关'
   },
   {
     key: 'testEnabled',
