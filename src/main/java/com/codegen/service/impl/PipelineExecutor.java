@@ -466,6 +466,8 @@ public class PipelineExecutor {
         dto.setMobileEnabled(com.codegen.util.GenTemplateModel.resolveMobile(project.getMobileEnabled()));
         // V6.6：文件能力包开关（回落唯一实现 resolveFile）
         dto.setFileEnabled(com.codegen.util.GenTemplateModel.resolveFile(project.getFileEnabled()));
+        // V9.15：数据可视化图表能力包开关（回落唯一实现 resolveChart）
+        dto.setChartEnabled(com.codegen.util.GenTemplateModel.resolveChart(project.getChartEnabled()));
         // V6.8：品牌三项原样下发（回落统一在 GenTemplateModel.resolveAppName/resolveThemeColor，
         // 这里只搬运，不重复实现回落逻辑）
         dto.setAppName(project.getAppName());

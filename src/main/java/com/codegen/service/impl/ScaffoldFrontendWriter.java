@@ -118,9 +118,11 @@ final class ScaffoldFrontendWriter {
                 + "</style>\n";
     }
 
-    static String frontendPackageJson(String project, String module, boolean payEnabled) {
+    static String frontendPackageJson(String project, String module, boolean payEnabled, boolean chartEnabled) {
         // V6.3：收银台二维码由前端 qrcode 生成（后端零图像依赖），随能力包开关注入依赖
         String qrcodeDep = payEnabled ? ",\n    \"qrcode\": \"^1.5.4\"" : "";
+        // V9.15：ECharts 随图表能力包开关注入；关闭态产物 package.json 零 diff
+        String echartsDep = chartEnabled ? ",\n    \"echarts\": \"^5.5.0\"" : "";
         return "{\n"
                 + "  \"name\": \"" + module + "\",\n"
                 + "  \"version\": \"1.0.0\",\n"
@@ -139,7 +141,7 @@ final class ScaffoldFrontendWriter {
                 + "    \"vue\": \"^3.4.21\",\n"
                 + "    \"vue-router\": \"^4.3.0\",\n"
                 + "    \"vuex\": \"^4.1.0\""
-                + qrcodeDep + "\n"
+                + qrcodeDep + echartsDep + "\n"
                 + "  },\n"
                 + "  \"devDependencies\": {\n"
                 + "    \"@vitejs/plugin-vue\": \"^5.0.4\",\n"
@@ -469,11 +471,24 @@ final class ScaffoldFrontendWriter {
     }
 
     static String frontendRouterJs() {
-        return frontendRouterJs(false);
+        return frontendRouterJs(false, false);
     }
 
-    /** V9.12：withAuth 时追加系统管理路由（页面只在开启鉴权时生成）。 */
     static String frontendRouterJs(boolean withAuth) {
+        return frontendRouterJs(withAuth, false);
+    }
+
+    /** V9.12：withAuth 时追加系统管理路由（页面只在开启鉴权时生成）。V9.15：chartEnabled 时追加数据看板路由。 */
+    static String frontendRouterJs(boolean withAuth, boolean chartEnabled) {
+        String dashboardRoute = chartEnabled
+                ? ",\n"
+                + "      {\n"
+                + "        path: 'dashboard',\n"
+                + "        name: 'Dashboard',\n"
+                + "        component: () => import('@/views/dashboard/index.vue'),\n"
+                + "        meta: { title: '数据看板' }\n"
+                + "      }"
+                : "";
         String systemRoutes = withAuth
                 ? ",\n"
                 + "  {\n"
@@ -518,7 +533,8 @@ final class ScaffoldFrontendWriter {
                 + "        name: 'Home',\n"
                 + "        component: () => import('@/views/index.vue'),\n"
                 + "        meta: { title: '首页' }\n"
-                + "      }\n"
+                + "      }"
+                + dashboardRoute + "\n"
                 + "    ]\n"
                 + "  },\n"
                 + "  ...genRoutes"

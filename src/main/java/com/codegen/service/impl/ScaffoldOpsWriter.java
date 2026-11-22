@@ -155,6 +155,16 @@ final class ScaffoldOpsWriter {
         }
     }
 
+    /** V9.15 数据可视化图表：读 scaffold-chart/ 前端资源（fileResource 同款；图卡无 __PKG__ 占位，主题色走 CSS token）。 */
+    static String chartResource(String file) {
+        try {
+            org.springframework.core.io.ClassPathResource resource = new org.springframework.core.io.ClassPathResource("scaffold-chart/" + file);
+            return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        } catch (java.io.IOException e) {
+            throw new com.codegen.common.exception.BusinessException(500, "图表模块资源缺失：scaffold-chart/" + file);
+        }
+    }
+
     /**
      * V6.7 产物测试出厂：读 scaffold-test/ 资源（fileResource 同款；__PKG__ 占位替换）。
      * 每次改 scaffold-test/ 后必须重打包平台 jar 再 scaffold（V6.6 实测坑：平台读的是 jar 内资源）。

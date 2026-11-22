@@ -216,6 +216,7 @@ CREATE TABLE `sys_project` (
   `default_language` varchar(32) DEFAULT NULL COMMENT '默认语言BCP47标签(空=zh-CN)',
   `supported_languages` text DEFAULT NULL COMMENT '启用语言码,逗号分隔(空=全部启用)',
   `i18n_enabled` tinyint DEFAULT NULL COMMENT 'V8.0 产物国际化开关:NULL/0=关 1=开',
+  `chart_enabled` tinyint DEFAULT NULL COMMENT 'V9.15 数据可视化图表能力包:NULL/0=关 1=生成看板与聚合接口',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_project_code` (`project_code`,`deleted`),
   KEY `idx_default` (`is_default`)
