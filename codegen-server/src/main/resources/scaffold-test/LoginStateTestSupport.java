@@ -1,4 +1,4 @@
-package __PKG_;
+package __PKG__;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;

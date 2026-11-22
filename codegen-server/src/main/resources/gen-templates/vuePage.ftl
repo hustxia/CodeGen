@@ -805,14 +805,14 @@ export default {
       })
       Object.keys(next).forEach(field => {
         const state = next[field]
-        this.$set(this.linkState, field, state)
+        this.linkState[field] = state
         // 必填状态同步进校验规则；隐藏字段不参与校验，避免提交时被看不见的字段拦下
         if (!state.visible) {
-          this.$set(this.rules, field, [])
+          this.rules[field] = []
         } else if (state.required) {
-          this.$set(this.rules, field, [{ required: true, message: this.linkLabel(field) + '不能为空', trigger: 'blur' }])
+          
         } else if (this.rules[field] && this.rules[field].some(r => r.required)) {
-          this.$set(this.rules, field, [])
+          this.rules[field] = []
         }
       })
     },
@@ -952,9 +952,9 @@ export default {
           // 直接走通用 request，不依赖宿主工程是否提供 @/api/dict；
           // 宿主没有字典接口时这里会抛错，下面 catch 把选项降级为空数组，页面照常可用
           const res = await request({ url: '${apiRoot}/system/dict/data/type/' + code, method: 'get' })
-          this.$set(this.dicts, code, (res && res.data) || [])
+          this.dicts[code] = (res && res.data) || []
         } catch (e) {
-          this.$set(this.dicts, code, [])
+          this.dicts[code] = []
         }
       }))
     },
@@ -1033,14 +1033,14 @@ export default {
 </#if>
 <#if hasRef>
     async searchRef(field, refTable, label, keyword) {
-      this.$set(this.refLoading, field, true)
+      this.refLoading[field] = true
       try {
         const res = await get${className}Options(refTable, label, keyword)
-        this.$set(this.refOptions, field, res.data || [])
+        this.refOptions[field] = res.data || []
       } catch (e) {
-        this.$set(this.refOptions, field, [])
+        this.refOptions[field] = []
       } finally {
-        this.$set(this.refLoading, field, false)
+        this.refLoading[field] = false
       }
     },
     initRefs() {
@@ -1063,9 +1063,9 @@ export default {
         const res = await get${className}Options(refTable, label, '')
         const map = {}
         ;(res.data || []).forEach(o => { map[String(o.id)] = o.label })
-        this.$set(this.refLabels, field, map)
+        this.refLabels[field] = map
       } catch (e) {
-        this.$set(this.refLabels, field, {})
+        this.refLabels[field] = {}
       }
     },
 </#if>
@@ -1159,13 +1159,13 @@ export default {
     },
 <#if hasGrandDialog>
     /**
-     * 打开某一行的下级明细。用 $set 保障数组存在，
+     * 打开某一行的下级明细。Vue3 下直接给不存在的属性赋值即可响应，无需 $set，
      * 因为后端返回的 VO 里该字段可能为 null（没有下级时）。
      */
     openGrandRows(childVar, gcVar, row) {
       const field = gcVar + 's'
       if (!row[field]) {
-        this.$set(row, field, [])
+        row[field] = []
       }
       this.grandRows = row[field]
       this.grandDialog = childVar + '.' + gcVar
@@ -1445,21 +1445,21 @@ export default {
   margin-bottom: 16px;
 }
 
-.filter-card >>> .el-card__body {
+.filter-card :deep(.el-card__body) {
   padding: 18px 18px 4px;
 }
 
-.filter-card >>> .el-form-item {
+.filter-card :deep(.el-form-item) {
   margin-right: 16px;
   margin-bottom: 14px;
 }
 
-.filter-card >>> .el-form-item__label {
+.filter-card :deep(.el-form-item__label) {
   color: #5a6478;
   font-size: 13px;
 }
 
-.table-card >>> .el-card__header {
+.table-card :deep(.el-card__header) {
   padding: 16px 18px;
   border-bottom: 1px solid #eef1f7;
 }
@@ -1487,26 +1487,26 @@ export default {
   color: #909399;
 }
 
-.card-actions >>> .el-button + .el-button {
+.card-actions :deep(.el-button + .el-button) {
   margin-left: 8px;
 }
 
 /* ===== 表格 ===== */
-.data-table >>> .table-head-cell {
+.data-table :deep(.table-head-cell) {
   background: #f7f9fc !important;
   color: #5c6270;
   font-weight: 600;
 }
 
-.data-table >>> td {
+.data-table :deep(td) {
   padding: 11px 0;
 }
 
-.data-table >>> .el-table__row:hover > td {
+.data-table :deep(.el-table__row:hover > td) {
   background: #f5f9ff;
 }
 
-.data-table >>> .el-button--text {
+.data-table :deep(.el-button--text) {
   padding: 4px 6px;
 }
 
@@ -1642,4 +1642,4 @@ export default {
 }
 </#if>
 </style>
-/* <gen:end key="vue-style"> */
+<!-- <gen:end key="vue-style"> -->

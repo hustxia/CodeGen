@@ -1,6 +1,7 @@
 package com.codegen.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.codegen.config.GenOutputProperties;
 import com.codegen.config.GenPipelineProperties;
 import com.codegen.dto.GenApplyDTO;
@@ -161,9 +162,19 @@ public class PipelineExecutor {
         }
 
         pipeline.setStatus("running");
-        pipeline.setFailReason(null);
         pipeline.setCurrentStep("model");
         pipelineMapper.updateById(pipeline);
+        // 坑 68：MyBatis-Plus updateById 默认 NOT_NULL，setFailReason(null) 不会进 SET 子句，
+        // 重跑成功后仍挂着上次失败文案。清空必须用 UpdateWrapper 显式 set null。
+        pipelineMapper.update(null, new LambdaUpdateWrapper<GenPipeline>()
+                .eq(GenPipeline::getId, pipelineId)
+                .set(GenPipeline::getFailReason, null));
+        stepMapper.update(null, new LambdaUpdateWrapper<GenPipelineStep>()
+                .eq(GenPipelineStep::getPipelineId, pipelineId)
+                .set(GenPipelineStep::getMessage, null)
+                .set(GenPipelineStep::getLogExcerpt, null)
+                .set(GenPipelineStep::getStartedAt, null)
+                .set(GenPipelineStep::getFinishedAt, null));
         push(pipeline);
 
         try {
@@ -455,6 +466,8 @@ public class PipelineExecutor {
         dto.setMobileEnabled(com.codegen.util.GenTemplateModel.resolveMobile(project.getMobileEnabled()));
         // V6.6：文件能力包开关（回落唯一实现 resolveFile）
         dto.setFileEnabled(com.codegen.util.GenTemplateModel.resolveFile(project.getFileEnabled()));
+        // V9.15：数据可视化图表能力包开关（回落唯一实现 resolveChart）
+        dto.setChartEnabled(com.codegen.util.GenTemplateModel.resolveChart(project.getChartEnabled()));
         // V6.8：品牌三项原样下发（回落统一在 GenTemplateModel.resolveAppName/resolveThemeColor，
         // 这里只搬运，不重复实现回落逻辑）
         dto.setAppName(project.getAppName());
@@ -669,8 +682,11 @@ public class PipelineExecutor {
                     + "（请检查脚手架/代码生成步骤是否成功，以及系统台账的 backend_root 配置）");
         }
         String mvn = resolveMaven();
+        // 坑 66：命令参数里的路径必须绝对化——cwd 保持相对（相对 Java 进程 user.dir），
+        // 而 -f 参数的相对路径会在子进程 cwd 下被二次解析， pom 找不到。
+        String pom = backendDir.toAbsolutePath().normalize().resolve("pom.xml").toString();
         CommandResult r = runCommand(pipeline, "package_backend", backendDir.toFile(),
-                mvn, "-f", backendDir.resolve("pom.xml").toString(), "-DskipTests", "package");
+                mvn, "-f", pom, "-DskipTests", "package");
         if (r.exitCode != 0) {
             throw new IllegalStateException("mvn package 退出码 " + r.exitCode + "，详见日志 " + r.logFile);
         }
@@ -689,7 +705,10 @@ public class PipelineExecutor {
 
         Path log = logFile(pipeline, "deploy_backend");
         try {
-            ProcessBuilder pb = new ProcessBuilder(java, "-jar", jar.toString(),
+            // 坑 68：整线重跑时先清掉上次残留的进程树，否则旧进程占端口会造成「假成功」
+            stopPrevious(pipeline.getBackendPid(), "后端");
+            // 坑 66：命令参数路径绝对化（cwd 仍用相对 target.toFile()）
+            ProcessBuilder pb = new ProcessBuilder(java, "-jar", jar.toAbsolutePath().normalize().toString(),
                     "--server.port=" + pipeline.getBackendPort());
             pb.directory(target.toFile());
             // 坑 #5：残留的 SERVER__PORT 优先级高于命令行，必须清掉
@@ -761,17 +780,33 @@ public class PipelineExecutor {
         return "移动端出包完成：H5 静态包 + mp-weixin 目录（" + (h5.durationSeconds + mp.durationSeconds) + "s）";
     }
 
-    /** deploy_frontend：npm run serve -- --port X，dev server 常驻 */
+    /** deploy_frontend：按产物 package.json 的 scripts 自动选 dev(vite)/serve(vue-cli)，dev server 常驻 */
     private String stepDeployFrontend(GenPipeline pipeline) {
         var project = projectService.getById(pipeline.getProjectId());
         Path webDir = Paths.get(project.getFrontendRoot(), project.getProjectCode() + "-web");
-        if (!Files.exists(webDir.resolve("package.json"))) {
+        Path packageJson = webDir.resolve("package.json");
+        if (!Files.exists(packageJson)) {
             throw new IllegalStateException("前端工程不存在：" + webDir + "（请检查脚手架步骤是否成功）");
+        }
+        // 坑 67：产物前端是 Vue3+Vite（scripts.dev），平台控制台才是 Vue2（scripts.serve）
+        String script;
+        boolean vite;
+        try {
+            var scripts = objectMapper.readTree(packageJson.toFile()).path("scripts");
+            if (scripts.has("dev")) { script = "dev"; vite = true; }
+            else if (scripts.has("serve")) { script = "serve"; vite = false; }
+            else throw new IllegalStateException("package.json 既无 dev 也无 serve 启动脚本");
+        } catch (IOException e) {
+            throw new IllegalStateException("读取前端 package.json 失败：" + e.getMessage(), e);
         }
         Path log = logFile(pipeline, "deploy_frontend");
         try {
-            ProcessBuilder pb = new ProcessBuilder("cmd", "/c", props.getNpm(),
-                    "run", "serve", "--", "--port", String.valueOf(pipeline.getFrontendPort()));
+            stopPrevious(pipeline.getFrontendPid(), "前端");
+            java.util.List<String> args = new java.util.ArrayList<>(java.util.List.of(
+                    "cmd", "/c", props.getNpm(), "run", script, "--",
+                    "--port", String.valueOf(pipeline.getFrontendPort())));
+            if (vite) { args.add("--host"); args.add("127.0.0.1"); }  // Vite 默认绑 IPv6，awaitPort 探 IPv4
+            ProcessBuilder pb = new ProcessBuilder(args);
             pb.directory(webDir.toFile());
             pb.environment().remove("SERVER__PORT");
             pb.redirectErrorStream(true);
@@ -783,7 +818,8 @@ public class PipelineExecutor {
             throw new IllegalStateException("前端进程启动失败：" + e.getMessage(), e);
         }
         awaitPort("前端", pipeline.getFrontendPort());
-        return "pid=" + pipeline.getFrontendPid() + " :" + pipeline.getFrontendPort();
+        return "pid=" + pipeline.getFrontendPid() + " :" + pipeline.getFrontendPort()
+                + " (" + script + (vite ? "/vite" : "/vue-cli") + ")";
     }
 
     /** health：双端端口就绪 + 前端 HTTP 可访问 */
@@ -799,7 +835,7 @@ public class PipelineExecutor {
                 .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(5)).build();
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:" + pipeline.getFrontendPort()))
+                .uri(URI.create("http://127.0.0.1:" + pipeline.getFrontendPort()))
                 .timeout(Duration.ofSeconds(20))
                 .GET().build();
         // dev server 首次请求会触发 webpack 全量编译（实测 2.5min+），
@@ -891,6 +927,21 @@ public class PipelineExecutor {
         } catch (Exception e) {
             throw new IllegalStateException("命令执行失败：" + String.join(" ", command) + " - " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * 坑 68：整线重跑前清掉上次残留的进程树。Windows 下 cmd/npm 会再拉起 node 子进程，
+     * 只 destroy 父进程端口仍被占，新进程秒退而旧进程让 awaitPort「假成功」。
+     */
+    private void stopPrevious(Long pid, String label) {
+        if (pid == null || pid <= 0) {
+            return;
+        }
+        ProcessHandle.of(pid).ifPresent(handle -> {
+            handle.descendants().forEach(ProcessHandle::destroy);
+            handle.destroy();
+            log.info("清理上次残留的{}进程 pid={}", label, pid);
+        });
     }
 
     private void awaitPort(String label, int port) {

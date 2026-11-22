@@ -63,4 +63,16 @@ class GenSelfCheckTestCompileTest {
                 "cannot find symbol: method save(com.wms.WmsZone)"));
         assertFalse(GenSelfCheckServiceImpl.isTestDependencyGap(null));
     }
+
+    @Test
+    @DisplayName("V9.12：scaffold 测试基座的包占位符必须与 testResource 的 __PKG__ 一致（坑 65 根因 2）")
+    void scaffoldTestPlaceholderMatchesWriter() throws Exception {
+        try (var in = getClass().getClassLoader().getResourceAsStream("scaffold-test/LoginStateTestSupport.java")) {
+            assertTrue(in != null, "scaffold-test/LoginStateTestSupport.java 资源应存在");
+            String head = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            assertTrue(head.startsWith("package __PKG__;"),
+                    "占位符必须是 __PKG__（双下划线），与 ScaffoldOpsWriter.testResource 的 replace(\"__PKG__\", pkg) 一致；"
+                    + "写成 __PKG_ 会导致产物包名非法、自检报 cannot find symbol");
+        }
+    }
 }

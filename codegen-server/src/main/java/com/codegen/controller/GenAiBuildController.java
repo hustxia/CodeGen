@@ -83,10 +83,23 @@ public class GenAiBuildController {
         return Result.ok(null);
     }
 
-    @Operation(summary = "V9.7 行业模板清单（电商/ERP/CRM/CMS，秒级克隆表结构）")
+    @Operation(summary = "V9.9 行业模板清单（250+ 套 / 19 类，秒级克隆表结构；不含表明细）")
     @GetMapping("/templates")
     public Result<java.util.List<com.codegen.vo.GenAiTemplateVO>> templates() {
         return Result.ok(aiBuildService.templates());
+    }
+
+    @Operation(summary = "V9.9 行业模板分类清单（供前端分组筛选）")
+    @GetMapping("/template-categories")
+    public Result<java.util.List<String>> templateCategories() {
+        return Result.ok(aiBuildService.templateCategories());
+    }
+
+    @Operation(summary = "V9.9 行业模板明细：按 key 取模块与表结构（按需加载）")
+    @GetMapping("/templates/{key}")
+    public Result<com.codegen.vo.GenAiTemplateVO> templateDetail(
+            @org.springframework.web.bind.annotation.PathVariable("key") String key) {
+        return Result.ok(aiBuildService.templateDetail(key));
     }
 
     @Operation(summary = "V9.7 行业模板建表：克隆模板表结构（不调 LLM），走与 AI 相同的收口/编辑/落库链路")

@@ -9,6 +9,7 @@ import com.codegen.dto.GenScaffoldDTO;
 import com.codegen.service.GenScaffoldService;
 import com.codegen.service.I18nMessageService;
 import com.codegen.service.I18nTextRewriter;
+import com.codegen.support.GenDashboardWriter;
 import com.codegen.support.GenNaming;
 import com.codegen.support.GenPathResolver;
 import com.codegen.vo.GenScaffoldCheckVO;
@@ -106,6 +107,8 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
         boolean payEnabled = Boolean.TRUE.equals(dto.getPayEnabled());
         // V6.6 文件能力包：系统级开关（DTO 由调用方按 sys_project.file_enabled + resolveFile 组装）
         boolean fileEnabled = Boolean.TRUE.equals(dto.getFileEnabled());
+        // V9.15 数据可视化图表：系统级开关（DTO 由调用方按 sys_project.chart_enabled + resolveChart 组装）
+        boolean chartEnabled = Boolean.TRUE.equals(dto.getChartEnabled());
         // ---------- 后端 ----------
         if (multi) {
             // 多模块：聚合 pom + 4 个子模块 pom；依赖拆分原则——common 承载全部基座依赖，
@@ -259,6 +262,15 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             // V6.4 P0-4：登录日志只读查询接口
             write(commonRoot, pkgPath + "/system/LoginLogController.java",
                     ScaffoldAuthWriter.loginLogControllerJava(pkg), "backend", force, vo, counter);
+            // V9.12：RBAC 管理入口——此前只有登录接口，建出来的系统改角色只能手工连库
+            write(commonRoot, pkgPath + "/system/SysUserController.java",
+                    ScaffoldAuthWriter.sysUserControllerJava(pkg), "backend", force, vo, counter);
+            write(commonRoot, pkgPath + "/system/SysRoleController.java",
+                    ScaffoldAuthWriter.sysRoleControllerJava(pkg), "backend", force, vo, counter);
+            write(commonRoot, pkgPath + "/system/SysMenuController.java",
+                    ScaffoldAuthWriter.sysMenuControllerJava(pkg), "backend", force, vo, counter);
+            write(commonRoot, pkgPath + "/common/auth/SysApiPerms.java",
+                    ScaffoldAuthWriter.sysApiPermsJava(pkg), "backend", force, vo, counter);
             write(bootRoot, "db/init_sys_user.sql", seedSql(),
                     "backend", force, vo, counter);
         }
@@ -381,7 +393,7 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
 
         // ---------- 前端 ----------
         if (Boolean.TRUE.equals(dto.getWithFrontend())) {
-            write(frontendRoot, "package.json", ScaffoldFrontendWriter.frontendPackageJson(project, frontendModule, payEnabled),
+            write(frontendRoot, "package.json", ScaffoldFrontendWriter.frontendPackageJson(project, frontendModule, payEnabled, chartEnabled),
                     "frontend", force, vo, counter);
             // V6.0 micro：前端请求走网关（端口=服务端口+1），apiBase 不带 /api 前缀（网关按模块路由）
             int proxyPort = micro ? serverPort + 1 : serverPort;
@@ -409,7 +421,18 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             write(frontendRoot, "src/views/index.vue", ScaffoldFrontendWriter.frontendHomeVue(appName), "frontend", force, vo, counter);
             // V5.0 F-07：登录页与路由守卫（401 跳转目标从 request.js 来）
             write(frontendRoot, "src/views/login.vue", ScaffoldFrontendWriter.frontendLoginVue(appName, appLogo, themeColor), "frontend", force, vo, counter);
-            write(frontendRoot, "src/router/index.js", ScaffoldFrontendWriter.frontendRouterJs(), "frontend", force, vo, counter);
+            write(frontendRoot, "src/router/index.js", ScaffoldFrontendWriter.frontendRouterJs(Boolean.TRUE.equals(dto.getWithAuth()), chartEnabled), "frontend", force, vo, counter);
+            // V9.12：系统管理三页（用户/角色/菜单），接口与后端 SysXxxController 对齐
+            if (Boolean.TRUE.equals(dto.getWithAuth())) {
+                write(frontendRoot, "src/api/system.js", ScaffoldFrontendWriter.frontendApiSystemJs(),
+                        "frontend", force, vo, counter);
+                write(frontendRoot, "src/views/system/user.vue", ScaffoldFrontendWriter.frontendSystemUserVue(),
+                        "frontend", force, vo, counter);
+                write(frontendRoot, "src/views/system/role.vue", ScaffoldFrontendWriter.frontendSystemRoleVue(),
+                        "frontend", force, vo, counter);
+                write(frontendRoot, "src/views/system/menu.vue", ScaffoldFrontendWriter.frontendSystemMenuVue(),
+                        "frontend", force, vo, counter);
+            }
             // 占位：route-sync 未跑前保证 webpack 能解析 import（后续被 GenMenuServiceImpl 整文件重建）
             write(frontendRoot, "src/router/gen-routes.js",
                     "// 该文件由代码生成器自动维护，请勿手工编辑。\n"
@@ -431,6 +454,18 @@ public class GenScaffoldServiceImpl implements GenScaffoldService {
             // 页面在 hasRichText 时才 import，组件文件始终随前端骨架写盘，保证 import 不会落空。
             write(frontendRoot, "src/components/RichTextEditor.vue",
                     ScaffoldOpsWriter.fileResource("RichTextEditor.vue", pkg), "frontend", force, vo, counter);
+            // V9.15 数据可视化图表：ChartCard 组件随开关写盘（看板页 import 它）
+            if (chartEnabled) {
+                write(frontendRoot, "src/components/ChartCard.vue",
+                        ScaffoldOpsWriter.chartResource("ChartCard.vue"), "frontend", force, vo, counter);
+                // 空态看板页：路由在 scaffold 阶段已注册 dashboard，若此处不写页面，
+                // 「只 scaffold 未 write」的产物 build 会报 ENOENT（路由 import 不存在的文件）。
+                // write 阶段用真实图卡覆盖此文件（GenDashboardWriter 同源生成）。
+                write(frontendRoot, "src/views/dashboard/index.vue",
+                        GenDashboardWriter.dashboardVue(appName, java.util.List.of(), ""), "frontend", force, vo, counter);
+                write(frontendRoot, "src/api/chart.js",
+                        GenDashboardWriter.chartApiJs(), "frontend", force, vo, counter);
+            }
             // V8.0 产物国际化：只有开关打开才写这一组文件，存量工程零 diff
             if (i18nOn) {
                 writeI18nResources(frontendRoot, dto, force, vo, counter);

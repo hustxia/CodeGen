@@ -258,6 +258,11 @@ public class GenTemplateEngine {
                     project == null ? null : project.rootPackage());
             files.put(permsPrefix + apiPermsPath(model), apiPermsJava(model));
         }
+        // V9.15 数据可视化：hasCharts 前置条件在 GenTemplateModel 算好（chartOn+genService+非从表+有图），引擎只认结果。
+        // 每表一个 /{module}/stats 聚合接口，与 controller 同源但独立文件。
+        if (Boolean.TRUE.equals(model.get("hasCharts"))) {
+            put(files, "chartStats", resolver, model, project);
+        }
         if (genFrontend && GenTemplateModel.on(table.getGenApiJs()) && !isChild) {
             put(files, "apiJs", resolver, model, project);
         }

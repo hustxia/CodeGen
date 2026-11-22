@@ -12,7 +12,6 @@ import com.codegen.common.exception.BusinessException;
 import com.codegen.common.log.Log;
 import org.springframework.jdbc.core.JdbcTemplate;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -50,7 +49,7 @@ import java.time.LocalDateTime;
 /**
  * 商品 Controller
  */
-@Tag(name = "商品管理", description = "商品管理")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "商品管理", description = "商品管理")
 @RestController
 @RequestMapping("/goods")
 public class DemoGoodsController {

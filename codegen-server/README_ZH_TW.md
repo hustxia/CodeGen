@@ -2,7 +2,10 @@
 
 > Languages: [简体中文](README_ZH.md) · **繁體中文** · [English](README.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
 
+
 ---
+
+> **多語言支援**：生成的系統內建整頁國際化，框架涵蓋 **206 種語言**並可自動回退；其中 **8 種為專業翻譯**（zh-CN、en-US、ja-JP、ko-KR、fr-FR、de-DE、es-ES、ar-SA），其餘語言統一回退到簡體中文。想貢獻翻譯？見 [`多語言項目介紹/CONTRIBUTING.md`](多語言項目介紹/CONTRIBUTING.md)。
 
 > 一個針對 **Spring Boot + Vue** 的多專案程式碼產生器：從資料庫表結構出發，產出**可編譯、可執行、具備選單與權限**的前後端業務程式碼，並處理寫入磁碟、備份、記帳與回滾的完整交付流程。
 
@@ -265,13 +268,20 @@ npm run serve
 | **V8.1** | 品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | 生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷 | 93a12d5 + e49330b  |
 | **V9.1** | **可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **測試中心與驗證中心：把介面/UI 用例資產（7 張表）與平台驗證資產（S1–S9 套件、三層落庫、統一 JSON 摘要）合併為一個版本；產物零差異，373/373 單測，206/206 語言鍵** | V9.2 release, **目前版本** |
-| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
-| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
-| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
-| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
-| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
-| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
+| **V9.2** | **測試中心+驗證中心：用例中心 7 表 / 驗證中心 9 套件（S1-S9，全局 409 單跑鎖，CI 共享 JSON 摘要）；373/373 單測（新增 50），i18n 契約 9/9** | V9.2 release, **目前版本** |
+| **V9.3** | **生成產物執行期修復（模板 3 處 Vue2 遺留）+ 驗證中心前端接入 + 一句話建系統端到端跑通（自檢/子進程路徑/前端啟動/重跑清場）；96 份多語言文檔版本歷史同步至 V9.3** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **一句話建系統分階段確認：AI 推薦 → 編輯/預覽（同源 DDL 唯讀）→ 確認落草稿/建庫，階段門禁；DDL 預覽與建庫執行共用同一組裝方法，所見即所得** | b3f0587（含遺留入庫） |
+| **V9.5** | **AI 建表推薦與人工確認（/gen/ai-build）：AI 推薦表結構 → 可編輯 → 同源 DDL 預覽 → 確認落草稿/建庫；補表按目標系統已有表做差集，服務端硬過濾重複表** | 570f6fc + 3104317 |
+| **V9.6** | **大型/超大型分批建模任務：任務/批次兩表落庫，條件更新認領調度（2s tick 多 worker 多實例安全），超時回收重試（900s/2 次），前端 2s 輪詢批次進度；實測 11 批/70 表/8s（stub 4 worker）；流水線號防撞（4 位序號 + uk_no 換號重試）** | 5a2bcac + ecbe2ba |
+| **V9.7** | **快速建表：兩段式骨架生成（AI 只列表名/註釋/欄位名，型別與主鍵由命名語義規則補全，真模型實測 3m13s → 54s，約 3.6 倍）+ 行業模板庫（電商/ERP/CRM/CMS 四套 JSON 模板包，與 AI 同收口克隆，秒級零 AI）** | d38ba7c + fd2440c |
+| **V9.8** | **多流水線並發執行：PipelineRunGate 閘門（全局 max-running 上限 + 同系統互斥，跨系統並行安全）取代單執行緒執行器 + 全域 AtomicBoolean；啟動恢復——服務重啟後 running 孤兒狀態自動置 failed（修復實際事故）；462/462 單測全綠** | 157f5ca + 07e8607, **目前版本** |
+| **V9.9** | **行業模板庫擴至 250+ 套 / 19 大類 / 2100+ 表：可複用領域藍圖 + 生成腳本；模板清單改為輕量（不含表明細），明細按需載入，支援分類篩選與搜尋；464/464 單測全綠** | pending, **current** |
+| **V9.10** | **行業模板欄位展開：2191 張表依表語義補業務欄位（編碼/單號/金額/聯絡方式/時間區間/正文/排序/狀態/備註），平均每表 6.12 → 7.87 欄，狀態 100% / 備註 96% / 編碼 82% 覆蓋；語義等價組避免重複欄；修復處方表 create_time 與審計欄撞名；465/465 單測全綠** | pending, **current** |
+| **V9.11** | **行業模板升級為完整系統：每套追加 15 張平台通用表（審批流/附件/操作日誌/任務/訊息/字典/設定）+ 所屬分類 10-15 張專屬業務表（19 大類共 248 張）。每套 29-45 張表（平均 34.8，原 8.6）、每表 10-20 欄位（平均 14.25，原 7.87）；欄位深化依輔助表語義避免假欄位；466/466 單測全綠** | pending, **current** |
+| **V9.12** | **Dedicated smart-village template: village_affairs (85 tables / 1414 columns) covering household registration, land rights, three-asset management, party governance, three-affairs disclosure, convenience services, human settlement and sentiment analytics; dedicated generator script with Chinese column-comment dictionary, idempotent and audit-safe; generic deepening scripts skip dedicated templates; 467/467 tests green** | pending, **current** |
+| **V9.13** | **Smart-village system hardening: replan menu into 12 business domains (replacing 'Other/66 pages'); seed data for 28 tables (98 menus, 5 users, household/land/asset/party/service/flow data, all interlinked); full approval flow verified end-to-end (submit 0-1, approve 1-2, reject 1-3). Fixed two generator defects: flow tables sys_flow_def/sys_flow_task id missing AUTO_INCREMENT (submit 500), auth filter not injecting userId (approve 403, audit create_by null); 3 anti-regression tests, 468/468 green** | 049027a, **current** |
+| **V9.14** | **Smart-village UI & data hardening: Chinese field labels (52 foreign-key comments fixed at source + 129 page labels synced), 12 business-domain menu icons, real-time dashboard stats (DashboardController whitelist COUNT + 12 stat cards), demo data for all 90 business tables (100% coverage, real foreign-key links). Fixed 3 script-level pitfalls (invalid Map icon, date-rule misfire, English-token comments); 3 new contract tests, 474/474 green** | 039ae7e, **current** |
+| **V9.15** | **資料視覺化圖表能力包（通用、零領域耦合）：chart_enabled 三態開關（NULL/0=關、1=開，關閉時產物零 diff）；GenChartDeriver 純按欄位中繼資料推導圓餅/折線/柱狀/儀表板，零領域關鍵詞；每表 /{module}/stats 彙總介面，生成期欄位白名單防 SQL 注入；ECharts 圖卡元件 + 跨表看板，系列色跟隨 --app-primary；486/486 測試全綠，產物 64 個 StatsController 編譯通過，真瀏覽器 4 類圖表 0 主控台錯誤** | 69d5a06 (web 5097231), **current** |
 
 ---
 
@@ -279,7 +289,7 @@ npm run serve
 
 ## 13. 專案狀態
 
-- 目前規劃的版本線已抵達 **V9.2**（能力持續迭代：AI 建模、種子資料增強、能力包系統等）。
+- 目前發佈版本 **V9.8**：多流水線並發執行（`PipelineRunGate` 全域並發上限 + 同系統互斥，跨系統並行安全）+ 服務重啟後 `running` 孤兒流水線自動置 failed；往前依次為 V9.7 快速建表（兩段式骨架生成，真模型實測提速約 3.6 倍；電商 / ERP / CRM / CMS 行業模板庫）、V9.6 大型/超大型分批建模任務、V9.5 AI 建表推薦與人工確認、V9.4 分階段確認、V9.2 測試中心與驗證中心。單測基線 **462/462 全綠**。
 - 配套示範專案 `demo_admin`（後端 8140 / 前端 9040）涵蓋樹狀 / CRUD / 主從 / 唯讀 / 列印場景，可獨立執行驗證。
 - 兩個倉庫皆託管於 Gitee：`https://gitee.com/hustxiayuhong/CodeGen.git`
 

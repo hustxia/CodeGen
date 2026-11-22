@@ -61,23 +61,37 @@
             </el-radio-group>
           </el-form-item>
           <el-form-item v-if="form.source === 'template'" label="行业模板" required>
-            <el-select
-              v-model="form.templateKey"
-              placeholder="选择最接近的行业模板，克隆后可在第②步任意增删改"
-              style="width: 100%"
-            >
-              <el-option
-                v-for="t in templates"
-                :key="t.key"
-                :label="t.name + '（' + t.moduleCount + ' 模块 / ' + t.tableCount + ' 表）'"
-                :value="t.key"
+            <div style="display: flex; gap: 8px">
+              <el-select v-model="categoryFilter" placeholder="全部分类" clearable style="width: 170px">
+                <el-option v-for="c in templateCategories" :key="c" :label="c" :value="c" />
+              </el-select>
+              <el-select
+                v-model="form.templateKey"
+                filterable
+                clearable
+                placeholder="输入名称搜索行业模板（250+ 套），克隆后可在第②步任意增删改"
+                style="flex: 1"
               >
-                <span>{{ t.name }}</span>
-                <span class="muted" style="margin-left: 8px">{{ t.desc }}</span>
-              </el-option>
-            </el-select>
-            <div v-if="currentTemplate" class="muted">{{ currentTemplate.desc }}</div>
-            <el-checkbox-group v-if="currentTemplate" v-model="form.templateModules" style="margin-top: 6px">
+                <el-option-group
+                  v-for="group in templateGroups"
+                  :key="group.category"
+                  :label="group.category"
+                >
+                  <el-option
+                    v-for="t in group.items"
+                    :key="t.key"
+                    :label="t.name + '（' + t.tableCount + ' 表）'"
+                    :value="t.key"
+                  >
+                    <span>{{ t.name }}</span>
+                    <span class="muted" style="margin-left: 8px">{{ t.desc }}</span>
+                  </el-option>
+                </el-option-group>
+              </el-select>
+            </div>
+            <div v-if="currentTemplateMeta" class="muted">{{ currentTemplateMeta.desc }}</div>
+            <div v-if="templateLoading" class="muted">模块加载中…</div>
+            <el-checkbox-group v-if="currentTemplate && currentTemplate.modules" v-model="form.templateModules" style="margin-top: 6px">
               <el-checkbox v-for="m in currentTemplate.modules" :key="m.name" :label="m.name">
                 {{ m.name }}（{{ m.tables.length }} 表）
               </el-checkbox>
@@ -344,6 +358,8 @@ import {
   aiBuildJobResult,
   aiBuildJobCancel,
   aiBuildTemplates,
+  aiBuildTemplateCategories,
+  aiBuildTemplateDetail,
   aiBuildPlanFromTemplate,
   aiBuildDdlPreview,
   aiBuildConfirm
@@ -372,6 +388,11 @@ export default {
         deploy: 'micro'
       },
       templates: [],
+      templateCategories: [],
+      categoryFilter: '',
+      templateDetailCache: {},
+      templateDetail: null,
+      templateLoading: false,
       projects: [],
       planLoading: false,
       plan: null,
@@ -391,8 +412,27 @@ export default {
     }
   },
   computed: {
-    currentTemplate() {
+    // V9.9：清单轻量（无 modules），明细按需加载；按分类过滤后的候选项
+    templateOptions() {
+      if (!this.categoryFilter) return this.templates
+      return this.templates.filter(t => t.category === this.categoryFilter)
+    },
+    currentTemplateMeta() {
       return this.templates.find(t => t.key === this.form.templateKey) || null
+    },
+    // 按分类分组的 el-option-group 数据，保持后端分类顺序
+    templateGroups() {
+      const map = {}
+      this.templateOptions.forEach(t => {
+        const c = t.category || '其他'
+        if (!map[c]) map[c] = []
+        map[c].push(t)
+      })
+      return Object.keys(map).sort().map(c => ({ category: c, items: map[c] }))
+    },
+    currentTemplate() {
+      // 明细（模块列表）走单独接口，缓存在本地，避免 254 套清单携带全部表结构
+      return this.templateDetail || null
     },
     relationMap() {
       const m = {}
@@ -468,13 +508,23 @@ export default {
   beforeDestroy() {
     this.clearJobTimer()
   },
+  watch: {
+    'form.templateKey'(key) {
+      this.loadTemplateDetail(key)
+    }
+  },
   created() {
     aiBuildConfig().then(r => { this.aiEnabled = !!(r.data && r.data.aiEnabled) }).catch(() => { this.aiEnabled = false })
+    aiBuildTemplateCategories()
+      .then(r => { this.templateCategories = r.data || [] })
+      .catch(() => { this.templateCategories = [] })
     aiBuildTemplates()
       .then(r => {
         this.templates = r.data || []
         if (this.templates.length && !this.form.templateKey) {
           this.form.templateKey = this.templates[0].key
+        } else if (this.form.templateKey) {
+          this.loadTemplateDetail(this.form.templateKey)
         }
       })
       .catch(() => { this.templates = [] })
@@ -483,6 +533,23 @@ export default {
       .catch(() => { this.projects = [] })
   },
   methods: {
+    // V9.9：按需加载模板明细（模块+表），带本地缓存
+    loadTemplateDetail(key) {
+      if (!key) { this.templateDetail = null; return }
+      if (this.templateDetailCache[key]) {
+        this.templateDetail = this.templateDetailCache[key]
+        return
+      }
+      this.templateLoading = true
+      aiBuildTemplateDetail(key)
+        .then(r => {
+          const d = r.data
+          this.$set(this.templateDetailCache, key, d)
+          if (this.form.templateKey === key) this.templateDetail = d
+        })
+        .catch(() => { if (this.form.templateKey === key) this.templateDetail = null })
+        .finally(() => { this.templateLoading = false })
+    },
     doPlan() {
       if (!this.form.systemName || !this.form.dbName) {
         this.$message.warning('请先填写系统名称与数据库名')

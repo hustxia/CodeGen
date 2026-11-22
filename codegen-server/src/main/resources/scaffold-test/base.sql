@@ -102,7 +102,7 @@ VALUES (1, '超级管理员', 'admin', '内置角色：接口权限点直通');
 INSERT IGNORE INTO sys_user_role (user_id, role_id) VALUES (1, 1);
 -- V6.1 流程表（builtin/activiti 双引擎共用的投影表）
 CREATE TABLE IF NOT EXISTS sys_flow_def (
-  id bigint NOT NULL,
+  id bigint NOT NULL AUTO_INCREMENT,
   flow_code varchar(64) NOT NULL COMMENT '流程编码',
   flow_name varchar(64) NOT NULL COMMENT '流程名称',
   table_name varchar(64) NOT NULL COMMENT '业务表名',
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS sys_flow_def (
   CONSTRAINT uk_flow_code UNIQUE (flow_code, deleted)
 );
 CREATE TABLE IF NOT EXISTS sys_flow_task (
-  id bigint NOT NULL,
+  id bigint NOT NULL AUTO_INCREMENT,
   flow_code varchar(64) NOT NULL,
   biz_table varchar(64) NOT NULL,
   biz_id bigint NOT NULL,

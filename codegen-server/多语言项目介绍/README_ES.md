@@ -10,6 +10,12 @@
 
 GitHub: https://github.com/hustxia/CodeGen
 
+> **Versión actual V9.2 · Centro de pruebas y centro de verificación · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical**
+> **V9.1 · Refactorización de mantenibilidad · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9**
+> **V9.0 · Artefactos generados modernizados a Vue 3 + Element Plus + Vite; verificados en tiempo de ejecución (40/40 aserciones, vite build exitoso, 14 capturas incl. ar-SA RTL); 3 defectos de ejecución corregidos**
+> **V8.1** · Reforzamiento de calidad: arnés de contrato fuera de línea (9 modos, dif cero en OFF) + pruebas unitarias i18n-core + compuerta CI + división honesta del README (marco 206 / traducidos 8) + check-locale-keys.mjs
+> **V8.0** · i18n de página completa: marco de 206 idiomas (8 traducidos profesionalmente), i18n de doble vía con contrato de dif cero en OFF
+
 ## 1. ¿Qué es esto?
 
 CodeGen es una fábrica de código "guiada por tablas". Basta con incorporar tus tablas de negocio (importándolas desde la base de datos o pegando un DDL), configurar los campos y los interruptores de generación y pulsar "Generar": el sistema produce por ti el Entity/Mapper/Service/Controller/DTO/VO del backend, el `api.js` y las páginas Vue del frontend, los menús y las rutas, e incluso páginas de impresión A4 y esqueletos de pruebas de integración, escribiéndolo todo de forma segura en tu proyecto destino.
@@ -71,7 +77,7 @@ Toma de tablas (importación de BD / DDL)
 | Impresión de documentos | Al marcar el interruptor "Imprimir" se generan una página A4 de impresión y su ruta, con cabecera + tabla de detalle |
 | Crear un sistema con una frase | Describes el dominio de negocio y la IA crea la BD y las tablas + andamiaje + generación completa + registro de menús de una sola vez |
 
-> Todos estos escenarios cuentan con una demostración ejecutable (proyecto `demo_admin`) y capturas de pantalla asociadas; consulta `docs/典型场景操作指南-演示后台demo.md` (Chino).
+> Todos estos escenarios cuentan con una demostración ejecutable (proyecto `demo_admin`) y capturas de pantalla asociadas; consulta `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chino).
 
 ---
 
@@ -223,11 +229,11 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 
 | Documento | Contenido |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (Chino) | Despliegue, inicio en cinco minutos, configuración de tablas, incorporación por lotes, gestión de plantillas, ledger, catálogo de APIs y pipeline completo (con capturas reales) |
-| `docs/典型场景操作指南-演示后台demo.md` (Chino) | 6 tablas que cubren 5 escenarios típicos, con demo ejecutable y capturas de ejecuciones reales |
-| `docs/项目介绍.md` | Documento de presentación del proyecto, con el mismo origen que este archivo |
-| `docs/代码生成器-Vx.x-规划.md` | Planificación e inventario de funcionalidades de las versiones V3.1 → V7.3 |
-| `codegen-web/README.md` | Referencia de inicio rápido de la consola de frontend |
+| `../codegen-server/docs/代码生成器-操作手册.md` (Chino) | Despliegue, inicio en cinco minutos, configuración de tablas, incorporación por lotes, gestión de plantillas, ledger, catálogo de APIs y pipeline completo (con capturas reales) |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (Chino) | 6 tablas que cubren 5 escenarios típicos, con demo ejecutable y capturas de ejecuciones reales |
+| `项目介绍.md` | Documento de presentación del proyecto, con el mismo origen que este archivo |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | Planificación e inventario de funcionalidades de las versiones V3.1 → V9.2 |
+| `../codegen-web/README.md` | Referencia de inicio rápido de la consola de frontend |
 
 ---
 
@@ -260,34 +266,22 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 | V7.0 | Recomendaciones de IA para páginas y menús (preview / apply) | V7.0 (94 líneas), 45f2670 |
 | V7.1 | Enriquecimiento de datos semilla con IA (la IA gobierna la semántica, las reglas la estructura) | V7.1 (42 líneas), 5ca6e72 |
 | V7.2 | Volcado de entregables SQL en `db/` tras un pipeline exitoso | eebff88 |
-| **V7.3** | **Fiabilidad de la entrega: pruebas de los artefactos compilados en el autochequeo / salida unificada de entregables SQL / recomendaciones de IA por tabla** | **V7.3 (138 líneas)** |
+| **V7.3** | **Fiabilidad de la entrega: pruebas de los artefactos compilados en el autochequeo / salida unificada de entregables SQL / recomendaciones de IA por tabla** | **V7.3 (138 líneas), 696765b** |
 | **V7.4** | **Entrega repetible: desplegable desde una base de datos vacía, cada commit garantiza que se puede ejecutar** | c306e29 |
-| **V7.5** | Configuración de idiomas del proyecto: lista de 206 idiomas / idioma predeterminado / idiomas habilitados, inyección de lang y dir en los generados | 7a9afa0 + abac56d |
-| **V8.0** | i18n de página completa: marco de 206 idiomas (8 traducidos profesionalmente), i18n de doble vía con contrato de dif cero en OFF | 9e5dd57 → 7d57aea |
-| **V8.1** | Reforzamiento de calidad: arnés de contrato fuera de línea (9 modos, dif cero en OFF) + pruebas unitarias i18n-core + compuerta CI + división honesta del README (marco 206 / traducidos 8) + check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | Artefactos generados modernizados a Vue 3 + Element Plus + Vite; verificados en tiempo de ejecución (40/40 aserciones, vite build exitoso, 14 capturas incl. ar-SA RTL); 3 defectos de ejecución corregidos | 93a12d5 + e49330b  |
+| **V7.5** | **Configuración de idiomas del proyecto: lista de 206 idiomas / idioma predeterminado / idiomas habilitados, inyección de lang y dir en los generados** | 7a9afa0 + abac56d |
+| **V8.0** | **i18n de página completa: marco de 206 idiomas (8 traducidos profesionalmente), i18n de doble vía con contrato de dif cero en OFF** | 9e5dd57 → 7d57aea |
+| **V8.1** | **Reforzamiento de calidad: arnés de contrato fuera de línea (9 modos, dif cero en OFF) + pruebas unitarias i18n-core + compuerta CI + división honesta del README (marco 206 / traducidos 8) + check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **Artefactos generados modernizados a Vue 3 + Element Plus + Vite; verificados en tiempo de ejecución (40/40 aserciones, vite build exitoso, 14 capturas incl. ar-SA RTL); 3 defectos de ejecución corregidos** | 93a12d5 + e49330b  |
 | **V9.1** | **Refactorización de mantenibilidad · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9** | 654b8e0 → b0d081e  |
 | **V9.2** | **Centro de pruebas y centro de verificación · Test Center (7 tables: env/suite/case/dataset/run/result/schedule) + Verification Center (tc_run/tc_case_result/tc_artifact, 9 suites S1-S9, single-run 409 lock, `codegen.testcenter/v1`); 373/373 tests; 206/206 locales; output byte-identical** | V9.2 release, **Versión actual** |
-| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
-| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
-| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
-| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
-| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
-| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
-| **V9.9** | **Biblioteca de plantillas industriales ampliada a 250+ paquetes / 19 categorías / 2100+ tablas: bloques de dominio reutilizables + script generador; lista ligera (sin detalle de tablas), detalle bajo demanda, filtro por categoría y búsqueda; 464/464 pruebas en verde** | pending, **current** |
-| **V9.10** | **Ampliación de campos de plantillas industriales: 2191 tablas enriquecidas con campos de negocio según su semántica (código / n.º de documento / importe / contacto / periodo / contenido / orden / estado / observación), media 6,12 → 7,87 columnas por tabla, cobertura estado 100 % / observación 96 % / código 82 %; grupos de equivalencia semántica evitan columnas duplicadas; corregida colisión de create_time con columna de auditoría en tablas de receta; 465/465 pruebas en verde** | pending, **current** |
-| **V9.11** | **Plantillas industriales convertidas en sistemas completos: +15 tablas de plataforma común (flujo de aprobación, adjuntos, registro, tareas, mensajes, diccionario, configuración) + 10-15 tablas específicas por categoría (19 categorías, 248 tablas). Cada plantilla tiene ahora 29-45 tablas (media 34,8, antes 8,6) y 10-20 columnas por tabla (media 14,25, antes 7,87); enriquecimiento semántico de campos con conciencia de tablas auxiliares; 466/466 pruebas en verde** | pending, **current** |
-| **V9.12** | **Dedicated smart-village template: village_affairs (85 tables / 1414 columns) covering household registration, land rights, three-asset management, party governance, three-affairs disclosure, convenience services, human settlement and sentiment analytics; dedicated generator script with Chinese column-comment dictionary, idempotent and audit-safe; generic deepening scripts skip dedicated templates; 467/467 tests green** | pending, **current** |
-| **V9.13** | **Smart-village system hardening: replan menu into 12 business domains (replacing 'Other/66 pages'); seed data for 28 tables (98 menus, 5 users, household/land/asset/party/service/flow data, all interlinked); full approval flow verified end-to-end (submit 0-1, approve 1-2, reject 1-3). Fixed two generator defects: flow tables sys_flow_def/sys_flow_task id missing AUTO_INCREMENT (submit 500), auth filter not injecting userId (approve 403, audit create_by null); 3 anti-regression tests, 468/468 green** | 049027a, **current** |
-| **V9.14** | **Smart-village UI & data hardening: Chinese field labels (52 foreign-key comments fixed at source + 129 page labels synced), 12 business-domain menu icons, real-time dashboard stats (DashboardController whitelist COUNT + 12 stat cards), demo data for all 90 business tables (100% coverage, real foreign-key links). Fixed 3 script-level pitfalls (invalid Map icon, date-rule misfire, English-token comments); 3 new contract tests, 474/474 green** | 039ae7e, **current** |
 
 ---
 
-> **V6.10 Observabilidad de la plataforma**: se integran Actuator + Micrometer, con muestreo cada 5 segundos hacia un búfer circular en memoria (ventana de 30 minutos), y se añade una nueva página integrada de "Monitorización del sistema": APIs de agregación `/monitor/*` en el backend + paneles ECharts en el frontend. Solo se permiten por lista blanca los endpoints `health/info/metrics`; `/actuator/health` no requiere token, mientras que `metrics` y otros sí exigen autenticación; `env/beans/heapdump/threaddump/loggers` nunca se exponen. La ventana de muestreo es solo dentro del proceso, se pierde al reiniciar y no se comparte entre instancias. Consulta `docs/可观测性说明.md` (Chino) para más detalles.
+> **V6.10 Observabilidad de la plataforma**: se integran Actuator + Micrometer, con muestreo cada 5 segundos hacia un búfer circular en memoria (ventana de 30 minutos), y se añade una nueva página integrada de "Monitorización del sistema": APIs de agregación `/monitor/*` en el backend + paneles ECharts en el frontend. Solo se permiten por lista blanca los endpoints `health/info/metrics`; `/actuator/health` no requiere token, mientras que `metrics` y otros sí exigen autenticación; `env/beans/heapdump/threaddump/loggers` nunca se exponen. La ventana de muestreo es solo dentro del proceso, se pierde al reiniciar y no se comparte entre instancias. Consulta `../codegen-server/docs/可观测性说明.md` (Chino) para más detalles.
 
 ## 13. Estado del proyecto
 
-- La línea de versiones planificada ha alcanzado la **V9.8**, con capacidades en iteración continua (modelado por IA, enriquecimiento de datos semilla, sistema de paquetes de capacidades, etc.).
+- La línea de versiones planificada ha alcanzado la **V9.2**, con capacidades en iteración continua (modelado por IA, enriquecimiento de datos semilla, sistema de paquetes de capacidades, etc.).
 - Se ha consolidado el proyecto de demostración complementario `demo_admin` (backend 8140 / frontend 9040), que cubre los escenarios de árbol / CRUD / maestro-detalle / solo lectura / impresión y puede ejecutarse de forma independiente para su verificación.
 - Ambos repositorios están alojados en Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
@@ -300,39 +294,3 @@ El frontend escucha por defecto en el puerto **9530** y redirige `/dev-api` al b
 - **Soporte técnico**: escriba el correo **en chino**, incluyendo la descripción del problema, el entorno (JDK / MySQL / versión) y los pasos para reproducirlo
 
 > Leo y respondo todos los correos. Se agradecen los informes de errores, las sugerencias de funcionalidades y las propuestas de colaboración.
-
----
-
-## 15. Comparación con herramientas similares
-
-CodeGen is neither a mere code snippet generator nor a full-stack low-code platform — it sits in a specific niche. Here is how it positions itself relative to the more commonly known tools in the Spring Boot / Java ecosystem.
-
-### vs. Snippet Generators (JPA Buddy · MapStruct · Spring Initializr)
-
-Tools like **JPA Buddy**, **MapStruct**, and **Spring Initializr** are great for scaffolding and small ergonomic wins, but they only produce **fragments**: an entity here, a mapper there, some DTO conversion helpers, or an empty starter project. You still need to wire up the CRUD pages, menus, routes, and permission codes by hand — and when the table changes, you re-do it.
-
-CodeGen, by contrast, produces a **zero-edit, runnable vertical slice**: full backend (Entity → Mapper → Service → Controller → DTO/VO) + full frontend (`api.js` + Vue pages + A4 print page) + menu + route registration. Bring your DDL, click once, and the feature is live.
-
-### vs. Scaffold Frameworks (JeecgBoot · RuoYi · dlow)
-
-**JeecgBoot**, **RuoYi**, and similar frameworks ship a complete admin scaffold first, then bolt a code generator on top. You are required to **fork their scaffold**, carry its conventions, its authentication layer, its menu schema, its file layout, and — critically — its upgrade story. The generator **inherits the parent framework's biases** (e.g., dynamic datasource conventions, Shiro/Spring Security choices, front-end tech-lock).
-
-CodeGen takes the opposite stance: **it never touches your project's infrastructure**. It assumes your project already has `Result`, `BaseEntity`, `PageQuery`, `PaginationInnerInterceptor`, and a `utils/request.js` that returns `{list, total}`. It only **drops business code into your existing layout**, alongside whatever auth stack, UI, and conventions you already chose. No fork. No convention hijack. Clean, surgical.
-
-### vs. Built-in Generators (Yunzhai · JeecgBoot built-in · RuoYi built-in)
-
-Many scaffolds now include a code generator inside them. The generated code works — but quality gates are usually weak: no real compilation check, no structured contract test, no template versioning, no rollback, and no change ledger. When a template change produces broken output, you won't find out until runtime.
-
-CodeGen's **quality-gate chain** is its differentiator:
-
-| Step | What it actually does |
-| --- | --- |
-| Preview & diff | Generates to memory, renders per-file diffs against disk, you confirm before anything is written |
-| Write with backup | Every touched file is copied to `.gen-backup/<batchNo>/` before being overwritten |
-| Marked-zone merge | Hand-written code inside `// gen:begin-end` blocks is preserved; only generated zones are replaced |
-| In-memory self-check | A real `javac` compile of all generated back-end artifacts (not a regex lint) — nothing lands on disk unless it compiles |
-| Independent class-path compile | Generated integration tests are compiled against your target project's classpath — missing dependencies fail at write time, not runtime |
-| Four-state ledger | `gen_output` records every file as **created / merged / skipped / failed**, with byte count, MD5, and backup path |
-| Rollback by batch | Any batch can be rolled back in one click, restoring exactly the state before that generation ran |
-
-These seven links — preview → backup → merge → javac self-check → class-path compile → ledger → rollback — are **not present in the built-in generators of any popular scaffold framework** the author is aware of.

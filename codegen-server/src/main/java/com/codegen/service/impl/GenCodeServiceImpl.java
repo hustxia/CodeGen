@@ -19,6 +19,7 @@ import com.codegen.service.GenSqlDeliverService;
 import com.codegen.service.GenTableColumnService;
 import com.codegen.service.TestSuiteGenService;
 import com.codegen.service.I18nTextRewriter;
+import com.codegen.support.GenDashboardWriter;
 import com.codegen.support.GenPathResolver;
 import com.codegen.util.GenDigestUtils;
 import com.codegen.util.GenMergeUtils;
@@ -64,7 +65,7 @@ import java.util.zip.ZipOutputStream;
 @Service
 public class GenCodeServiceImpl implements GenCodeService {
 
-    private static final List<String> INFO_FILES = List.of("router-snippet.txt", "README-使用说明.txt");
+    private static final List<String> INFO_FILES = List.of("router-snippet.txt", "README-使用说明.txt", "chart-router-snippet.txt");
 
     private static final Logger log = LoggerFactory.getLogger(GenCodeServiceImpl.class);
 
@@ -169,6 +170,16 @@ public class GenCodeServiceImpl implements GenCodeService {
                     rendered.get(0).table(), projectConfigOf(rendered.get(0).table())).entrySet()) {
                 all.putIfAbsent(entry.getKey(), entry.getValue());
             }
+            // V9.15：图表能力包开启时，ZIP 也带看板页 + chartApi（与写盘侧同源，防「ZIP 有落盘无」）
+            GenTable zipAnchor = rendered.get(0).table();
+            SysProject zipProject = projectOf(zipAnchor);
+            if (zipProject != null && GenTemplateModel.resolveChart(zipProject.getChartEnabled())) {
+                List<GenDashboardWriter.Card> zipCards = chartCardsForProject(zipProject.getId());
+                String zipAppName = GenTemplateModel.resolveAppName(zipProject.getAppName(), zipProject.getProjectCode(), null);
+                all.putIfAbsent("src/views/dashboard/index.vue", GenDashboardWriter.dashboardVue(zipAppName, zipCards, ""));
+                all.putIfAbsent("src/api/chart.js", GenDashboardWriter.chartApiJs());
+                all.putIfAbsent("chart-router-snippet.txt", GenDashboardWriter.routerSnippet());
+            }
             // V7.3 P0-2：下载出口也带 SQL 交付物，与写盘/流水线同一套内容（db/ 下三个文件）
             addSqlEntries(all, rendered.get(0).table(), dto == null ? null : dto.getIds());
             for (Map.Entry<String, String> entry : all.entrySet()) {
@@ -269,6 +280,26 @@ public class GenCodeServiceImpl implements GenCodeService {
                     } catch (Exception e) {
                         log.warn("生成完成自动注册测试套件失败 tableId={}: {}", table.getId(), e.getMessage());
                     }
+                }
+            }
+            // V9.15：图表能力包开启时，为每个项目写看板页 + chartApi（系统级，跨表聚合）。
+            // 放在逐表循环之后：此时 idsByProject 已收集完整，看板能覆盖该项目所有有图的表。
+            for (Map.Entry<Long, List<Long>> pe : idsByProject.entrySet()) {
+                List<GenDashboardWriter.Card> cards = chartCardsForProject(pe.getKey());
+                // 无图卡也写空态看板（开关开了就该有看板入口），但仅在 chart_enabled 开启时——
+                // chartCardsForProject 对关闭项目返回空，需再确认开关态避免给关闭系统写空看板。
+                SysProject prj = projectMapper.selectById(pe.getKey());
+                if (prj == null || !GenTemplateModel.resolveChart(prj.getChartEnabled())) {
+                    continue;
+                }
+                GenTable anchor = loadTablesInOrder(pe.getValue()).get(0);
+                String appName = GenTemplateModel.resolveAppName(prj.getAppName(), prj.getProjectCode(), null);
+                Map<String, String> shared = new LinkedHashMap<>();
+                shared.put("src/views/dashboard/index.vue", GenDashboardWriter.dashboardVue(appName, cards, ""));
+                shared.put("src/api/chart.js", GenDashboardWriter.chartApiJs());
+                for (Map.Entry<String, String> e : shared.entrySet()) {
+                    results.addAll(writeOneSharedFile(anchor, e.getKey(), e.getValue(),
+                            overwrite, skipDrifted, force, batchNo, ledger));
                 }
             }
             if (results.isEmpty()) {
@@ -550,6 +581,67 @@ public class GenCodeServiceImpl implements GenCodeService {
     }
 
     /**
+     * V9.15：写一个系统级共享文件（看板页/chartApi）。路径解析、覆盖/漂移/备份/合并策略与 writeTable 同口径，
+     * 以 anchor 表的前端工程根为锚点——看板虽是全系统 1 份，但落盘位置必须跟随项目配置（三级回落）。
+     */
+    private List<GenWriteVO> writeOneSharedFile(GenTable anchor, String relPath, String content,
+                                                 boolean overwrite, boolean skipDrifted, boolean force,
+                                                 String batchNo, Map<String, GenDriftService.LedgerSnapshot> ledger) {
+        List<GenWriteVO> results = new ArrayList<>();
+        try {
+            applyOutputDefaults(anchor);
+            String root = frontendRootOf(anchor);
+            if (!StringUtils.hasText(root)) {
+                results.add(new GenWriteVO("dashboard", relPath, "ERROR", "前端根目录未配置"));
+                return results;
+            }
+            Path rootPath = frontendBaseOf(anchor, Paths.get(root).toAbsolutePath().normalize());
+            Path target = rootPath.resolve(relPath).normalize();
+            if (!target.startsWith(rootPath)) {
+                results.add(new GenWriteVO("dashboard", relPath, "ERROR", "非法目标路径（越界）"));
+                return results;
+            }
+            boolean exists = Files.exists(target);
+            String oldContent = exists ? new String(Files.readAllBytes(target), StandardCharsets.UTF_8) : null;
+            // V9.15：scaffold 阶段写的空态看板页带占位标记，write 阶段必须覆盖它（否则真实图卡永远写不进去）
+            boolean isScaffoldPlaceholder = oldContent != null
+                    && oldContent.contains("V9.15 scaffold placeholder");
+            if (exists && !overwrite && !isScaffoldPlaceholder) {
+                results.add(new GenWriteVO("dashboard", relPath, "SKIPPED", "文件已存在，未勾选覆盖"));
+                return results;
+            }
+            if (isScaffoldPlaceholder) {
+                overwrite = true; // 占位页是生成器自己的产物，覆盖不算破坏用户资产
+            }
+            String currentMd5 = exists ? GenDigestUtils.md5Hex(Files.readAllBytes(target)) : null;
+            if (exists && skipDrifted) {
+                GenDriftService.LedgerSnapshot snap = ledger.get(target.toString());
+                if (GenDriftService.DRIFTED.equals(genDriftService.judge(snap == null ? null : snap.md5(), currentMd5))) {
+                    results.add(new GenWriteVO("dashboard", relPath, "SKIPPED", "磁盘内容已手改（漂移），跳过"));
+                    return results;
+                }
+            }
+            if (exists && overwrite && !force && !ledger.containsKey(target.toString())) {
+                results.add(new GenWriteVO("dashboard", relPath, "SKIPPED", "既有文件且无台账快照，需 force=true 才覆盖"));
+                return results;
+            }
+            String backupPath = exists ? backup(rootPath, batchNo, relPath, target) : null;
+            String finalContent = exists ? GenMergeUtils.merge(oldContent, content).content() : content;
+            Files.createDirectories(target.getParent());
+            Files.writeString(target, finalContent, StandardCharsets.UTF_8);
+            recordOutput(batchNo, anchor, "frontend", relPath, target.toString(),
+                    exists ? "OVERWRITTEN" : "WRITTEN", finalContent.getBytes(StandardCharsets.UTF_8).length,
+                    GenDigestUtils.md5Hex(finalContent.getBytes(StandardCharsets.UTF_8)), "",
+                    backupPath, currentMd5);
+            results.add(new GenWriteVO("dashboard", relPath, "WRITTEN", target.toString(), backupPath));
+        } catch (Exception e) {
+            log.warn("V9.15 看板共享文件写盘失败 {}：{}", relPath, e.getMessage());
+            results.add(new GenWriteVO("dashboard", relPath, "ERROR", e.getMessage()));
+        }
+        return results;
+    }
+
+    /**
      * 备份到 {@code <root>/.gen-backup/<batchNo>/<relPath>}，失败不阻断写盘（返回 null）
      */
     private String backup(Path rootPath, String batchNo, String relPath, Path target) {
@@ -726,7 +818,7 @@ public class GenCodeServiceImpl implements GenCodeService {
                 project.getDefaultDeleteCascadeMode(), project.getDefaultGenPrint(),
                 project.getProjectStructure(), project.getPayEnabled(), project.getMobileEnabled(),
                 project.getFileEnabled(), project.getTestEnabled(), project.getDefaultLanguage(),
-                project.getI18nEnabled());
+                project.getI18nEnabled(), project.getChartEnabled());
     }
 
     /**
@@ -891,6 +983,65 @@ public class GenCodeServiceImpl implements GenCodeService {
         SysProject project = projectMapper.selectById(projectId);
         projectCache.put(projectId, project);
         return project;
+    }
+
+    /**
+     * V9.15：聚合某项目下所有表的图卡清单（系统级看板用）。
+     *
+     * <p>逐表用与写盘同一份列模型 + GenTemplateModel.build 拿 charts，确保看板图卡与
+     * 每表 /stats 接口白名单口径一致（同源推导，杜绝两处各算一遍导致图卡点了 400）。
+     * 未开图表能力包的项目返回空清单（零侵入）。
+     */
+    private List<GenDashboardWriter.Card> chartCardsForProject(Long projectId) {
+        List<GenDashboardWriter.Card> cards = new ArrayList<>();
+        if (projectId == null) {
+            return cards;
+        }
+        SysProject project = projectMapper.selectById(projectId);
+        if (project == null || !GenTemplateModel.resolveChart(project.getChartEnabled())) {
+            return cards;
+        }
+        GenTemplateModel.ProjectConfig pcfg = new GenTemplateModel.ProjectConfig(
+                project.getRootPackage(), project.getGatewayPrefix(), project.getRootPackage(),
+                project.getProjectCode(), project.getDefaultDeleteCascadeMode(), project.getDefaultGenPrint(),
+                project.getProjectStructure(), project.getPayEnabled(), project.getMobileEnabled(),
+                project.getFileEnabled(), project.getTestEnabled(), project.getDefaultLanguage(),
+                project.getI18nEnabled(), project.getChartEnabled());
+        List<GenTable> tables = genTableMapper.selectList(new LambdaQueryWrapper<GenTable>()
+                .eq(GenTable::getProjectId, projectId)
+                .eq(GenTable::getDeleted, 0)
+                .orderByAsc(GenTable::getId));
+        for (GenTable t : tables) {
+            if (t.getMasterTableId() != null && t.getMasterTableId() > 0) {
+                continue; // 从表随主表，不出独立图卡
+            }
+            // 与 renderOne 同口径：applyOutputDefaults + autoDetectRefs，
+            // 否则某些表的开关/外键在 build 时还是默认值，charts 判定与写盘不一致 → 看板图卡点了 404
+            applyOutputDefaults(t);
+            List<GenTableColumn> cols = columnService.list(new LambdaQueryWrapper<GenTableColumn>()
+                    .eq(GenTableColumn::getTableId, t.getId()).orderByAsc(GenTableColumn::getSort));
+            autoDetectRefs(t, cols);
+            Map<String, Object> model = GenTemplateModel.build(t, cols, null, pcfg);
+            Object chartList = model.get("charts");
+            if (!(chartList instanceof List<?> list)) {
+                continue;
+            }
+            for (Object o : list) {
+                if (!(o instanceof Map<?, ?> cm)) {
+                    continue;
+                }
+                String field = String.valueOf(cm.get("field"));
+                String type = String.valueOf(cm.get("type"));
+                String title = String.valueOf(cm.get("title"));
+                String metric = String.valueOf(cm.get("metric"));
+                String range = cm.get("range") == null ? "30d" : String.valueOf(cm.get("range"));
+                String apiBase = model.get("apiBase") == null ? "" : String.valueOf(model.get("apiBase"));
+                cards.add(new GenDashboardWriter.Card(t.getTableName(),
+                        org.springframework.util.StringUtils.hasText(t.getModuleName()) ? t.getModuleName() : t.getTableName(),
+                        field, type, title, metric, range, apiBase));
+            }
+        }
+        return cards;
     }
 
     /**

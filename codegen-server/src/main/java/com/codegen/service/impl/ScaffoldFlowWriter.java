@@ -853,7 +853,7 @@ final class ScaffoldFlowWriter {
         StringBuilder sql = new StringBuilder(1024);
         sql.append("-- V6.1 产物流程表（幂等：CREATE TABLE IF NOT EXISTS）\n")
                 .append("CREATE TABLE IF NOT EXISTS `sys_flow_def` (\n")
-                .append("  `id` bigint NOT NULL,\n")
+                .append("  `id` bigint NOT NULL AUTO_INCREMENT,\n")
                 .append("  `flow_code` varchar(64) NOT NULL COMMENT '流程编码',\n")
                 .append("  `flow_name` varchar(64) NOT NULL COMMENT '流程名称',\n")
                 .append("  `table_name` varchar(64) NOT NULL COMMENT '业务表名',\n")
@@ -870,7 +870,7 @@ final class ScaffoldFlowWriter {
                 .append("  UNIQUE KEY `uk_flow_code` (`flow_code`, `deleted`)\n")
                 .append(") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程定义';\n\n")
                 .append("CREATE TABLE IF NOT EXISTS `sys_flow_task` (\n")
-                .append("  `id` bigint NOT NULL,\n")
+                .append("  `id` bigint NOT NULL AUTO_INCREMENT,\n")
                 .append("  `flow_code` varchar(64) NOT NULL,\n")
                 .append("  `biz_table` varchar(64) NOT NULL,\n")
                 .append("  `biz_id` bigint NOT NULL,\n")

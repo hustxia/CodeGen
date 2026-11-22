@@ -51,6 +51,9 @@ public class GenTemplateSeeder implements ApplicationRunner {
             new SeedMeta("saveDto", "保存 DTO", "backend", "${backendBase}/dto/${className}SaveDTO.java"),
             new SeedMeta("vo", "列表 VO", "backend", "${backendBase}/vo/${className}VO.java"),
             new SeedMeta("controller", "Controller", "backend", "${backendBase}/controller/${className}Controller.java"),
+            // V9.15 数据可视化图表：仅 chartStats 走模板（每表一个，有可图表化列才渲染）。
+            // 看板页/chartApi 是系统级跨表聚合，走 GenDashboardWriter Java 方法生成（同 V6.4 ApiPerms 理由），不进 gen_template。
+            new SeedMeta("chartStats", "图表聚合接口", "backend", "${backendBase}/controller/${className}StatsController.java"),
             new SeedMeta("apiJs", "前端 api.js", "frontend", "src/api/${moduleName}.js"),
             new SeedMeta("vuePage", "前端页面", "frontend", "src/views/${moduleName}/index.vue"),
             // V4.5 A4 打印单据：开关 gen_print 开启才渲染，独立于 index.vue 的单据版式页

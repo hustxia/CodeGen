@@ -239,6 +239,10 @@ public class SysProjectServiceImpl implements SysProjectService {
         projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
                 .eq(SysProject::getId, project.getId())
                 .set(SysProject::getFileEnabled, project.getFileEnabled()));
+        // V9.15 同款修复：chart_enabled 三态（NULL=关 / 1=生成 / 0=不生成）
+        projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
+                .eq(SysProject::getId, project.getId())
+                .set(SysProject::getChartEnabled, project.getChartEnabled()));
         // V6.7 同款修复：test_enabled 三态（NULL=未配置开 / 1=生成 / 0=不生成）
         projectMapper.update(null, new LambdaUpdateWrapper<SysProject>()
                 .eq(SysProject::getId, project.getId())

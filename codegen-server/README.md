@@ -4,11 +4,91 @@
 
 ---
 
+## At a glance
+
+**CodeGen turns a database schema into a complete Spring Boot + Vue business system — code that compiles, runs, and ships with menus, permissions and i18n.**
+
+- **Table-driven, not prompt-driven** — import DDL or connect your DB; one click generates Entity / Mapper / Service / Controller / DTO / VO, Vue pages, routes and menus from the same metadata, so front end and back end never drift apart.
+- **Quality gates built in** — real `javac` self-check, structural contract checks, `.gen-backup` batch backups, marker-block merge that preserves hand-written code, and a four-state ledger with one-click rollback.
+- **One-sentence system build** — a 12-step pipeline takes you from a plain-language description to a running system: create DB → scaffold → generate → seed data → register menus.
+- **Proven across industries** — full systems generated end to end for public security, apparel ERP, HR and manufacturing MES (screenshots below); generated pages support 206 languages out of the box.
+
+**Jump to:** [Showcase](#showcase) · [Quick Start](#10-quick-start) · [Documentation](#11-documentation-map) · [Contributing](CONTRIBUTING.md)
+
+**From DDL to a running system — real screenshots, no mockups:**
+
+[![CodeGen demo reel: 8 real generated systems](docs/images/showcase/demo.gif)](docs/images/showcase/demo.gif)
+
+<details>
+<summary><b>Why CodeGen? Comparison with other approaches</b></summary>
+
+| Dimension | Traditional CRUD generator | Low-code platform | Prompt-only tool | CodeGen |
+| --- | --- | --- | --- | --- |
+| Input | One-table config | Drag-and-drop model | Natural language | DDL / live DB connection |
+| Front/back consistency | Manually aligned | Platform-internal | Not guaranteed | Same metadata, zero drift |
+| Compile self-check | Rare | Platform-managed | None | Real `javac` self-check |
+| Merge with existing code | Overwrite risk | Platform lock-in | N/A | Marker-block merge preserves hand-written code |
+| Rollback | None | Platform snapshot | None | Four-state ledger + one-click rollback |
+| i18n | Separate work | Partial | Model-dependent | 206-language framework, 8 professionally translated |
+| Deliverable | Code snippets | Platform-only app | Text | Compilable, runnable full project |
+
+</details>
+
+**60-second quick start** (commands verified; full guide in [Quick Start](#10-quick-start)):
+
+```bash
+mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
+mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
+cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
+mvn package -DskipTests
+java -jar target/codegen-server.jar
+```
+
+Then `cd ../codegen-web && npm install && npm run serve`, open `http://localhost:9530`, login `admin / admin123`.
+
+> Stuck? Open a [Discussion](https://github.com/hustxia/CodeGen/discussions) with the full error message. If this saved you time, a Star helps other developers find it.
+
+---
+
 > **Language support**: generated systems ship with full-page internationalization built in. The framework supports switching and fallback across **206 languages**; **8 are professionally translated** (zh-CN, en-US, ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA), and all others fall back to Simplified Chinese. Want to contribute a translation? See [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md).
 
-> A multi-project code generator for **Spring Boot + Vue**: starting from database table structures, it produces **compilable, runnable, menu-and-permission-ready** front-end and back-end business code, and handles the full delivery loop of writing to disk, backup, ledgering and rollback.
+> A **code generator** and **low-code scaffold** for **Spring Boot 3 + Vue3**: starting from database table structures (DDL-to-code), it produces **compilable, runnable, menu-and-permission-ready** front-end and back-end CRUD, and supports a **one-sentence system build** — the full delivery loop of writing to disk, backup, ledgering and rollback.
 
 GitHub: https://github.com/hustxia/CodeGen
+
+<a id="showcase"></a>
+
+## Showcase · Systems Built with CodeGen
+
+> Real, runnable systems generated end-to-end by this generator — from database tables to front-end pages, menus and permissions. Not mockups: every list below is backed by live data. Click any image to view full size.
+
+**Public security · 64 pages / 79 tables** — one-sentence build from a functional design doc, with district data, police-calling records and key-place ledgers.
+
+| 110 dispatch & incident registration | Key-place register |
+| :---: | :---: |
+| [![110 dispatch](docs/images/showcase/police-110-dispatch.png)](docs/images/showcase/police-110-dispatch.png) | [![Key places](docs/images/showcase/police-key-places.png)](docs/images/showcase/police-key-places.png) |
+
+**Apparel ERP · 71 pages** — style/color/size matrix, BOM, dye-lot traceability and sell-through analytics.
+
+| Style-color-size SKU | Sell-through & replenishment analytics |
+| :---: | :---: |
+| [![SKU matrix](docs/images/showcase/garment-sku.png)](docs/images/showcase/garment-sku.png) | [![Sell-through](docs/images/showcase/garment-sellthrough.png)](docs/images/showcase/garment-sellthrough.png) |
+
+**Smart HR · 68 pages** — organization, recruiting, attendance, payroll and performance across 14 HR domains.
+
+| Payroll calculation | Interview scheduling |
+| :---: | :---: |
+| [![Payroll](docs/images/showcase/hr-payroll.png)](docs/images/showcase/hr-payroll.png) | [![Interview](docs/images/showcase/hr-interview.png)](docs/images/showcase/hr-interview.png) |
+
+**Manufacturing MES · 68 pages** — work orders, quality gates, equipment, batch/serial traceability and Andon.
+
+| Production work order | Batch traceability chain |
+| :---: | :---: |
+| [![Work order](docs/images/showcase/mes-work-order.png)](docs/images/showcase/mes-work-order.png) | [![Traceability](docs/images/showcase/mes-traceability.png)](docs/images/showcase/mes-traceability.png) |
+
+> Each system went through the same 12-step pipeline: DDL preview → build database → generate → seed data → full-page verification (zero empty lists, zero page errors). See the CSDN walkthroughs linked in [Documentation Map](#11-documentation-map).
+
+---
 
 ## 1. What Is This
 
@@ -225,6 +305,13 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 | Document | Content |
 | --- | --- |
+| `docs/images/showcase/demo.gif` | 8-frame demo reel built from the real screenshots below |
+| `docs/images/showcase/` | Real system screenshots — public security / apparel ERP / smart HR / manufacturing MES |
+| `docs/blog/智慧警务系统-CSDN博客.html` | Publish-ready CSDN HTML: 64-page public-security system, 12-step pipeline and pitfall notes |
+| `docs/blog/服装ERP系统-CSDN博客.html` | Publish-ready CSDN HTML: 71-table apparel ERP, SKU matrix and sell-through analytics |
+| `docs/blog/智慧人力资源系统-CSDN博客.html` | Publish-ready CSDN HTML: 83 tables → 68 pages, payroll and recruiting |
+| `docs/blog/制造业MES系统-CSDN博客.html` | Publish-ready CSDN HTML: 83 tables → 68 pages, work orders and traceability |
+| `docs/blog/代码生成器多行业落地-CSDN博客.html` | Publish-ready CSDN HTML: four-industry retrospective of the same pipeline |
 | `docs/代码生成器-操作手册.md` (Chinese) | Deployment, 5-minute start, table config, batch intake, template management, ledger, API catalog, full pipeline (with screenshots) |
 | `docs/典型场景操作指南-演示后台demo.md` (Chinese) | 6 tables covering 5 typical scenarios, with runnable demo and real-run screenshots |
 | `docs/项目介绍.md` | Project introduction document, same source as this file |
@@ -275,7 +362,14 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
 | **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
 | **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
-| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
+| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607 |
+| **V9.9** | **Industry template library scaled to 250+ packs / 19 categories / 2100+ tables: reusable domain blueprints + generator script (scripts/gen_industry_templates.py); templates list is now lightweight (no table detail) with on-demand detail endpoint + category filter/search; 464/464 tests green** | 7e16b72 (web 7a5d1c7) |
+| **V9.10** | **Industry template field expansion: 2191 tables enriched with business fields by table semantics (id code / doc no / amount / contact / time range / content / sort / status / remark), avg 6.12 → 7.87 columns, status 100% + remark 96% + code/no 82% coverage; semantic equivalence groups prevent duplicate columns; fixed legacy prescription create_time collision with audit column (would break DDL); 465/465 tests green** | 11efe55 |
+| **V9.11** | **Industry templates become full systems: +15 common platform tables (approval workflow, attachments, audit log, tasks, messages, dictionary, config) + 10-15 domain-specific tables per category (19 categories, 248 tables total). Every template now has 29-45 tables (avg 34.8, was 8.6) and 10-20 columns per table (avg 14.25, was 7.87); semantic field enrichment with auxiliary-table awareness; 466/466 tests green** | 16d39ec |
+| **V9.12** | **Dedicated smart-village template village_affairs (85 tables / 1414 columns) + full-chain generator fixes: Tag vs Swagger @Tag ambiguity, fat-jar self-check classpath, scaffold package placeholder & test base sources, pipeline absolute paths, Vue3 dev/vite deploy, stale failReason cleanup, Vue3 page legacy fixes. End-to-end: 12/12 pipeline steps success, generated system running (backend 8140 / frontend 9040), 90 .vue pages compile with 0 errors; 468/468 tests green** | 25e2dcc..3fabb7b |
+| **V9.13** | **Smart-village system hardening: replan menu into 12 business domains (replacing 'Other/66 pages'); seed data for 28 tables (98 menus, 5 users, household/land/asset/party/service/flow data, all interlinked); full approval flow verified end-to-end (submit 0-1, approve 1-2, reject 1-3). Fixed two generator defects: flow tables sys_flow_def/sys_flow_task id missing AUTO_INCREMENT (submit 500), auth filter not injecting userId (approve 403, audit create_by null); 3 anti-regression tests, 468/468 green** | 049027a..e4b9df2 |
+| **V9.14** | **Smart-village UI & data hardening: Chinese field labels (52 foreign-key comments fixed at source + 129 page labels synced), 12 business-domain menu icons, real-time dashboard stats (DashboardController whitelist COUNT + 12 stat cards), demo data for all 90 business tables (100% coverage, real foreign-key links). Fixed 3 script-level pitfalls (invalid Map icon, date-rule misfire, English-token comments); 3 new contract tests, 474/474 green** | 039ae7e |
+| **V9.15** | **Data visualization chart capability pack (generic / domain-agnostic): chart_enabled tri-state switch (NULL/0=off, 1=on; chart-off output byte-identical); GenChartDeriver infers pie/line/bar/gauge purely from column metadata with zero domain keywords; per-table /{module}/stats aggregation endpoint with generation-time field whitelist against SQL injection; ECharts ChartCard + cross-table dashboard with series colors following --app-primary; scaffold / write-to-disk / ZIP / router / dependency full-chain injection; 486/486 platform tests green, 64 generated StatsControllers compiled, 4 chart types rendered in a real browser with 0 console errors** | 69d5a06 (web 5097231), **current** |
 
 ---
 
@@ -283,7 +377,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ## 13. Project Status
 
-- The current released version is **V9.8** (multi-pipeline concurrent runs via `PipelineRunGate` + startup recovery for orphaned `running` pipelines after restart). It builds on **V9.7** (fast table creation: two-phase skeleton generation + industry template library), **V9.6** (batched AI modeling jobs for large/huge systems), **V9.5** (AI table recommendation with human confirmation), **V9.4** (staged confirmation), **V9.2** (test center + verification hub), **V9.1** (byte-identical maintainability refactor), **V9.0** (Vue 3 + Element Plus + Vite generated artifacts), **V8.1** (quality gate) and **V8.0** (full-page i18n). Language support verified on 2026-11-13: 206/206 locales, 12 RTL, 8 translated word banks key-identical to zh-CN (60 keys each).
+- The current released version is **V9.15** (generic data visualization chart capability pack: `chart_enabled` tri-state switch, domain-agnostic `GenChartDeriver`, per-table `/{module}/stats` endpoints, ECharts `ChartCard` + cross-table dashboard; chart-off output byte-identical). It builds on **V9.14** (smart-village UI & data hardening), **V9.13** (smart-village system hardening), **V9.12** (dedicated village template + full-chain fixes), **V9.11** (industry templates as full systems), **V9.10** (field expansion), **V9.9** (250+ template packs), **V9.8** (multi-pipeline concurrent runs via `PipelineRunGate` + startup recovery for orphaned `running` pipelines), **V9.7** (fast table creation), **V9.6** (batched AI modeling), **V9.5** (AI table recommendation), **V9.4** (staged confirmation), **V9.2** (test center + verification hub), **V9.1** (byte-identical refactor), **V9.0** (Vue 3 + Element Plus + Vite), **V8.1** (quality gate) and **V8.0** (full-page i18n). Language support verified on 2026-11-13: 206/206 locales, 12 RTL, 8 translated word banks key-identical to zh-CN (60 keys each).
 - A companion demo project `demo_admin` (backend 8140 / frontend 9040) covers tree / CRUD / master-detail / read-only / print scenarios and runs standalone for verification.
 - Both repositories are hosted on Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

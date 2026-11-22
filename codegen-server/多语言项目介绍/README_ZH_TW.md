@@ -2,14 +2,17 @@
 
 > Languages: [简体中文](README_ZH.md) · **繁體中文** · [English](README.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
 
-
 ---
-
-> **多語言支援**：生成的系統內建整頁國際化，框架涵蓋 **206 種語言**並可自動回退；其中 **8 種為專業翻譯**（zh-CN、en-US、ja-JP、ko-KR、fr-FR、de-DE、es-ES、ar-SA），其餘語言統一回退到簡體中文。想貢獻翻譯？見 [`多語言項目介紹/CONTRIBUTING.md`](多語言項目介紹/CONTRIBUTING.md)。
 
 > 一個針對 **Spring Boot + Vue** 的多專案程式碼產生器：從資料庫表結構出發，產出**可編譯、可執行、具備選單與權限**的前後端業務程式碼，並處理寫入磁碟、備份、記帳與回滾的完整交付流程。
 
 GitHub: https://github.com/hustxia/CodeGen
+
+> **目前版本 V9.8 · 多流水線並發執行 + 啟動復原：`PipelineRunGate` 全域並發上限（`max-running`）與同系統互斥取代單執行緒執行器 + 全域執行標記；服務重啟後處於 `running` 的孤兒流水線自動置 failed。先前版本：V9.7 快速建表（骨架生成實測提速約 3.6 倍 + 電商/ERP/CRM/CMS 行業模板庫）、V9.6 大型/超大型分批建模任務、V9.5 AI 建表推薦與人工確認、V9.4 分階段確認**
+> **V9.1 · 可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9**
+> **V9.0 · 生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷**
+> **V8.1** · 品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs
+> **V8.0** · 全頁面國際化：206 語言框架（8 種精譯），雙軌制 i18n、OFF 逐位元組零 diff 契約
 
 ## 1. 這是什麼
 
@@ -71,7 +74,7 @@ Table intake (DB import / DDL)
 | 列印文件 | 勾選「列印」開關產出 A4 列印頁面與路由，含表頭 + 明細表 |
 | 一句話建系統 | 描述業務領域——AI 一次性建立資料庫與資料表 + 腳手架 + 完整產生 + 選單註冊 |
 
-> 所有場景皆有可執行示範（`demo_admin` 專案）與螢幕截圖——詳見 `docs/典型场景操作指南-演示后台demo.md`（中文）。
+> 所有場景皆有可執行示範（`demo_admin` 專案）與螢幕截圖——詳見 `../codegen-server/docs/典型场景操作指南-演示后台demo.md`（中文）。
 
 ---
 
@@ -224,11 +227,11 @@ npm run serve
 
 | 文件 | 內容 |
 | --- | --- |
-| `docs/代码生成器-操作手册.md` (中文) | 部署、5 分鐘上手、表設定、批次匯入、模板管理、記帳、API 目錄、完整管線（含截圖） |
-| `docs/典型场景操作指南-演示后台demo.md` (中文) | 6 張表涵蓋 5 個典型場景，含可執行示範與實際執行截圖 |
-| `docs/项目介绍.md` | 專案介紹文件，與本文件同源 |
-| `docs/代码生成器-Vx.x-规划.md` | V3.1 → V7.3 的版本規劃與功能清單 |
-| `codegen-web/README.md` | 前端控制台快速上手參考 |
+| `../codegen-server/docs/代码生成器-操作手册.md` (中文) | 部署、5 分鐘上手、表設定、批次匯入、模板管理、記帳、API 目錄、完整管線（含截圖） |
+| `../codegen-server/docs/典型场景操作指南-演示后台demo.md` (中文) | 6 張表涵蓋 5 個典型場景，含可執行示範與實際執行截圖 |
+| `项目介绍.md` | 專案介紹文件，與本文件同源 |
+| `../codegen-server/docs/代码生成器-Vx.x-规划.md` | V3.1 → V9.8 的版本規劃與功能清單 |
+| `../codegen-web/README.md` | 前端控制台快速上手參考 |
 
 ---
 
@@ -261,30 +264,24 @@ npm run serve
 | V7.0 | AI 頁面與選單推薦（預覽 / 套用） | V7.0（94 行），45f2670 |
 | V7.1 | 種子資料 AI 增強（AI 負責語意，規則負責結構） | V7.1（42 行），5ca6e72 |
 | V7.2 | 管線成功後將 SQL 交付物寫入 `db/` | eebff88 |
-| **V7.3** | **交付可信度：自檢已編譯產出物測試 / 統一 SQL 交付出口 / 逐表 AI 推薦** | **V7.3（138 行）** |
+| **V7.3** | **交付可信度：自檢已編譯產出物測試 / 統一 SQL 交付出口 / 逐表 AI 推薦** | **V7.3（138 行）, 696765b** |
 | **V7.4** | 可重複交付：可從空資料庫部署，每次提交保證可執行 | c306e29 |
-| **V7.5** | 專案語言設定：206 語言清單 / 預設語言 / 啟用語言，生成物 lang 與 dir 注入 | 7a9afa0 + abac56d |
-| **V8.0** | 全頁面國際化：206 語言框架（8 種精譯），雙軌制 i18n、OFF 逐位元組零 diff 契約 | 9e5dd57 → 7d57aea |
-| **V8.1** | 品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
-| **V9.0** | 生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷 | 93a12d5 + e49330b  |
+| **V7.5** | **專案語言設定：206 語言清單 / 預設語言 / 啟用語言，生成物 lang 與 dir 注入** | 7a9afa0 + abac56d |
+| **V8.0** | **全頁面國際化：206 語言框架（8 種精譯），雙軌制 i18n、OFF 逐位元組零 diff 契約** | 9e5dd57 → 7d57aea |
+| **V8.1** | **品質加固：離線契約 harness（9 模式 OFF 零 diff）+ i18n-core 單元測試 + CI 關卡 + README 誠實拆分（框架 206 / 精譯 8）+ check-locale-keys.mjs** | 93a12d5 + e49330b |
+| **V9.0** | **生成物現代化：Vue 3 + Element Plus + Vite；執行期驗證（40/40 斷言、vite build 成功、14 張截圖含 ar-SA RTL）；修復 3 個執行期缺陷** | 93a12d5 + e49330b  |
 | **V9.1** | **可維護性重構：GenScaffoldServiceImpl 5072 → 931 行拆為 8 個 Writer；產物逐位元組零差異（新舊 jar 共 119 + 62 檔案 diff -r 為空）；312/312 單測；離線 i18n 契約 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **測試中心+驗證中心：用例中心 7 表 / 驗證中心 9 套件（S1-S9，全局 409 單跑鎖，CI 共享 JSON 摘要）；373/373 單測（新增 50），i18n 契約 9/9** | V9.2 release, **目前版本** |
+| **V9.2** | **測試中心與驗證中心：把介面/UI 用例資產（7 張表）與平台驗證資產（S1–S9 套件、三層落庫、統一 JSON 摘要）合併為一個版本；產物零差異，373/373 單測，206/206 語言鍵** | 8be92a9 + f9f16d2 |
 | **V9.3** | **生成產物執行期修復（模板 3 處 Vue2 遺留）+ 驗證中心前端接入 + 一句話建系統端到端跑通（自檢/子進程路徑/前端啟動/重跑清場）；96 份多語言文檔版本歷史同步至 V9.3** | 52f3bab / 8dabbd1 / 85e279c |
 | **V9.4** | **一句話建系統分階段確認：AI 推薦 → 編輯/預覽（同源 DDL 唯讀）→ 確認落草稿/建庫，階段門禁；DDL 預覽與建庫執行共用同一組裝方法，所見即所得** | b3f0587（含遺留入庫） |
 | **V9.5** | **AI 建表推薦與人工確認（/gen/ai-build）：AI 推薦表結構 → 可編輯 → 同源 DDL 預覽 → 確認落草稿/建庫；補表按目標系統已有表做差集，服務端硬過濾重複表** | 570f6fc + 3104317 |
 | **V9.6** | **大型/超大型分批建模任務：任務/批次兩表落庫，條件更新認領調度（2s tick 多 worker 多實例安全），超時回收重試（900s/2 次），前端 2s 輪詢批次進度；實測 11 批/70 表/8s（stub 4 worker）；流水線號防撞（4 位序號 + uk_no 換號重試）** | 5a2bcac + ecbe2ba |
 | **V9.7** | **快速建表：兩段式骨架生成（AI 只列表名/註釋/欄位名，型別與主鍵由命名語義規則補全，真模型實測 3m13s → 54s，約 3.6 倍）+ 行業模板庫（電商/ERP/CRM/CMS 四套 JSON 模板包，與 AI 同收口克隆，秒級零 AI）** | d38ba7c + fd2440c |
 | **V9.8** | **多流水線並發執行：PipelineRunGate 閘門（全局 max-running 上限 + 同系統互斥，跨系統並行安全）取代單執行緒執行器 + 全域 AtomicBoolean；啟動恢復——服務重啟後 running 孤兒狀態自動置 failed（修復實際事故）；462/462 單測全綠** | 157f5ca + 07e8607, **目前版本** |
-| **V9.9** | **行業模板庫擴至 250+ 套 / 19 大類 / 2100+ 表：可複用領域藍圖 + 生成腳本；模板清單改為輕量（不含表明細），明細按需載入，支援分類篩選與搜尋；464/464 單測全綠** | pending, **current** |
-| **V9.10** | **行業模板欄位展開：2191 張表依表語義補業務欄位（編碼/單號/金額/聯絡方式/時間區間/正文/排序/狀態/備註），平均每表 6.12 → 7.87 欄，狀態 100% / 備註 96% / 編碼 82% 覆蓋；語義等價組避免重複欄；修復處方表 create_time 與審計欄撞名；465/465 單測全綠** | pending, **current** |
-| **V9.11** | **行業模板升級為完整系統：每套追加 15 張平台通用表（審批流/附件/操作日誌/任務/訊息/字典/設定）+ 所屬分類 10-15 張專屬業務表（19 大類共 248 張）。每套 29-45 張表（平均 34.8，原 8.6）、每表 10-20 欄位（平均 14.25，原 7.87）；欄位深化依輔助表語義避免假欄位；466/466 單測全綠** | pending, **current** |
-| **V9.12** | **Dedicated smart-village template: village_affairs (85 tables / 1414 columns) covering household registration, land rights, three-asset management, party governance, three-affairs disclosure, convenience services, human settlement and sentiment analytics; dedicated generator script with Chinese column-comment dictionary, idempotent and audit-safe; generic deepening scripts skip dedicated templates; 467/467 tests green** | pending, **current** |
-| **V9.13** | **Smart-village system hardening: replan menu into 12 business domains (replacing 'Other/66 pages'); seed data for 28 tables (98 menus, 5 users, household/land/asset/party/service/flow data, all interlinked); full approval flow verified end-to-end (submit 0-1, approve 1-2, reject 1-3). Fixed two generator defects: flow tables sys_flow_def/sys_flow_task id missing AUTO_INCREMENT (submit 500), auth filter not injecting userId (approve 403, audit create_by null); 3 anti-regression tests, 468/468 green** | 049027a, **current** |
-| **V9.14** | **Smart-village UI & data hardening: Chinese field labels (52 foreign-key comments fixed at source + 129 page labels synced), 12 business-domain menu icons, real-time dashboard stats (DashboardController whitelist COUNT + 12 stat cards), demo data for all 90 business tables (100% coverage, real foreign-key links). Fixed 3 script-level pitfalls (invalid Map icon, date-rule misfire, English-token comments); 3 new contract tests, 474/474 green** | 039ae7e, **current** |
 
 ---
 
-> **V6.10 平台可觀測性**：整合 Actuator + Micrometer，每 5 秒取樣至記憶體環形緩衝區（30 分鐘視窗），並新增內嵌「系統監控」頁面——後端 `/monitor/*` 聚合 API + 前端 ECharts 面板。僅開放 `health/info/metrics` 端點；`/actuator/health` 免令牌，而 `metrics` 等需驗證；`env/beans/heapdump/threaddump/loggers` 永不暴露。取樣視窗僅限單一程序，重啟即遺失，且不跨實例共享。詳見 `docs/可观测性说明.md`（中文）。
+> **V6.10 平台可觀測性**：整合 Actuator + Micrometer，每 5 秒取樣至記憶體環形緩衝區（30 分鐘視窗），並新增內嵌「系統監控」頁面——後端 `/monitor/*` 聚合 API + 前端 ECharts 面板。僅開放 `health/info/metrics` 端點；`/actuator/health` 免令牌，而 `metrics` 等需驗證；`env/beans/heapdump/threaddump/loggers` 永不暴露。取樣視窗僅限單一程序，重啟即遺失，且不跨實例共享。詳見 `../codegen-server/docs/可观测性说明.md`（中文）。
 
 ## 13. 專案狀態
 
@@ -301,39 +298,3 @@ npm run serve
 - **技術支援**：請以**中文**撰寫電子郵件，內容包含問題描述、執行環境（JDK / MySQL / 版本）與重現步驟
 
 > 我閱讀並回覆每一封郵件。錯誤回報、功能建議與合作洽詢皆歡迎。
-
----
-
-## 十五、同類產品比較
-
-CodeGen 既不是片段程式碼產生器，也不是全堆疊低程式碼平台——它處在一個非常具體的生態位。下面是它和 Spring Boot / Java 生態裡常見工具的定位對比。
-
-### vs. 片段產生輔助工具（JPA Buddy · MapStruct · Spring Initializr）
-
-**JPA Buddy**、**MapStruct**、**Spring Initializr** 這類工具擅長腳手架和小範圍開發提效，但產物都是**片段**：一個實體類、一個 Mapper 介面、幾份 DTO 轉換 helper，或者一個空專案殼。CRUD 頁面、選單、路由、權限碼仍然要你手動接；表欄位一改，重新手工改一輪。
-
-CodeGen 產出的是**零修改可跑的完整垂直切片**：後端（Entity → Mapper → Service → Controller → DTO/VO）+ 前端（`api.js` + Vue 頁面 + A4 列印頁）+ 選單 + 路由註冊。貼上 DDL、點一下產生，功能直接上線。
-
-### vs. 腳手架框架（JeecgBoot · RuoYi · dlow）
-
-**JeecgBoot**、**RuoYi** 這類框架是先給你一套完整的後台管理基座，再在上面掛一個程式碼產生器。你必須 **fork 他們的腳手架**，承擔他們的約定、認證層、選單 schema、檔案佈局，以及——關鍵——他們的版本升級路徑。產生器**繼承了父框架的偏見**（比如動態資料來源約定、Shiro/Spring Security 選擇、前端技術鎖死）。
-
-CodeGen 走的是另一條路：**絕不碰觸目標工程的基礎設施**。它假設你的專案已經具備 `Result`、`BaseEntity`、`PageQuery`、`PaginationInnerInterceptor`、以及一個能傳回 `{list, total}` 的 `utils/request.js`。它只做一件事——在你現有的目錄佈局裡**乾淨地丟進業務程式碼**，和你已經選好的認證堆疊、UI 框架、專案約定並存。不 fork。不劫持約定。乾淨、精準。
-
-### vs. 腳手架內建產生器（雲宅 · JeecgBoot 內建 · RuoYi 內建）
-
-不少腳手架現在都內建了程式碼產生器，跑出來產物是能用的——但品質護欄普遍偏弱：沒有真實編譯校驗、沒有結構化契約測試、沒有模板版本管理、沒有回滾、沒有變更台帳。一旦模板改動生成了壞掉的產物，你只能到執行時才發現。
-
-CodeGen 的**品質護欄鏈**是它和這些內建產生器最本質的差異：
-
-| 環節 | 它實際做了什麼 |
-|---|---|
-| 預覽與差異 | 先在記憶體產生，逐檔案渲染對磁碟目前狀態的 diff，確認後才寫盤 |
-| 寫盤帶備份 | 每個被改動的檔案在覆蓋前都會拷貝到 `.gen-backup/<批次號>/` |
-| 標記區合併 | `// gen:begin-end` 之間的手寫程式碼原樣保留，只替換生成區 |
-| 記憶體自檢驗證 | 對所有產生的後端產物跑一次**真實 `javac` 編譯**（不是正則式 lint）——沒編譯過的檔案不會落盤 |
-| 獨立 classpath 編譯 | 產生的整合測試用目標工程自己的 classpath 再編譯一次——缺什麼依賴寫盤時報什麼，不是執行時才炸 |
-| 四狀態台帳 | `gen_output` 把每個檔案記為 **created / merged / skipped / failed**，附帶位元組數、MD5、備份路徑 |
-| 批次級回滾 | 任意一批產生可一鍵回滾，恢復到那一批執行前的精確狀態 |
-
-預覽 → 備份 → 合併 → javac 自檢 → classpath 編譯 → 台帳 → 回滾，這**七環品質護欄**——據作者所知，**市面上主流腳手架的內建產生器沒有一家是完整具備的**。

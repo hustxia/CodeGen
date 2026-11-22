@@ -272,6 +272,13 @@ npm run serve
 | **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
 | **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
 | **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
+| **V9.9** | **업계 템플릿 라이브러리를 250+세트 / 19개 분류 / 2100+테이블로 확장: 재사용 도메인 블루프린트 + 생성 스크립트; 목록은 경량(테이블 상세 제외), 상세는 필요 시 로드, 분류 필터·검색 지원; 464/464 테스트 통과** | pending, **current** |
+| **V9.10** | **업계 템플릿 필드 확장: 2191개 테이블에 테이블 의미에 맞는 비즈니스 필드(코드/전표번호/금액/연락처/기간/본문/정렬/상태/비고) 추가, 테이블당 평균 6.12 → 7.87열, 상태 100% / 비고 96% / 코드 82% 커버리지; 의미 동등 그룹으로 중복 열 방지; 처방전 create_time과 감사 열 충돌 수정; 465/465 테스트 통과** | pending, **current** |
+| **V9.11** | **업계 템플릿을 완전한 시스템으로 업그레이드: 각 템플릿에 공통 플랫폼 테이블 15개(결재/첨부/로그/작업/메시지/사전/설정) + 해당 분야 전용 테이블 10~15개(19개 분류 총 248개) 추가. 템플릿당 29~45개 테이블(평균 34.8, 기존 8.6), 테이블당 10~20개 열(평균 14.25, 기존 7.87); 보조 테이블 의미를 고려한 필드 확장; 466/466 테스트 통과** | pending, **current** |
+| **V9.12** | **Dedicated smart-village template: village_affairs (85 tables / 1414 columns) covering household registration, land rights, three-asset management, party governance, three-affairs disclosure, convenience services, human settlement and sentiment analytics; dedicated generator script with Chinese column-comment dictionary, idempotent and audit-safe; generic deepening scripts skip dedicated templates; 467/467 tests green** | pending, **current** |
+| **V9.13** | **Smart-village system hardening: replan menu into 12 business domains (replacing 'Other/66 pages'); seed data for 28 tables (98 menus, 5 users, household/land/asset/party/service/flow data, all interlinked); full approval flow verified end-to-end (submit 0-1, approve 1-2, reject 1-3). Fixed two generator defects: flow tables sys_flow_def/sys_flow_task id missing AUTO_INCREMENT (submit 500), auth filter not injecting userId (approve 403, audit create_by null); 3 anti-regression tests, 468/468 green** | 049027a, **current** |
+| **V9.14** | **Smart-village UI & data hardening: Chinese field labels (52 foreign-key comments fixed at source + 129 page labels synced), 12 business-domain menu icons, real-time dashboard stats (DashboardController whitelist COUNT + 12 stat cards), demo data for all 90 business tables (100% coverage, real foreign-key links). Fixed 3 script-level pitfalls (invalid Map icon, date-rule misfire, English-token comments); 3 new contract tests, 474/474 green** | 039ae7e, **current** |
+| **V9.15** | **데이터 시각화 차트 기능 팩(범용·도메인 비종속): chart_enabled 3상 스위치(NULL/0=꺼짐, 1=켜짐, 꺼짐 시 산출물 바이트 동일); GenChartDeriver가 열 메타데이터만으로 원/선/막대/게이지를 추론하며 도메인 키워드 0; 테이블별 /{module}/stats 집계 엔드포인트, 생성기 필드 화이트리스트로 SQL 인젝션 방지; ECharts 차트 카드 + 교차 테이블 대시보드, 시리즈 색상은 --app-primary 추종; 486/486 테스트 통과, 산출물 64개 StatsController 컴파일 통과, 실제 브라우저에서 4종 차트 콘솔 오류 0 렌더링** | 69d5a06 (web 5097231), **current** |
 
 ---
 
@@ -279,7 +286,7 @@ npm run serve
 
 ## 13. 프로젝트 현황
 
-- 현재 계획 버전 라인은 **V9.2**에 도달했으며, 기능은 지속적으로 반복 개선 중입니다 (AI 모델링, 시드 데이터 강화, 기능 팩 체계 등).
+- 현재 계획 버전 라인은 **V9.8**에 도달했으며, 기능은 지속적으로 반복 개선 중입니다 (AI 모델링, 시드 데이터 강화, 기능 팩 체계 등).
 - 동반 데모 프로젝트 `demo_admin`(백엔드 8140 / 프론트엔드 9040)이 준비되어 있으며, 트리 / CRUD / 마스터-디테일 / 읽기 전용 / 인쇄 전 시나리오를 커버하고 독립적으로 실행·검증할 수 있습니다.
 - 두 리포지토리 모두 Gitee에 호스팅되어 있습니다: `https://gitee.com/hustxiayuhong/CodeGen.git`
 

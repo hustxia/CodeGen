@@ -69,7 +69,7 @@ export default {
         this.$message.error((res && res.msg) || '上传失败')
         return
       }
-      this.$set(this.nameMap, res.data.url, res.data.name)
+      this.nameMap[res.data.url] = res.data.name
       this.fileId = res.data.id
       this.$emit('input', res.data.url)
       this.$emit('uploaded', res.data)

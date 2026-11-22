@@ -4,11 +4,45 @@
 
 > 语言 / Language: **中文** · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · [Español](README_ES.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [हिन्दी](README_HI.md) · [العربية](README_AR.md) · [বাংলা](README_BN.md) · [Русский](README_RU.md) · [اردو](README_UR.md)
 
+> **多语言支持**：生成的系统内置整页国际化，框架覆盖 **206 种语言**并可自动回退；其中 **8 种为专业翻译**（zh-CN、en-US、ja-JP、ko-KR、fr-FR、de-DE、es-ES、ar-SA），其余语言统一回退到简体中文。想贡献翻译？见 [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md)。
+
 > 面向 **Spring Boot + Vue** 的多工程代码生成器：从数据库表结构出发，产出**可编译、可运行、带菜单权限**的前后端业务代码，并负责写盘、备份、记账、回滚的完整交付闭环。
 
 ---
 github 地址：https://github.com/hustxia/CodeGen
 
+
+## 实战截图 · 用 CodeGen 生成的系统
+
+> 以下都是本生成器端到端生成的**真实可运行系统**——从数据库建表到前端页面、菜单与权限一应俱全。绝非示意图：每张图对应的列表都灌有真实数据。点击图片可查看大图。
+
+**智慧警务 · 64 页 / 79 表** —— 依据功能设计文档一句话建系统，覆盖辖区数据、接处警记录、重点场所台账。
+
+| 110 接警与警情登记 | 重点场所台账 |
+| :---: | :---: |
+| [![110接警](docs/images/showcase/police-110-dispatch.png)](docs/images/showcase/police-110-dispatch.png) | [![重点场所](docs/images/showcase/police-key-places.png)](docs/images/showcase/police-key-places.png) |
+
+**服装 ERP · 71 页** —— 款色码矩阵、BOM 物料清单、缸号批次追溯、售罄率动销分析。
+
+| 款色码 SKU | 售罄率与翻单分析 |
+| :---: | :---: |
+| [![款色码SKU](docs/images/showcase/garment-sku.png)](docs/images/showcase/garment-sku.png) | [![售罄率](docs/images/showcase/garment-sellthrough.png)](docs/images/showcase/garment-sellthrough.png) |
+
+**智慧人力资源 · 68 页** —— 组织人事、招聘、考勤、薪酬、绩效共 14 个 HR 业务域。
+
+| 薪资核算 | 面试安排 |
+| :---: | :---: |
+| [![薪资核算](docs/images/showcase/hr-payroll.png)](docs/images/showcase/hr-payroll.png) | [![面试安排](docs/images/showcase/hr-interview.png)](docs/images/showcase/hr-interview.png) |
+
+**制造业 MES · 68 页** —— 生产工单、质量门禁、设备管理、批次序列号追溯、安灯异常。
+
+| 生产工单 | 批次追溯链路 |
+| :---: | :---: |
+| [![生产工单](docs/images/showcase/mes-work-order.png)](docs/images/showcase/mes-work-order.png) | [![追溯链路](docs/images/showcase/mes-traceability.png)](docs/images/showcase/mes-traceability.png) |
+
+> 每套系统都走过同一条 12 步流水线：DDL 预览 → 建库 → 生成 → 灌数据 → 全页验收（零空列表、零页面错误）。实战博文见[文档导航](#十一文档导航)。
+
+---
 
 ## 一、这是什么
 
@@ -224,6 +258,7 @@ npm run serve
 
 | 文档 | 内容 |
 | --- | --- |
+| `docs/images/showcase/` | 真实系统实战截图——智慧警务 / 服装 ERP / 智慧人力 / 制造业 MES |
 | `docs/代码生成器-操作手册.md` | 部署、五分钟上手、表配置、批量接管、模板管理、台账、接口目录、流水线全流程（含实拍截图） |
 | `docs/典型场景操作指南-演示后台demo.md` | 6 张表覆盖 5 类典型场景，含可运行 demo 与实跑截图 |
 | `docs/项目介绍.md` | 与本文同源的项目介绍文档 |
@@ -262,19 +297,26 @@ npm run serve
 | V7.1 | 种子数据 AI 增强（AI 管语义、规则管结构） | V7.1（42 行），5ca6e72 |
 | V7.2 | 流水线成功后 SQL 交付物落盘 `db/` | eebff88 |
 | **V7.3** | **交付可信度：自检编译产物测试 / 统一 SQL 交付出口 / 表级 AI 推荐** | **V7.3（138 行）** |
-| **V7.4** | 可重复交付：空库能部署、每次提交都保证能跑  ** | c306e29 |
+| **V7.4** | 可重复交付：空库能部署、每次提交都保证能跑 | c306e29 |
 | **V7.5** | 项目语言配置：206 语言清单 / 默认语言 / 启用语言，生成物 lang 与 dir 注入 | 7a9afa0 + abac56d |
 | **V8.0** | 全页面国际化：206 语言框架（8 种精译），双轨制 i18n、OFF 逐字节零 diff 契约 | 9e5dd57 → 7d57aea |
 | **V8.1** | 质量加固：离线契约 harness（9 模式 OFF 零 diff）+ i18n-core 单测 + CI 卡点 + README 诚实拆分（框架 206 / 精译 8）+ check-locale-keys.mjs | 93a12d5 + e49330b |
 | **V9.0** | 生成物现代化：Vue 3 + Element Plus + Vite；运行时验证（40/40 断言、vite build 成功、14 张截图含 ar-SA RTL）；修复 3 个运行时缺陷 | 93a12d5 + e49330b  |
 | **V9.1** | **可维护性重构：GenScaffoldServiceImpl 5072 → 931 行拆为 8 个 Writer；产物逐字节零差异（新旧 jar 共 119 + 62 文件 diff -r 为空）；312/312 单测；离线 i18n 契约 9/9** | 654b8e0 → b0d081e  |
-| **V9.2** | **测试中心与验证中心：把接口/UI 用例资产（7 张表）与平台验证资产（S1–S9 套件、三层落库、统一 JSON 摘要）合并为一个版本；产物零 diff，373/373 单测，206/206 语言键** | V9.2 release, **当前版本** |
-| **V9.3** | **Generated-artifact runtime fixes (3 Vue2 leftovers in templates broke V9.0 pages) + verification hub frontend integration + end-to-end one-sentence system run (self-check / subprocess paths / frontend startup / rerun cleanup); version-history source of truth synced to V9.3 across 96 multilingual docs** | 52f3bab / 8dabbd1 / 85e279c |
-| **V9.4** | **One-sentence system staged confirmation: recommend (AI) -> edit/preview (same-source DDL, read-only) -> confirm (draft/DB) with per-stage gates; DDL preview shares the exact buildDdl assembler with DB execution so what you preview is what you get** | b3f0587 (incl. leftover intake) |
-| **V9.5** | **AI table recommendation with human confirmation at `/gen/ai-build`: AI recommends table structures -> editable -> same-source DDL preview -> confirm to draft/DB; supplement mode diffs against the target system's existing tables with server-side hard dedup** | 570f6fc + 3104317 |
-| **V9.6** | **Batched AI modeling jobs for large/huge systems: gen_ai_build_job + gen_ai_build_batch tables, conditional-update claim scheduler (2s tick, multi-worker, multi-instance safe), timeout reclaim & retry (900s / 2 retries), frontend 2s polling with per-batch progress; measured 11 batches / 70 tables / 8s (stub, 4 workers); pipeline-no collision fixed (4-digit seq + uk_no retry)** | 5a2bcac + ecbe2ba |
-| **V9.7** | **Fast table creation: two-phase skeleton generation (AI lists table/comment/column names only; types & PKs filled by naming-semantics rules in TableSkeletonExpander — real-model measured 3m13s -> 54s, ~3.6x) + industry template library (e-commerce / ERP / CRM / CMS JSON packs, clone via the same assemblePlan funnel as AI, second-level, zero AI)** | d38ba7c + fd2440c |
-| **V9.8** | **Multi-pipeline concurrent runs: PipelineRunGate (global max-running cap + same-project mutual exclusion; cross-system parallel safe) replacing the old single-thread executor + global AtomicBoolean; startup recovery marks orphaned `running` pipelines as failed after restart (real incident fixed); 462/462 tests green** | 157f5ca + 07e8607, **current** |
+| **V9.2** | **测试中心+验证中心：用例中心 7 表 / 验证中心 9 套件（S1-S9，全局 409 单跑锁，CI 共享 JSON 摘要）；373/373 单测（新增 50），i18n 契约 9/9** | 8be92a9 + f9f16d2 |
+| **V9.3** | **生成产物运行时修复（模板 3 处 Vue2 遗留）+ 验证中心前端接入 + 一句话建系统端到端跑通（自检/子进程路径/前端启动/重跑清场）；96 份多语言文档版本历史同步至 V9.3** | 52f3bab / 8dabbd1 / 85e279c |
+| **V9.4** | **一句话建系统分阶段确认：AI 推荐 → 编辑/预览（同源 DDL 只读）→ 确认落草稿/建库，阶段门禁；DDL 预览与建库执行共用同一组装方法，所见即所得** | b3f0587（含遗留入库） |
+| **V9.5** | **AI 建表推荐与人工确认（/gen/ai-build）：AI 推荐表结构 → 可编辑 → 同源 DDL 预览 → 确认落草稿/建库；补表按目标系统已有表做差集，服务端硬过滤重复表** | 570f6fc + 3104317 |
+| **V9.6** | **大型/超大型分批建模任务：任务/批次两表落库，条件更新认领调度（2s tick 多 worker 多实例安全），超时回收重试（900s/2 次），前端 2s 轮询批次进度；实测 11 批/70 表/8s（stub 4 worker）；流水线号防撞（4 位序号 + uk_no 换号重试）** | 5a2bcac + ecbe2ba（web 2ff1c74） |
+| **V9.7** | **快速建表：两段式骨架生成（AI 只列表名/注释/字段名，类型与主键由命名语义规则补全，真模型实测 3m13s → 54s，约 3.6 倍）+ 行业模板库（电商/ERP/CRM/CMS 四套 JSON 模板包，与 AI 同收口克隆，秒级零 AI）** | d38ba7c + fd2440c（web 3e9eb92） |
+| **V9.8** | **多流水线并发运行：PipelineRunGate 闸门（全局 max-running 上限 + 同系统互斥，跨系统并行安全）取代单线程执行器 + 全局 AtomicBoolean；启动恢复——服务重启后 running 孤儿状态自动置 failed（修复实际事故）；462/462 单测全绿** | 157f5ca + 07e8607 |
+| **V9.9** | **行业模板库扩至 250+ 套 / 19 大类 / 2100+ 表：可复用领域蓝图 + 生成脚本（scripts/gen_industry_templates.py）；模板清单改为轻量（不表明细），明细按需加载，支持分类筛选与搜索；464/464 单测全绿** | 7e16b72（web 7a5d1c7） |
+| **V9.10** | **行业模板字段展开：2191 张表按表语义补充业务字段（编码/单号/金额/联系方式/时间区间/正文/排序/状态/备注），平均每表 6.12 → 7.87 列，状态 100% / 备注 96% / 编码 82% 覆盖；语义等价组防止重复列；修复历史处方表 create_time 与审计列撞名（会导致建表重复列失败）；465/465 单测全绿** | 11efe55 |
+| **V9.11** | **行业模板升级为完整系统：每套追加 15 张平台通用表（审批流/附件/操作日志/任务/消息/字典/配置）+ 所属分类 10-15 张专属业务表（19 大类共 248 张）。每套模板 29-45 张表（平均 34.8，原 8.6）、每表 10-20 字段（平均 14.25，原 7.87）；字段二次深化按辅助表语义避免假字段；466/466 单测全绿** | 16d39ec |
+| **V9.12** | **智慧村务专用模板 village_affairs（85 表/1414 字段）+ 生成器全链路修复：Tag 撞 Swagger @Tag 歧义、肥 jar 自检 classpath、scaffold 包占位符与测试基座编译单元、流水线路径绝对化、Vue3 dev/vite 部署、重跑残留 failReason 清理、Vue3 页面遗留修复。端到端：12/12 步骤全绿，生成系统已运行（后端 8140/前端 9040），90 个 .vue 页面 0 编译错误；468/468 单测全绿** | 25e2dcc..3fabb7b |
+| **V9.13** | **智慧村务系统完善：菜单重规划为 12 个村务业务域（替代「其他66页」）；28 张表种子数据（98菜单/5用户/户籍土地三资党建便民流程数据，全部关联）；审批流端到端跑通（提交0→1、通过1→2、驳回1→3）。修复两个生成器缺陷：流程表 id 未自增（submit 500）、鉴权过滤器未注入 userId（approve 403、审计 create_by 空）；3 项防回归测试，468/468 全绿** | 049027a..e4b9df2 |
+| **V9.14** | **智慧村务界面与数据完善：字段中文名（源头修 52 个外键注释 + 同步 129 处页面 label）、12 业务域菜单图标、首页真实统计（DashboardController 白名单 COUNT + 12 统计卡片）、90 张业务表全部演示数据（100% 覆盖、真实外键关联）；修 3 个脚本层坑（Map 图标无效、日期规则误伤、英文 token 注释）；3 项契约测试，474/474 全绿** | 039ae7e |
+| **V9.15** | **数据可视化图表能力包（通用、零领域耦合）：chart_enabled 三态开关（NULL/0=关、1=开，关闭时产物零 diff）；GenChartDeriver 纯按列元数据推导饼图/折线/柱状/仪表盘，零领域关键词；每表 /{module}/stats 聚合接口，生成期字段白名单防 SQL 注入；ECharts 图卡组件 + 跨表看板，系列色跟随 --app-primary；scaffold / 写盘 / ZIP / 路由 / 依赖全链路注入；平台 486/486 单测全绿，产物 64 个 StatsController 编译通过，真浏览器 4 类图表 0 控制台错误** | 69d5a06（web 5097231）, **当前版本** |
 
 ---
 
@@ -282,7 +324,7 @@ npm run serve
 
 ## 十三、项目状态
 
-- 当前规划版本线已达 **V9.2**，能力持续迭代（AI 建模、种子数据增强、能力包体系等）。
+- 当前发布版本 **V9.15**：通用数据可视化图表能力包（`chart_enabled` 三态开关 + 零领域耦合的 `GenChartDeriver` 推导饼/线/柱/仪表盘 + 每表 `/{module}/stats` 聚合接口 + ECharts 图卡与跨表看板，关闭时产物零 diff）；往前依次为 V9.14 智慧村务界面与数据完善、V9.13 智慧村务系统完善、V9.12 村务专用模板与全链路修复、V9.11 行业模板升级为完整系统、V9.10 字段展开、V9.9 250+ 模板库、V9.8 多流水线并发运行（`PipelineRunGate` 全局并发上限 + 同系统互斥，跨系统并行安全）+ 服务重启后 `running` 孤儿流水线自动置 failed、V9.7 快速建表（两段式骨架生成，真模型实测提速约 3.6 倍）、V9.6 大型/超大型分批建模、V9.5 AI 建表推荐与人工确认、V9.4 分阶段确认、V9.2 测试中心与验证中心。单测基线 **486/486 全绿**。
 - 已沉淀配套演示工程 `demo_admin`（后端 8140 / 前端 9040），覆盖树形 / CRUD / 主子表 / 只读 / 打印全场景，可独立运行验证。
 - 两仓库均托管于 Gitee：`https://gitee.com/hustxiayuhong/CodeGen.git`
 
