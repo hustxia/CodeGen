@@ -48,6 +48,19 @@ jobs:
       - name: 定位 mysql 客户端
         run: echo "CG_MYSQL=$(command -v mysql)" >> "$GITHUB_ENV"
 
+      # 部分迁移脚本带 UTF-8 BOM，MySQL 8.0 会当成非法字符；测试库统一去 BOM
+      - name: 初始化测试库 gen_platform_test
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          out = Path('/tmp/codegen-sql')
+          out.mkdir(exist_ok=True)
+          for p in sorted(Path('docs/sql').glob('*.sql')):
+              (out / p.name).write_text(p.read_text(encoding='utf-8-sig'), encoding='utf-8')
+          PY
+          mysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS gen_platform_test DEFAULT CHARSET utf8mb4;"
+          for f in /tmp/codegen-sql/*.sql; do mysql -uroot -proot gen_platform_test < "$f"; done
+
       # 空库冒烟要连本机 MySQL：127.0.0.1:3306 / root / root
       - name: 门禁（含空库冒烟）
         env:
