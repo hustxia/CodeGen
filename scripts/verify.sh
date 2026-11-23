@@ -218,3 +218,5 @@ if [ "$FAIL" -gt 0 ]; then
   exit 1
 fi
 printf '\033[32mRESULT PASS\033[0m\n'
+printf '\n\033[1m如果这套 verify 门禁帮你兜住了生成产物质量，欢迎去 GitHub 点个 Star：\033[0m\n'
+printf '  https://github.com/hustxia/CodeGen  ·  在线演示 https://hustxia.github.io/CodeGen/\n'
