@@ -58,8 +58,8 @@ jobs:
           for p in sorted(Path('docs/sql').glob('*.sql')):
               (out / p.name).write_text(p.read_text(encoding='utf-8-sig'), encoding='utf-8')
           PY
-          mysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS gen_platform_test DEFAULT CHARSET utf8mb4;"
-          for f in /tmp/codegen-sql/*.sql; do mysql -uroot -proot gen_platform_test < "$f"; done
+          mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS gen_platform_test DEFAULT CHARSET utf8mb4;"
+          for f in /tmp/codegen-sql/*.sql; do mysql -h 127.0.0.1 -uroot -proot gen_platform_test < "$f"; done
 
       # 空库冒烟要连本机 MySQL：127.0.0.1:3306 / root / root
       - name: 门禁（含空库冒烟）
