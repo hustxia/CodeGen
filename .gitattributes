@@ -13,3 +13,10 @@
 *.ico binary
 *.woff binary
 *.woff2 binary
+
+# GitHub Linguist：文档与演示页面不计入项目主语言
+# 背景：docs/ 下 48 份多语言 README + 演示 HTML 的字节数超过 Java，
+# 导致仓库主语言被识别为 HTML，language:Java 搜索无法命中。
+*.md linguist-documentation
+*.html linguist-documentation
+docs/** linguist-documentation
