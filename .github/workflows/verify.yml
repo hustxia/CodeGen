@@ -61,8 +61,10 @@ jobs:
               s = re.sub(r'(?im)^\s*(?:CREATE\s+(?:DATABASE|SCHEMA)\b[^;]*;|USE\s+`?\w+`?\s*;)\s*$', '', s)
               (out / p.name).write_text(s, encoding='utf-8')
           PY
-          mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS gen_platform_test DEFAULT CHARSET utf8mb4;"
-          for f in /tmp/codegen-sql/*.sql; do mysql -h 127.0.0.1 -uroot -proot gen_platform_test < "$f"; done
+          for db in gen_platform gen_platform_test; do
+            mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS $db DEFAULT CHARSET utf8mb4;"
+            for f in /tmp/codegen-sql/*.sql; do mysql -h 127.0.0.1 -uroot -proot "$db" < "$f"; done
+          done
 
       # 空库冒烟要连本机 MySQL：127.0.0.1:3306 / root / root
       - name: 门禁（含空库冒烟）
