@@ -52,11 +52,14 @@ jobs:
       - name: 初始化测试库 gen_platform_test
         run: |
           python3 - <<'PY'
+          import re
           from pathlib import Path
           out = Path('/tmp/codegen-sql')
           out.mkdir(exist_ok=True)
           for p in sorted(Path('docs/sql').glob('*.sql')):
-              (out / p.name).write_text(p.read_text(encoding='utf-8-sig'), encoding='utf-8')
+              s = p.read_text(encoding='utf-8-sig')
+              s = re.sub(r'(?im)^\s*(?:CREATE\s+(?:DATABASE|SCHEMA)\b[^;]*;|USE\s+`?\w+`?\s*;)\s*$', '', s)
+              (out / p.name).write_text(s, encoding='utf-8')
           PY
           mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS gen_platform_test DEFAULT CHARSET utf8mb4;"
           for f in /tmp/codegen-sql/*.sql; do mysql -h 127.0.0.1 -uroot -proot gen_platform_test < "$f"; done
