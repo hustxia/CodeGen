@@ -1,8 +1,34 @@
 # 码匠 · 代码生成器（CodeGen）项目介绍
 
+**Live demo:** [hustxia.github.io/CodeGen](https://hustxia.github.io/CodeGen/) · **Source:** [github.com/hustxia/CodeGen](https://github.com/hustxia/CodeGen)
+
+[![verify](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
+
+<details>
+<summary>All languages / 全部语言（48）</summary>
+
 > Languages: **简体中文** · [繁體中文](README_ZH_TW.md) · [English](README.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
 
+</details>
+
+
+<details>
+<summary>All languages / 全部语言（48）</summary>
+
 > 语言 / Language: **中文** · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · [Español](README_ES.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [हिन्दी](README_HI.md) · [العربية](README_AR.md) · [বাংলা](README_BN.md) · [Русский](README_RU.md) · [اردو](README_UR.md)
+
+</details>
+
+## 一眼看懂
+
+**CodeGen 把数据库表结构变成可编译、可运行、自带菜单权限的 Spring Boot 3 + Vue3 业务系统。**
+
+- **表驱动而非提示词驱动** —— 导入 DDL 或连接数据库，一次生成后端全栈代码与前端页面、路由、菜单，前后端不会漂移。
+- **安全交付** —— 真实 `javac` 自检、写盘前备份、标记块合并保留手写代码、四态账本一键回滚。
+- **先看效果** —— [在线演示](https://hustxia.github.io/CodeGen/)展示四套真实生成系统的首页与 V9.15 数据看板。
+
+> 如果它帮你省下一天 CRUD 时间，请点个 Star，让更多开发者看到。
 
 > **多语言支持**：生成的系统内置整页国际化，框架覆盖 **206 种语言**并可自动回退；其中 **8 种为专业翻译**（zh-CN、en-US、ja-JP、ko-KR、fr-FR、de-DE、es-ES、ar-SA），其余语言统一回退到简体中文。想贡献翻译？见 [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md)。
 

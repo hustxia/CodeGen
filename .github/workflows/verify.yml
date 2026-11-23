@@ -8,7 +8,7 @@ name: verify
 
 on:
   push:
-    branches: [master, dev, xyh_dev]
+    branches: [main, master, dev, xyh_dev]
   pull_request:
 
 jobs:

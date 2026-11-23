@@ -309,4 +309,10 @@ Confirm each item before submitting a PR:
 5. Make sure test screenshots are clear and legible, proving tests were executed and passed.
 6. By contributing code, you agree that your contribution will be used and distributed under the repository's license.
 
+## 11. Release convention
+
+- One version = one GitHub Release. Tag format is numeric (`9.15`, no `v` prefix); title starts with `V9.15`.
+- Publish the release together with the version-history update. Never batch-create dozens of historical releases in one minute — it looks like noise and hides the real changes.
+- Every release body must state: what changed, the verified test count, and any migration note (SQL/config).
+
 Thanks again for your contribution!
