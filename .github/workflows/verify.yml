@@ -38,9 +38,21 @@ jobs:
         with:
           node-version: '20'
 
+      # 本机门禁用离线 Maven；CI 无本地仓库，必须在线拉依赖
+      - name: Freemarker 2.3.32 (i18n 快照契约)
+        run: |
+          curl -fsSL -o scripts/i18n_snapshot/freemarker.jar \
+            https://repo.maven.apache.org/maven2/org/freemarker/freemarker/2.3.32/freemarker-2.3.32.jar
+          test "$(stat -c%s scripts/i18n_snapshot/freemarker.jar)" -gt 100000
+
+      - name: 定位 mysql 客户端
+        run: echo "CG_MYSQL=$(command -v mysql)" >> "$GITHUB_ENV"
+
       # 空库冒烟要连本机 MySQL：127.0.0.1:3306 / root / root
       - name: 门禁（含空库冒烟）
         env:
+          MVN_FLAGS: -B
+          FREEMARKER_JAR: ${{ github.workspace }}/scripts/i18n_snapshot/freemarker.jar
           CG_DB_PASSWORD: root
           CG_DB_HOST: 127.0.0.1
         run: bash scripts/verify.sh --with-db
