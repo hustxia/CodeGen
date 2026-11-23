@@ -1,8 +1,8 @@
 # 从 DDL 到可运行系统：我用代码生成器把 79 张表变成了一个真实警务平台
 
-> CSDN 草稿 · 对应仓库：https://github.com/hustxia/CodeGen
-> 在线演示：https://hustxia.github.io/CodeGen/
-> 发布前请：替换本地截图为图床链接；把仓库链接换成你自己的；提交后把 GitHub 主页 Homepage 指到本文。
+> CSDN 草稿 · 对应仓库：https://github.com/hustxia/CodeGen （觉得有用请点个 Star ⭐）
+> 在线演示：https://hustxia.github.io/CodeGen/ （浏览器直接看真实生成效果，无需安装）
+> 发布前请：替换本地截图为图床链接；首尾钩子块不可删（见 docs/blog/文章钩子模板-每篇必加.md）；提交后把 GitHub 主页 Homepage 指到本文。
 
 ## 开篇：为什么又写一个代码生成器
 
@@ -70,7 +70,10 @@ java -jar target/codegen-server.jar
 
 ## 结尾
 
-如果它帮你省下一天 CRUD 时间，欢迎去 GitHub 点个 Star，让更多开发者看到：
-https://github.com/hustxia/CodeGen
+---
 
-问题与建议请提到 Discussions：https://github.com/hustxia/CodeGen/discussions
+## 如果这个项目帮到了你
+
+- **点个 Star** ⭐：https://github.com/hustxia/CodeGen —— 让更多开发者少写一天 CRUD
+- **先看效果再决定**：[在线演示](https://hustxia.github.io/CodeGen/) 展示四套真实生成系统的首页与 V9.15 数据看板
+- **遇到问题**：提 [Discussions](https://github.com/hustxia/CodeGen/discussions) 或 Issue，我会回复
