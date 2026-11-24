@@ -1,7 +1,7 @@
 # 代码生成器 · 版本路线图（Roadmap）
 
-> 当前版本：**V9.11** — 全页面国际化（V8.0）→ 质量加固（V8.1）→ 生成物 Vue3 现代化（V9.0）→ 巨型类拆分（V9.1）→ 测试/验证中心（V9.2）→ 分阶段确认（V9.4）→ AI 建表推荐（V9.5）→ 分批建模任务（V9.6）→ 快速建表：骨架生成 + 行业模板（V9.7）→ 多流水线并发 + 启动恢复（V9.8）→ 行业模板库扩至 250+ 套（V9.9）→ 模板业务字段展开（V9.10）→ 模板升级为完整系统（V9.11）  
-> 路线图建立：2026-11-12　|　最近更新：2026-11-16  
+> 当前版本：**V9.19** — 全页面国际化（V8.0）→ 质量加固（V8.1）→ 生成物 Vue3 现代化（V9.0）→ 巨型类拆分（V9.1）→ 测试/验证中心（V9.2）→ 分阶段确认（V9.4）→ AI 建表推荐（V9.5）→ 分批建模任务（V9.6）→ 快速建表：骨架生成 + 行业模板（V9.7）→ 多流水线并发 + 启动恢复（V9.8）→ 行业模板库扩至 250+ 套（V9.9）→ 模板业务字段展开（V9.10）→ 模板升级为完整系统（V9.11）→ 一键试用与演示体验（V9.16）→ 能力包深度补全（V9.17）→ 生成质量与可维护性（V9.18）→ 建模规模化收尾（V9.19）  
+> 路线图建立：2026-11-12　|　最近更新：2026-11-24  
 > 状态：V9.1 已完成 `GenScaffoldServiceImpl` 拆分（5072 → 931 行：914 行编排 + 17 行反射兼容桩，新增 8 个职责单一的 Writer/Support 类），产物**逐字节零 diff**（新旧 jar 各生成 119 + 62 个文件，全量 diff 为空），全量测试 **312/312 通过**（顺带清偿 13 个历史红测试），离线 i18n 契约 **9/9**。
 
 本文档承接项目评估结论，把近期必须推进的三件事拆成可执行的版本里程碑：  
@@ -183,16 +183,57 @@
 
 ---
 
-### V9.16 — 一键试用与演示体验（开发中，2026-11-24 多 agent 并行启动）
+### V9.16 — 一键试用与演示体验（已完成，2026-11-24，d1ca428）
 
 **目标**：把「Maven + MySQL + 手工配库才能跑」的门槛降到 5 分钟（增长优先策略，依据：外部访客约 0.5 人/天、331 克隆者 0 star）。
 
 - [x] **Docker 一键起**：多阶段 Dockerfile + docker-compose.yml（MySQL8 healthcheck + codegen-server）、scripts/docker/init 33 个按数字版本序初始化 SQL（纠正 V9.15/V6.10 字典序陷阱）、V1.0 自带 admin/admin123 种子（BCrypt）无需额外种子、docs/quick-start-docker.md
 - [x] **H2 内存库 demo 模式**：pom 加 h2 runtime 依赖、application-h2.yml（MODE=MySQL，34 个脚本按数字版本序）、scripts/h2/convert_sql_to_h2.py 转换器（含存储过程/动态 DDL 展开）、编译通过；已知限制：连库导入/字典探测直查 MySQL information_schema 在 H2 下不完整
 - [x] **演示页提速**：showcase 8 图 PNG→WebP（877KB→332KB，38%）、演示效果.html 17/18 img lazy + picture 兜底、GoatCounter 占位（注册后启用）、docs/增长/演示页统计与提速指南.md
-- [ ] **中央验证**：全量测试 + 提交 xyh_dev + 同步 GitHub main（含 Pages 根目录 docs/）
+- [x] **中央验证**：全量测试 + 提交 xyh_dev + 同步 GitHub main（含 Pages 根目录 docs/）
 
 红线约束继续有效：i18n OFF 逐字节零 diff、能力包关闭零 diff、测试阈值只升不降。
+
+---
+
+### V9.17 — 能力包深度补全（已完成，2026-11-24）
+
+**目标**：补齐被真实行业项目点名过的 P1 能力包 backlog（支付 / 工作流 / 打印 / 安全 / 唯一性校验），优先服务已验证的五行业场景。
+
+- [x] **支付深度**：`payApi.ftl` 新增 `getPayConfig` / `createJsapiOrder` / `getJsapiSignature` / `createH5Order` / `getRefundResult` 五个前端契约；`payBizApi.ftl` 以 `pay_code + "_" + bizNo` 生成表级退款查询（不硬编码 `order_no`）；收银台/订单页按开关可选注入 JSAPI/H5 与支付宝沙箱参数（`alipay.sandbox=true` 切网关，密钥仍走 `${PAY_*:}` 占位符）。开关默认关，关闭态产物与 V6.3 基线逐字节一致。
+- [x] **工作流深度**：`flowApi.ftl` 新增 `getFlowProgress` / `flowCountersign` / `getFlowCountersignOpinions` / `flowDelegate` / `flowValidateDef` / `flowSaveDef`；`flowTodo.ftl` 新增 SVG 节点进度图（CURRENT / DELEGATED 状态着色）、会签投票（ALL / ANY）、委派留痕，以及整合在「流程设计」tab 的轻量设计器（拖拽排序 + 表单化审批人/条件 + JSON 预览与校验）；`flowDesigner.ftl` 作为独立页备选一并产出。
+- [x] **打印深度**：`printPage.ftl` 支持横版（`print_landscape`）、金额大写（`printRmb`，人民币大写算法内联）、`print_title` 覆盖标题；条码用纯 JS CODE128-B（107 项宽度表 + 校验位，SVG `<rect>` 绘制，非 ASCII 自动隐藏），二维码先出占位 SVG + 取数约定，不引第三方依赖。
+- [x] **安全加固**：生成物 `AuthContextFilter` 增通用接口限流（`auth.api-rate-limit.*`，默认关，429 + `Retry-After`，JDK `ConcurrentHashMap` 固定窗口）；运行时加载 `sys_role.data_scope`（多角色取最宽，失败降级 `self`）；新增 `/sysRole/dataScope|assignDataScope|dept/list` 三端点 + 平台 `system/data-scope` 配置页；密码强度增 4 个字符类型开关、过期提醒 `expire-days`、`POST /sysUser/changePwd`；登录响应回传 `kickedSessions` / `kickedNotice`。`withAuth=false` 时文件集合不变。
+- [x] **唯一性校验对齐**：`controller.ftl` 生成 `checkUnique` 400 工厂兜底，`saveDto.ftl` / `vuePage.ftl` 生成字段名常量与 `data.field` 解析，前端在对应 `el-form-item` 下红字提示并保持弹窗打开；无唯一列时不产出任何查重代码。新增 `V917UniquenessAlignTemplateTest`、扩充 `UniqueConflictErrorBodyTest`。
+- [ ] **遗留**：支付产物后端端点（`/pay/config`、`/pay/jsapi/*`、`/pay/h5/order`、退款查询）与五个开关的模型接线未完成；`flowDesigner` 独立路由未接线；`custom` 数据范围的多部门 SQL 过滤需扩展拦截器；多组独立唯一键、分布式限流未支持。
+
+**验收结论**：`V917PrintEnhanceTest`、`V917UniquenessAlignTemplateTest`、`PayRefundContractTest`、`UniqueConflictErrorBodyTest` 已入库；打印默认配置与 V4.5 基线逐字节一致，CODE128 算法冒烟通过（107 项表、`12345678` 34 条）；安全四项默认关（互踢仍默认开）保持 V6.4 行为；`withAuth=false`、无 `flow_code` 绑定、`genPrint` 无效时零产物。按「模板契约先行、产物后端待接」口径发布，遗留见上。
+
+---
+
+### V9.18 — 生成质量与可维护性（已完成，2026-11-24）
+
+**目标**：让模板改动可见、产物回归自动化、验证中心结果成为合并门禁。
+
+- [x] **模板影响面预览**：`GET /gen/template/files` 扫描 classpath `gen-templates/scaffold/scaffold-*` 下的 `.ftl`，`GET /gen/template/impact` 按表返回产物路径与表形态提示（`GenTemplateImpactSupport`）；控制台「模板影响面」页通过 `permission.js` 静态注入，无需 `sys_menu` 落库。
+- [x] **child_save_mode**：`gen_table.child_save_mode`（0=全量替换，默认；1=按主键三路合并）；一对多按主键、一对一按外键 upsert、多对多按关联键差集增删；MySQL 源脚本 / docker init `036` / H2 幂等加列。`ChildSavePlannerTest` + `ChildSaveModeTemplateTest` 覆盖，mode=0 逐字节零 diff（基线 14 + 契约 8 + i18n 快照 9/9）。
+- [x] **S8 / S9 进验证中心**：S8 截图验证（playwright/puppeteer 缺失时 SKIPPED，不阻断）、S9 目录 diff（纯 Node 递归 + 白名单 + 阈值），结果落 `tc_case_result` / `tc_artifact`（SCREENSHOT / DIFF）。
+- [x] **CI 门禁 + 定时执行**：`.github/workflows/verify.yml` 新增 `verify-center-gate`（CLI 有 FAIL 即 exit 1）；测试中心定时任务支持「间隔分钟」模式并展示下次执行时间（`ScheduleTimeCalculator`）。
+- [ ] **平台控制台 Vue 2.7 → Vue 3**：控制台仍是 Vue 2.7.16 + Element UI 2.15，按计划放最后，本版未动。
+
+**验收结论**：i18n 快照 9/9、基线 14 + 契约 8 全绿，`mode=0` 零 diff 契约保持；控制台升级列遗留。
+
+---
+
+### V9.19 — 建模规模化收尾（已完成，2026-11-24）
+
+**目标**：把超大型建模的串行 DDL、翻译贡献与行业模板分发三条规模化路径补齐。
+
+- [x] **confirm 建库分批化**：新增 `gen.pipeline.db-batch-size`（默认 50），DDL 分批执行、每批独立提交，失败时报批号与语句摘要；纯函数 `DdlBatchPlanner` + 7 个单测（空输入 / 非法批大小回落不分批 / 边界切分）。
+- [x] **翻译贡献自动化**：`scripts/i18n-coverage.mjs` 产出 12 语言 × 60 键覆盖矩阵（默认阈值 100%），CI 增加 `backend-i18n-coverage` job；新增 ru-RU / pt-BR / id-ID / vi-VN 精译，README 与版本史统一为 8 → 12。
+- [x] **模板市场雏形**：`gen.template.external-dir`（默认 `~/.codegen/industry-templates`）；单包/多包 ZIP 导出、`.json` / `.zip` 导入（全量校验、冲突默认拒绝、`overwrite` 覆盖、防路径穿越）、删除用户包、`builtin` / `user` 来源标记；`GenTemplatePackController` + 控制台「模板市场」页。
+
+**验收结论**：DDL 分批失败可定位到具体批号；i18n 覆盖 12 × 60 达 100%；模板包校验/编解码由 `GenTemplatePackTest` 覆盖；遗留：模板市场仅本地目录，无远程仓库与签名校验，控制台页依赖平台路由登记。
 
 ---
 

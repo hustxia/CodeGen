@@ -2,6 +2,8 @@ package com.codegen.util;
 
 import com.codegen.entity.GenTable;
 import com.codegen.entity.GenTableColumn;
+import com.codegen.support.ChildSaveMode;
+import com.codegen.support.ChildSavePlanner;
 import com.codegen.support.GenCascadeMode;
 import org.springframework.util.StringUtils;
 
@@ -646,6 +648,12 @@ public final class GenTemplateModel {
         m.put("deleteCascadeOn", cascadeMode == GenCascadeMode.CASCADE);
         m.put("deleteCascadeOff", cascadeMode == GenCascadeMode.NONE);
 
+        // V9.18 子表保存模式：仅两档、无系统级回落（null → 0）。
+        // 红线：childIncremental=false 时模板必须走既有分支，产物逐字节保持 V9.18 之前的样子。
+        int childSaveMode = ChildSaveMode.resolve(table.getChildSaveMode());
+        m.put("childSaveMode", childSaveMode);
+        m.put("childIncremental", childSaveMode == ChildSaveMode.INCREMENTAL);
+
         // V4.5 打印单据：表级 → 系统默认 → 硬编码关（resolveGenPrint 唯一实现）。
         // 前置条件：开前端 + api.js（打印页 import 取数函数）+ 非从表（从表无独立页面）
         // + 有可用取数接口（主子表 with-children / 单表详情）。
@@ -1004,6 +1012,27 @@ public final class GenTemplateModel {
         cm.put("fkColumn", fkColumn);
         cm.put("fkField", GenUtils.toCamel(fkColumn));
         cm.put("fkCapField", capitalize(GenUtils.toCamel(fkColumn)));
+        // V9.18 子表保存策略：middle/ONE_TO_ONE/MANY_TO_MANY 统一归一，缺省按一对多处理。
+        // 一对一按外键 upsert；多对多中间表按「非主表外键的那个关联列」做关联差集。
+        // 关联列必须是可编辑表单列：只有进 DTO 的列才有 getter 可供生成代码引用。
+        String childRelation = ChildSavePlanner.normalizeRelationType(ct.getRelationType());
+        cm.put("relationType", childRelation);
+        cm.put("oneToOne", "ONE_TO_ONE".equals(childRelation));
+        cm.put("manyToMany", "MANY_TO_MANY".equals(childRelation));
+        GenTableColumn otherKeyCol = null;
+        if ("MANY_TO_MANY".equals(childRelation)) {
+            for (GenTableColumn c : childBiz) {
+                String colName = c.getColumnName() == null ? "" : c.getColumnName();
+                if (c.getRelationKey() != null && c.getRelationKey() == 1 && on(c.getIsForm())
+                        && !fkColumn.equalsIgnoreCase(colName)) {
+                    otherKeyCol = c;
+                    break;
+                }
+            }
+        }
+        cm.put("hasRelationKey", otherKeyCol != null);
+        cm.put("relationKeyField", otherKeyCol == null ? "" : otherKeyCol.getJavaField());
+        cm.put("relationKeyCapField", otherKeyCol == null ? "" : capitalize(otherKeyCol.getJavaField()));
         List<Map<String, Object>> childList = toModel(childBiz.stream().filter(c -> on(c.getIsList())).toList());
         cm.put("listColumns", childList);
         // V4.5 打印增强：明细块的人民币大写行取「最后一个金额列」的合计——

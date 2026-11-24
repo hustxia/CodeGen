@@ -76,7 +76,11 @@ function run(label, cmd, args, cwd, extraEnv = {}) {
     let output = ''
     let child
     try {
-      child = spawn(cmd, args, { cwd, env, shell: WIN, windowsHide: true })
+      // shell:true 下 cmd/参数里的空格不会被自动转义（例如 C:\Program Files\nodejs\node.exe），
+      // 这里显式补引号，否则 Windows 会把 "C:\Program" 当成可执行文件。
+      const spawnCmd = WIN && /\s/.test(cmd) ? `"${cmd}"` : cmd
+      const spawnArgs = WIN ? args.map(a => /\s/.test(String(a)) ? `"${a}"` : a) : args
+      child = spawn(spawnCmd, spawnArgs, { cwd, env, shell: WIN, windowsHide: true })
     } catch (err) {
       console.error('spawn 失败：' + err.message)
       return resolve({ code: -1, output: err.message })
@@ -109,7 +113,58 @@ function surefireCounts() {
 
 const ok = (metrics, note) => ({ status: 'PASSED', metrics, note })
 const bad = (metrics, note) => ({ status: 'FAILED', metrics, note })
-const skip = reason => ({ status: 'SKIPPED', metrics: {}, note: reason })
+const skip = (reason, metrics = {}) => ({ status: 'SKIPPED', metrics, note: reason })
+
+/** S8/S9 产物目录：执行器给了 TC_ARTIFACT_DIR 就落运行目录（tc_artifact 可下载），CLI 模式落 target/ */
+function artifactDir(suiteId) {
+  const base = process.env.TC_ARTIFACT_DIR
+  if (base) return path.join(base, suiteId)
+  return path.join(ROOT, 'target', suiteId === 'S8' ? 'verify-shots' : 'verify-diff')
+}
+
+function stamp() {
+  return new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14)
+}
+
+/** 取子脚本最后一行 TC_METRICS；suiteId 由驱动统一写，这里剔掉避免覆盖 */
+function childMetrics(output) {
+  const line = [...String(output || '').split(/\r?\n/)].reverse()
+    .find(l => l.trim().startsWith('TC_METRICS '))
+  if (!line) return {}
+  try {
+    const m = JSON.parse(line.trim().slice('TC_METRICS '.length))
+    delete m.suiteId
+    return m
+  } catch {
+    return {}
+  }
+}
+
+/** 子脚本声明的产物绝对路径（截图 / diff JSON），统一由驱动在末尾重新声明给执行器 */
+function childArtifacts(output) {
+  const out = []
+  for (const line of String(output || '').split(/\r?\n/)) {
+    const t = line.trim()
+    if (!t.startsWith('TC_ARTIFACTS ')) continue
+    try {
+      const arr = JSON.parse(t.slice('TC_ARTIFACTS '.length))
+      if (Array.isArray(arr)) out.push(...arr.filter(x => typeof x === 'string' && x.trim()))
+    } catch {
+      // 单行解析失败不影响其余产物声明
+    }
+  }
+  return out
+}
+
+function readJson(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'))
+  } catch {
+    return null
+  }
+}
+
+const ACCUMULATED_ARTIFACTS = []
 
 const SUITES = {
   /** S1 后端单测：先清旧报告再跑，避免把上次的 testcase 数累加进来 */
@@ -205,12 +260,73 @@ const SUITES = {
     return ok({ smoke: 'passed' }, 'schema + 幂等重跑通过')
   },
 
-  /** S8/S9 是 P1 人工链路：如实标 SKIPPED，不伪造通过 */
+  /**
+   * S8 截图验证（V9.18 自动化）：调用 scripts/shot-verify.mjs。
+   * 浏览器库缺失 / 页面不可达时子脚本自行返回 SKIPPED，这里如实透传，不伪造 PASS。
+   */
   async S8() {
-    return skip('P1 未自动化：需要 API 生成 + vite build + Chrome/Puppeteer 双服务链路（V9.2 默认不勾选）')
+    const outDir = artifactDir('S8')
+    const r = await run('shot-verify', process.execPath,
+      [path.join(ROOT, 'scripts', 'shot-verify.mjs'), '--out', outDir], ROOT,
+      { TC_SHOT_URLS: process.env.TC_SHOT_URLS || '', TC_ARTIFACT_DIR: process.env.TC_ARTIFACT_DIR || '' })
+    const metrics = childMetrics(r.output)
+    const childStatus = metrics.status
+    const childReason = metrics.reason
+    delete metrics.status
+    ACCUMULATED_ARTIFACTS.push(...childArtifacts(r.output))
+    if (childStatus === 'SKIPPED') {
+      return skip(childReason || '截图环境缺失，按 SKIPPED 处理', metrics)
+    }
+    delete metrics.reason
+    if (r.code !== 0) {
+      return bad(metrics, childReason || '截图验证失败')
+    }
+    return ok(metrics, `${metrics.shots || 0} 张截图，${metrics.missing || 0} 个目标不可达`)
   },
+
+  /**
+   * S9 产物等价性（V9.18 自动化）：纯 Node 递归比对「新产物目录」与「基线目录」。
+   * 差异清单默认只列出不失败，只有超过 verify.contract.* 阈值（由 Java 侧注入环境变量）才 FAILED。
+   */
   async S9() {
-    return skip('P1 未自动化：需要新旧两个 jar 并行 + 同 DTO 双变体 diff -r（V9.2 默认不勾选）')
+    const newDir = normalizeBin(process.env.TC_DIFF_NEW || '')
+    const baselineDir = normalizeBin(process.env.TC_DIFF_BASELINE || '')
+    if (!newDir || !baselineDir) {
+      return skip('未配置 TC_DIFF_NEW / TC_DIFF_BASELINE（verify.contract.new-dir / baseline-dir），跳过产物比对')
+    }
+    if (!exists(newDir)) return skip('新产物目录不存在：' + newDir)
+    if (!exists(baselineDir)) return skip('基线目录不存在：' + baselineDir)
+
+    const outDir = artifactDir('S9')
+    fs.mkdirSync(outDir, { recursive: true })
+    const outJson = path.join(outDir, `diff-${stamp()}.json`)
+    const args = [path.join(ROOT, 'scripts', 'dir-diff.mjs'),
+      '--new', newDir, '--baseline', baselineDir, '--out', outJson, '--enforce']
+    if (process.env.VERIFY_CONTRACT_MAX_ADDED) args.push('--max-added', process.env.VERIFY_CONTRACT_MAX_ADDED)
+    if (process.env.VERIFY_CONTRACT_MAX_REMOVED) args.push('--max-removed', process.env.VERIFY_CONTRACT_MAX_REMOVED)
+    if (process.env.VERIFY_CONTRACT_MAX_MODIFIED) args.push('--max-modified', process.env.VERIFY_CONTRACT_MAX_MODIFIED)
+    if (process.env.VERIFY_CONTRACT_WHITELIST) args.push('--whitelist', process.env.VERIFY_CONTRACT_WHITELIST)
+
+    const r = await run('dir-diff', process.execPath, args, ROOT)
+    const metrics = childMetrics(r.output)
+    if (exists(outJson)) ACCUMULATED_ARTIFACTS.push(outJson)
+    const diff = readJson(outJson)
+    if (diff) {
+      // 清单只带前 15 条进 metrics_json：日志尾部有 4000 字符上限，超长会截断整行指标；
+      // 完整清单在 diff.json 产物里，页面优先读产物
+      const cap = 15
+      metrics.diffList = {
+        added: diff.added.slice(0, cap),
+        removed: diff.removed.slice(0, cap),
+        modified: diff.modified.slice(0, cap)
+      }
+      metrics.diffTruncated = diff.added.length > cap || diff.removed.length > cap || diff.modified.length > cap
+      metrics.diffArtifact = path.basename(outJson)
+    }
+    const summary = `新增 ${metrics.diffAdded || 0} / 删除 ${metrics.diffRemoved || 0} / 修改 ${metrics.diffModified || 0}`
+    if (r.code === 1) return bad(metrics, `${summary}，超出 verify.contract 阈值`)
+    if (r.code !== 0) return bad(metrics, '目录比对执行失败（退出码 ' + r.code + '）')
+    return ok(metrics, `${summary}，阈值内`)
   }
 }
 
@@ -227,6 +343,10 @@ async function main() {
   }
   const metrics = { suiteId: SUITE_ID, status: result.status, ...result.metrics }
   if (result.status === 'SKIPPED') metrics.reason = result.note
+  // 产物声明必须在 TC_METRICS 之前，执行器只读日志尾部，两者都要能被扫到
+  if (ACCUMULATED_ARTIFACTS.length) {
+    console.log('TC_ARTIFACTS ' + JSON.stringify([...new Set(ACCUMULATED_ARTIFACTS)]))
+  }
   console.log('TC_METRICS ' + JSON.stringify(metrics))
   console.log(`RESULT ${result.status} ${SUITE_ID}：${result.note}`)
   process.exit(result.status === 'FAILED' ? 1 : 0)

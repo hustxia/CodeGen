@@ -42,6 +42,7 @@ CREATE TABLE `gen_table` (
   `last_gen_time` datetime DEFAULT NULL COMMENT '最近一次写盘时间',
   `last_gen_by` bigint DEFAULT NULL COMMENT '最近一次写盘操作人',
   `delete_cascade_mode` tinyint DEFAULT NULL COMMENT '删除级联模式：NULL=未配置(回落系统默认) 0=阻止(有子行拒删) 1=级联(同删全部子表) 2=不处理(现状)',
+  `child_save_mode` tinyint NOT NULL DEFAULT '0' COMMENT '子表保存模式:0=全量替换(默认) 1=按主键三路合并(含一对一 upsert/多对多差集)',
   `gen_print` tinyint DEFAULT NULL COMMENT '打印单据:NULL=跟随系统默认 1=生成 0=不生成',
   `print_title` varchar(100) DEFAULT NULL COMMENT '打印页标题:NULL/空=回落表注释',
   `print_landscape` tinyint DEFAULT NULL COMMENT '横版打印:NULL/0=A4纵向 1=A4横向',

@@ -8,9 +8,11 @@ import com.codegen.dto.GenWriteDTO;
 import com.codegen.entity.GenOutput;
 import com.codegen.entity.GenTable;
 import com.codegen.entity.GenTableColumn;
+import com.codegen.entity.GenTemplate;
 import com.codegen.entity.SysProject;
 import com.codegen.mapper.GenOutputMapper;
 import com.codegen.mapper.GenTableMapper;
+import com.codegen.mapper.GenTemplateMapper;
 import com.codegen.mapper.SysProjectMapper;
 import com.codegen.monitor.MonitorMetrics;
 import com.codegen.service.GenCodeService;
@@ -21,6 +23,7 @@ import com.codegen.service.TestSuiteGenService;
 import com.codegen.service.I18nTextRewriter;
 import com.codegen.support.GenDashboardWriter;
 import com.codegen.support.GenPathResolver;
+import com.codegen.support.GenTemplateImpactSupport;
 import com.codegen.util.GenDigestUtils;
 import com.codegen.util.GenMergeUtils;
 import com.codegen.util.GenTemplateEngine;
@@ -28,6 +31,7 @@ import com.codegen.util.GenTemplateModel;
 import com.codegen.vo.GenDiffVO;
 import com.codegen.vo.GenFileVO;
 import com.codegen.vo.GenSqlDeliverVO;
+import com.codegen.vo.GenTemplateImpactVO;
 import com.codegen.vo.GenWriteVO;
 import com.codegen.vo.TestVO;
 import com.codegen.common.context.UserContext;
@@ -95,6 +99,9 @@ public class GenCodeServiceImpl implements GenCodeService {
 
     @Autowired
     private GenOutputMapper genOutputMapper;
+
+    @Autowired
+    private GenTemplateMapper genTemplateMapper;
 
     @Autowired
     private GenTableColumnService columnService;
@@ -218,6 +225,149 @@ public class GenCodeServiceImpl implements GenCodeService {
             }
         }
         return result;
+    }
+
+    /**
+     * 模板影响面预览：遍历全部表配置，判断指定模板会为哪些表产出哪些文件。
+     *
+     * <p>只读实现：先复用 {@link GenTemplateEngine#renderWithProject} 的渲染产物定位「实际会产出的相对路径」，
+     * 再用模板的 pathPattern 反查该路径归属哪个模板。开关裁剪（gen_* 与各能力包）全部沿用生成侧判定，
+     * 预览不会和真实生成跑偏；不写盘、不改库。
+     *
+     * <p>共享产物（readme / flowApi / pay* 等）按系统渲染一次，归属该系统下确实受影响表。
+     */
+    @Override
+    public GenTemplateImpactVO templateImpact(String templatePath) {
+        String normalized = GenTemplateImpactSupport.normalizeTemplatePath(templatePath);
+        String code = GenTemplateImpactSupport.templateCode(normalized);
+        // 全局模板 + 表级覆盖：引擎 resolveFromDb 会优先取 table_id=该表 的模板，其 pathPattern 可能不同
+        List<GenTemplate> allTemplates = genTemplateMapper.selectList(new LambdaQueryWrapper<GenTemplate>()
+                .eq(GenTemplate::getStatus, 1)
+                .orderByAsc(GenTemplate::getId));
+        Map<String, GenTemplate> globalTemplates = new LinkedHashMap<>();
+        boolean codeExists = false;
+        for (GenTemplate tpl : allTemplates) {
+            boolean global = tpl.getTableId() == null || tpl.getTableId() == 0L;
+            if (global) {
+                globalTemplates.putIfAbsent(tpl.getTplCode(), tpl);
+            }
+            if (code == null || code.equals(tpl.getTplCode())) {
+                codeExists = true;
+            }
+        }
+        GenTemplateImpactVO result = new GenTemplateImpactVO();
+        result.setTemplate(code == null ? "ALL" : normalized);
+        if (!codeExists) {
+            // 未注册的模板不会参与生成，影响面自然为空
+            return result;
+        }
+        // 与渲染入口同口径：先清系统配置缓存，避免读到管理页改配置前的旧值
+        clearProjectCache();
+        List<GenTable> allTables = genTableMapper.selectList(new LambdaQueryWrapper<GenTable>()
+                .eq(GenTable::getDeleted, 0)
+                .orderByAsc(GenTable::getId));
+        // 子表分组只用于模型里的 hasChild（决定 serviceImpl 派发），不参与渲染内容
+        Map<Long, List<GenTemplateModel.ChildInfo>> childrenByMaster = new HashMap<>();
+        for (GenTable row : allTables) {
+            if (row.getMasterTableId() != null && row.getMasterTableId() > 0) {
+                childrenByMaster.computeIfAbsent(row.getMasterTableId(), k -> new ArrayList<>())
+                        .add(new GenTemplateModel.ChildInfo(row, List.of()));
+            }
+        }
+        Map<Long, Map<String, String>> sharedByProject = new HashMap<>();
+        int outputCount = 0;
+        for (GenTable table : allTables) {
+            GenTemplateImpactVO.AffectedTable affected = new GenTemplateImpactVO.AffectedTable();
+            affected.setTableId(table.getId());
+            affected.setTableName(table.getTableName());
+            affected.setTableComment(table.getTableComment());
+            affected.setModeHints(GenTemplateImpactSupport.modeHints(table,
+                    childrenByMaster.containsKey(table.getId())));
+            try {
+                applyOutputDefaults(table);
+                List<GenTableColumn> cols = columnService.list(new LambdaQueryWrapper<GenTableColumn>()
+                        .eq(GenTableColumn::getTableId, table.getId())
+                        .orderByAsc(GenTableColumn::getSort));
+                GenTemplateModel.ProjectConfig pcfg = projectConfigOf(table);
+                // 渲染产物 = 生成侧真正会产出的路径集合（开关与能力包裁剪都在引擎里）
+                Map<String, String> files = rewriteForI18n(table,
+                        genTemplateEngine.renderWithProject(table, cols, pcfg));
+                Map<String, Object> model = GenTemplateModel.build(table, cols,
+                        childrenByMaster.getOrDefault(table.getId(), List.of()), pcfg);
+                Long projectKey = table.getProjectId() == null ? -1L : table.getProjectId();
+                Map<String, String> shared = sharedByProject.get(projectKey);
+                if (shared == null) {
+                    shared = renderSharedForImpact(table, pcfg);
+                    sharedByProject.put(projectKey, shared);
+                }
+                // 表级覆盖优先：与引擎 resolveFromDb 的取值顺序保持一致
+                Map<String, GenTemplate> effective = new LinkedHashMap<>(globalTemplates);
+                for (GenTemplate override : allTemplates) {
+                    if (table.getId() != null && table.getId().equals(override.getTableId())) {
+                        effective.put(override.getTplCode(), override);
+                    }
+                }
+                for (GenTemplate tpl : effective.values()) {
+                    if (code != null && !code.equals(tpl.getTplCode())) {
+                        continue;
+                    }
+                    String relPath = templateOutputPath(tpl, model, pcfg);
+                    if (relPath == null) {
+                        continue;
+                    }
+                    String tplCode = tpl.getTplCode();
+                    // serviceImpl 三个模板共用同一路径，只认按表形态派发的那一个
+                    if (tplCode != null && tplCode.startsWith("serviceImpl")
+                            && !tplCode.equals(GenTemplateModel.serviceImplTplCode(model))) {
+                        continue;
+                    }
+                    // routerSnippet 不进 renderShared，由 ZIP 出口单独生成
+                    boolean emitted = files.containsKey(relPath) || shared.containsKey(relPath)
+                            || "routerSnippet".equals(tplCode);
+                    if (emitted && !affected.getOutputs().contains(relPath)) {
+                        affected.getOutputs().add(relPath);
+                    }
+                }
+                if (!affected.getOutputs().isEmpty()) {
+                    outputCount += affected.getOutputs().size();
+                    result.getAffectedTables().add(affected);
+                }
+            } catch (Exception e) {
+                log.warn("模板影响面预览：表 {} 计算失败：{}", table.getTableName(), e.getMessage());
+                affected.setError(e.getMessage());
+                result.getAffectedTables().add(affected);
+            }
+        }
+        result.setOutputCount(outputCount);
+        return result;
+    }
+
+    /** 模板在指定模型下的产物相对路径（含多模块前缀），渲染失败返回 null */
+    private String templateOutputPath(GenTemplate tpl, Map<String, Object> model,
+                                      GenTemplateModel.ProjectConfig pcfg) {
+        if (tpl == null || tpl.getPathPattern() == null || tpl.getPathPattern().isBlank()) {
+            return null;
+        }
+        try {
+            String path = GenTemplateEngine.renderString(tpl.getPathPattern(), model);
+            String prefix = GenPathResolver.moduleRelPrefix(tpl.getTplCode(),
+                    pcfg == null ? null : pcfg.projectStructure(),
+                    pcfg == null ? null : pcfg.rootPackage());
+            return GenTemplateImpactSupport.normalizeOutputPath(prefix.isEmpty() ? path : prefix + path);
+        } catch (Exception e) {
+            log.warn("模板路径渲染失败 code={}: {}", tpl.getTplCode(), e.getMessage());
+            return null;
+        }
+    }
+
+    /** 影响面预览的共享产物（readme / flowApi / pay* 等）：按系统渲染一次，失败不阻断预览 */
+    private Map<String, String> renderSharedForImpact(GenTable anchor, GenTemplateModel.ProjectConfig pcfg) {
+        try {
+            return new LinkedHashMap<>(genTemplateEngine.renderShared(anchor, pcfg));
+        } catch (Exception e) {
+            log.warn("模板影响面预览：共享产物渲染失败 table={}: {}", anchor.getTableName(), e.getMessage());
+            return Map.of();
+        }
     }
 
     @Override

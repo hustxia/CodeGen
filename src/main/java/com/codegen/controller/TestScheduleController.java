@@ -5,6 +5,7 @@ import com.codegen.common.result.Result;
 import com.codegen.dto.TestCenterDTO;
 import com.codegen.entity.TestSchedule;
 import com.codegen.service.TestScheduleService;
+import com.codegen.vo.TestScheduleVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +27,9 @@ public class TestScheduleController {
     @Autowired
     private TestScheduleService scheduleService;
 
-    @Operation(summary = "分页查询定时任务")
+    @Operation(summary = "分页查询定时任务（含下次执行时间）")
     @PostMapping("/page")
-    public Result<Page<TestSchedule>> page(@RequestBody TestCenterDTO.SchedulePage dto) {
+    public Result<Page<TestScheduleVO>> page(@RequestBody TestCenterDTO.SchedulePage dto) {
         return Result.ok(scheduleService.page(dto));
     }
 

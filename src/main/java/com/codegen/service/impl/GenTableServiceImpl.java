@@ -17,6 +17,7 @@ import com.codegen.service.GenMenuService;
 import com.codegen.service.GenTableColumnService;
 import com.codegen.service.DictDetectService;
 import com.codegen.service.GenTableService;
+import com.codegen.support.ChildSaveMode;
 import com.codegen.support.GenCascadeMode;
 import com.codegen.support.GenSwitchDefaults;
 import com.codegen.util.GenUtils;
@@ -455,6 +456,8 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         BeanUtils.copyProperties(dto, table);
         table.setId(null);
         table.setDeleteCascadeMode(GenCascadeMode.sanitize(dto.getDeleteCascadeMode()));
+        // V9.18 子表保存模式：非空列，null 落 0（全量替换），保证存量产物零 diff
+        table.setChildSaveMode(ChildSaveMode.sanitize(dto.getChildSaveMode()));
         // V3.1 P0-3：17 个开关留空的，按「所属系统默认值 → 1」补齐。
         // 放在入库前而不是生成时：生成阶段必须尊重表级值，否则用户手动关掉的开关
         // 会被系统默认值顶回去，表现为「关了还在生成」，极难排查。
@@ -517,6 +520,8 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         BeanUtils.copyProperties(dto, table);
         // 越界值归一为 null（未配置），避免脏值逃进模板
         table.setDeleteCascadeMode(GenCascadeMode.sanitize(dto.getDeleteCascadeMode()));
+        // V9.18 子表保存模式：非空列，null 落 0（全量替换）
+        table.setChildSaveMode(ChildSaveMode.sanitize(dto.getChildSaveMode()));
         // V4.5 打印单据：只认 0/1，越界归一为 null（跟随系统）
         Integer genPrint = dto.getGenPrint();
         if (genPrint != null && genPrint != 0 && genPrint != 1) {
@@ -611,6 +616,10 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         }
         if (dto.getColumns() == null || dto.getColumns().isEmpty()) {
             throw new BusinessException(400, "字段配置不能为空");
+        }
+        // V9.18 子表保存模式只接受 0/1：非法值必须中文报错，不能静默归一成默认值
+        if (!ChildSaveMode.isValid(dto.getChildSaveMode())) {
+            throw new BusinessException(400, "子表保存模式不合法：仅支持 0（全量替换）或 1（增量合并）");
         }
     }
 

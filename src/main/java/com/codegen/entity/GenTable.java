@@ -228,6 +228,13 @@ public class GenTable extends BaseEntity {
     private Integer deleteCascadeMode;
 
     /**
+     * V9.18 子表保存模式（仅主子表主表生效）：0=全量替换（默认，先按外键删再逐行插），
+     * 1=增量合并（按主键三路合并；一对一子表按外键 upsert，多对多中间表按关联键差集增删）。
+     * 非空列（NOT NULL DEFAULT 0）：0 分支必须继续产出与 V9.18 之前逐字节一致的代码。
+     */
+    private Integer childSaveMode;
+
+    /**
      * V4.5 打印单据：NULL=跟随系统默认（默认关）1=生成 A4 打印页 print.vue 0=强制不生成。
      * 必须可空三态（坑库 mysql.md）：NOT NULL DEFAULT 会让系统默认层被表级短路成死配置。
      * 有效生成还需：gen_frontend=1、gen_api_js=1、非从表、有取数接口（with-children 或详情）。
