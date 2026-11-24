@@ -1,0 +1,19 @@
+# Docker 构建上下文瘦身：不进镜像的东西
+target/
+logs/
+uploads/
+.git/
+.gitignore
+.idea/
+.vscode/
+*.iml
+
+# 本机个人配置不打进镜像（application-local.yml 指向本机 LLM，
+# 且 application.yml 对缺失的 local profile 会静默跳过）
+src/main/resources/application-local.yml
+
+# 文档与脚本目录不参与构建
+docs/
+scripts/
+node_modules/
+*.md
