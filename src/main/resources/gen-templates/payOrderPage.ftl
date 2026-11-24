@@ -37,11 +37,15 @@
           <template #default="{ row }">{{ row.businessType ? row.businessType + ' #' + row.businessId : '—' }}</template>
         </el-table-column>
         <el-table-column prop="paidAt" label="支付时间" width="160" />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="<#if (payRefundQueryEnabled!0) == 1>320<#else>250</#if>" fixed="right">
           <template #default="{ row }">
             <el-button type="text" size="small" @click="doQuery(row)">查单</el-button>
             <el-button v-if="row.payStatus === 0" type="text" size="small" class="danger-link" @click="doClose(row)">关单</el-button>
             <el-button v-if="row.payStatus === 0" type="text" size="small" @click="goPay(row)">去支付</el-button>
+            <el-button v-if="row.payStatus === 1" type="text" size="small" class="danger-link" @click="openRefund(row)">退款</el-button>
+<#if (payRefundQueryEnabled!0) == 1>
+            <el-button v-if="row.payStatus === 1 || row.payStatus === 3" type="text" size="small" @click="viewRefund(row)">退款结果</el-button>
+</#if>
           </template>
         </el-table-column>
       </el-table>
@@ -57,12 +61,56 @@
         @current-change="load()"
         @size-change="load(1)"
       />
+
+      <!-- 退款弹窗：金额默认剩余可退全额（支持部分退款），确认后调渠道退款并刷新列表 -->
+      <el-dialog v-model="refundDlg.visible" :title="refundDlg.title" width="420px" append-to-body>
+        <div v-if="refundDlg.maxYuan > 0" class="tip" style="margin-bottom:12px">
+          已退 {{ fenToYuan(refundDlg.refundedFen) }} 元，剩余可退 {{ refundDlg.maxYuan.toFixed(2) }} 元
+        </div>
+        <el-form label-width="110px">
+          <el-form-item label="退款金额（元）">
+            <el-input-number v-model="refundDlg.amountYuan" :min="0.01" :max="refundDlg.maxYuan"
+              :precision="2" :step="1" style="width:200px" />
+          </el-form-item>
+          <el-form-item label="退款原因">
+            <el-input v-model="refundDlg.reason" maxlength="100" placeholder="选填，入退款审计" />
+          </el-form-item>
+<#if (payRefundNoEnabled!0) == 1>
+          <el-form-item label="退款单号">
+            <el-input v-model="refundDlg.refundNo" maxlength="64" placeholder="商户退款单号；同值重放幂等" />
+          </el-form-item>
+</#if>
+        </el-form>
+        <template #footer>
+          <el-button @click="refundDlg.visible = false">取消</el-button>
+          <el-button type="primary" :loading="refundDlg.loading" @click="doRefund">确认退款</el-button>
+        </template>
+      </el-dialog>
+<#if (payRefundQueryEnabled!0) == 1>
+
+      <!-- V9.17 退款结果查询：已支付/已退款订单可见，金额后端按分存储 -->
+      <el-dialog v-model="refundResultDlg.visible" title="退款结果" width="420px" append-to-body>
+        <div v-if="refundResultDlg.data" class="refund-result">
+          <div>退款单号：{{ refundResultDlg.data.refundNo || '—' }}</div>
+          <div>退款金额：{{ fenToYuan(refundResultDlg.data.refundAmount) }} 元</div>
+          <div>退款时间：{{ refundResultDlg.data.refundAt || '—' }}</div>
+          <div>退款原因：{{ refundResultDlg.data.refundReason || '—' }}</div>
+          <div>支付状态：{{ statusText(refundResultDlg.data.payStatus) }}</div>
+        </div>
+        <template #footer>
+          <el-button type="primary" @click="refundResultDlg.visible = false">知道了</el-button>
+        </template>
+      </el-dialog>
+</#if>
     </el-card>
   </div>
 </template>
 
 <script>
-import { payOrderPage, getPayOrder, closePayOrder } from '@/api/pay'
+import { payOrderPage, getPayOrder, closePayOrder, refundPayOrder } from '@/api/pay'
+<#if (payRefundQueryEnabled!0) == 1>
+import { getRefundResult } from '@/api/pay'
+</#if>
 
 export default {
   name: 'PayOrderPage',
@@ -71,7 +119,11 @@ export default {
       query: { pageNum: 1, pageSize: 10, outTradeNo: '', payStatus: undefined },
       rows: [],
       total: 0,
-      loading: false
+      loading: false,
+      refundDlg: { visible: false, title: '', outTradeNo: '', refundedFen: 0, maxYuan: 0, amountYuan: null, reason: '', loading: false<#if (payRefundNoEnabled!0) == 1>, refundNo: ''</#if> }
+<#if (payRefundQueryEnabled!0) == 1>
+      , refundResultDlg: { visible: false, data: null }
+</#if>
     }
   },
   mounted() { this.load(1) },
@@ -110,6 +162,45 @@ export default {
         subject: row.subject, amount: this.fenToYuan(row.amount), redirect: '/pay/order'
       } })
     },
+    // V6.3 补全：退款入口——payStatus=1（含部分退款未退满）可再退剩余金额
+    openRefund(row) {
+      const refundedFen = Number(row.refundAmount || 0)
+      const maxYuan = Math.max(0, (Number(row.amount || 0) - refundedFen) / 100)
+      this.refundDlg = {
+        visible: true,
+        title: '退款：' + (row.subject || row.outTradeNo),
+        outTradeNo: row.outTradeNo,
+        refundedFen: refundedFen,
+        maxYuan: maxYuan,
+        amountYuan: maxYuan > 0 ? Number(maxYuan.toFixed(2)) : null,
+        reason: '',
+        loading: false<#if (payRefundNoEnabled!0) == 1>, refundNo: ''</#if>
+      }
+    },
+    async doRefund() {
+      const dlg = this.refundDlg
+      if (!dlg.amountYuan || dlg.amountYuan <= 0 || dlg.amountYuan > dlg.maxYuan) {
+        this.$message.warning('退款金额必须在剩余可退范围内')
+        return
+      }
+      dlg.loading = true
+      try {
+        await refundPayOrder(dlg.outTradeNo, { refundAmount: dlg.amountYuan, reason: dlg.reason || undefined<#if (payRefundNoEnabled!0) == 1>, refundNo: dlg.refundNo || undefined</#if> })
+        this.$message.success('已发起退款')
+        dlg.visible = false
+        await this.load()
+      } finally {
+        dlg.loading = false
+      }
+    },
+<#if (payRefundQueryEnabled!0) == 1>
+    async viewRefund(row) {
+      try {
+        const data = (await getRefundResult(row.outTradeNo)).data
+        this.refundResultDlg = { visible: true, data: data || {} }
+      } catch (e) { this.$message.warning('暂无退款记录或查询失败') }
+    },
+</#if>
     fenToYuan(fen) { return (Number(fen || 0) / 100).toFixed(2) },
     statusText(s) { return { 0: '待支付', 1: '成功', 2: '已关闭', 3: '已退款' }[s] || s },
     statusTagType(s) { return { 0: 'warning', 1: 'success', 2: 'info', 3: 'danger' }[s] || 'info' }

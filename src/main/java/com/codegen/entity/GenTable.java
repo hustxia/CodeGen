@@ -199,6 +199,13 @@ public class GenTable extends BaseEntity {
     private String flowCode;
 
     /**
+     * V6.3 补全 表级支付绑定（pay_code）：非空 = 该业务表接入支付能力包。
+     * 生成 {Class}PayController：按业务单号发起支付/查询支付状态/退款（pay_code 随支付单落库）。
+     * 有效生成前置：系统 pay_enabled=1 + gen_controller=1 + 非从表，缺一不生成（防死链，与 genPrint 同思路）。
+     */
+    private String payCode;
+
+    /**
      * 已注册菜单ID（sys_menu.id），为空表示尚未注册
      */
     private Long menuId;
@@ -226,6 +233,19 @@ public class GenTable extends BaseEntity {
      * 有效生成还需：gen_frontend=1、gen_api_js=1、非从表、有取数接口（with-children 或详情）。
      */
     private Integer genPrint;
+
+    /**
+     * V4.5 打印增强-打印页标题：null/空=回落表注释（printPage.ftl doc-title）。
+     * 仅影响打印页抬头文案，列表页标题不受影响；写库前由 Service 层 trim + 空串归一为 null。
+     */
+    private String printTitle;
+
+    /**
+     * V4.5 打印增强-横版打印：null/0=A4 纵向（默认，存量零 diff）、1=A4 横向
+     * （@page size: A4 landscape + 屏幕预览按 1123px 宽模拟）。
+     * 三态可空沿用 gen_print 约定；越界值由 Service 层归一为 null。
+     */
+    private Integer printLandscape;
 
     /**
      * 所属系统（sys_project.id）。为空表示沿用 application.yml 的全局默认，

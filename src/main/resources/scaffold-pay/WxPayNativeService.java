@@ -9,6 +9,9 @@ import com.wechat.pay.java.service.payments.nativepay.model.Amount;
 import com.wechat.pay.java.service.payments.nativepay.model.CloseOrderRequest;
 import com.wechat.pay.java.service.payments.nativepay.model.PrepayRequest;
 import com.wechat.pay.java.service.payments.nativepay.model.QueryOrderByOutTradeNoRequest;
+import com.wechat.pay.java.service.refund.RefundService;
+import com.wechat.pay.java.service.refund.model.AmountReq;
+import com.wechat.pay.java.service.refund.model.CreateRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -66,6 +69,24 @@ public class WxPayNativeService extends AbstractPayService {
         req.setMchid(props.getWxMchId());
         req.setOutTradeNo(order.getOutTradeNo());
         nativePayService().closeOrder(req);
+    }
+
+    /**
+     * V6.3 补全 渠道退款：复用 RSAAutoCertificateConfig（证书自动管理，零新依赖）。
+     * out_refund_no 是微信侧幂等键，同号重放微信返回首次退款结果，不会二次退款。
+     */
+    @Override
+    protected void channelRefund(PayOrder order, long refundFen, String refundNo) {
+        RefundService refundService = new RefundService.Builder().config(config()).build();
+        CreateRequest req = new CreateRequest();
+        req.setOutTradeNo(order.getOutTradeNo());
+        req.setOutRefundNo(refundNo);
+        AmountReq amount = new AmountReq();
+        amount.setRefund(refundFen);
+        amount.setTotal(order.getAmount());
+        amount.setCurrency("CNY");
+        req.setAmount(amount);
+        refundService.create(req);
     }
 
     /**

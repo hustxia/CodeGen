@@ -459,6 +459,8 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         // 放在入库前而不是生成时：生成阶段必须尊重表级值，否则用户手动关掉的开关
         // 会被系统默认值顶回去，表现为「关了还在生成」，极难排查。
         GenSwitchDefaults.fillMissing(table, projectOf(dto.getProjectId()));
+        // V4.5 打印增强：横版开关只认 0/1，越界归一为 null（纵向）；标题 trim 空串归一 null
+        sanitizePrintEnhance(table);
         if (exist != null) {
             if (!overwrite) {
                 throw new BusinessException(409, "表名已存在：" + dto.getTableName() + "，可选择覆盖");
@@ -473,6 +475,23 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         }
         saveColumns(table.getId(), dto.getColumns());
         return table.getId();
+    }
+
+    /**
+     * V4.5 打印增强配置归一：横版开关只认 0/1（越界归一 null=纵向），
+     * 标题 trim 后空串归一 null（回落表注释）。saveConfig / updateConfig 共用一套口径，
+     * 避免两条入库路径出现「同一输入两种落库结果」。
+     */
+    private void sanitizePrintEnhance(GenTable table) {
+        Integer landscape = table.getPrintLandscape();
+        if (landscape != null && landscape != 0 && landscape != 1) {
+            table.setPrintLandscape(null);
+        }
+        String title = table.getPrintTitle();
+        if (title != null) {
+            String trimmed = title.trim();
+            table.setPrintTitle(trimmed.isEmpty() ? null : trimmed);
+        }
     }
 
     @Override
@@ -504,12 +523,15 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             genPrint = null;
         }
         table.setGenPrint(genPrint);
+        // V4.5 打印增强：横版/标题归一（与 saveConfig 同口径）
+        sanitizePrintEnhance(table);
         updateById(table);
         // 「改回未配置」必须显式置 NULL：MyBatis-Plus 的 updateById 默认跳过 null 字段，
         // 表单清空级联下拉后旧值会永远删不掉，表现为「选了未配置、保存完还是原来的值」。
         // 不用实体上的 updateStrategy=IGNORED 兜底——本类还有 349/430 两处只改
         // 部分字段的 updateById，那样会把它们没带上的字段一并清空。
-        if (table.getDeleteCascadeMode() == null || genPrint == null) {
+        if (table.getDeleteCascadeMode() == null || genPrint == null
+                || table.getPrintLandscape() == null || table.getPrintTitle() == null) {
             LambdaUpdateWrapper<GenTable> clearWrapper = new LambdaUpdateWrapper<GenTable>()
                     .eq(GenTable::getId, dto.getId());
             if (table.getDeleteCascadeMode() == null) {
@@ -517,6 +539,12 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             }
             if (genPrint == null) {
                 clearWrapper.set(GenTable::getGenPrint, null);
+            }
+            if (table.getPrintLandscape() == null) {
+                clearWrapper.set(GenTable::getPrintLandscape, null);
+            }
+            if (table.getPrintTitle() == null) {
+                clearWrapper.set(GenTable::getPrintTitle, null);
             }
             update(clearWrapper);
         }

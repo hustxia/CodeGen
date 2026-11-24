@@ -34,6 +34,14 @@ class ${className}ControllerTest extends LoginStateTestSupport {
 
     /** 业务字段 JSON（平台按列模型生成；唯一列值运行时随机，避免测试互撞唯一键） */
     private String fieldsJson() {
+        return fieldsJson("it" + System.nanoTime(), System.nanoTime() % 1000000);
+    }
+
+    /**
+     * 唯一列值由调用方指定的重载（V6.7 唯一性 400 断言用）：
+     * 重复提交要把同一组唯一键连插两次，值必须固定。
+     */
+    private String fieldsJson(String uniqueValue, long uniqueNum) {
         return ${testFieldsJsonExpr};
     }
 
@@ -102,6 +110,30 @@ class ${className}ControllerTest extends LoginStateTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").value(nullValue()));
+    }
+    </#if>
+
+    <#if hasUnique>
+    @Test
+    void duplicateSubmitReturnsBadRequest() throws Exception {
+        // V6.7 唯一性 400 断言：同一组唯一键连插两次，第二条在 insert 前被查重拦下。
+        // 查重口径为 deleted=0（@TableLogic 自动追加），冲突返回 HTTP 400 + {code,msg,data.field}
+        String uniqueJson = fieldsJson("dup" + System.nanoTime(), 7L);
+        String body = <#if hasChild>"{\"master\":" + uniqueJson + "}"<#else>uniqueJson</#if>;
+        mockMvc.perform(MockMvcRequestBuilders.post("/${moduleName}<#if hasChild>/save-with-children</#if>")
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+        mockMvc.perform(MockMvcRequestBuilders.post("/${moduleName}<#if hasChild>/save-with-children</#if>")
+                        .header("Authorization", bearer())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.msg").isNotEmpty())
+                .andExpect(jsonPath("$.data.field").isNotEmpty());
     }
     </#if>
 

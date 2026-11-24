@@ -59,7 +59,7 @@ public class PayController {
         } catch (ArithmeticException e) {
             throw new BusinessException(400, "金额精度非法（最多两位小数）");
         }
-        return Result.ok(paymentService.create(req.subject, fen, req.businessType, req.businessId));
+        return Result.ok(paymentService.create(req.subject, fen, req.businessType, req.businessId, req.payCode));
     }
 
     /** 当前支付渠道（收银台据此切换 UI 形态：mock 按钮 / 出码 / 跳转） */
@@ -122,6 +122,24 @@ public class PayController {
         return Result.ok();
     }
 
+    /**
+     * V6.3 补全 退款：仅支付成功订单可退，支持部分退款（累计不超过支付金额）。
+     * refundNo 传同值重放幂等（不重复调渠道）；退满时支付单置已退款终态。
+     */
+    @PostMapping("/refund/{outTradeNo}")
+    public Result<PayOrderVO> refund(@PathVariable String outTradeNo, @RequestBody RefundReq req) {
+        if (req == null || req.refundAmount == null) {
+            throw new BusinessException(400, "退款金额必填");
+        }
+        long fen;
+        try {
+            fen = req.refundAmount.movePointRight(2).longValueExact();
+        } catch (ArithmeticException e) {
+            throw new BusinessException(400, "退款金额精度非法（最多两位小数）");
+        }
+        return Result.ok(paymentService.refund(outTradeNo, fen, req.refundNo, req.reason));
+    }
+
     /** 支付记录页分页（管理用） */
     @PostMapping("/order/page")
     public Result<Page<PayOrder>> page(@RequestBody PageReq req) {
@@ -141,6 +159,18 @@ public class PayController {
         public BigDecimal amount;
         public String businessType;
         public Long businessId;
+        /** V6.3 补全 表级绑定支付码（gen_table.pay_code，可空） */
+        public String payCode;
+    }
+
+    /** V6.3 补全 退款请求体 */
+    public static class RefundReq {
+        /** 退款金额：元（两位小数），后端转分 */
+        public BigDecimal refundAmount;
+        /** 商户退款单号：可空（缺省生成）；同值重放幂等 */
+        public String refundNo;
+        /** 退款原因（审计，可空） */
+        public String reason;
     }
 
     /** 支付记录分页请求体 */

@@ -54,6 +54,21 @@ public class PayOrder {
     /** 业务主键 */
     private Long businessId;
 
+    /** V6.3 补全 表级绑定支付码（gen_table.pay_code，业务侧标识，可空） */
+    private String payCode;
+
+    /** V6.3 补全 已累计退款金额：分（部分退款期间 pay_status 仍为 1，以本字段区分进度） */
+    private Long refundAmount;
+
+    /** V6.3 补全 最近一次商户退款单号（渠道幂等键；同号重放不二次退款） */
+    private String refundNo;
+
+    /** V6.3 补全 最近退款时间 */
+    private LocalDateTime refundAt;
+
+    /** V6.3 补全 最近退款原因（审计） */
+    private String refundReason;
+
     /** 回调原始报文（审计） */
     private String notifyRaw;
 
@@ -88,6 +103,16 @@ public class PayOrder {
     public void setBusinessType(String v) { this.businessType = v; }
     public Long getBusinessId() { return businessId; }
     public void setBusinessId(Long v) { this.businessId = v; }
+    public String getPayCode() { return payCode; }
+    public void setPayCode(String v) { this.payCode = v; }
+    public Long getRefundAmount() { return refundAmount; }
+    public void setRefundAmount(Long v) { this.refundAmount = v; }
+    public String getRefundNo() { return refundNo; }
+    public void setRefundNo(String v) { this.refundNo = v; }
+    public LocalDateTime getRefundAt() { return refundAt; }
+    public void setRefundAt(LocalDateTime v) { this.refundAt = v; }
+    public String getRefundReason() { return refundReason; }
+    public void setRefundReason(String v) { this.refundReason = v; }
     public String getNotifyRaw() { return notifyRaw; }
     public void setNotifyRaw(String v) { this.notifyRaw = v; }
     public LocalDateTime getPaidAt() { return paidAt; }

@@ -54,6 +54,8 @@ public class GenTemplateSeeder implements ApplicationRunner {
             // V9.15 数据可视化图表：仅 chartStats 走模板（每表一个，有可图表化列才渲染）。
             // 看板页/chartApi 是系统级跨表聚合，走 GenDashboardWriter Java 方法生成（同 V6.4 ApiPerms 理由），不进 gen_template。
             new SeedMeta("chartStats", "图表聚合接口", "backend", "${backendBase}/controller/${className}StatsController.java"),
+            // V6.3 补全 表级支付绑定：gen_table.pay_code 非空的表每表一个支付绑定接口（hasPayBiz 门控才渲染）
+            new SeedMeta("payBizApi", "表级支付绑定接口", "backend", "${backendBase}/controller/${className}PayController.java"),
             new SeedMeta("apiJs", "前端 api.js", "frontend", "src/api/${moduleName}.js"),
             new SeedMeta("vuePage", "前端页面", "frontend", "src/views/${moduleName}/index.vue"),
             // V4.5 A4 打印单据：开关 gen_print 开启才渲染，独立于 index.vue 的单据版式页

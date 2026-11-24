@@ -6,9 +6,11 @@ import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.api.request.AlipayTradeCloseRequest;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.request.AlipayTradeQueryRequest;
+import com.alipay.api.request.AlipayTradeRefundRequest;
 import com.alipay.api.response.AlipayTradeCloseResponse;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
+import com.alipay.api.response.AlipayTradeRefundResponse;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -84,6 +86,28 @@ public class AliPayPageService extends AbstractPayService {
             }
         } catch (com.alipay.api.AlipayApiException e) {
             throw new __PKG__.common.exception.BusinessException(500, "支付宝关单失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * V6.3 补全 渠道退款：AlipayTradeRefund，沿用现有 RSA2 客户端（零新依赖）。
+     * out_request_no 是支付宝侧幂等键（同号重放返回首次退款结果）；
+     * refund_amount 单位元（字符串），以本地单的分换算保持单一精度来源。
+     */
+    @Override
+    protected void channelRefund(PayOrder order, long refundFen, String refundNo) {
+        AlipayTradeRefundRequest req = new AlipayTradeRefundRequest();
+        req.setBizContent("{\"out_trade_no\":\"" + order.getOutTradeNo() + "\""
+                + ",\"refund_amount\":\"" + fenToYuan(refundFen) + "\""
+                + ",\"out_request_no\":\"" + refundNo + "\"}");
+        try {
+            AlipayTradeRefundResponse resp = client().execute(req);
+            if (resp == null || !resp.isSuccess()) {
+                throw new __PKG__.common.exception.BusinessException(500,
+                        "支付宝退款失败：" + (resp == null ? "无应答" : resp.getSubMsg()));
+            }
+        } catch (com.alipay.api.AlipayApiException e) {
+            throw new __PKG__.common.exception.BusinessException(500, "支付宝退款异常：" + e.getMessage());
         }
     }
 

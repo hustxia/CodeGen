@@ -145,5 +145,15 @@ public class GenTableVO implements Serializable {
      */
     private Integer genPrint;
 
+    /**
+     * V4.5 打印增强-打印页标题（表级配置原值）：null/空=回落表注释。
+     */
+    private String printTitle;
+
+    /**
+     * V4.5 打印增强-横版打印（表级配置原值）：null/0=纵向、1=横向。
+     */
+    private Integer printLandscape;
+
     private List<GenColumnDTO> columns;
 }

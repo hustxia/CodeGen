@@ -33,4 +33,51 @@ export function getFlowTaskDetail(taskId) {
   return request({ url: `/flow/task/${taskId}`, method: 'get' })
 }
 
+// ===== V9.17 工作流深度：进度图 / 会签 / 委派 / 设计器 =====
+
+// 流程进度数据（节点状态 JSON）：与 /flow/state 同源。
+// 返回 data: {
+//   flowCode, flowName, status, actions,
+//   nodes: [{ from, to, roleCode, nodeName?, condition?, approvers?, countersignMode? }],
+//   nodeStatuses: [{ nodeKey, nodeName, order, status, assigneeName, finishTime }]
+// }
+// status 取值：DONE / CURRENT / PENDING / REJECTED / DELEGATED
+export function getFlowProgress(flowCode, bizId) {
+  return request({ url: '/flow/state', method: 'get', params: { flowCode, bizId } })
+}
+
+// 会签投票：多人审批。approvers 传 [] 时用当前登录人（UserContext）作为审批人。
+// mode: ALL=全部同意才通过 / ANY=一人同意即通过 / VETO=一票否决（任一反对即驳回）。
+// approved: true=同意票，false=反对票。每票在 sys_flow_task 留一行 COUNTERSIGN_* 流水。
+export function flowCountersign(flowCode, bizId, approvers, mode, comment, approved) {
+  return request({
+    url: '/flow/countersign', method: 'post',
+    data: { flowCode, bizId, approvers, mode, comment, approved }
+  })
+}
+
+// 会签意见列表：投影成 approval_node 同构结构
+// [{ assigneeId, assigneeName, result, comment, handleTime }]
+export function getFlowCountersignOpinions(flowCode, bizId, nodeName) {
+  return request({ url: '/flow/countersign/opinions', method: 'get', params: { flowCode, bizId, nodeName } })
+}
+
+// 委派（转办）：审批人把任务转给他人，后端写 DELEGATE 流水 + DELEGATE_ASSIGN 指派流水，留痕可查。
+export function flowDelegate(flowCode, bizId, toUserId, toUserName, reason) {
+  return request({
+    url: '/flow/delegate', method: 'post',
+    data: { flowCode, bizId, toUserId, toUserName, reason }
+  })
+}
+
+// 流程定义 JSON 校验（设计器）：返回 { valid, errors: [], normalized: [] }
+export function flowValidateDef(defJson) {
+  return request({ url: '/flow/def/validate', method: 'post', data: { defJson } })
+}
+
+// 流程定义保存（设计器）：按 flowCode 幂等 upsert sys_flow_def，不改表结构。
+export function flowSaveDef(defJson) {
+  return request({ url: '/flow/def/save', method: 'post', data: { defJson } })
+}
+
 // ===== 以下为手写区：自定义请求写在这里，重新生成不会被覆盖 =====

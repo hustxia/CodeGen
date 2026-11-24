@@ -146,6 +146,16 @@ public class GenTableSaveDTO implements Serializable {
     private Integer genPrint;
 
     /**
+     * V4.5 打印增强-打印页标题：null/空=回落表注释。前端为可选文本框，清空即「恢复默认」。
+     */
+    private String printTitle;
+
+    /**
+     * V4.5 打印增强-横版打印：null/0=A4 纵向、1=A4 横向。越界值由 Service 层归一为 null。
+     */
+    private Integer printLandscape;
+
+    /**
      * 字段配置
      */
     private List<GenColumnDTO> columns;
