@@ -34,7 +34,8 @@ jobs:
       - name: Download Freemarker 2.3.32
         working-directory: scripts/i18n_snapshot
         run: |
-          curl -sSL -o freemarker.jar https://repo1.maven.org/maven2/freemarker/freemarker/2.3.32/freemarker-2.3.32.jar
+          curl -fsSL -o freemarker.jar https://repo.maven.apache.org/maven2/org/freemarker/freemarker/2.3.32/freemarker-2.3.32.jar
+          test "$(stat -c%s freemarker.jar)" -gt 100000
           ls -l freemarker.jar
 
       - name: Compile snapshot contract
