@@ -5,9 +5,11 @@
 [![verify](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml) [![i18n contract](https://github.com/hustxia/CodeGen/actions/workflows/i18n-contract.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/i18n-contract.yml) [![tests 486](https://img.shields.io/badge/tests-486%20passing-green.svg)](#11-documentation-map) [![demo live](https://img.shields.io/badge/demo-live-2563eb.svg)](https://hustxia.github.io/CodeGen/) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 > **Try it first:** [open the live demo](https://hustxia.github.io/CodeGen/) — real generated-system homepages and the V9.15 dashboard, no signup and no install. If it saves you a day of CRUD wiring, a Star helps other developers find it.
+> **[简体中文文档 →](README_ZH.md)** · **[Watch Releases →](https://github.com/hustxia/CodeGen/releases)** (get notified for new versions)
 
-> Languages: **English** · [简体中文](README_ZH.md)
+**From DDL to a running system — real screenshots, no mockups:**
 
+[![CodeGen demo reel: 8 real generated systems](docs/images/showcase/demo.gif)](docs/images/showcase/demo.gif)
 
 ---
 
@@ -21,10 +23,6 @@
 - **Proven across industries** — full systems generated end to end for public security, apparel ERP, HR and manufacturing MES (screenshots below); generated pages support 206 languages out of the box.
 
 **Jump to:** [Showcase](#showcase) · [Quick Start](#10-quick-start) · [Documentation](#11-documentation-map) · [Contributing](CONTRIBUTING.md)
-
-**From DDL to a running system — real screenshots, no mockups:**
-
-[![CodeGen demo reel: 8 real generated systems](docs/images/showcase/demo.gif)](docs/images/showcase/demo.gif)
 
 <details>
 <summary><b>Why CodeGen? Comparison with other approaches</b></summary>
@@ -399,6 +397,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 > I read and reply to every email. Bug reports, feature requests and collaboration inquiries are all welcome.
 
 ---
+
 
 ## 15. How It Compares with Similar Tools
 
