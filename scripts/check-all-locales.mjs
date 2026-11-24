@@ -3,7 +3,7 @@
  * V9.2 验证中心 S4：206 语言键覆盖批量校验。
  *
  * 与随生成物产出的 check-locale-keys.mjs 的区别：
- *   后者校验「一种新语言」，本脚本校验「平台全部 206 种语言 + 8 精译 + 12 RTL」，
+ *   后者校验「一种新语言」，本脚本校验「平台全部 206 种语言 + 12 精译 + 12 RTL」，
  *   是本地门禁与验证中心共用的入口，输出机器可读的 TC_METRICS 行。
  *
  * 用法：node scripts/check-all-locales.mjs [--json]
@@ -84,12 +84,12 @@ for (const lang of listed) {
   }
 }
 
-// 8 精译逐键一致：键集合完全相同，且值不得与源语言整篇雷同（防止复制占位）
+// 精译逐键一致：键集合完全相同，且值不得与源语言整篇雷同（防止复制占位）
 if (builtinKeySets.size !== builtin.length) {
   errors.push(`精译语言校验只覆盖 ${builtinKeySets.size}/${builtin.length} 种`)
 } else {
   const sets = new Set(builtinKeySets.values())
-  if (sets.size !== 1) errors.push('8 种精译语言键集合不一致')
+  if (sets.size !== 1) errors.push(`${builtin.length} 种精译语言键集合不一致`)
 }
 
 const metrics = {
@@ -105,7 +105,7 @@ const metrics = {
 }
 
 if (rtl !== 12) errors.push(`RTL 语言应为 12 种，实际 ${rtl}`)
-if (builtin.length !== 8) errors.push(`精译语言应为 8 种，实际 ${builtin.length}`)
+if (builtin.length !== 12) errors.push(`精译语言应为 12 种，实际 ${builtin.length}`)
 
 if (!jsonOnly) {
   console.log(`语言 ${declared} 种 / 已覆盖 ${covered} 种 / 语言包文件 ${fileNames.size} 个 / 每语言 ${expectedKeys.length} 键`)

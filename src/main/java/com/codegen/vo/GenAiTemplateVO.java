@@ -35,6 +35,9 @@ public class GenAiTemplateVO {
     @Schema(description = "表总数（列表接口用）")
     private int tableCount;
 
+    @Schema(description = "来源：builtin=预置包 / user=用户自定义包", example = "builtin")
+    private String source;
+
     @Schema(description = "模板明细：模块清单（仅 detail 接口返回）")
     private List<Module> modules = new ArrayList<>();
 
