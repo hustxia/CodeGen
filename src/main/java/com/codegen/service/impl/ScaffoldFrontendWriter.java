@@ -1015,6 +1015,9 @@ final class ScaffoldFrontendWriter {
                 + "## 已内置\n\n"
                 + "- `vite.config.js` 内置 SPA history 回退（刷新页面不会 404）\n"
                 + "- `utils/request.js` 统一注入 token、按 `code` 判成败、401 回登录页\n"
-                + "- `layout/index.vue` 侧边栏骨架\n";
+                + "- `layout/index.vue` 侧边栏骨架\n\n"
+                + "---\n\n"
+                + "> 本工程由 [Majiang CodeGen](https://github.com/hustxia/CodeGen) 一键生成（DDL → 可运行系统）"
+                + "· [在线演示](https://hustxia.github.io/CodeGen/) · 觉得省事就点个 [Star ⭐](https://github.com/hustxia/CodeGen/stargazers) 吧\n";
     }
 }

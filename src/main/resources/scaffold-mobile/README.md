@@ -33,3 +33,7 @@ src/
 ## 新增业务表怎么上移动端
 
 平台侧开启 `mobile_enabled` → 表配置勾选前端页面 → 重新生成写盘。每张标准表（非从表/非树表）会得到一份 `src/config/tables/{模块}/{表名}.js`，首页宫格与动态页自动出现，pages.json 无需改动。
+
+---
+
+> 本工程由 [Majiang CodeGen](https://github.com/hustxia/CodeGen) 一键生成（DDL → 可运行系统）· [在线演示](https://hustxia.github.io/CodeGen/) · 觉得省事就点个 [Star ⭐](https://github.com/hustxia/CodeGen/stargazers) 吧

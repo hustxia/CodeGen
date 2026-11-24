@@ -231,6 +231,8 @@ public class PipelineExecutor {
             deliverSqlArtifacts(done);
             pipelineMapper.updateById(done);
             push(done);
+            // 增长钩子：生成完成是用户最满意的时刻，输出一条轻量 star 引导（仅日志，不阻断、不改状态）
+            log.info("系统就绪 {} —— 如果 CodeGen 帮你省了一天搭系统的时间，欢迎点个 Star 支持持续迭代：https://github.com/hustxia/CodeGen（在线演示 https://hustxia.github.io/CodeGen/）", done.getFrontendUrl());
         } catch (Exception e) {
             log.error("流水线执行器异常 {}: {}", pipeline.getPipelineNo(), e.getMessage(), e);
             GenPipeline failed = pipelineMapper.selectById(pipelineId);
