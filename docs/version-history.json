@@ -602,8 +602,8 @@
         "zh": "生成质量与可维护性：新增模板影响面预览（扫描 scaffold-*.ftl，按表给出产物路径与形态提示）与控制台页；gen_table 加 child_save_mode（0=全量替换、1=按主键三路合并），一对多按主键、一对一按外键、多对多按关联键，MySQL/docker/H2 幂等加列，mode=0 零 diff（基线 14 + 契约 8 + i18n 快照 9/9）；S8/S9 进验证中心，verify.yml 加 CI 门禁。"
       },
       "commit": {
-        "en": "pending",
-        "zh": "pending"
+        "en": "a5f5b10",
+        "zh": "a5f5b10"
       }
     },
     {
@@ -614,8 +614,8 @@
         "zh": "建模规模化收尾：confirm 建库分批化，新增 gen.pipeline.db-batch-size（默认 50），DDL 分批、每批独立提交、失败报批号与摘要，DdlBatchPlanner + 7 单测；i18n 覆盖矩阵 12 语言 × 60 键 100%，CI 加 backend-i18n-coverage，补 ru-RU、pt-BR、id-ID、vi-VN；模板市场：外部模板目录支持 ZIP 导出、JSON 导入（校验、冲突拒绝、overwrite、防穿越）与来源标记，控制台新增页。"
       },
       "commit": {
-        "en": "pending",
-        "zh": "pending"
+        "en": "0863a1f",
+        "zh": "0863a1f"
       }
     }
   ],
