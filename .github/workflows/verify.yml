@@ -8,7 +8,7 @@ name: verify
 
 on:
   push:
-    branches: [master, dev, xyh_dev]
+    branches: [main, master, dev, xyh_dev]
   pull_request:
 
 jobs:
@@ -38,9 +38,39 @@ jobs:
         with:
           node-version: '20'
 
+      # 本机门禁用离线 Maven；CI 无本地仓库，必须在线拉依赖
+      - name: Freemarker 2.3.32 (i18n 快照契约)
+        run: |
+          curl -fsSL -o scripts/i18n_snapshot/freemarker.jar \
+            https://repo.maven.apache.org/maven2/org/freemarker/freemarker/2.3.32/freemarker-2.3.32.jar
+          test "$(stat -c%s scripts/i18n_snapshot/freemarker.jar)" -gt 100000
+
+      - name: 定位 mysql 客户端
+        run: echo "CG_MYSQL=$(command -v mysql)" >> "$GITHUB_ENV"
+
+      # 部分迁移脚本带 UTF-8 BOM，MySQL 8.0 会当成非法字符；测试库统一去 BOM
+      - name: 初始化测试库 gen_platform_test
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          out = Path('/tmp/codegen-sql')
+          out.mkdir(exist_ok=True)
+          for p in sorted(Path('docs/sql').glob('*.sql')):
+              s = p.read_text(encoding='utf-8-sig')
+              s = re.sub(r'(?im)^\s*(?:CREATE\s+(?:DATABASE|SCHEMA)\b[^;]*;|USE\s+`?\w+`?\s*;)\s*$', '', s)
+              (out / p.name).write_text(s, encoding='utf-8')
+          PY
+          for db in gen_platform gen_platform_test; do
+            mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS $db DEFAULT CHARSET utf8mb4;"
+            for f in /tmp/codegen-sql/*.sql; do mysql -h 127.0.0.1 -uroot -proot "$db" < "$f"; done
+          done
+
       # 空库冒烟要连本机 MySQL：127.0.0.1:3306 / root / root
       - name: 门禁（含空库冒烟）
         env:
+          MVN_FLAGS: -B
+          FREEMARKER_JAR: ${{ github.workspace }}/scripts/i18n_snapshot/freemarker.jar
           CG_DB_PASSWORD: root
           CG_DB_HOST: 127.0.0.1
         run: bash scripts/verify.sh --with-db
