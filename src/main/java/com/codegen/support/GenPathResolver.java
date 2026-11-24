@@ -205,6 +205,11 @@ public final class GenPathResolver {
                 || tplCode.equals("pageDto") || tplCode.equals("saveDto") || tplCode.equals("vo")) {
             return "service";
         }
+        // V6.3 补全 表级支付绑定：{Class}PayController 与 controller 同属 service 模块
+        //（pay 专属增量，仅命中 payBizApi 一个模板码）
+        if (tplCode.equals("payBizApi")) {
+            return "service";
+        }
         return null;
     }
 

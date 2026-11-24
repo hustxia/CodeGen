@@ -263,6 +263,11 @@ public class GenTemplateEngine {
         if (Boolean.TRUE.equals(model.get("hasCharts"))) {
             put(files, "chartStats", resolver, model, project);
         }
+        // V6.3 补全 表级支付绑定：hasPayBiz 前置条件在 GenTemplateModel 算好（pay_code 非空+pay_enabled+genController+非从表）。
+        // 每表一个 {Class}PayController：按业务单号发起支付/查询支付状态/退款，与 controller 同源但独立文件（不侵入 controller.ftl）。
+        if (Boolean.TRUE.equals(model.get("hasPayBiz"))) {
+            put(files, "payBizApi", resolver, model, project);
+        }
         if (genFrontend && GenTemplateModel.on(table.getGenApiJs()) && !isChild) {
             put(files, "apiJs", resolver, model, project);
         }

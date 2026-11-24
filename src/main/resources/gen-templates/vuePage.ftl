@@ -897,6 +897,31 @@ export default {
       return map[field] || field
     },
 </#if>
+<#if hasUnique>
+    /**
+     * V9.17 唯一冲突字段级提示：后端保存接口统一返回 HTTP 400 +
+     * {code:400, msg:"编码已存在", data:{field:"code"}}；
+     * 同时兼容扁平写法 {code:400, message, field}，宿主自定义拦截器改形状也不失效。
+     * 红字挂到对应 el-form-item 上，弹窗保持打开；toast 由 request 拦截器统一弹，这里不重复弹。
+     */
+    applyUniqueFieldError(e) {
+      const body = e && e.response && e.response.data
+      if (!body || body.code !== 400) return
+      const field = (body.data && body.data.field) || body.field
+      if (!field || !this.$refs.form) return
+      const message = body.msg || body.message || ''
+      // 先清掉上一次的字段红字，避免换字段提交后旧提示还挂着
+      if (this._uniqueErrorField && this._uniqueErrorField !== field) {
+        this.$refs.form.clearValidate([this._uniqueErrorField])
+      }
+      this._uniqueErrorField = field
+      const item = this.$refs.form.fields.find(f => f.prop === field)
+      if (item) {
+        item.validateState = 'error'
+        item.validateMessage = message
+      }
+    },
+</#if>
 <#if hasMultiImage>
     // V6.8 多图字段：库里存 URL JSON 数组字符串。解析失败一律降级为空数组，
     // 不让一条脏数据把整页渲染打挂（列表/详情/详情预览三处共用这两个方法）。
@@ -1223,8 +1248,14 @@ export default {
         this.$message.success(this.form.id ? '更新成功' : '创建成功')
 </#if>
         this.dialogVisible = false
+<#if hasUnique>
+        this._uniqueErrorField = undefined
+</#if>
         this.fetchList()
-      } catch (e) { /* 拦截器已提示 */ } finally {
+      } catch (e) {
+        // 拦截器已提示；V9.17 唯一冲突(400)时按 data.field 把红字落到对应表单项，弹窗不关
+        <#if hasUnique>this.applyUniqueFieldError(e)</#if>
+      } finally {
         this.submitting = false
       }
     },

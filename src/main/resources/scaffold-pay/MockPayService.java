@@ -39,6 +39,11 @@ public class MockPayService extends AbstractPayService {
         // 无渠道侧动作
     }
 
+    @Override
+    protected void channelRefund(PayOrder order, long refundFen, String refundNo) {
+        // mock 退款无渠道侧动作：余额校验与状态流转在 AbstractPayService.refund 统一收敛
+    }
+
     /**
      * 模拟渠道回调：读单 → 金额校验 → markPaid（与真渠道回调同构）。
      *

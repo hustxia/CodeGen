@@ -11,6 +11,11 @@ CREATE TABLE IF NOT EXISTS pay_order (
     pay_form       mediumtext   COMMENT '渠道返回的自动提交表单 HTML（alipay pageExecute）',
     business_type  varchar(64)  DEFAULT NULL COMMENT '业务表名（支付成功联动其 pay_status）',
     business_id    bigint       DEFAULT NULL COMMENT '业务主键',
+    pay_code       varchar(64)  DEFAULT NULL COMMENT '表级绑定支付码（gen_table.pay_code，业务侧标识）',
+    refund_amount  bigint       NOT NULL DEFAULT 0 COMMENT '已累计退款金额：分（部分退款期间 pay_status 仍为 1）',
+    refund_no      varchar(64)  DEFAULT NULL COMMENT '最近一次商户退款单号（渠道幂等键）',
+    refund_at      datetime     DEFAULT NULL COMMENT '最近退款时间',
+    refund_reason  varchar(255) DEFAULT NULL COMMENT '最近退款原因（审计）',
     notify_raw     mediumtext   COMMENT '回调原始报文（审计）',
     paid_at        datetime     DEFAULT NULL COMMENT '支付成功时间',
     deleted        tinyint      NOT NULL DEFAULT 0,
@@ -19,5 +24,6 @@ CREATE TABLE IF NOT EXISTS pay_order (
     update_by      bigint       DEFAULT NULL,
     update_time    datetime     DEFAULT NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_out_trade_no (out_trade_no)
+    UNIQUE KEY uk_out_trade_no (out_trade_no),
+    KEY idx_pay_business (business_type, business_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='支付单';

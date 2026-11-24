@@ -56,6 +56,7 @@ spring:
         classpath:db/h2/V9.2__verification_center.sql,
         classpath:db/h2/V9.6__ai_build_job.sql,
         classpath:db/h2/V9.15__chart_enabled.sql,
+        classpath:db/h2/V9.17__pay_code.sql,
         classpath:db/h2/999_demo_seed.sql
       data-locations: ""
       mode: always

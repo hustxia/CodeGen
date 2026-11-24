@@ -13,6 +13,11 @@ CREATE TABLE IF NOT EXISTS pay_order (
     pay_form       text         COMMENT '渠道返回的自动提交表单 HTML',
     business_type  varchar(64)  DEFAULT NULL COMMENT '业务表名',
     business_id    bigint       DEFAULT NULL COMMENT '业务主键',
+    pay_code       varchar(64)  DEFAULT NULL COMMENT '表级绑定支付码（gen_table.pay_code）',
+    refund_amount  bigint       NOT NULL DEFAULT 0 COMMENT '已累计退款金额：分',
+    refund_no      varchar(64)  DEFAULT NULL COMMENT '最近一次商户退款单号',
+    refund_at      datetime     DEFAULT NULL COMMENT '最近退款时间',
+    refund_reason  varchar(255) DEFAULT NULL COMMENT '最近退款原因（审计）',
     notify_raw     text         COMMENT '回调原始报文（审计）',
     paid_at        datetime     DEFAULT NULL COMMENT '支付成功时间',
     deleted        tinyint      NOT NULL DEFAULT 0,
@@ -23,3 +28,4 @@ CREATE TABLE IF NOT EXISTS pay_order (
     PRIMARY KEY (id),
     CONSTRAINT uk_out_trade_no UNIQUE (out_trade_no)
 );
+CREATE INDEX IF NOT EXISTS idx_pay_business ON pay_order (business_type, business_id);

@@ -707,9 +707,23 @@ final class ScaffoldPomWriter {
                 + payBlock
                 + fileBlock
                 // V6.4 P0-1：会话时长（滑动续期）；顶层键块放 yml 末尾（坑 40：插进 spring: 会挤坏后续块）
+                // V6.4 安全加固三件套：登录限流 / 单用户互踢 / 密码强度（默认保守，不改=与原行为兼容）
                 + "\n# V6.4 登录会话：token 持久化 sys_session，滑动续期；改短便于验证过期清理\n"
+                + "# V6.4 安全加固：登录限流（IP+账号滑动窗口，60s 内 5 次失败锁 300s，内存实现）、\n"
+                + "# 单用户互踢（后登录顶掉先登录，旧 token 返回 401 + 业务码 4011）、密码强度策略\n"
                 + "auth:\n"
-                + "  session-hours: 24\n";
+                + "  session-hours: 24\n"
+                + "  login-rate-limit:\n"
+                + "    enabled: true\n"
+                + "    window-seconds: 60\n"
+                + "    max-failures: 5\n"
+                + "    lock-seconds: 300\n"
+                + "  kick-enabled: true\n"
+                + "  # 密码强度：新增/重置密码校验；require-letter-and-digit 默认关（兼容默认口令 123456），pattern 为空=不启用正则\n"
+                + "  password-policy:\n"
+                + "    min-length: 6\n"
+                + "    require-letter-and-digit: false\n"
+                + "    pattern: \"\"\n";
     }
 
     static String applicationLocalExample(String pkg) {

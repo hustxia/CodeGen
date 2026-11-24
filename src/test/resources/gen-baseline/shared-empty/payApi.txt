@@ -13,6 +13,11 @@ export function closePayOrder(outTradeNo) {
   return request({ url: '/pay/close/' + outTradeNo, method: 'post' })
 }
 
+// V6.3 补全 退款：refundAmount 单位元（支持部分退款），refundNo 传同值重放幂等
+export function refundPayOrder(outTradeNo, data) {
+  return request({ url: '/pay/refund/' + outTradeNo, method: 'post', data })
+}
+
 // mock 渠道专用：本地模拟支付成功（真渠道下后端返回 404）
 export function mockPay(outTradeNo) {
   return request({ url: '/pay/mock/pay/' + outTradeNo, method: 'post' })

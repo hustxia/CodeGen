@@ -47,6 +47,31 @@
           <div class="tip">本页每 2 秒自动查单，成功后自动跳转</div>
         </template>
 
+<#-- V9.17：以下三块均为三态开关能力（NULL/0 关、1 开），缺省关闭时模板指令行被剔除，产物与 V6.3 逐字节一致 -->
+<#if (payJsapiEnabled!0) == 1>
+        <!-- V9.17 JSAPI：微信内置浏览器走 WeixinJSBridge，appId 由后端配置下发（前端零硬编码） -->
+        <template v-if="channel === 'wxpay' && isWeixin && order.payStatus === 0">
+          <el-button type="primary" :loading="paying" :disabled="!jsapiReady" @click="payInWeixin">微信内支付</el-button>
+          <div class="tip">签名由后端用 jsapi_ticket 生成；appId/商户号从 pay 配置读取，前端不落密钥</div>
+        </template>
+
+</#if>
+<#if (payH5Enabled!0) == 1>
+        <!-- V9.17 H5：非微信内置浏览器跳微信 H5 支付链接 -->
+        <template v-if="channel === 'wxpay' && !isWeixin && order.payStatus === 0 && order.payUrl">
+          <el-button type="primary" @click="gotoH5">跳转微信 H5 支付</el-button>
+          <div class="tip">微信外打开走 H5 链接；本页每 2 秒自动查单</div>
+        </template>
+
+</#if>
+<#if (payAlipaySandboxEnabled!0) == 1>
+        <!-- V9.17 支付宝沙箱：后端 alipay.sandbox=true 切沙箱网关，前端给环境提示与扫码登录入口 -->
+        <template v-if="channel === 'alipay' && sandbox">
+          <div class="tip">当前为支付宝沙箱环境，资金为虚拟；扫码请使用沙箱买家账号</div>
+          <el-button size="small" @click="gotoSandboxLogin">沙箱扫码/登录</el-button>
+        </template>
+
+</#if>
         <div v-if="order.payStatus === 1" class="done">
           <el-icon style="color:#67c23a;font-size:42px"><SuccessFilled /></el-icon>
           <div>支付成功{{ redirect ? '，即将跳转…' : '' }}</div>
@@ -59,6 +84,15 @@
 <script>
 import QRCode from 'qrcode'
 import { createPayOrder, getPayOrder, mockPay, getPayChannel } from '@/api/pay'
+<#if (payJsapiEnabled!0) == 1 || (payAlipaySandboxEnabled!0) == 1>
+import { getPayConfig } from '@/api/pay'
+</#if>
+<#if (payJsapiEnabled!0) == 1>
+import { createJsapiOrder, getJsapiSignature } from '@/api/pay'
+</#if>
+<#if (payH5Enabled!0) == 1>
+import { createH5Order } from '@/api/pay'
+</#if>
 
 export default {
   name: 'PayCashier',
@@ -71,12 +105,26 @@ export default {
       creating: false,
       mocking: false,
       timer: null
+<#if (payJsapiEnabled!0) == 1 || (payAlipaySandboxEnabled!0) == 1>
+      , payConfig: {}
+      , sandbox: false
+</#if>
+<#if (payJsapiEnabled!0) == 1>
+      , paying: false
+      , jsapiParams: null
+      , jsapiReady: false
+</#if>
     }
   },
   computed: {
     channelText() {
       return { mock: '模拟支付', wxpay: '微信支付（扫码）', alipay: '支付宝' }[this.channel] || this.channel
     }
+<#if (payJsapiEnabled!0) == 1 || (payH5Enabled!0) == 1>
+    , isWeixin() {
+      return /MicroMessenger/i.test(navigator.userAgent || '')
+    }
+</#if>
   },
   async mounted() {
     const q = this.$route.query || {}
@@ -90,6 +138,14 @@ export default {
       const res = await getPayChannel()
       this.channel = res.data || 'mock'
     } catch (e) { this.channel = 'mock' }
+<#if (payJsapiEnabled!0) == 1 || (payAlipaySandboxEnabled!0) == 1>
+    try {
+      // V9.17：appId / 沙箱标识等运行时配置由产物后端从 yml 读取后下发
+      const cfg = (await getPayConfig()).data || {}
+      this.payConfig = cfg
+      this.sandbox = cfg.alipaySandbox === true || cfg.alipaySandbox === 1
+    } catch (e) { /* 后端未部署 /pay/config 时保持默认（非沙箱），不影响原有渠道流程 */ }
+</#if>
   },
   beforeDestroy() {
     if (this.timer) clearInterval(this.timer)
@@ -102,6 +158,36 @@ export default {
       }
       this.creating = true
       try {
+<#if (payJsapiEnabled!0) == 1>
+        if (this.channel === 'wxpay' && this.isWeixin) {
+          const data = (await createJsapiOrder({
+            subject: this.form.subject, amount: this.form.amountYuan,
+            businessType: this.form.businessType || undefined,
+            businessId: this.form.businessId || undefined,
+            redirect: this.form.redirect || undefined,
+            payScene: 'jsapi'
+          })).data
+          this.order = data
+          await this.applyJsapiConfig(data)
+          if (data.payStatus === 0) this.startPolling()
+          return
+        }
+</#if>
+<#if (payH5Enabled!0) == 1>
+        if (this.channel === 'wxpay' && !this.isWeixin) {
+          const data = (await createH5Order({
+            subject: this.form.subject, amount: this.form.amountYuan,
+            businessType: this.form.businessType || undefined,
+            businessId: this.form.businessId || undefined,
+            redirect: this.form.redirect || undefined,
+            payScene: 'h5'
+          })).data
+          this.order = data
+          if (data.payUrl) window.location.href = data.payUrl
+          if (data.payStatus === 0) this.startPolling()
+          return
+        }
+</#if>
         const data = (await createPayOrder({
           subject: this.form.subject,
           amount: this.form.amountYuan,
@@ -128,6 +214,13 @@ export default {
       }
     },
     gotoAli() {
+<#if (payAlipaySandboxEnabled!0) == 1>
+      // V9.17 沙箱：后端按 alipay.sandbox 切到沙箱网关并下发 payUrl，前端不拼网关域名
+      if (this.sandbox && this.payConfig.alipaySandboxPayUrl) {
+        window.location.href = this.payConfig.alipaySandboxPayUrl
+        return
+      }
+</#if>
       if (this.order.payForm) {
         // pageExecute 返回自动提交表单：落空文档即跳转支付宝
         const w = window.open('', '_blank')
@@ -137,6 +230,51 @@ export default {
         window.location.href = this.order.payUrl
       }
     },
+<#if (payAlipaySandboxEnabled!0) == 1>
+    gotoSandboxLogin() {
+      const url = this.payConfig.alipaySandboxLoginUrl
+      if (!url) { this.$message.warning('后端未提供沙箱登录地址（检查 alipay.sandbox 配置）'); return }
+      window.open(url, '_blank')
+    },
+</#if>
+<#if (payJsapiEnabled!0) == 1>
+    async applyJsapiConfig(data) {
+      try {
+        let sign = data && data.jsapiSign
+        if (!sign) {
+          sign = (await getJsapiSignature(window.location.href.split('#')[0])).data
+        }
+        const appId = (this.payConfig && this.payConfig.wxAppId) || (sign && sign.appId)
+        if (!appId) { this.$message.warning('后端未下发微信 appId，检查 pay 配置'); return }
+        this.jsapiParams = {
+          appId,
+          timeStamp: String(sign.timestamp),
+          nonceStr: sign.nonceStr,
+          package: sign.package || ('prepay_id=' + (data.prepayId || '')),
+          signType: sign.signType || 'RSA',
+          paySign: sign.paySign
+        }
+        this.jsapiReady = true
+      } catch (e) { this.$message.error('JSAPI 签名获取失败') }
+    },
+    payInWeixin() {
+      if (!window.WeixinJSBridge || !this.jsapiParams) {
+        this.$message.warning('请在微信内置浏览器打开，并确认 JSAPI 签名已就绪')
+        return
+      }
+      this.paying = true
+      window.WeixinJSBridge.invoke('getBrandWCPayRequest', this.jsapiParams, (res) => {
+        this.paying = false
+        if (res && res.err_msg === 'get_brand_wcpay_request:ok') this.refreshOnce()
+      })
+    },
+</#if>
+<#if (payH5Enabled!0) == 1>
+    gotoH5() {
+      if (this.order && this.order.payUrl) window.location.href = this.order.payUrl
+      else this.$message.warning('后端未返回 H5 支付链接')
+    },
+</#if>
     startPolling() {
       if (this.timer) clearInterval(this.timer)
       this.timer = setInterval(() => this.refreshOnce(), 2000)

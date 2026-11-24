@@ -251,8 +251,18 @@ public Result<Map<String, Object>> detailWithChildren(@PathVariable("id") Long i
 @Operation(summary = "保存${comment}（主表 + 子表同事务；子表字段为 null 表示不动，空列表表示清空）")
 @PostMapping("/save-with-children")
 public Result<Void> saveWithChildren(<#if ctrlValid>@Valid </#if>@RequestBody WithChildrenDTO dto) {
+<#if hasUnique>
+    // 主子表保存同样过唯一性校验：master 走 add/update 同一套 checkUnique，
+    // 落库时再由 writeWithUniqueGuard 兜底，冲突统一 BusinessException.unique → HTTP 400 + data.field
+    checkUnique(dto.getMaster(), dto.getMaster().getId());
+</#if>
+<#if hasUnique>
+    writeWithUniqueGuard(() -> ${varName}Service.saveWithChildren(dto.getMaster()<#list children as child>,
+                                       dto.get${child.varName?cap_first}Rows()</#list>));
+<#else>
     ${varName}Service.saveWithChildren(dto.getMaster()<#list children as child>,
                                        dto.get${child.varName?cap_first}Rows()</#list>);
+</#if>
     return Result.ok();
 }
 
@@ -509,6 +519,25 @@ public Result<${className}VO> getById(@PathVariable("id") Long id) {
     return Result.ok(vo);
 }
 </#if>
+<#if hasUnique>
+    // ==================== V9.17 唯一性冲突兜底（与前置 checkUnique 同一错误体） ====================
+    /** 冲突文案与字段名由模板常量生成，前端 el-form-item prop 与此处 field 同源（联合唯一取首列）。 */
+    private static final String UNIQUE_CONFLICT_MSG = "<#if hasSingleUnique>${uniqueColumns[0].commentLabel}已存在<#else><#list uniqueColumns as c>${c.commentLabel}<#if c_has_next>+</#if></#list>组合已存在</#if>";
+    private static final String UNIQUE_CONFLICT_FIELD = "${uniqueColumns[0].javaField}";
+
+    /**
+     * V9.17：DB 层唯一键兜底。前置 checkUnique 是 check-then-insert，存在并发竞态；
+     * 绕过页面直接调接口也会漏检。这里把 DuplicateKeyException 翻成同一份
+     * HTTP 400 + {code,msg,data.field}，不让唯一冲突退化成兜底 500。
+     */
+    private void writeWithUniqueGuard(Runnable write) {
+        try {
+            write.run();
+        } catch (org.springframework.dao.DuplicateKeyException ex) {
+            throw BusinessException.unique(UNIQUE_CONFLICT_MSG, UNIQUE_CONFLICT_FIELD);
+        }
+    }
+</#if>
 <#if ctrlAddApi>${''}
 @Operation(summary = "新增${comment}")
 <#if genLog>@Log(title = "${comment}", type = "INSERT")
@@ -519,7 +548,11 @@ public Result<Void> add(<#if ctrlValid>@Valid </#if>@RequestBody ${className}Sav
 </#if>
     ${className} entity = new ${className}();
     BeanUtils.copyProperties(dto, entity);
+<#if hasUnique>
+    writeWithUniqueGuard(() -> ${varName}Service.save(entity));
+<#else>
     ${varName}Service.save(entity);
+</#if>
     return Result.ok();
 }
 </#if>
@@ -533,7 +566,11 @@ public Result<Void> update(<#if ctrlValid>@Valid </#if>@RequestBody ${className}
 </#if>
     ${className} entity = new ${className}();
     BeanUtils.copyProperties(dto, entity);
+<#if hasUnique>
+    writeWithUniqueGuard(() -> ${varName}Service.updateById(entity));
+<#else>
     ${varName}Service.updateById(entity);
+</#if>
     return Result.ok();
 }
 </#if>
@@ -615,13 +652,16 @@ public Result<Void> delete(@PathVariable("id") Long id) {
     /**
      * 保存前兜底校验：前端异步校验只是体验优化，绕过接口直接调保存时这里必须拦住。
      * 单列 unique 逐列判断；多列 unique 联合判断（同时相等才算重复）。
+     * 冲突走 BusinessException.unique(msg, field)：HTTP 400 + {code,msg,data.field}，
+     * field 指向冲突列（联合唯一取首列，前端据此把红字落在对应表单项上）；
+     * 与 writeWithUniqueGuard 的 DB 兜底同一常量、同一错误体。
      */
     private void checkUnique(${className}SaveDTO dto, Long excludeId) {
         <#if hasSingleUnique>
         <#list uniqueColumns as c>
         if (dto.get${c.capField}() != null && !String.valueOf(dto.get${c.capField}()).isBlank()
                 && countBy("${c.dbField}", String.valueOf(dto.get${c.capField}()), excludeId) > 0) {
-            throw new BusinessException(400, "${c.commentLabel}已存在");
+            throw BusinessException.unique(UNIQUE_CONFLICT_MSG, UNIQUE_CONFLICT_FIELD);
         }
         </#list>
         <#else>
@@ -636,7 +676,7 @@ public Result<Void> delete(@PathVariable("id") Long id) {
                 wrapper.ne(${className}::getId, excludeId);
             }
             if (${varName}Service.count(wrapper) > 0) {
-                throw new BusinessException(400, "<#list uniqueColumns as c>${c.commentLabel}<#if c_has_next>+</#if></#list>组合已存在");
+                throw BusinessException.unique(UNIQUE_CONFLICT_MSG, UNIQUE_CONFLICT_FIELD);
             }
         }
         </#if>
@@ -644,6 +684,9 @@ public Result<Void> delete(@PathVariable("id") Long id) {
 
     /**
      * 按列名统计重复条数。列名来自生成期常量，不存在拼接用户输入的风险。
+     * 查重口径含 deleted=0：实体继承 BaseEntity 的 @TableLogic，
+     * MyBatis-Plus 会给 wrapper 查询自动追加逻辑删除条件，已删行不算重复，
+     * 同值「删了重填」不会被误拦。
      */
     private long countBy(String column, String value, Long excludeId) {
         com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<${className}> wrapper =

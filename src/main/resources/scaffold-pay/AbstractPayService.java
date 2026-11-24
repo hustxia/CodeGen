@@ -45,8 +45,19 @@ public abstract class AbstractPayService implements PaymentService {
     /** 渠道侧关单 hook */
     protected abstract void channelClose(PayOrder order);
 
+    /**
+     * 渠道侧退款 hook：refundNo 是渠道幂等键（同号重放渠道侧也不会二次退），
+     * 校验失败（余额不足/单不可退）抛 BusinessException，成功无返回。
+     */
+    protected abstract void channelRefund(PayOrder order, long refundFen, String refundNo);
+
     @Override
     public PayOrderVO create(String subject, long amountFen, String businessType, Long businessId) {
+        return create(subject, amountFen, businessType, businessId, null);
+    }
+
+    @Override
+    public PayOrderVO create(String subject, long amountFen, String businessType, Long businessId, String payCode) {
         if (amountFen <= 0) {
             throw new __PKG__.common.exception.BusinessException(400, "金额必须大于 0");
         }
@@ -65,6 +76,7 @@ public abstract class AbstractPayService implements PaymentService {
         order.setPayStatus(PayOrder.STATUS_PENDING);
         order.setBusinessType(businessType);
         order.setBusinessId(businessId);
+        order.setPayCode(payCode);
         orderMapper.insert(order);
         channelCreate(order);
         orderMapper.updateById(order);
@@ -94,6 +106,67 @@ public abstract class AbstractPayService implements PaymentService {
     }
 
     /**
+     * V6.3 补全 退款状态机唯一入口：金额校验 → 渠道退款 → 条件 UPDATE 累加 → 退满置终态。
+     *
+     * <p>与 {@link #markPaid} 同款幂等思路，三重防护：
+     * <ol>
+     *   <li>余额校验：本次退款 + 已累计退款 ≤ 支付金额，超出直接 400；</li>
+     *   <li>同 refund_no 重放：直接返回当前状态，不再调渠道（渠道侧 out_refund_no 同号也幂等，双保险）；</li>
+     *   <li>条件 UPDATE：pay_status=1 且余额足够才累加（并发退款天然收敛，无需分布式锁）。</li>
+     * </ol>
+     * 部分退款保持 pay_status=1（由 refund_amount 区分）；累计退满 → pay_status=3 并联动业务表 pay_status=3。
+     */
+    @Override
+    public PayOrderVO refund(String outTradeNo, long refundFen, String refundNo, String reason) {
+        if (refundFen <= 0) {
+            throw new __PKG__.common.exception.BusinessException(400, "退款金额必须大于 0");
+        }
+        PayOrder order = mustGet(outTradeNo);
+        if (order.getPayStatus() == PayOrder.STATUS_REFUNDED) {
+            throw new __PKG__.common.exception.BusinessException(400, "订单已全额退款，不可重复退款");
+        }
+        if (order.getPayStatus() != PayOrder.STATUS_PAID) {
+            throw new __PKG__.common.exception.BusinessException(400, "仅支付成功的订单可退款");
+        }
+        long refunded = order.getRefundAmount() == null ? 0L : order.getRefundAmount();
+        if (refundFen + refunded > order.getAmount()) {
+            throw new __PKG__.common.exception.BusinessException(400,
+                    "退款金额超过可退余额（已退 " + fenToYuan(refunded) + " 元）");
+        }
+        if (StringUtils.hasText(refundNo) && refundNo.equals(order.getRefundNo())) {
+            return toVo(order); // 幂等重放：同 refund_no 已受理过
+        }
+        String effectiveRefundNo = StringUtils.hasText(refundNo)
+                ? refundNo
+                : "R" + DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS").format(LocalDateTime.now())
+                        + ThreadLocalRandom.current().nextInt(100, 1000);
+        channelRefund(order, refundFen, effectiveRefundNo);
+        // refundFen 已是校验过的 long，条件里仅做数值拼接（无注入面）；余额不足或状态已变时影响行数=0
+        int updated = orderMapper.update(null, new LambdaUpdateWrapper<PayOrder>()
+                .eq(PayOrder::getOutTradeNo, outTradeNo)
+                .eq(PayOrder::getPayStatus, PayOrder.STATUS_PAID)
+                .apply("IFNULL(refund_amount, 0) + {0} <= amount", refundFen)
+                .setSql("refund_amount = IFNULL(refund_amount, 0) + " + refundFen)
+                .set(PayOrder::getRefundNo, effectiveRefundNo)
+                .set(PayOrder::getRefundAt, LocalDateTime.now())
+                .set(StringUtils.hasText(reason), PayOrder::getRefundReason, reason));
+        if (updated == 0) {
+            throw new __PKG__.common.exception.BusinessException(400, "退款失败：订单状态已变化或可退余额不足");
+        }
+        PayOrder latest = mustGet(outTradeNo);
+        if (latest.getRefundAmount() != null && latest.getRefundAmount().equals(latest.getAmount())) {
+            // 累计退满：1 → 3 终态（条件 UPDATE，与并发退款互斥），业务表 pay_status 联动置 3
+            orderMapper.update(null, new LambdaUpdateWrapper<PayOrder>()
+                    .eq(PayOrder::getOutTradeNo, outTradeNo)
+                    .eq(PayOrder::getPayStatus, PayOrder.STATUS_PAID)
+                    .set(PayOrder::getPayStatus, PayOrder.STATUS_REFUNDED));
+            linkBusiness(latest, 3);
+            latest = mustGet(outTradeNo);
+        }
+        return toVo(latest);
+    }
+
+    /**
      * 唯一状态流转入口：回调重放/mock 重复支付/补偿任务全部经此收敛。
      *
      * <p>条件 UPDATE（pay_status=0 才置 1）影响行数=0 即已被处理，直接返回 false——幂等；
@@ -115,17 +188,17 @@ public abstract class AbstractPayService implements PaymentService {
         if (updated == 0) {
             return false;
         }
-        linkBusiness(order);
+        linkBusiness(order, 1);
         return true;
     }
 
     /**
-     * 业务联动：支付成功后更新业务表 pay_status=1。
+     * 业务联动：支付成功更新业务表 pay_status=1；V6.3 补全：全额退款联动置 3。
      *
      * <p>business_type 是动态表名，必须三重校验防 SQL 注入：
      * 正则白名单 → 表存在性（information_schema）→ pay_status 列存在性。
      */
-    private void linkBusiness(PayOrder order) {
+    private void linkBusiness(PayOrder order, int targetStatus) {
         String table = order.getBusinessType();
         if (!StringUtils.hasText(table) || order.getBusinessId() == null) {
             return;
@@ -148,7 +221,8 @@ public abstract class AbstractPayService implements PaymentService {
         if (colCnt == null || colCnt == 0) {
             return; // 业务表没有 pay_status 列 = 未接入支付约定，静默跳过
         }
-        jdbcTemplate.update("UPDATE " + table + " SET pay_status = 1 WHERE id = ?", order.getBusinessId());
+        jdbcTemplate.update("UPDATE " + table + " SET pay_status = ? WHERE id = ?",
+                targetStatus, order.getBusinessId());
     }
 
     /** 下单前校验业务表名（同 linkBusiness 的白名单与存在性口径） */
@@ -188,6 +262,11 @@ public abstract class AbstractPayService implements PaymentService {
         vo.setPayForm(order.getPayForm());
         vo.setBusinessType(order.getBusinessType());
         vo.setBusinessId(order.getBusinessId());
+        // V6.3 补全：退款进度字段（前端展示「已退 x 元 / 剩余可退」）
+        vo.setPayCode(order.getPayCode());
+        vo.setRefundAmountFen(order.getRefundAmount());
+        vo.setRefundAmountYuan(fenToYuan(order.getRefundAmount()));
+        vo.setRefundAt(order.getRefundAt());
         return vo;
     }
 

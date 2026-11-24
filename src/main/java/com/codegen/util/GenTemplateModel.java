@@ -16,6 +16,8 @@ import java.util.StringJoiner;
  */
 public final class GenTemplateModel {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GenTemplateModel.class);
+
     /**
      * 生成物引用基座类时使用的根包名（如 com.demo → com.demo.common.result.Result）。
      *
@@ -653,6 +655,36 @@ public final class GenTemplateModel {
                 && (!childrenModel.isEmpty() || genDetailApi);
         m.put("genPrint", genPrint);
 
+        // V4.5 打印增强-横版：表级三态（null/0=纵向 1=横向），模板只消费 0/1 键。
+        // 基线模型（print_landscape 全空）落 0 → @page 仍是 A4 portrait，存量产物逐字节零 diff。
+        m.put("printLandscape", on(table.getPrintLandscape()) ? 1 : 0);
+        // V4.5 打印增强-打印页标题：表级覆盖 → 表注释回落。空串等价未配置（firstText 跳过空值）。
+        m.put("printTitle", sanitizeComment(firstText(table.getPrintTitle(),
+                orDefault(table.getTableComment(), className))).trim());
+        // V4.5 打印增强-金额大写：主表键值区存在金额列时，键值表下补「人民币大写」行。
+        // 判定唯一实现 isMoneyColumn（BigDecimal + 列名/注释词表），模板只消费结果。
+        boolean masterMoney = formCols.stream().anyMatch(c ->
+                isMoneyColumn(c.getColumnName(), c.getColumnComment(), c.getJavaType()));
+        m.put("hasMasterMoney", masterMoney);
+        // V4.5 打印增强-金额大写：主表键值区或任一明细块存在金额列时，打印页才内联
+        // rmbUpper 转换函数（生成物零依赖纯 JS）。无金额列的表连函数都不出，产物零 diff。
+        boolean anyDetailMoney = childrenModel.stream().anyMatch(c -> {
+            Object mf = c.get("moneyField");
+            if (mf != null && !String.valueOf(mf).isEmpty()) {
+                return true;
+            }
+            for (Object grand : asList(c.get("grandChildren"))) {
+                if (grand instanceof Map<?, ?> gm) {
+                    Object gf = gm.get("moneyField");
+                    if (gf != null && !String.valueOf(gf).isEmpty()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
+        m.put("printRmb", masterMoney || anyDetailMoney);
+
         // V9.15 数据可视化图表：GenChartDeriver 纯函数按列元数据推导图清单（零领域词，跨系统通用）。
         // 前置：chart_enabled 开 + 出 Service（stats 接口要查库）+ 非从表（从表随主表出，无独立接口）。
         // 图清单固化进模型：chartStats.ftl 据此内联列名白名单（防注入），前端看板据此渲染图卡。
@@ -787,6 +819,36 @@ public final class GenTemplateModel {
                     && listCols.stream().anyMatch(c -> "status".equalsIgnoreCase(c.getColumnName())));
         }
 
+        // ===== V6.3 补全 表级支付绑定（pay_code） =====
+        // 绑定生效前置：系统 pay_enabled=1 + gen_controller=1 + 非从表（从表无独立 Controller，缺一不生成防死链）。
+        // 「业务单号/金额」列在生成期按命名约定推导并固化为常量（chartStats 白名单同款防注入思路，运行期零拼接用户输入）：
+        //   单号列：order_no / bill_no / out_trade_no / business_no / no，均无则回落主键 id（此时"业务单号"即主键值）；
+        //   金额列：total_amount / pay_amount / order_amount / amount（数值型），均无则发起支付必须显式传金额。
+        String payCode = orDefault(table.getPayCode(), "").trim();
+        boolean hasPayBiz = !payCode.isEmpty()
+                && on(table.getGenController()) && !isChild
+                && resolvePay(project == null ? null : project.payEnabled());
+        m.put("payCode", payCode);
+        // payCode 会固化进生成物 Java 字符串常量（PAY_CODE），只保留安全字符防串改坏代码
+        m.put("payCodeSafe", payCode.replaceAll("[^A-Za-z0-9_\\-]", ""));
+        m.put("hasPayBiz", hasPayBiz);
+        if (hasPayBiz) {
+            GenTableColumn noCol = biz.stream().filter(c -> c.getColumnName() != null
+                    && c.getColumnName().toLowerCase().matches("(order_no|bill_no|out_trade_no|business_no|no)"))
+                    .findFirst().orElse(null);
+            m.put("payBizNoColumn", noCol == null ? "id" : noCol.getColumnName());
+            m.put("payBizNoField", noCol == null ? null : noCol.getJavaField());
+            m.put("payBizNoIsId", noCol == null);
+            GenTableColumn amountCol = biz.stream().filter(c -> c.getColumnName() != null
+                    && c.getColumnName().toLowerCase().matches("(total_amount|pay_amount|order_amount|amount)")
+                    && !isStringType(c.getJavaType()))
+                    .findFirst().orElse(null);
+            m.put("payBizAmountColumn", amountCol == null ? null : amountCol.getColumnName());
+            m.put("payBizAmountField", amountCol == null ? null : amountCol.getJavaField());
+            m.put("payBizAmountIsFen", amountCol != null
+                    && ("Long".equals(amountCol.getJavaType()) || "long".equalsIgnoreCase(amountCol.getJavaType())));
+        }
+
         // ===== P1 字段级增强的派生标记 =====
         // P1-2 操作列宽度：按按钮数算，2 字按钮约 62px，避免按钮被挤换行
         int btnCount = (genEditBtn ? 1 : 0) + (genDeleteBtn ? 1 : 0) + (genFrontend && genDetailApi ? 1 : 0);
@@ -845,10 +907,12 @@ public final class GenTemplateModel {
 
     /**
      * V6.7 产物测试出厂：集成测试新增/修改 body 的 Java 表达式文本。
-     * 选列 = is_form 且必填，再补首个字符串列（保证 update 有可改字段）；
-     * 值按 javaType 给最小合法字面量；唯一列的值运行时随机（suffix()）防测试互撞唯一键。
+     * 选列 = is_form 且必填 + 首个字符串列（保证 update 有可改字段），再补齐全部唯一列
+     * （联合唯一必须整组都在 body 里，重复提交断言才能触发查重）；
+     * 值按 javaType 给最小合法字面量；唯一列的值走方法入参 {@code uniqueValue}/{@code uniqueNum}——
+     * 默认路径传运行时随机值防测试互撞唯一键，重复提交断言传固定值连插两次。
      * 返回的是「Java 源码表达式」，如 {@code "{\"name\":\"it\",\"age\":1}"}，
-     * 含唯一列时为 {@code "{\"name\":\"" + suffix() + "\",\"age\":1}"}。
+     * 含唯一列时为 {@code "{\"name\":\"" + uniqueValue + "\",\"age\":1}"}。
      */
     private static String testFieldsJsonExpr(List<GenTableColumn> formCols, List<GenTableColumn> uniqueCols) {
         List<GenTableColumn> chosen = new ArrayList<>();
@@ -863,6 +927,13 @@ public final class GenTemplateModel {
                     chosen.add(c);
                     break;
                 }
+            }
+        }
+        // V6.7 唯一性 400 断言：唯一列（含联合唯一的每一列）必须落在测试 body 里，
+        // 否则第二次重复提交根本不会触发查重，断言会假绿（200 而非 400）
+        for (GenTableColumn c : uniqueCols) {
+            if (formCols.contains(c) && !chosen.contains(c)) {
+                chosen.add(c);
             }
         }
         if (chosen.isEmpty()) {
@@ -901,11 +972,12 @@ public final class GenTemplateModel {
             }
         }
         json.append('}');
-        // 转 Java 字符串字面量：引号转义后嵌引号成表达式；唯一列占位符换成运行时拼接
+        // 转 Java 字符串字面量：引号转义后嵌引号成表达式；唯一列占位符换成入参拼接
+        // （V6.7 起不再内联 suffix()/nanoTime，由 crudControllerTest 的 fieldsJson 重载决定取值）
         String escaped = json.toString().replace("\"", "\\\"");
         String expr = "\"" + escaped + "\"";
-        expr = expr.replace("\\\"@U@\\\"", "\\\" + suffix() + \\\"");
-        expr = expr.replace("@N@", "\" + (System.nanoTime() % 1000000) + \"");
+        expr = expr.replace("\\\"@U@\\\"", "\\\" + uniqueValue + \\\"");
+        expr = expr.replace("@N@", "\" + uniqueNum + \"");
         return expr;
     }
 
@@ -932,7 +1004,11 @@ public final class GenTemplateModel {
         cm.put("fkColumn", fkColumn);
         cm.put("fkField", GenUtils.toCamel(fkColumn));
         cm.put("fkCapField", capitalize(GenUtils.toCamel(fkColumn)));
-        cm.put("listColumns", toModel(childBiz.stream().filter(c -> on(c.getIsList())).toList()));
+        List<Map<String, Object>> childList = toModel(childBiz.stream().filter(c -> on(c.getIsList())).toList());
+        cm.put("listColumns", childList);
+        // V4.5 打印增强：明细块的人民币大写行取「最后一个金额列」的合计——
+        // 单据明细里通常只有末列是行小计/金额，前导的单价/数量列不参与大写。
+        cm.put("moneyField", lastMoneyField(childList));
         // 外键列由后端按主表 ID 赋值，不能出现在可编辑表单里（否则前端会拿它当普通数字框）
         cm.put("formColumns", toModel(childBiz.stream()
                 .filter(c -> on(c.getIsForm()))
@@ -975,7 +1051,10 @@ public final class GenTemplateModel {
         gcm.put("fkColumn", gFk);
         gcm.put("fkField", GenUtils.toCamel(gFk));
         gcm.put("fkCapField", capitalize(GenUtils.toCamel(gFk)));
-        gcm.put("listColumns", toModel(gBiz.stream().filter(c -> on(c.getIsList())).toList()));
+        List<Map<String, Object>> grandList = toModel(gBiz.stream().filter(c -> on(c.getIsList())).toList());
+        gcm.put("listColumns", grandList);
+        // V4.5 打印增强：孙表块大写行与子表块同口径（最后一个金额列）
+        gcm.put("moneyField", lastMoneyField(grandList));
         gcm.put("formColumns", toModel(gBiz.stream()
                 .filter(c -> on(c.getIsForm()))
                 .filter(c -> c.getColumnName() == null || !c.getColumnName().equalsIgnoreCase(gFk))
@@ -1071,8 +1150,9 @@ public final class GenTemplateModel {
                 if (t.startsWith("maxlen=")) {
                     try {
                         return Integer.parseInt(t.substring(7).trim());
-                    } catch (NumberFormatException ignore) {
+                    } catch (NumberFormatException e) {
                         // 规则写错时退化为按列类型推断
+                        log.debug("maxlen 规则解析失败，退化为按列类型推断: {}", t);
                     }
                 }
             }
@@ -1283,6 +1363,43 @@ public final class GenTemplateModel {
     }
 
     /**
+     * V4.5 打印增强-金额列语义判定（唯一实现，模板/子表模型只消费结果）：
+     * BigDecimal 列 且 列名命中金额词表（主）或注释含金额词（兜底）。
+     *
+     * <p>刻意只认 BigDecimal：Double 是浮点误差高危类型、Integer/Long 多为数量/编号，
+     * 把它们算进「金额」会在打印页整行整列冒出大写行。判定宁缺毋滥——
+     * 漏判只是少一行大写，误判是把「汇率/数量」也翻译成人民币。
+     */
+    static final java.util.regex.Pattern MONEY_NAME_PATTERN = java.util.regex.Pattern
+            .compile(".*(amount|money|price|fee|total|sum|amt|cost|balance|premium|salary|wage|tax|fare|rent|freight|deposit|discount|budget).*");
+
+    static final List<String> MONEY_COMMENT_KEYWORDS = List.of(
+            "金额", "单价", "价格", "总价", "合计", "费用", "余额", "工资", "税款", "税额", "运费", "押金", "预算");
+
+    static boolean isMoneyColumn(String columnName, String comment, String javaType) {
+        if (!"BigDecimal".equals(javaType)) {
+            return false;
+        }
+        String n = columnName == null ? "" : columnName.toLowerCase(java.util.Locale.ROOT);
+        if (MONEY_NAME_PATTERN.matcher(n).matches()) {
+            return true;
+        }
+        String c = comment == null ? "" : comment;
+        return MONEY_COMMENT_KEYWORDS.stream().anyMatch(c::contains);
+    }
+
+    /** 明细列里「最后一个金额列」的字段名（单据明细的行合计惯例在末列）；无金额列返回空串 */
+    private static String lastMoneyField(List<Map<String, Object>> listCols) {
+        String out = "";
+        for (Map<String, Object> cm : listCols) {
+            if (Boolean.TRUE.equals(cm.get("isMoney"))) {
+                out = String.valueOf(cm.get("javaField"));
+            }
+        }
+        return out;
+    }
+
+    /**
      * 列模型展平
      */
     private static List<Map<String, Object>> toModel(List<GenTableColumn> cols) {
@@ -1347,6 +1464,8 @@ public final class GenTemplateModel {
             cm.put("isUpload", "image".equals(htmlType) || "file".equals(htmlType) || "multiImage".equals(htmlType));
             // V9.5 §4.7 富文本列派生标志（唯一实现在此，模板只消费）
             cm.put("isRichText", "richtext".equals(htmlType));
+            // V4.5 打印增强-金额大写：BigDecimal + 金额语义列（isMoneyColumn 唯一实现）
+            cm.put("isMoney", isMoneyColumn(c.getColumnName(), c.getColumnComment(), javaType));
             // P1-2 列宽自适应：按控件类型与宽度语义给默认值，避免所有列等宽
             cm.put("colWidth", columnWidth(c, htmlType, javaType));
             cm.put("dictType", hasDict ? dictType.trim() : "");
@@ -1478,6 +1597,11 @@ public final class GenTemplateModel {
 
     private static boolean hasType(List<GenTableColumn> cols, String javaType) {
         return cols.stream().anyMatch(c -> javaType.equals(c.getJavaType()));
+    }
+
+    /** Java 属性类型是否字符串（pay_code 绑定推导金额列时排除文本列） */
+    private static boolean isStringType(String javaType) {
+        return javaType == null || "String".equals(javaType);
     }
 
     public static boolean on(Integer flag) {
