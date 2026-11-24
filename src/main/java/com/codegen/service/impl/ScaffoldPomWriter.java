@@ -760,6 +760,9 @@ final class ScaffoldPomWriter {
                 + "java -jar target/" + module + ".jar\n"
                 + "```\n\n"
                 + "端口 `" + serverPort + "`，接口文档 `http://127.0.0.1:" + serverPort + "/swagger-ui.html`。\n\n"
-                + "包名 `" + pkg + "`，生成物会落在 `" + pkg + ".entity / mapper / service / controller / dto / vo`。\n";
+                + "包名 `" + pkg + "`，生成物会落在 `" + pkg + ".entity / mapper / service / controller / dto / vo`。\n\n"
+                + "---\n\n"
+                + "> 本工程由 [Majiang CodeGen](https://github.com/hustxia/CodeGen) 一键生成（DDL → 可运行系统）"
+                + "· [在线演示](https://hustxia.github.io/CodeGen/) · 觉得省事就点个 [Star ⭐](https://github.com/hustxia/CodeGen/stargazers) 吧\n";
     }
 }
