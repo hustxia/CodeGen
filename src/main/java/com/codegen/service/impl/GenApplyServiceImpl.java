@@ -691,8 +691,9 @@ public class GenApplyServiceImpl implements GenApplyService {
             if (logFile != null) {
                 try {
                     Files.deleteIfExists(logFile);
-                } catch (Exception ignored) {
+                } catch (Exception e) {
                     // 临时文件清理失败不影响结果
+                    log.debug("apply 临时日志文件清理失败: {}", logFile, e);
                 }
             }
         }

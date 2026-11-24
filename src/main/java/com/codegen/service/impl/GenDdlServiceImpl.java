@@ -266,8 +266,9 @@ public class GenDdlServiceImpl implements GenDdlService {
                     // 库未建时 USE 失败不致命（回落当前库执行，下一条语句前会再切）
                     try {
                         st.execute("USE `" + schema + "`");
-                    } catch (Exception ignored) {
-                        // ignore
+                    } catch (Exception e) {
+                        // ignore：库未建时 USE 失败不致命，回落当前库
+                        log.debug("USE {} 失败，回落当前库执行", schema, e);
                     }
                     try {
                         st.execute(stmt);
@@ -293,8 +294,9 @@ public class GenDdlServiceImpl implements GenDdlService {
                 if (originalDb != null && !originalDb.isBlank()) {
                     try (Statement st = conn.createStatement()) {
                         st.execute("USE `" + originalDb + "`");
-                    } catch (Exception ignored) {
-                        // ignore
+                    } catch (Exception e) {
+                        // ignore：切回原库失败仅影响连接池复用
+                        log.debug("切回原库 {} 失败", originalDb, e);
                     }
                 }
             }

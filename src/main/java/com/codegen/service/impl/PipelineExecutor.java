@@ -903,7 +903,8 @@ public class PipelineExecutor {
         Path dir = Paths.get(props.getLogDir(), pipeline.getPipelineNo());
         try {
             Files.createDirectories(dir);
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            log.debug("流水线日志目录创建失败 dir={}", dir, e);
         }
         return dir.resolve(stepKey + ".log");
     }

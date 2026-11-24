@@ -14,6 +14,8 @@ import java.util.Map;
  */
 public final class TcMetrics {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TcMetrics.class);
+
     public static final String PREFIX = "TC_METRICS ";
 
     private TcMetrics() {
@@ -42,8 +44,9 @@ public final class TcMetrics {
                     out.put(e.getKey(), e.getValue());
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
             // 指标解析失败不影响套件本身的 PASS/FAIL 判定
+            log.debug("TC_METRICS 行解析失败，忽略指标提取: {}", last, e);
         }
         return out;
     }

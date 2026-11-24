@@ -205,8 +205,9 @@ public class TestCenterExecutor {
             run.setErrorMsg("执行器异常: " + e.getMessage());
             try {
                 run.setSummaryJson(mapper.writeValueAsString(summary));
-            } catch (Exception ignored) {
+            } catch (Exception ex) {
                 // 摘要序列化失败不影响状态落库
+                log.debug("摘要序列化失败，跳过 summary 落库 runId={}", run.getId(), ex);
             }
             store.updateRun(run);
             return run;
@@ -300,8 +301,9 @@ public class TestCenterExecutor {
             Files.createDirectories(logFile.getParent());
             Files.writeString(logFile, text + System.lineSeparator(), StandardCharsets.UTF_8,
                     java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
             // 日志写失败不改变套件结论
+            log.warn("执行日志写入失败 file={}", logFile, e);
         }
     }
 
@@ -310,8 +312,8 @@ public class TestCenterExecutor {
             if (!Files.exists(logFile)) {
                 appendLog(logFile, result.status() + " (无输出)");
             }
-        } catch (Exception ignored) {
-            // ignore
+        } catch (Exception e) {
+            log.debug("套件收尾日志写入失败", e);
         }
     }
 

@@ -239,8 +239,9 @@ public class TestScheduleServiceImpl extends ServiceImpl<TestScheduleMapper, Tes
             }
             try {
                 ids.add(Long.parseLong(p));
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException e) {
                 // 跳过非法片段，不阻断其余套件
+                log.debug("跳过非法套件 ID 片段: {}", p);
             }
         }
         return ids;

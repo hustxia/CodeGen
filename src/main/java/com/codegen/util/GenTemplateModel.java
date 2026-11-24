@@ -16,6 +16,8 @@ import java.util.StringJoiner;
  */
 public final class GenTemplateModel {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GenTemplateModel.class);
+
     /**
      * 生成物引用基座类时使用的根包名（如 com.demo → com.demo.common.result.Result）。
      *
@@ -1071,8 +1073,9 @@ public final class GenTemplateModel {
                 if (t.startsWith("maxlen=")) {
                     try {
                         return Integer.parseInt(t.substring(7).trim());
-                    } catch (NumberFormatException ignore) {
+                    } catch (NumberFormatException e) {
                         // 规则写错时退化为按列类型推断
+                        log.debug("maxlen 规则解析失败，退化为按列类型推断: {}", t);
                     }
                 }
             }

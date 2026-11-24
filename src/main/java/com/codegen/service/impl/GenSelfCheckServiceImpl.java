@@ -12,6 +12,7 @@ import com.codegen.service.GenTableColumnService;
 import com.codegen.vo.GenFileVO;
 import com.codegen.vo.GenSelfCheckVO;
 import com.codegen.common.exception.BusinessException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,7 @@ import java.util.stream.Stream;
  * <p>同时做轻量结构检查（Vue/JS 结构、未渲染的占位符、下拉缺字典），
  * 让明显问题不需要编译器也能被发现。
  */
+@Slf4j
 @Service
 public class GenSelfCheckServiceImpl implements GenSelfCheckService {
 
@@ -491,8 +493,9 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
                         classToPath.put(fqcn, (backendRootOverride != null ? backendRootOverride : outputProperties.getBackendRoot())
                                 + "/" + srcRoot.relativize(javaFile).toString()
                                         .replace('\\', '/'));
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
                         // 读不出来就交给 classpath 兜底
+                        log.debug("读取生成源码失败，走 classpath 兜底: {}", javaFile, e);
                     }
                 }
                 // V5.0 修复（人事系统自检 12 个 cannot find symbol）：基座类互相引用
@@ -519,12 +522,14 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
                                 classToPath.put(fqcn, (backendRootOverride != null ? backendRootOverride : outputProperties.getBackendRoot())
                                         + "/" + srcRoot.relativize(javaFile).toString()
                                                 .replace('\\', '/'));
-                            } catch (Exception ignored) {
+                            } catch (Exception e) {
                                 // 单个文件读不出来就交给 classpath 兜底
+                                log.debug("读取生成源码失败（子流程），走 classpath 兜底: {}", javaFile, e);
                             }
                         }
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
                         // 遍历失败不影响主流程
+                        log.debug("遍历生成源码目录失败，走 classpath 兜底", e);
                     }
                 }
             }
@@ -546,8 +551,9 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         } finally {
             try {
                 fileManager.close();
-            } catch (Exception ignored) {
+            } catch (Exception e) {
                 // 忽略关闭异常
+                log.debug("编译器 FileManager 关闭失败", e);
             }
             deleteQuietly(outDir);
         }
@@ -765,8 +771,9 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
         } finally {
             try {
                 fileManager.close();
-            } catch (Exception ignored) {
+            } catch (Exception e) {
                 // 忽略关闭异常
+                log.debug("编译器 FileManager 关闭失败", e);
             }
             deleteQuietly(outDir);
         }
@@ -1206,12 +1213,14 @@ public class GenSelfCheckServiceImpl implements GenSelfCheckService {
             walk.sorted(Comparator.reverseOrder()).forEach(p -> {
                 try {
                     Files.deleteIfExists(p);
-                } catch (Exception ignored) {
+                } catch (Exception e) {
                     // 临时目录清理失败不影响结果
+                    log.debug("临时文件清理失败: {}", p, e);
                 }
             });
-        } catch (Exception ignored) {
+        } catch (Exception e) {
             // 同上
+            log.debug("临时目录清理失败", e);
         }
     }
 

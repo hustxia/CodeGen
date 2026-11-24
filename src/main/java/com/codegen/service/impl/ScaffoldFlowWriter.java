@@ -32,6 +32,7 @@ import java.util.Map;
  * V9.1 拆分自 {@link GenScaffoldServiceImpl}：工作流（Flow/Activiti/BPMN）与流程注册 SQL 的产物字符串工厂。
  * 纯函数集合，无实例状态；产物内容与拆分前逐字节一致。
  */
+@Slf4j
 final class ScaffoldFlowWriter {
 
     /** 产物 FlowService 接口：双引擎共用契约（submit/approve/reject/records/state + todo/done/taskDetail） */
@@ -895,8 +896,9 @@ final class ScaffoldFlowWriter {
             try {
                 nodesJson = new com.fasterxml.jackson.databind.ObjectMapper()
                         .writeValueAsString(d.getNodes() == null ? List.of() : d.getNodes());
-            } catch (Exception ignore) {
+            } catch (Exception e) {
                 // 序列化失败按空节点下发，产物侧报错可读
+                log.warn("流程节点序列化失败，按空节点下发 flowCode={}", d.getFlowCode(), e);
             }
             String bpmn = d.getBpmnXml() == null ? "NULL" : "'" + escSql(d.getBpmnXml()) + "'";
             sql.append("\n-- 流程定义：").append(d.getFlowName() == null ? d.getFlowCode() : d.getFlowName())
