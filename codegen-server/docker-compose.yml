@@ -1,0 +1,69 @@
+# ============================================================
+# codegen-server 一键启动：MySQL 8 + 平台后端
+#
+# 使用（在仓库根目录执行）：
+#   docker compose up -d --build
+#
+# 首次启动时 MySQL 容器会把 scripts/docker/init/*.sql 按文件名字典序
+# （001~033，已由 scripts/docker/build_init_sql.py 排好）导入 gen_platform 库。
+# 数据落在具名 volume mysql_data，docker compose down 不会丢，
+# 想彻底重置（重新导库）：docker compose down -v && docker compose up -d --build
+# ============================================================
+
+services:
+  mysql8:
+    image: mysql:8.0
+    container_name: codegen-mysql
+    environment:
+      # 容器初始化用 root 口令；与下方 codegen-server 里的 DB_PASSWORD 保持一致
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      # V1.0__init.sql 自带 CREATE DATABASE/USE gen_platform，这里再声明一份双保险
+      MYSQL_DATABASE: gen_platform
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+    ports:
+      # 宿主机 3306 可能被占用时改成 "13306:3306" 并同步改 SPRING_DATASOURCE_URL
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 官方镜像约定：此目录下的 .sql 首次启动按文件名顺序自动执行
+      - ./scripts/docker/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # 用密码探活，避免 init 阶段（尚未就绪）误判 healthy
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  codegen-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: codegen-server:latest
+    container_name: codegen-server
+    depends_on:
+      mysql8:
+        condition: service_healthy
+    environment:
+      # application.yml 的 datasource.url 写死 localhost，未暴露环境变量；
+      # 利用 Spring Boot 标准 relaxed binding 用环境变量整体覆盖 URL，
+      # 无需改动现有 application.yml
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql8:3306/gen_platform?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
+      # 生产环境务必覆盖：默认 JWT 密钥会打 WARN 且可被伪造 token
+      # JWT_SECRET: 换成你自己的随机长串
+      TZ: Asia/Shanghai
+    ports:
+      - "8120:8120"
+    # 代码生成器产物写盘目录（gen.output.backend-root 等默认相对路径），
+    # 挂出来方便在宿主机直接查看生成物
+    volumes:
+      - codegen_output:/app/output
+
+volumes:
+  mysql_data:
+  codegen_output:

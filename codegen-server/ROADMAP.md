@@ -183,6 +183,19 @@
 
 ---
 
+### V9.16 — 一键试用与演示体验（开发中，2026-11-24 多 agent 并行启动）
+
+**目标**：把「Maven + MySQL + 手工配库才能跑」的门槛降到 5 分钟（增长优先策略，依据：外部访客约 0.5 人/天、331 克隆者 0 star）。
+
+- [x] **Docker 一键起**：多阶段 Dockerfile + docker-compose.yml（MySQL8 healthcheck + codegen-server）、scripts/docker/init 33 个按数字版本序初始化 SQL（纠正 V9.15/V6.10 字典序陷阱）、V1.0 自带 admin/admin123 种子（BCrypt）无需额外种子、docs/quick-start-docker.md
+- [x] **H2 内存库 demo 模式**：pom 加 h2 runtime 依赖、application-h2.yml（MODE=MySQL，34 个脚本按数字版本序）、scripts/h2/convert_sql_to_h2.py 转换器（含存储过程/动态 DDL 展开）、编译通过；已知限制：连库导入/字典探测直查 MySQL information_schema 在 H2 下不完整
+- [x] **演示页提速**：showcase 8 图 PNG→WebP（877KB→332KB，38%）、演示效果.html 17/18 img lazy + picture 兜底、GoatCounter 占位（注册后启用）、docs/增长/演示页统计与提速指南.md
+- [ ] **中央验证**：全量测试 + 提交 xyh_dev + 同步 GitHub main（含 Pages 根目录 docs/）
+
+红线约束继续有效：i18n OFF 逐字节零 diff、能力包关闭零 diff、测试阈值只升不降。
+
+---
+
 ### V9.2+ — 体验与生态（P2，待排期）
 
 - [ ] H2 内存库一键 demo / Docker 镜像，降低上手门槛。
