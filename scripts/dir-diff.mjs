@@ -20,9 +20,12 @@ import { fileURLToPath } from 'node:url'
 
 export const SCHEMA = 'codegen.verify.diff/v1'
 
-/** 统一用 `/` 分隔，避免 Windows 反斜杠让前后端对比/展示不一致 */
+/** 统一用 `/` 分隔，避免 Windows 反斜杠让前后端对比/展示不一致。
+ *  同时替换两种分隔符：path.sep 在 Windows 是 `\`、在 Linux 是 `/`，
+ *  但输入可能来自另一平台（如 CI 跑 POSIX、fixture 带 Windows 路径），
+ *  因此显式处理 `\\`，保证跨平台结果一致。 */
 export function normalizeRel(rel) {
-  return String(rel || '').split(path.sep).join('/').replace(/^\.\//, '')
+  return String(rel || '').replace(/\\/g, '/').split(path.sep).join('/').replace(/^\.\//, '')
 }
 
 /**
