@@ -1,0 +1,61 @@
+# ============================================================
+# H2 内存库 demo 模式（不装 MySQL 也能跑起来体验）
+#
+# 启动：mvn spring-boot:run -Dspring-boot.run.profiles=h2
+#   或  java -jar codegen-server.jar --spring.profiles.active=h2
+#
+# 建库脚本：src/main/resources/db/h2/*.sql
+#   由 scripts/h2/convert_sql_to_h2.py 从 docs/sql/*.sql 自动转换（勿手工编辑），
+#   按数字版本号排序执行（V9.15 > V9.2，避开文件名字典序陷阱）。
+#
+# 已知限制见 docs/quick-start-h2.md。
+# ============================================================
+spring:
+  datasource:
+    # MODE=MySQL：启用 MySQL 兼容方言（ON DUPLICATE KEY UPDATE / INSERT IGNORE /
+    # AUTO_INCREMENT / backtick 标识符等）；DB_CLOSE_DELAY=-1：连接关闭后内存库不销毁；
+    # DATABASE_TO_LOWER=TRUE：标识符统一小写，与 MySQL 表名口径一致
+    url: jdbc:h2:mem:gen_platform;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  sql:
+    init:
+      # DDL 与 DML 混在原始脚本里，统一走 schema-locations 按 版本号顺序 执行；
+      # 内存库每次启动都是全新空库，重跑天然幂等
+      schema-locations: classpath:db/h2/V1.0__init.sql,
+        classpath:db/h2/V2.0__quick_build.sql,
+        classpath:db/h2/V2.1__api_catalog_menu.sql,
+        classpath:db/h2/V2.2__flow_code.sql,
+        classpath:db/h2/V3.0__multi_project.sql,
+        classpath:db/h2/V3.1__project_menu.sql,
+        classpath:db/h2/V4.0__user_theme.sql,
+        classpath:db/h2/V4.1__project_gen_defaults.sql,
+        classpath:db/h2/V4.2__unify_gen_ledger.sql,
+        classpath:db/h2/V4.3__oper_log_region.sql,
+        classpath:db/h2/V4.4__delete_cascade_mode.sql,
+        classpath:db/h2/V4.5__gen_print.sql,
+        classpath:db/h2/V5.0__pipeline.sql,
+        classpath:db/h2/V5.1__pipeline_menu.sql,
+        classpath:db/h2/V5.5__project_structure.sql,
+        classpath:db/h2/V6.0__project_structure_micro.sql,
+        classpath:db/h2/V6.1__flow_engine.sql,
+        classpath:db/h2/V6.2__gen_deploy.sql,
+        classpath:db/h2/V6.3__pay_enabled.sql,
+        classpath:db/h2/V6.5__mobile_enabled.sql,
+        classpath:db/h2/V6.6__file_enabled.sql,
+        classpath:db/h2/V6.7__test_enabled.sql,
+        classpath:db/h2/V6.8__app_brand.sql,
+        classpath:db/h2/V6.9__sys_doc.sql,
+        classpath:db/h2/V6.9__doc_menu.sql,
+        classpath:db/h2/V6.10__monitor_menu.sql,
+        classpath:db/h2/V7.4__oper_log_audit_columns.sql,
+        classpath:db/h2/V7.5__language_config.sql,
+        classpath:db/h2/V8.0__i18n.sql,
+        classpath:db/h2/V9.2__test_center.sql,
+        classpath:db/h2/V9.2__verification_center.sql,
+        classpath:db/h2/V9.6__ai_build_job.sql,
+        classpath:db/h2/V9.15__chart_enabled.sql,
+        classpath:db/h2/999_demo_seed.sql
+      data-locations: ""
+      mode: always

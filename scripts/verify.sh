@@ -90,13 +90,20 @@ T0=$SECONDS
 if JAVA_HOME="$JAVA_HOME" "$MVN_BIN" -o clean > /dev/null 2>&1; then
   note "clean 完成"
 else
-  note "clean 失败（本机 IDE 正在索引 target/classes 是常见原因），改为只清 surefire 报告"
+  # V9.16：pom.xml 变更会使 setup-java 的依赖缓存 key 失效，离线解析整体失败——
+  # 先尝试在线把依赖拉齐，再走离线测试；CI 上 go-offline 只是兜底，正常命中缓存时是空操作。
+  note "clean 失败（IDE 索引锁 或 离线依赖缓存失效），尝试在线补拉依赖"
+  JAVA_HOME="$JAVA_HOME" "$MVN_BIN" -q dependency:go-offline > "$LOG_DIR/verify-gooffline.log" 2>&1 \
+    || true
   rm -rf target/surefire-reports 2>/dev/null || true
 fi
 
 MVN_OK=1
 if JAVA_HOME="$JAVA_HOME" "$MVN_BIN" -o test > "$LOG_DIR/verify-mvn.log" 2>&1; then
   ok "mvn test"
+elif JAVA_HOME="$JAVA_HOME" "$MVN_BIN" test >> "$LOG_DIR/verify-mvn.log" 2>&1; then
+  # V9.16：离线测试失败但在线重跑通过（缓存失效场景），不算门禁失败
+  ok "mvn test（离线失败，在线兜底重跑通过）"
 else
   MVN_OK=0
   bad "mvn test（日志 $LOG_DIR/verify-mvn.log）"
