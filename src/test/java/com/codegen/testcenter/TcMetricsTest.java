@@ -41,6 +41,29 @@ class TcMetricsTest {
     }
 
     @Test
+    void parseAll_keepsNestedDiffListForUi() {
+        Map<String, Object> m = TcMetrics.parseAll(
+                "TC_METRICS {\"diffAdded\":1,\"diffList\":{\"added\":[\"a.js\"],\"removed\":[]},\"diffThresholdOk\":false}",
+                mapper);
+        assertEquals(1, ((Number) m.get("diffAdded")).intValue());
+        assertEquals(false, m.get("diffThresholdOk"));
+        assertTrue(m.get("diffList") instanceof Map);
+    }
+
+    @Test
+    void parseArtifacts_readsDeclaredScreenshotAndDiffFiles() {
+        String log = "TC_ARTIFACTS [\"D:/run/S8/a.png\"]\n"
+                + "noise\n"
+                + "TC_ARTIFACTS [\"D:/run/S8/a.png\",\"D:/run/S9/diff.json\"]\n";
+        var files = TcMetrics.parseArtifacts(log, mapper);
+        assertEquals(2, files.size());
+        assertEquals("D:/run/S8/a.png", files.get(0));
+        assertEquals("D:/run/S9/diff.json", files.get(1));
+        assertTrue(TcMetrics.parseArtifacts("TC_ARTIFACTS [not json]", mapper).isEmpty());
+        assertTrue(TcMetrics.parseArtifacts(null, mapper).isEmpty());
+    }
+
+    @Test
     void tailKeepsLastLinesAndCapsLength() {
         StringBuilder sb = new StringBuilder();
         for (int i = 1; i <= 300; i++) {

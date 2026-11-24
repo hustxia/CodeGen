@@ -55,3 +55,33 @@ jobs:
             target/surefire-reports/
             target/gen-matrix/manifest.json
           retention-days: 7
+
+  # V9.18 验证中心门禁：与页面执行器共用 scripts/testcenter-suites.mjs，
+  # 只要 S8（截图）/ S9（产物等价性）出现 FAILED 就阻断合并；SKIPPED 表示环境依赖缺失，不阻断。
+  verify-center-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 纯函数单测先行：目录递归比对 / 阈值判定有问题时，几秒内就能定位到具体维度
+      - name: 验证中心纯函数单测（dir-diff）
+        run: node --test scripts/dir-diff.test.mjs
+
+      # headless 入口：无 MySQL / 无浏览器也能跑，缺依赖时如实 SKIPPED 而不是伪造 PASS
+      - name: 验证中心门禁（S8 截图 / S9 产物等价性）
+        run: node scripts/verify-center-cli.mjs --suites S8,S9
+
+      - name: 归档验证中心证据（截图 / diff 清单 / 报告）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-center-evidence
+          path: |
+            target/verify-shots/
+            target/verify-diff/
+            target/verify-center/
+          retention-days: 7

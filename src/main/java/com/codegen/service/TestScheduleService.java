@@ -3,14 +3,15 @@ package com.codegen.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.codegen.dto.TestCenterDTO;
 import com.codegen.entity.TestSchedule;
+import com.codegen.vo.TestScheduleVO;
 
 /**
  * V9.2 定时回归：任务增删改查 + 到期扫描触发。
  */
 public interface TestScheduleService {
 
-    /** 分页查询（按 projectId / name 过滤） */
-    Page<TestSchedule> page(TestCenterDTO.SchedulePage dto);
+    /** 分页查询（按 projectId / name 过滤）；V9.18 起带间隔分钟与下次执行时间 */
+    Page<TestScheduleVO> page(TestCenterDTO.SchedulePage dto);
 
     /** 详情 */
     TestSchedule getById(Long id);

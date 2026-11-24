@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 <#if deleteCascadeBlock>import ${rootPkg}.common.exception.BusinessException;
 </#if>
-<#if genTree>import java.util.ArrayList;
+<#if genTree || childIncremental>import java.util.ArrayList;
 </#if>
 import java.util.List;
 <#if genTree>import java.util.Map;
@@ -91,6 +91,257 @@ public class ${className}ServiceImpl extends ServiceImpl<${className}Mapper, ${c
 </#list>
     }
 <#list children as child>
+<#if childIncremental>
+<#if child.oneToOne>
+    /**
+     * ${child.comment} 写回（child_save_mode=1，一对一）：外键唯一，已存在则更新、不存在则插入。
+     * rows 为 null 表示本次提交未涉及该子表（不动），空列表表示解除这条一对一关联。
+     */
+    private void replace${child.className}Rows(Long masterId, List<${child.className}SaveDTO> rows) {
+        if (masterId == null || rows == null) {
+            return;
+        }
+        ${child.className}Mapper childMapper = ${child.varName}Mapper;
+        if (rows.isEmpty()) {
+            childMapper.delete(new LambdaQueryWrapper<${child.className}>()
+                    .eq(${child.className}::get${child.fkCapField}, masterId));
+            return;
+        }
+        // 一对一：只认首行；身份是外键而不是回传主键，改主键的脏提交也不会插出第二行
+        ${child.className}SaveDTO dto = rows.get(0);
+        List<${child.className}> existing = childMapper.selectList(new LambdaQueryWrapper<${child.className}>()
+                .eq(${child.className}::get${child.fkCapField}, masterId));
+        if (existing.isEmpty()) {
+            ${child.className} child = new ${child.className}();
+            BeanUtils.copyProperties(dto, child);
+            // 新行：主键重新生成，审计字段交给自动填充
+            child.setId(null);
+            child.setCreateTime(null);
+            child.setUpdateTime(null);
+            child.setCreateBy(null);
+            child.setUpdateBy(null);
+            child.set${child.fkCapField}(masterId);
+            childMapper.insert(child);
+<#list child.grandChildren as gc>
+            save${gc.className}Rows(child.getId(), dto.get${gc.className}s());
+</#list>
+        } else {
+            ${child.className} child = existing.get(0);
+            Long existingId = child.getId();
+            BeanUtils.copyProperties(dto, child);
+            // 保留既有主键与审计字段，只覆盖业务列（updateById 会跳过 null，避免把列值抹掉）
+            child.setId(existingId);
+            child.setUpdateTime(null);
+            child.setUpdateBy(null);
+            child.set${child.fkCapField}(masterId);
+            childMapper.updateById(child);
+<#list child.grandChildren as gc>
+            save${gc.className}Rows(existingId, dto.get${gc.className}s());
+</#list>
+        }
+    }
+<#elseif child.manyToMany && child.hasRelationKey && !child.hasGrandChild>
+    /**
+     * ${child.comment} 写回（child_save_mode=1，多对多中间表）：按关联键做差集，只删该删、只插新关联。
+     * 同一关联对象在本次提交里重复出现只会落一行，重复保存不会产生重复关联行。
+     * rows 为 null 表示本次提交未涉及该子表（不动），空列表表示清空全部关联。
+     */
+    private void replace${child.className}Rows(Long masterId, List<${child.className}SaveDTO> rows) {
+        if (masterId == null || rows == null) {
+            return;
+        }
+        ${child.className}Mapper childMapper = ${child.varName}Mapper;
+        List<${child.className}> existing = childMapper.selectList(new LambdaQueryWrapper<${child.className}>()
+                .eq(${child.className}::get${child.fkCapField}, masterId));
+        // 本次提交的关联键（去重）
+        List<Object> incomingKeys = new ArrayList<>();
+        for (${child.className}SaveDTO dto : rows) {
+            Object key = dto.get${child.relationKeyCapField}();
+            if (key != null && !incomingKeys.contains(key)) {
+                incomingKeys.add(key);
+            }
+        }
+        // 差集删除：库里有、本次没提交的关联行
+        List<Long> removeIds = new ArrayList<>();
+        for (${child.className} old : existing) {
+            if (old.get${child.relationKeyCapField}() == null
+                    || !incomingKeys.contains(old.get${child.relationKeyCapField}())) {
+                removeIds.add(old.getId());
+            }
+        }
+        if (!removeIds.isEmpty()) {
+            childMapper.deleteBatchIds(removeIds);
+        }
+        // 差集新增：已经存在的关联不再插，保证幂等
+        List<Object> existingKeys = new ArrayList<>();
+        for (${child.className} old : existing) {
+            if (old.get${child.relationKeyCapField}() != null) {
+                existingKeys.add(old.get${child.relationKeyCapField}());
+            }
+        }
+        for (${child.className}SaveDTO dto : rows) {
+            Object key = dto.get${child.relationKeyCapField}();
+            if (key == null || existingKeys.contains(key)) {
+                continue;
+            }
+            ${child.className} child = new ${child.className}();
+            BeanUtils.copyProperties(dto, child);
+            child.setId(null);
+            child.setCreateTime(null);
+            child.setUpdateTime(null);
+            child.setCreateBy(null);
+            child.setUpdateBy(null);
+            child.set${child.fkCapField}(masterId);
+            childMapper.insert(child);
+            existingKeys.add(key);
+        }
+    }
+<#else>
+    /**
+     * ${child.comment} 增量保存（child_save_mode=1）：按主键三路合并，与主表同一事务。
+     * 新增 insert、变更 update、本次未提交的旧行 delete；不再先 delete-all。
+     * rows 为 null 表示本次提交未涉及该子表（不动），空列表表示清空。
+     */
+    private void replace${child.className}Rows(Long masterId, List<${child.className}SaveDTO> rows) {
+        if (masterId == null || rows == null) {
+            return;
+        }
+        ${child.className}Mapper childMapper = ${child.varName}Mapper;
+        List<${child.className}> existing = childMapper.selectList(new LambdaQueryWrapper<${child.className}>()
+                .eq(${child.className}::get${child.fkCapField}, masterId));
+        List<Long> keepIds = new ArrayList<>();
+        for (${child.className}SaveDTO dto : rows) {
+            ${child.className} matched = null;
+            for (${child.className} old : existing) {
+                if (dto.getId() != null && dto.getId().equals(old.getId())) {
+                    matched = old;
+                    break;
+                }
+            }
+            if (matched == null) {
+                // 三路合并·新增：主键为空或库里没有 → 重新生成主键与审计字段
+                ${child.className} child = new ${child.className}();
+                BeanUtils.copyProperties(dto, child);
+                child.setId(null);
+                child.setCreateTime(null);
+                child.setUpdateTime(null);
+                child.setCreateBy(null);
+                child.setUpdateBy(null);
+                child.set${child.fkCapField}(masterId);
+                childMapper.insert(child);
+                keepIds.add(child.getId());
+<#list child.grandChildren as gc>
+                save${gc.className}Rows(child.getId(), dto.get${gc.className}s());
+</#list>
+            } else {
+                // 三路合并·更新：沿用原主键，审计字段不重置（update_by/update_time 交给自动填充）
+                Long existingId = matched.getId();
+                BeanUtils.copyProperties(dto, matched);
+                matched.setId(existingId);
+                matched.setUpdateTime(null);
+                matched.setUpdateBy(null);
+                matched.set${child.fkCapField}(masterId);
+                childMapper.updateById(matched);
+                keepIds.add(existingId);
+<#list child.grandChildren as gc>
+                save${gc.className}Rows(existingId, dto.get${gc.className}s());
+</#list>
+            }
+        }
+        // 三路合并·删除：库里有、本次没提交的行，按主键集合一次删（逻辑删除）
+        List<Long> removeIds = new ArrayList<>();
+        for (${child.className} old : existing) {
+            if (old.getId() != null && !keepIds.contains(old.getId())) {
+                removeIds.add(old.getId());
+            }
+        }
+        if (!removeIds.isEmpty()) {
+            childMapper.deleteBatchIds(removeIds);
+        }
+    }
+</#if>
+<#list child.grandChildren as gc>
+<#if child.oneToOne || child.manyToMany>
+    /**
+     * ${gc.comment} 全量替换。抽成独立方法，避免保存主流程出现三层嵌套循环。
+     */
+    private void save${gc.className}Rows(Long parentId, List<${gc.className}SaveDTO> rows) {
+        if (parentId == null) {
+            return;
+        }
+        ${gc.className}Mapper mapper = ${gc.varName}Mapper;
+        mapper.delete(new LambdaQueryWrapper<${gc.className}>()
+                .eq(${gc.className}::get${gc.fkCapField}, parentId));
+        if (rows == null) {
+            return;
+        }
+        for (${gc.className}SaveDTO dto : rows) {
+            ${gc.className} row = new ${gc.className}();
+            BeanUtils.copyProperties(dto, row);
+            row.setId(null);
+            row.setCreateTime(null);
+            row.setUpdateTime(null);
+            row.setCreateBy(null);
+            row.setUpdateBy(null);
+            row.set${gc.fkCapField}(parentId);
+            mapper.insert(row);
+        }
+    }
+<#else>
+    /**
+     * ${gc.comment} 增量保存：按主键三路合并，避免三层明细整体重建。
+     */
+    private void save${gc.className}Rows(Long parentId, List<${gc.className}SaveDTO> rows) {
+        if (parentId == null || rows == null) {
+            return;
+        }
+        ${gc.className}Mapper mapper = ${gc.varName}Mapper;
+        List<${gc.className}> existing = mapper.selectList(new LambdaQueryWrapper<${gc.className}>()
+                .eq(${gc.className}::get${gc.fkCapField}, parentId));
+        List<Long> keepIds = new ArrayList<>();
+        for (${gc.className}SaveDTO dto : rows) {
+            ${gc.className} matched = null;
+            for (${gc.className} old : existing) {
+                if (dto.getId() != null && dto.getId().equals(old.getId())) {
+                    matched = old;
+                    break;
+                }
+            }
+            if (matched == null) {
+                ${gc.className} row = new ${gc.className}();
+                BeanUtils.copyProperties(dto, row);
+                row.setId(null);
+                row.setCreateTime(null);
+                row.setUpdateTime(null);
+                row.setCreateBy(null);
+                row.setUpdateBy(null);
+                row.set${gc.fkCapField}(parentId);
+                mapper.insert(row);
+                keepIds.add(row.getId());
+            } else {
+                Long existingId = matched.getId();
+                BeanUtils.copyProperties(dto, matched);
+                matched.setId(existingId);
+                matched.setUpdateTime(null);
+                matched.setUpdateBy(null);
+                matched.set${gc.fkCapField}(parentId);
+                mapper.updateById(matched);
+                keepIds.add(existingId);
+            }
+        }
+        List<Long> removeIds = new ArrayList<>();
+        for (${gc.className} old : existing) {
+            if (old.getId() != null && !keepIds.contains(old.getId())) {
+                removeIds.add(old.getId());
+            }
+        }
+        if (!removeIds.isEmpty()) {
+            mapper.deleteBatchIds(removeIds);
+        }
+    }
+</#if>
+</#list>
+<#else>
     /**
      * ${child.comment} 全量替换：先按外键逻辑删除旧行，再逐行插入，与主表同一事务。
      * rows 为 null 表示本次提交未涉及该子表（不动），空列表表示清空。
@@ -150,6 +401,7 @@ public class ${className}ServiceImpl extends ServiceImpl<${className}Mapper, ${c
         }
     }
 </#list>
+</#if>
 </#list>
     /**
      * V4.4 按删除级联模式删除主表（模式由生成时配置决定，三选一渲染）：

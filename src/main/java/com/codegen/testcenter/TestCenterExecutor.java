@@ -250,11 +250,15 @@ public class TestCenterExecutor {
         result.setExitCode(processResult.exitCode());
         result.setDurationMs(processResult.durationMs());
         result.setFinishedAt(LocalDateTime.now().withNano(0));
+        // _artifacts 是执行器内部键，不能写进 metrics_json；先摘出来再登记产物
+        Map<String, Object> metrics = new java.util.LinkedHashMap<>(processResult.metrics());
+        Object declaredArtifacts = metrics.remove(TcMetrics.ARTIFACTS_KEY);
         try {
-            result.setMetricsJson(mapper.writeValueAsString(processResult.metrics()));
+            result.setMetricsJson(mapper.writeValueAsString(metrics));
         } catch (Exception e) {
             result.setMetricsJson("{}");
         }
+        saveDeclaredArtifacts(run, suite, workDir, declaredArtifacts);
         // SKIPPED 也要留下原因，否则页面只显示「跳过」而不知道是缺 MySQL 还是缺依赖
         if (!TcStatus.PASSED.equals(processResult.status())) {
             String excerpt = processResult.errorExcerpt() == null ? "" : processResult.errorExcerpt();
@@ -273,6 +277,68 @@ public class TestCenterExecutor {
             }
         }
         return null;
+    }
+
+    /** 登记套件声明的产物（S8 截图 / S9 diff.json）；路径仍走 TcPathGuard 的 run 目录白名单。 */
+    private void saveDeclaredArtifacts(TcRun run, TcSuite suite, Path workDir, Object declared) {
+        if (!(declared instanceof java.util.Collection<?> files) || files.isEmpty()) {
+            return;
+        }
+        for (Object raw : files) {
+            if (!(raw instanceof String path) || path.isBlank()) {
+                continue;
+            }
+            try {
+                Path file = TcPathGuard.resolve(workDir, path);
+                TcArtifact artifact = new TcArtifact();
+                artifact.setRunId(run.getId());
+                artifact.setSuiteId(suite.getId());
+                artifact.setArtifactType(artifactTypeOf(file.getFileName().toString()));
+                artifact.setFileName(file.getFileName().toString());
+                artifact.setFilePath(file.toString());
+                artifact.setFileSize(Files.size(file));
+                artifact.setMimeType(mimeTypeOf(file.getFileName().toString()));
+                store.saveArtifact(artifact);
+            } catch (Exception e) {
+                // 单个产物登记失败不影响套件结论，但要在服务日志里留痕
+                log.warn("套件 {} 产物登记失败 path={}", suite.getId(), path, e);
+            }
+        }
+    }
+
+    private String artifactTypeOf(String fileName) {
+        String lower = fileName.toLowerCase(java.util.Locale.ROOT);
+        if (lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg")
+                || lower.endsWith(".webp")) {
+            return "SCREENSHOT";
+        }
+        if (lower.endsWith(".json")) {
+            return "DIFF";
+        }
+        if (lower.endsWith(".html")) {
+            return "REPORT";
+        }
+        return "ATTACH";
+    }
+
+    private String mimeTypeOf(String fileName) {
+        String lower = fileName.toLowerCase(java.util.Locale.ROOT);
+        if (lower.endsWith(".png")) {
+            return "image/png";
+        }
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+        if (lower.endsWith(".webp")) {
+            return "image/webp";
+        }
+        if (lower.endsWith(".json")) {
+            return "application/json";
+        }
+        if (lower.endsWith(".html")) {
+            return "text/html";
+        }
+        return "application/octet-stream";
     }
 
     private void saveLogArtifact(TcRun run, TcCaseResult caseResult) {

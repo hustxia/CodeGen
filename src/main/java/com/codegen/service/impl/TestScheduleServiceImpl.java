@@ -10,11 +10,14 @@ import com.codegen.entity.TestRun;
 import com.codegen.entity.TestSchedule;
 import com.codegen.mapper.TestRunMapper;
 import com.codegen.mapper.TestScheduleMapper;
+import com.codegen.schedule.ScheduleTimeCalculator;
 import com.codegen.service.TestRunService;
 import com.codegen.service.TestScheduleService;
+import com.codegen.vo.TestScheduleVO;
 import com.codegen.vo.TestVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
@@ -24,7 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -58,14 +63,56 @@ public class TestScheduleServiceImpl extends ServiceImpl<TestScheduleMapper, Tes
     private TestRunMapper runMapper;
 
     @Override
-    public Page<TestSchedule> page(TestCenterDTO.SchedulePage dto) {
+    public Page<TestScheduleVO> page(TestCenterDTO.SchedulePage dto) {
         Page<TestSchedule> page = new Page<>(dto.getPageNum(), dto.getPageSize());
         LambdaQueryWrapper<TestSchedule> w = new LambdaQueryWrapper<>();
         w.eq(dto.getProjectId() != null, TestSchedule::getProjectId, dto.getProjectId());
         w.like(dto.getName() != null, TestSchedule::getName, dto.getName());
         w.eq(TestSchedule::getDeleted, 0);
         w.orderByDesc(TestSchedule::getCreateTime);
-        return baseMapper.selectPage(page, w);
+        Page<TestSchedule> raw = baseMapper.selectPage(page, w);
+        Map<Long, TestRun> runs = loadLastRuns(raw.getRecords());
+        LocalDateTime now = LocalDateTime.now();
+        List<TestScheduleVO> rows = new ArrayList<>();
+        for (TestSchedule s : raw.getRecords()) {
+            rows.add(toVo(s, runs.get(s.getLastRunId()), now));
+        }
+        Page<TestScheduleVO> vo = new Page<>(raw.getCurrent(), raw.getSize(), raw.getTotal());
+        vo.setRecords(rows);
+        return vo;
+    }
+
+    /** 批量取最近批次，避免列表页 N+1；认领哨兵 -1 不查库 */
+    private Map<Long, TestRun> loadLastRuns(List<TestSchedule> records) {
+        List<Long> ids = new ArrayList<>();
+        for (TestSchedule s : records) {
+            if (s.getLastRunId() != null && s.getLastRunId() > 0) {
+                ids.add(s.getLastRunId());
+            }
+        }
+        Map<Long, TestRun> out = new HashMap<>();
+        if (ids.isEmpty()) {
+            return out;
+        }
+        for (TestRun run : runMapper.selectBatchIds(ids)) {
+            out.put(run.getId(), run);
+        }
+        return out;
+    }
+
+    private TestScheduleVO toVo(TestSchedule s, TestRun run, LocalDateTime now) {
+        TestScheduleVO vo = new TestScheduleVO();
+        BeanUtils.copyProperties(s, vo);
+        vo.setIntervalMinutes(ScheduleTimeCalculator.intervalMinutesOf(s.getCron()));
+        LocalDateTime lastAt = run == null ? null
+                : (run.getStartedAt() != null ? run.getStartedAt() : run.getCreateTime());
+        vo.setLastRunAt(lastAt);
+        vo.setLastRunStatus(run == null ? null : run.getStatus());
+        boolean enabled = Integer.valueOf(1).equals(s.getEnabled());
+        vo.setNextRunAt(enabled
+                ? ScheduleTimeCalculator.displayNextFireAt(s.getCron(), lastAt, true, now)
+                : null);
+        return vo;
     }
 
     @Override
@@ -82,21 +129,33 @@ public class TestScheduleServiceImpl extends ServiceImpl<TestScheduleMapper, Tes
         if (dto == null || !StringUtils.hasText(dto.getName()) || dto.getEnvId() == null) {
             throw new BusinessException(400, "任务名与执行环境必填");
         }
-        if (!StringUtils.hasText(dto.getCron()) || !StringUtils.hasText(dto.getSuiteIds())) {
-            throw new BusinessException(400, "cron 与套件列表必填");
+        if (!StringUtils.hasText(dto.getSuiteIds())) {
+            throw new BusinessException(400, "套件列表必须填写");
         }
-        // 提前校验 cron 合法性，避免存进一个永远触发的脏表达式
+        // 间隔优先：填了 intervalMinutes 就存成 @every Nm，否则按 cron 存
+        String rule;
         try {
-            CronExpression.parse(normalizeCron(dto.getCron()));
-        } catch (Exception e) {
-            throw new BusinessException(400, "cron 表达式非法: " + dto.getCron());
+            rule = ScheduleTimeCalculator.toStoredRule(dto.getCron(), dto.getIntervalMinutes());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(400, e.getMessage());
+        }
+        if (!StringUtils.hasText(rule)) {
+            throw new BusinessException(400, "间隔分钟或 cron 至少填一个");
+        }
+        // 提前校验，避免存进一个永远不触发的脏表达式
+        if (!ScheduleTimeCalculator.isIntervalRule(rule)) {
+            try {
+                CronExpression.parse(normalizeCron(rule));
+            } catch (Exception e) {
+                throw new BusinessException(400, "cron 表达式非法: " + dto.getCron());
+            }
         }
         TestSchedule entity = dto.getId() == null ? new TestSchedule() : getById(dto.getId());
         entity.setProjectId(dto.getProjectId());
         entity.setName(dto.getName());
         entity.setEnvId(dto.getEnvId());
         entity.setSuiteIds(dto.getSuiteIds());
-        entity.setCron(dto.getCron());
+        entity.setCron(rule);
         entity.setEnabled(dto.getEnabled() == null ? 1 : dto.getEnabled());
         entity.setNotifyType(dto.getNotifyType());
         entity.setNotifyTarget(dto.getNotifyTarget());
@@ -198,31 +257,32 @@ public class TestScheduleServiceImpl extends ServiceImpl<TestScheduleMapper, Tes
         baseMapper.updateById(s);
     }
 
-    /** 是否在触发窗口：最近一次执行时间之后的下一个 cron 点已到达 */
+    /** 是否在触发窗口：cron 的下一个触发点 / 间隔的下一个到期点已到达 */
     private boolean isDue(TestSchedule s) {
         try {
-            CronExpression expr = CronExpression.parse(normalizeCron(s.getCron()));
-            LocalDateTime from = lastFireAt(s);
-            LocalDateTime next = expr.next(from);
-            return next != null && !next.isAfter(LocalDateTime.now());
+            return ScheduleTimeCalculator.isDue(s.getCron(), lastFireAt(s), LocalDateTime.now());
         } catch (Exception e) {
-            log.warn("cron 解析失败 scheduleId={} cron={}: {}", s.getId(), s.getCron(), e.getMessage());
+            log.warn("调度规则解析失败 scheduleId={} rule={}: {}", s.getId(), s.getCron(), e.getMessage());
             return false;
         }
     }
 
-    /** 最近一次「触发基准时间」：从未跑→MIN（立即到期）；认领中→now（跳过）；否则取批次 started_at */
+    /**
+     * 最近一次「触发基准时间」：从未跑→null（立即到期）；认领中→now（本轮跳过）；
+     * 否则取批次 started_at。改为可空后由 {@link ScheduleTimeCalculator} 统一计算，
+     * 间隔与 cron 两种规则共用同一套到期语义。
+     */
     private LocalDateTime lastFireAt(TestSchedule s) {
         Long lid = s.getLastRunId();
         if (lid == null) {
-            return LocalDateTime.MIN;
+            return null;
         }
         if (Objects.equals(lid, CLAIMED)) {
             return LocalDateTime.now();
         }
         TestRun run = runMapper.selectById(lid);
         if (run == null) {
-            return LocalDateTime.MIN;
+            return null;
         }
         return run.getStartedAt() != null ? run.getStartedAt() : run.getCreateTime();
     }
@@ -249,13 +309,6 @@ public class TestScheduleServiceImpl extends ServiceImpl<TestScheduleMapper, Tes
 
     /** Spring CronExpression 需 6 段（秒 分 时 日 月 周）；5 段 Unix cron 补前导 0 秒 */
     private static String normalizeCron(String cron) {
-        if (cron == null) {
-            return cron;
-        }
-        String trimmed = cron.trim();
-        if (trimmed.isEmpty()) {
-            return trimmed;
-        }
-        return trimmed.chars().filter(ch -> ch == ' ').count() == 4 ? "0 " + trimmed : trimmed;
+        return ScheduleTimeCalculator.normalizeCron(cron);
     }
 }

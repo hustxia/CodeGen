@@ -1,5 +1,6 @@
 package com.codegen.testcenter;
 
+import com.codegen.verify.VerifyContractProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 
@@ -22,10 +23,12 @@ import java.util.concurrent.TimeUnit;
 public class SystemProcessLauncher implements TcProcessLauncher {
 
     private final TcProperties props;
+    private final VerifyContractProperties contract;
     private final ObjectMapper mapper;
 
-    public SystemProcessLauncher(TcProperties props, ObjectMapper mapper) {
+    public SystemProcessLauncher(TcProperties props, VerifyContractProperties contract, ObjectMapper mapper) {
         this.props = props;
+        this.contract = contract;
         this.mapper = mapper;
     }
 
@@ -51,6 +54,22 @@ public class SystemProcessLauncher implements TcProcessLauncher {
         env.put("TC_SERVER_ROOT", props.serverRoot().toString());
         env.put("TC_WEB_ROOT", props.webRoot().toString());
         env.put("TC_WORK_DIR", workDir.toString());
+        // S8/S9 产物（截图 / diff.json）统一落 run 目录，页面才能走 tc_artifact 白名单下载
+        env.put("TC_ARTIFACT_DIR", workDir.resolve("artifacts").toString());
+        // 验证契约：阈值只在后端配置里维护，页面/CLI/CI 三条入口共用
+        env.put("VERIFY_CONTRACT_MAX_ADDED", String.valueOf(contract.getMaxAdded()));
+        env.put("VERIFY_CONTRACT_MAX_REMOVED", String.valueOf(contract.getMaxRemoved()));
+        env.put("VERIFY_CONTRACT_MAX_MODIFIED", String.valueOf(contract.getMaxModified()));
+        env.put("VERIFY_CONTRACT_WHITELIST", contract.getWhitelist() == null ? "" : contract.getWhitelist());
+        if (contract.getNewDir() != null && !contract.getNewDir().isBlank()) {
+            env.put("TC_DIFF_NEW", contract.getNewDir().trim());
+        }
+        if (contract.getBaselineDir() != null && !contract.getBaselineDir().isBlank()) {
+            env.put("TC_DIFF_BASELINE", contract.getBaselineDir().trim());
+        }
+        if (contract.getShotUrls() != null && !contract.getShotUrls().isBlank()) {
+            env.put("TC_SHOT_URLS", contract.getShotUrls().trim());
+        }
         if (spec.env() != null) {
             for (Map.Entry<String, String> e : spec.env().entrySet()) {
                 if (e.getKey() != null && e.getValue() != null) {
@@ -90,17 +109,23 @@ public class SystemProcessLauncher implements TcProcessLauncher {
 
         long duration = System.currentTimeMillis() - start;
         String tail = readTail(logFile, props.getTailLines());
+        Map<String, Object> metrics = TcMetrics.parseAll(tail, mapper);
+        // 产物清单随 metrics 回传执行器，由执行器登记 tc_artifact 后剔除。
+        // 失败也要带回来：S9 超阈值时 diff.json 正是排查差异的证据。
+        List<String> artifacts = TcMetrics.parseArtifacts(tail, mapper);
+        if (!artifacts.isEmpty()) {
+            metrics.put(TcMetrics.ARTIFACTS_KEY, artifacts);
+        }
         if (cancelled) {
-            return TcProcessResult.failed(TcStatus.CANCELLED, -1, duration, "运行被取消");
+            return new TcProcessResult(TcStatus.CANCELLED, -1, duration, "运行被取消", metrics);
         }
         if (timedOut) {
-            return TcProcessResult.failed(TcStatus.TIMEOUT, -1, duration,
-                    "套件超时（" + spec.suite().getTimeoutMinutes() + " min）\n" + tail);
+            return new TcProcessResult(TcStatus.TIMEOUT, -1, duration,
+                    "套件超时（" + spec.suite().getTimeoutMinutes() + " min）\n" + tail, metrics);
         }
         if (exit != 0) {
-            return TcProcessResult.failed(TcStatus.FAILED, exit, duration, tail);
+            return new TcProcessResult(TcStatus.FAILED, exit, duration, tail, metrics);
         }
-        Map<String, Object> metrics = TcMetrics.parse(tail, mapper);
         // 驱动脚本显式声明 SKIPPED 时不算 PASSED，也不算 FAILED
         if ("SKIPPED".equals(metrics.get("status"))) {
             return new TcProcessResult(TcStatus.SKIPPED, 0, duration,

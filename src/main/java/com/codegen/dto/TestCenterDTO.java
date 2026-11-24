@@ -107,7 +107,10 @@ public final class TestCenterDTO {
         private String name;
         private Long envId;
         private String suiteIds;
+        /** 6 段 cron（秒 分 时 日 月 周）；与 intervalMinutes 二选一，间隔优先 */
         private String cron;
+        /** 间隔分钟（1-1440）；填了就按间隔触发，忽略 cron */
+        private Integer intervalMinutes;
         private Integer enabled = 1;
         private String notifyType;
         private String notifyTarget;
