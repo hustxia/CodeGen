@@ -84,6 +84,9 @@ public class GenScaffoldDTO {
     @Schema(description = "V6.6 是否生成文件能力包（sys_file 表 + /file 上传下载端点 + ImageUpload/FileUpload 组件），默认 false；系统配置请把 sys_project.file_enabled 设为同值")
     private Boolean fileEnabled;
 
+    @Schema(description = "V9.15 是否生成数据可视化图表能力包（ChartCard 组件 + echarts 依赖 + 看板页），默认 false；系统配置请把 sys_project.chart_enabled 设为同值")
+    private Boolean chartEnabled;
+
     @Schema(description = "V6.7 是否生成测试骨架（src/test 集成测试 + H2 内存库，打开即 mvn test 全绿），默认 true；multi/micro 工程暂不支持（P1）")
     private Boolean testEnabled;
 

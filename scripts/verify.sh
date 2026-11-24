@@ -36,8 +36,6 @@ cd "$ROOT"
 
 MIN_TESTS="${MIN_TESTS:-312}"
 MVN_BIN="${MVN_BIN:-mvn}"
-# 本机默认离线（依赖已缓存）；CI 设 MVN_FLAGS="-B" 走在线拉取，避免幻影失败
-MVN_FLAGS="${MVN_FLAGS--o}"
 JAVA_HOME="${JAVA_HOME:-}"
 LOG_DIR="${TC_LOG_DIR:-logs/testcenter}"
 WITH_DB=0
@@ -89,7 +87,7 @@ T0=$SECONDS
 # clean 在 Windows 开发机上常被 IDE 语言服务器锁住 target/classes（Trae/IDEA 索引中），
 # 那属于本机环境问题而不是代码问题：降级为「只清 surefire 报告 + 不 clean 的 test」，
 # 并明确提示，避免有人以为门禁坏了。CI（Linux）上 clean 永远能过。
-if JAVA_HOME="$JAVA_HOME" "$MVN_BIN" $MVN_FLAGS clean > /dev/null 2>&1; then
+if JAVA_HOME="$JAVA_HOME" "$MVN_BIN" -o clean > /dev/null 2>&1; then
   note "clean 完成"
 else
   note "clean 失败（本机 IDE 正在索引 target/classes 是常见原因），改为只清 surefire 报告"
@@ -97,7 +95,7 @@ else
 fi
 
 MVN_OK=1
-if JAVA_HOME="$JAVA_HOME" "$MVN_BIN" $MVN_FLAGS test > "$LOG_DIR/verify-mvn.log" 2>&1; then
+if JAVA_HOME="$JAVA_HOME" "$MVN_BIN" -o test > "$LOG_DIR/verify-mvn.log" 2>&1; then
   ok "mvn test"
 else
   MVN_OK=0
@@ -220,3 +218,5 @@ if [ "$FAIL" -gt 0 ]; then
   exit 1
 fi
 printf '\033[32mRESULT PASS\033[0m\n'
+printf '\n\033[1m如果这套 verify 门禁帮你兜住了生成产物质量，欢迎去 GitHub 点个 Star：\033[0m\n'
+printf '  https://github.com/hustxia/CodeGen  ·  在线演示 https://hustxia.github.io/CodeGen/\n'

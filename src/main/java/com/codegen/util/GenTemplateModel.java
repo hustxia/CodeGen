@@ -116,29 +116,29 @@ public final class GenTemplateModel {
                                 String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                                 String projectStructure, Integer payEnabled, Integer mobileEnabled,
                                 Integer fileEnabled, Integer testEnabled, String defaultLanguage,
-                                Integer i18nEnabled) {
+                                Integer i18nEnabled, Integer chartEnabled) {
 
         /** 兼容 V3.0 之前的构造：无系统编码，权限点不加前缀 */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage) {
-            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, null, null, null, null, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V3.0 构造：无级联默认值（V4.4 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage, String projectCode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, null, null, null, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V4.4 构造：无打印默认值（V4.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode) {
-            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null, null, null, null, null);
+            this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode, null, null, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V4.5 构造：无工程结构（V5.5 前的调用方） */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, null, null, null, null, null, null);
+                    defaultGenPrint, null, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V6.2 构造：无支付开关（V6.3 前的调用方） */
@@ -146,7 +146,7 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, null, null, null, null, null);
+                    defaultGenPrint, projectStructure, null, null, null, null, null, null, null);
         }
 
         /** 兼容 V6.3/V6.4 构造：无移动端开关（V6.5 前的调用方） */
@@ -154,7 +154,7 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure, Integer payEnabled) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, payEnabled, null, null, null, null);
+                    defaultGenPrint, projectStructure, payEnabled, null, null, null, null, null, null);
         }
 
         /** 兼容 V6.5 构造：无文件能力开关（V6.6 前的调用方） */
@@ -162,7 +162,7 @@ public final class GenTemplateModel {
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
                              String projectStructure, Integer payEnabled, Integer mobileEnabled) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, null, null, null);
+                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, null, null, null, null, null);
         }
 
         /** 兼容 V6.6 构造：无测试骨架开关（V6.7 前的调用方） */
@@ -171,15 +171,16 @@ public final class GenTemplateModel {
                              String projectStructure, Integer payEnabled, Integer mobileEnabled,
                              Integer fileEnabled) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
-                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, fileEnabled, null, null);
+                    defaultGenPrint, projectStructure, payEnabled, mobileEnabled, fileEnabled, null, null, null, null);
         }
 
         /**
          * 兼容 V7.4 及之前的「11 参全参构造」：无语言配置，回落 {@code zh-CN}。
          *
          * <p>V7.5 给 record 加了第 12 个组件 defaultLanguage，V8.0 又加了第 13 个 i18nEnabled，
-         * 如果不留这些重载，仓库里十几个基线/契约测试（以及未来任何旧调用）会全部编译失败。
-         * 存量系统的行为必须保持不变——这里显式传 null，让 LanguageConfig / resolveI18n 走默认（关）。
+         * V9.15 又加了第 14 个 chartEnabled。如果不留这些重载，仓库里十几个基线/契约测试
+         * （以及未来任何旧调用）会全部编译失败。存量系统的行为必须保持不变——这里显式传 null，
+         * 让 LanguageConfig / resolveI18n / resolveChart 走默认（关）。
          */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
@@ -187,14 +188,15 @@ public final class GenTemplateModel {
                              Integer fileEnabled, Integer testEnabled) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
                     defaultGenPrint, projectStructure, payEnabled, mobileEnabled, fileEnabled,
-                    testEnabled, null, null);
+                    testEnabled, null, null, null);
         }
 
         /**
          * 兼容 V7.5 的「12 参全参构造」：无国际化开关配置，回落关。
          *
-         * <p>V8.0 加第 13 个组件 i18nEnabled 时保留；仓库里十几个基线/契约测试仍用这个签名。
-         * 显式传 null 让 resolveI18n 走默认（关），存量产物逐字节零 diff。
+         * <p>V8.0 加第 13 个组件 i18nEnabled 时保留；V9.15 加第 14 个 chartEnabled。
+         * 仓库里十几个基线/契约测试仍用这个签名。显式传 null 让 resolveI18n/resolveChart 走默认（关），
+         * 存量产物逐字节零 diff。
          */
         public ProjectConfig(String packageName, String gatewayPrefix, String rootPackage,
                              String projectCode, Integer defaultDeleteCascadeMode, Integer defaultGenPrint,
@@ -202,7 +204,7 @@ public final class GenTemplateModel {
                              Integer fileEnabled, Integer testEnabled, String defaultLanguage) {
             this(packageName, gatewayPrefix, rootPackage, projectCode, defaultDeleteCascadeMode,
                     defaultGenPrint, projectStructure, payEnabled, mobileEnabled, fileEnabled,
-                    testEnabled, defaultLanguage, null);
+                    testEnabled, defaultLanguage, null, null);
         }
     }
 
@@ -259,6 +261,16 @@ public final class GenTemplateModel {
      * 没开能力包时列仍按普通文本框渲染，不产生死链）。
      */
     public static boolean resolveFile(Integer projectVal) {
+        return projectVal != null && projectVal == 1;
+    }
+
+    /**
+     * V9.15 数据可视化图表能力包开关的回落唯一实现：系统级 → 硬编码关。
+     * 与 resolvePay/resolveFile 同款语义（可空三态，NULL/0=关，1=开）；
+     * 图表是工程级能力包，无表级开关（每张表是否出图由列元数据经 GenChartDeriver 自动推导）。
+     * 系统没开时产物逐字节零 diff——不生成 chart 文件、不注入 echarts 依赖。
+     */
+    public static boolean resolveChart(Integer projectVal) {
         return projectVal != null && projectVal == 1;
     }
 
@@ -424,6 +436,9 @@ public final class GenTemplateModel {
         // V8.0 产物国际化开关：三态回落（NULL/0=关，1=开），模板用 <#if i18nEnabled?? && i18nEnabled == 1> 消费。
         // 基线模型传 null → 这里落 0 → 条件为假 → 存量产物逐字节零 diff。
         m.put("i18nEnabled", GenTemplateModel.resolveI18n(project == null ? null : project.i18nEnabled()) ? 1 : 0);
+        // V9.15 数据可视化图表开关：三态回落（NULL/0=关，1=开），模板用 <#if chartEnabled?? && chartEnabled == 1> 消费。
+        // 基线模型传 null → 这里落 0 → 条件为假 → 存量产物逐字节零 diff（与 i18nEnabled 同款）。
+        m.put("chartEnabled", GenTemplateModel.resolveChart(project == null ? null : project.chartEnabled()) ? 1 : 0);
         // F-09：空前缀 → /{module}（与后端 @RequestMapping("/${moduleName}") 直连，代理只剥 /dev-api）；
         // 有前缀 → /api/{prefix}/{module}（网关段原样保留，代理剥 /dev-api/api/{prefix}）
         // V6.0 micro：产物工程自带网关，网关按 /{module}/** 路由，前端不再拼 /api/{prefix} 段；
@@ -637,6 +652,35 @@ public final class GenTemplateModel {
                 && resolveGenPrint(table.getGenPrint(), project == null ? null : project.defaultGenPrint())
                 && (!childrenModel.isEmpty() || genDetailApi);
         m.put("genPrint", genPrint);
+
+        // V9.15 数据可视化图表：GenChartDeriver 纯函数按列元数据推导图清单（零领域词，跨系统通用）。
+        // 前置：chart_enabled 开 + 出 Service（stats 接口要查库）+ 非从表（从表随主表出，无独立接口）。
+        // 图清单固化进模型：chartStats.ftl 据此内联列名白名单（防注入），前端看板据此渲染图卡。
+        boolean chartOn = resolveChart(project == null ? null : project.chartEnabled());
+        List<com.codegen.support.GenChartDeriver.ChartSpec> chartSpecs =
+                com.codegen.support.GenChartDeriver.derive(bizModels, chartOn && genService && !isChild);
+        List<Map<String, Object>> chartList = new ArrayList<>();
+        for (com.codegen.support.GenChartDeriver.ChartSpec spec : chartSpecs) {
+            Map<String, Object> cm = new HashMap<>();
+            cm.put("type", spec.type());
+            cm.put("title", spec.title());
+            cm.put("field", spec.field());
+            cm.put("dbField", spec.dbField());
+            cm.put("metric", spec.metric());
+            cm.put("range", spec.range());
+            chartList.add(cm);
+        }
+        m.put("charts", chartList);
+        m.put("hasCharts", !chartList.isEmpty());
+        // 白名单：合法 field 参数集合（生成期固化进 Java 常量），供 chartStats.ftl 内联校验
+        m.put("chartFieldWhitelist", chartSpecs.stream()
+                .map(com.codegen.support.GenChartDeriver.ChartSpec::field).distinct().toList());
+        // field → 图型（line=时间趋势，按 range 过滤并 DATE_FORMAT 分组；其余按列分组）
+        m.put("chartFieldTypes", chartSpecs.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        com.codegen.support.GenChartDeriver.ChartSpec::field,
+                        com.codegen.support.GenChartDeriver.ChartSpec::type,
+                        (a, b) -> a, java.util.LinkedHashMap::new)));
 
         // 关联下拉：字段里 ref_table 非空的列
         List<Map<String, Object>> refCols = new ArrayList<>();

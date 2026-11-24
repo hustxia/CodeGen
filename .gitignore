@@ -1,43 +1,52 @@
-# 依赖与构建产物
-node_modules/
+# 构建产物
 target/
 build/
-out/
-dist/
-dist-*/
-logs/
-*.log
-derby.log
 *.jar
 *.war
 *.class
 
-# 运行时目录与本机私有配置
-uploads/
-# 一句话建系统生成的目标工程（流水线产物，不入库）
-codegen-demo-target/
-application-local.yml
-.env.local
-.env.*.local
+# 日志
+logs/
+*.log
 
-# 本机工具配置与诊断产物
-.trae/
-.claude/
-.workbuddy/
-.workflow/
-diag-ai/
-diag-ai-rec.js
-shot-manual.js
-shot-demo.js
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 本地环境覆盖（含数据库密码等，不入库）
+src/main/resources/application-local.yml
+src/main/resources/application-local.yaml
+src/main/resources/application-local.properties
+
+# 生成器运行期产物
 .gen-artifacts/
 .gen-backup/
 .gen-verify/
 
-# 编辑器与系统文件
-.idea/
-.vscode/
-*.iml
-*.suo
-*.sw?
-.DS_Store
-Thumbs.db
+# V6.9 文档中心：上传原件与预览缓存（运行期数据，不入库）
+uploads/
+
+# 临时
+*.tmp
+*.bak
+
+# 模板渲染自检脚本（本地回归用，路径与环境强相关，不入库）
+TplRenderCheck.java
+# mvn dependency:build-classpath 导出的本机依赖清单
+cp.txt
+target/cp.txt
+
+# Trae skills 已统一到 D:/workspace/skills 真源（目录联接），不纳入仓库
+.trae/skills/
+
+# 走查产物（台账与扫描报告，本地留档不入库）
+audit/
+.claude/

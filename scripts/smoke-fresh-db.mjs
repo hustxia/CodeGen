@@ -124,7 +124,7 @@ let executed = 0
 function runAllScripts(pass) {
   let done = 0
   for (const f of files) {
-    const content = sanitize(f, readFileSync(path.join(SQL_DIR, f), 'utf8').replace(/^\uFEFF/, ''))
+    const content = sanitize(f, readFileSync(path.join(SQL_DIR, f), 'utf8'))
     const r = sql(content)
     // mysql 客户端会把部分告警写到 stderr，只有非 0 退出码才算真失败
     if (!r.ok) {

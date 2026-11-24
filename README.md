@@ -11,6 +11,8 @@
 
 [![CodeGen demo reel: 8 real generated systems](docs/images/showcase/demo.gif)](docs/images/showcase/demo.gif)
 
+---
+
 ## At a glance
 
 **CodeGen turns a database schema into a complete Spring Boot + Vue business system — code that compiles, runs, and ships with menus, permissions and i18n.**
@@ -58,27 +60,6 @@ Then `cd ../codegen-web && npm install && npm run serve`, open `http://localhost
 > A **code generator** and **low-code scaffold** for **Spring Boot 3 + Vue3**: starting from database table structures (DDL-to-code), it produces **compilable, runnable, menu-and-permission-ready** front-end and back-end CRUD, and supports a **one-sentence system build** — the full delivery loop of writing to disk, backup, ledgering and rollback.
 
 GitHub: https://github.com/hustxia/CodeGen
-
-## The Name "Majiang" (Code Artisan)
-
-This project is named **Majiang (码匠)** — "ma" (码) means code, and "jiang" (匠) means artisan.
-
-> **Why "Majiang"?**
-> The name honors China's **spirit of craftsmanship** — the dedicated, focused, meticulous and excellence-seeking attitude and values formed through professional practice. It emphasizes both the ethics of "doing the job well" and continuous improvement and innovation.
-
-The spirit of craftsmanship comes down to five core values, which are also the principles this project follows in design and implementation:
-
-| Core Value | Meaning | In This Project |
-|---|---|---|
-| **Dedication & Focus** | Love your craft, specialize in it, and stay patient and composed | Focused on one thing — code generation — from DDL to a runnable project, deepening the entire delivery chain |
-| **Refinement** | Never settle for "good enough"; polish details for higher quality | Real `javac` self-check, four-state ledger, template baseline validation — every output must compile and run |
-| **Rigor** | Follow standards, processes and specifications; take responsibility for results | A 12-step pipeline, backups before writes, batch rollback — "never break your project" is built into the flow |
-| **Excellence** | Keep learning and improving; dare to aim higher | From templates to multi-project injection, from single-table CRUD to one-sentence system generation, continuously evolving |
-| **Integrity & Innovation** | Respect tradition and experience, but don't stick to old ways; solve problems with new methods | Built on mainstream Spring Boot + Vue, while introducing AI-assisted modeling, idempotent pipelines and safe merge strategies |
-
-"Majiang" is not a title but a promise: treat every generated line of code the way an artisan treats a craft — no shortcuts, no compromises, traceable and reversible.
-
----
 
 <a id="showcase"></a>
 
@@ -341,9 +322,6 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | `docs/项目介绍.md` | Project introduction document, same source as this file |
 | `docs/代码生成器-Vx.x-规划.md` | Version plans and feature inventories from V3.1 → V7.3 |
 | `codegen-web/README.md` | Frontend console quick-start reference |
-| `CONTRIBUTING.md` (English, 默认) / `CONTRIBUTING_ZH.md` (中文) | Code contribution guide: branch naming, tests, PR template and self-check checklist |
-| `CODE_OF_CONDUCT.md` (English) / `CODE_OF_CONDUCT_ZH.md` (中文) | Community behavior standards, reporting channel and enforcement process |
-| `SECURITY.md` | Supported versions and vulnerability reporting process |
 
 ---
 
@@ -404,7 +382,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 ## 13. Project Status
 
-- The current released version is **V9.15** (generic data visualization chart capability pack: `chart_enabled` tri-state switch, domain-agnostic `GenChartDeriver`, per-table `/{module}/stats` endpoints, ECharts `ChartCard` + cross-table dashboard; chart-off output byte-identical). It builds on **V9.14** (smart-village UI & data hardening), **V9.13** (smart-village system hardening), **V9.12** (dedicated village template + full-chain fixes), **V9.11** (industry templates as full systems), **V9.10** (field expansion), **V9.9** (250+ template packs), **V9.8** (multi-pipeline concurrent runs via `PipelineRunGate` + startup recovery for orphaned `running` pipelines), **V9.7** (fast table creation), **V9.6** (batched AI modeling), **V9.5** (AI table recommendation), **V9.4** (staged confirmation), **V9.2** (test center & verification hub), **V9.1** (byte-identical refactor), **V9.0** (Vue 3 + Element Plus + Vite), **V8.1** (quality gate) and **V8.0** (full-page i18n). Language support verified on 2026-11-13: 206/206 locales, 12 RTL, 8 translated word banks key-identical to zh-CN (60 keys each).
+- The current released version is **V9.15** (generic data visualization chart capability pack: `chart_enabled` tri-state switch, domain-agnostic `GenChartDeriver`, per-table `/{module}/stats` endpoints, ECharts `ChartCard` + cross-table dashboard; chart-off output byte-identical). It builds on **V9.14** (smart-village UI & data hardening), **V9.13** (smart-village system hardening), **V9.12** (dedicated village template + full-chain fixes), **V9.11** (industry templates as full systems), **V9.10** (field expansion), **V9.9** (250+ template packs), **V9.8** (multi-pipeline concurrent runs via `PipelineRunGate` + startup recovery for orphaned `running` pipelines), **V9.7** (fast table creation), **V9.6** (batched AI modeling), **V9.5** (AI table recommendation), **V9.4** (staged confirmation), **V9.2** (test center + verification hub), **V9.1** (byte-identical refactor), **V9.0** (Vue 3 + Element Plus + Vite), **V8.1** (quality gate) and **V8.0** (full-page i18n). Language support verified on 2026-11-13: 206/206 locales, 12 RTL, 8 translated word banks key-identical to zh-CN (60 keys each).
 - A companion demo project `demo_admin` (backend 8140 / frontend 9040) covers tree / CRUD / master-detail / read-only / print scenarios and runs standalone for verification.
 - Both repositories are hosted on Gitee: `https://gitee.com/hustxiayuhong/CodeGen.git`
 
@@ -418,16 +396,7 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 
 > I read and reply to every email. Bug reports, feature requests and collaboration inquiries are all welcome.
 
-> **Want to contribute code?** Please read the [Code Contribution Guide](CONTRIBUTING.md) (English, default) / [代码贡献指南](CONTRIBUTING_ZH.md) (中文) before opening a Pull Request — it covers the workflow, branch naming, required tests and the PR template.
-
 ---
-
-<details>
-<summary>All languages / 全部语言（48）</summary>
-
-> Languages: [简体中文](README_ZH.md) · [繁體中文](README_ZH_TW.md) · **English** · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
-
-</details>
 
 
 ## 15. How It Compares with Similar Tools
