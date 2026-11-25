@@ -138,4 +138,60 @@ class V917UniquenessAlignTemplateTest {
         hasNot(vue, "applyUniqueFieldError", "无唯一列不得生成字段定位逻辑");
         hasNot(vue, "/check-unique", "无唯一列不得生成查重请求");
     }
+
+    @Test
+    @DisplayName("V9.20 多组独立唯一键：code(组1) 与 name(组2) 各自查重，互不为联合条件")
+    void multiUniqueGroups() throws Exception {
+        GenTable table = GenTemplateModel.sampleTable();
+        table.setTableName("v920_goods");
+        table.setTableComment("商品");
+        table.setClassName("V920Goods");
+        table.setModuleName("v920Goods");
+        table.setPackageName("com.demo.goods");
+
+        List<GenTableColumn> cols = new ArrayList<>(GenTemplateModel.sampleCols());
+        // 关键：id 列（sampleCols 自带 uniqueFlag=1）必须清掉，否则会多一组
+        for (GenTableColumn c : cols) {
+            c.setUniqueFlag(0);
+        }
+        GenTableColumn code = new GenTableColumn();
+        code.setColumnName("code");
+        code.setColumnComment("编码");
+        code.setColumnType("varchar(32)");
+        code.setJavaField("code");
+        code.setJavaType("String");
+        code.setHtmlType("input");
+        code.setIsList(1);
+        code.setIsForm(1);
+        code.setUniqueFlag(1);
+        code.setUniqueGroup(1);
+        cols.add(code);
+        GenTableColumn name = new GenTableColumn();
+        name.setColumnName("goods_name");
+        name.setColumnComment("名称");
+        name.setColumnType("varchar(64)");
+        name.setJavaField("goodsName");
+        name.setJavaType("String");
+        name.setHtmlType("input");
+        name.setIsList(1);
+        name.setIsForm(1);
+        name.setUniqueFlag(1);
+        name.setUniqueGroup(2);
+        cols.add(name);
+
+        Map<String, Object> m = GenTemplateModel.build(table, cols);
+        assertTrue(Boolean.TRUE.equals(m.get("multiUniqueGroup")), "两组配置必须识别为多组");
+        String out = render("controller.ftl", m);
+        has(out, "// 唯一组 1（单列）", "组1 独立查重生成");
+        has(out, "// 唯一组 2（单列）", "组2 独立查重生成");
+        has(out, "countBy(\"code\", String.valueOf(dto.getCode())", "组1 按 code 单列查重");
+        has(out, "countBy(\"goods_name\", String.valueOf(dto.getGoodsName())", "组2 按 name 单列查重");
+        hasNot(out, "group1Wrapper.eq", "两组都是单列，不能生成联合条件");
+        // 零 diff：单组（全 0）渲染不含多组标记
+        for (GenTableColumn c : cols) {
+            c.setUniqueGroup(0);
+        }
+        Map<String, Object> single = GenTemplateModel.build(table, cols);
+        assertFalse(Boolean.TRUE.equals(single.get("multiUniqueGroup")), "全 0 组必须回落单组行为");
+    }
 }

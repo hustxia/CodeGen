@@ -26,6 +26,26 @@ public class PayProps {
     @Value("${pay.wxpay.notify-url:}")
     private String wxNotifyUrl;
 
+    /** V9.20：微信 JSAPI 下单需要用户 openid 场景值（公众号 appid 复用 wxAppId） */
+    @Value("${pay.wxpay.jsapi-openid:}")
+    private String wxJsapiOpenid;
+
+    /** V9.20：微信 H5 下单的场景信息（WAP 网站域名，微信支付要求） */
+    @Value("${pay.wxpay.h5-scene-info:}")
+    private String wxH5SceneInfo;
+
+    /** V9.20：支付宝沙箱开关 —— 只影响运行时网关与配置下发，不触碰密钥 */
+    @Value("${pay.alipay.sandbox:false}")
+    private boolean aliSandbox;
+
+    /** V9.20：支付宝沙箱扫码登录 URL（前端跳转用，可空） */
+    @Value("${pay.alipay.sandbox-login-url:}")
+    private String aliSandboxLoginUrl;
+
+    /** V9.20：支付宝沙箱收银台 URL（前端跳转用，可空） */
+    @Value("${pay.alipay.sandbox-pay-url:}")
+    private String aliSandboxPayUrl;
+
     @Value("${pay.alipay.app-id:}")
     private String aliAppId;
     @Value("${pay.alipay.private-key:}")
@@ -42,6 +62,11 @@ public class PayProps {
     public String getWxApiV3Key() { return wxApiV3Key; }
     public String getWxPrivateKeyPath() { return wxPrivateKeyPath; }
     public String getWxNotifyUrl() { return wxNotifyUrl; }
+    public String getWxJsapiOpenid() { return wxJsapiOpenid; }
+    public String getWxH5SceneInfo() { return wxH5SceneInfo; }
+    public boolean isAliSandbox() { return aliSandbox; }
+    public String getAliSandboxLoginUrl() { return aliSandboxLoginUrl; }
+    public String getAliSandboxPayUrl() { return aliSandboxPayUrl; }
     public String getAliAppId() { return aliAppId; }
     public String getAliPrivateKey() { return aliPrivateKey; }
     public String getAliPublicKey() { return aliPublicKey; }

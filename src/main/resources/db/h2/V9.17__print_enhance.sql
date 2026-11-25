@@ -14,3 +14,12 @@ COMMENT ON COLUMN `gen_table`.`print_title` IS '打印页标题:NULL/空=回落�
 ALTER TABLE `gen_table` ADD COLUMN IF NOT EXISTS print_landscape tinyint DEFAULT NULL;
 
 COMMENT ON COLUMN `gen_table`.`print_landscape` IS '横版打印:NULL/0=A4纵向 1=A4横向';
+
+-- V9.20 追加：打印条码/二维码字段（接线 V9.17 模板预留的 printBarcode/printQr 开关）
+ALTER TABLE `gen_table` ADD COLUMN IF NOT EXISTS print_barcode varchar(64) DEFAULT NULL;
+
+COMMENT ON COLUMN `gen_table`.`print_barcode` IS '打印条码字段名:NULL/空=不渲染';
+
+ALTER TABLE `gen_table` ADD COLUMN IF NOT EXISTS print_qr varchar(64) DEFAULT NULL;
+
+COMMENT ON COLUMN `gen_table`.`print_qr` IS '打印二维码字段名:NULL/空=不渲染';

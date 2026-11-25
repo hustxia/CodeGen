@@ -9,6 +9,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -693,6 +694,20 @@ public final class GenTemplateModel {
         });
         m.put("printRmb", masterMoney || anyDetailMoney);
 
+        // V9.20 打印条码/二维码接线：模板用 (printBarcode! '')?is_string && ?has_content 守卫，
+        // 空串=不渲染（存量零 diff）。只接受 master 表单区真实存在的 Java 字段名，防模板串改。
+        String barcode = orDefault(table.getPrintBarcode(), "").trim();
+        String qr = orDefault(table.getPrintQr(), "").trim();
+        // 同时接受 Java 字段名（驼峰）与数据库列名（下划线），统一归一为 master 对象的键
+        String barcodeField = formCols.stream().map(GenTableColumn::getJavaField)
+                .filter(f -> barcode.equals(f) || barcode.equals(f.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase()))
+                .findFirst().orElse("");
+        String qrField = formCols.stream().map(GenTableColumn::getJavaField)
+                .filter(f -> qr.equals(f) || qr.equals(f.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase()))
+                .findFirst().orElse("");
+        m.put("printBarcode", barcodeField);
+        m.put("printQr", qrField);
+
         // V9.15 数据可视化图表：GenChartDeriver 纯函数按列元数据推导图清单（零领域词，跨系统通用）。
         // 前置：chart_enabled 开 + 出 Service（stats 接口要查库）+ 非从表（从表随主表出，无独立接口）。
         // 图清单固化进模型：chartStats.ftl 据此内联列名白名单（防注入），前端看板据此渲染图卡。
@@ -841,6 +856,8 @@ public final class GenTemplateModel {
         m.put("payCodeSafe", payCode.replaceAll("[^A-Za-z0-9_\\-]", ""));
         m.put("hasPayBiz", hasPayBiz);
         if (hasPayBiz) {
+            // V9.20 开关接线：payEnabled=1 时表级退款查询能力随支付包默认启用（模板 <#if (key!0)==1>）。
+            m.put("payRefundQueryEnabled", 1);
             GenTableColumn noCol = biz.stream().filter(c -> c.getColumnName() != null
                     && c.getColumnName().toLowerCase().matches("(order_no|bill_no|out_trade_no|business_no|no)"))
                     .findFirst().orElse(null);
@@ -892,11 +909,27 @@ public final class GenTemplateModel {
                 .filter(c -> c.getUniqueFlag() != null && c.getUniqueFlag() == 1).toList();
         m.put("hasUnique", !uniqueCols.isEmpty());
         m.put("uniqueColumns", toModel(uniqueCols));
-        // V6.7 集成测试新增/修改 body：Java 侧算好 Java 表达式文本（模板只输出不拼 JSON，
-        // FreeMarker 里手拼转义引号必然翻车）；唯一列值运行时随机防测试互撞
+        // V6.7 集成测试新增/修改 body：Java 侧算好 Java 表达式文本
         m.put("testFieldsJsonExpr", testFieldsJsonExpr(formCols, uniqueCols));
         // 单列唯一时才做前端异步查重（联合唯一不适合逐字段实时校验）
         m.put("hasSingleUnique", uniqueCols.size() == 1);
+
+        // V9.20 多组独立唯一键：按 unique_group 聚合，每组独立查重。
+        // 存量（全 0 组）只有一组 → uniqueGroups=[全部 uniqueCols]，controller 走原有单组分支逐字节一致。
+        java.util.Map<Integer, List<GenTableColumn>> grouped = uniqueCols.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        c -> c.getUniqueGroup() == null ? 0 : c.getUniqueGroup(),
+                        java.util.LinkedHashMap::new, java.util.stream.Collectors.toList()));
+        List<Map<String, Object>> uniqueGroupModels = new ArrayList<>();
+        for (Map.Entry<Integer, List<GenTableColumn>> e : grouped.entrySet()) {
+            Map<String, Object> g = new LinkedHashMap<>();
+            g.put("group", e.getKey());
+            g.put("columns", toModel(e.getValue()));
+            g.put("single", e.getValue().size() == 1);
+            uniqueGroupModels.add(g);
+        }
+        m.put("uniqueGroups", uniqueGroupModels);
+        m.put("multiUniqueGroup", uniqueGroupModels.size() > 1);
 
         // 数据权限：任意列配了 dataScope，启动时要向拦截器登记这张表
         List<GenTableColumn> scopeCols = cols.stream()

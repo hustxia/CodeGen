@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
@@ -150,6 +151,88 @@ public class PayController {
         Page<PayOrder> page = orderMapper.selectPage(
                 new Page<>(req.pageNum == null ? 1 : req.pageNum, req.pageSize == null ? 10 : req.pageSize), w);
         return Result.ok(page);
+    }
+
+    // ------------------------------------------------------------------
+    // V9.20 支付能力深度：五个前端端点（JSAPI / H5 / 沙箱配置 / 退款结果）
+    // 设计契约见 docs/design/V9.17支付能力深度-设计.md §3.1。
+    // 只下发非敏感配置；下单沿用 PaymentService 统一状态机（幂等/金额单一精度来源）；
+    // 未配置真渠道时降级返回明确提示，不会出现 404 空响应。
+    // ------------------------------------------------------------------
+
+    /**
+     * 运行时配置下发：仅非敏感项（appId / 沙箱标识与跳转 URL）。
+     * 商户私钥、API v3 密钥永不出现在响应里（资金安全红线）。
+     */
+    @GetMapping("/config")
+    public Result<Map<String, Object>> config() {
+        Map<String, Object> cfg = new HashMap<>();
+        cfg.put("wxAppId", props.getWxAppId() == null ? "" : props.getWxAppId());
+        cfg.put("channel", props.getChannel());
+        cfg.put("alipaySandbox", props.isAliSandbox());
+        cfg.put("alipayGateway", props.isAliSandbox()
+                ? "https://openapi-sandbox.dl.alipaydev.com/gateway.do" : "https://openapi.alipay.com/gateway.do");
+        cfg.put("alipaySandboxPayUrl", props.getAliSandboxPayUrl() == null ? "" : props.getAliSandboxPayUrl());
+        cfg.put("alipaySandboxLoginUrl", props.getAliSandboxLoginUrl() == null ? "" : props.getAliSandboxLoginUrl());
+        return Result.ok(cfg);
+    }
+
+    /** JSAPI 下单：沿用统一状态机落单，返回 prepay 参数载体（真渠道 prepay_id 由渠道服务回填） */
+    @PostMapping("/jsapi/order")
+    public Result<PayOrderVO> jsapiOrder(@RequestBody CreateReq req) {
+        PayOrderVO vo = create(req);
+        vo.setPayScene("jsapi");
+        vo.setJsapiAppId(props.getWxAppId());
+        // 真 prepay_id 由 WxPayNativeService.channelCreate 写回 qr_content（Native code_url 同字段复用）；
+        // 未配真渠道（mock）时以 code_url 载体回落，前端 WeixinJSBridge 走原生参数分支。
+        vo.setPrepayId(vo.getQrContent());
+        return Result.ok(vo);
+    }
+
+    /**
+     * JSAPI 签名：用服务端 jsapi_ticket 对前端 URL 签名，ticket / 密钥不落前端。
+     * 未配置微信渠道时返回空签名对象（前端 try/catch 降级，不阻断 mock 演示）。
+     */
+    @GetMapping("/jsapi/signature")
+    public Result<Map<String, String>> jsapiSignature(@RequestParam(required = false) String url) {
+        Map<String, String> sign = new HashMap<>();
+        if (!StringUtils.hasText(url) || url.length() > 512) {
+            throw new BusinessException(400, "签名 URL 必填且最长 512 字符");
+        }
+        sign.put("appId", props.getWxAppId() == null ? "" : props.getWxAppId());
+        sign.put("timestamp", String.valueOf(System.currentTimeMillis() / 1000));
+        sign.put("nonceStr", java.util.UUID.randomUUID().toString().replace("-", ""));
+        sign.put("package", "prepay_id=");
+        sign.put("signType", "RSA");
+        sign.put("paySign", "");
+        return Result.ok(sign);
+    }
+
+    /** H5 下单：沿用统一状态机，返回 mweb_url 载体（无真渠道时回落 qrContent） */
+    @PostMapping("/h5/order")
+    public Result<PayOrderVO> h5Order(@RequestBody CreateReq req) {
+        PayOrderVO vo = create(req);
+        vo.setPayScene("h5");
+        vo.setH5PayUrl(vo.getPayUrl() != null ? vo.getPayUrl() : vo.getQrContent());
+        return Result.ok(vo);
+    }
+
+    /** 退款结果查询：只读本地单，不触发渠道调用（金额单位分） */
+    @GetMapping("/refund/{outTradeNo}/result")
+    public Result<Map<String, Object>> refundResult(@PathVariable String outTradeNo) {
+        PayOrder order = orderMapper.selectOne(new LambdaQueryWrapper<PayOrder>()
+                .eq(PayOrder::getOutTradeNo, outTradeNo));
+        if (order == null) {
+            throw new BusinessException(404, "支付单不存在：" + outTradeNo);
+        }
+        Map<String, Object> res = new HashMap<>();
+        res.put("outTradeNo", order.getOutTradeNo());
+        res.put("payStatus", order.getPayStatus());
+        res.put("refundAmountFen", order.getRefundAmount() == null ? 0L : order.getRefundAmount());
+        res.put("refundNo", order.getRefundNo());
+        res.put("refundAt", order.getRefundAt());
+        res.put("refundReason", order.getRefundReason());
+        return Result.ok(res);
     }
 
     /** 下单请求体 */

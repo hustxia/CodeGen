@@ -723,7 +723,17 @@ final class ScaffoldPomWriter {
                 + "  password-policy:\n"
                 + "    min-length: 6\n"
                 + "    require-letter-and-digit: false\n"
-                + "    pattern: \"\"\n";
+                + "    pattern: \"\"\n"
+                // V9.17 未尽事项 4：多实例限流外化方案（不引入任何 Redis 依赖，仅注释说明）
+                + "\n"
+                + "  # V9.17 接口限流多实例外化（可选）：默认计数器是单实例内存固定窗口，多实例部署时\n"
+                + "  # 各实例独立计数，实际阈值会被放大 N 倍。产物保持零第三方依赖，不生成 Redis 类；\n"
+                + "  # 业务方如需分布式限流：在目标工程自行加 spring-boot-starter-data-redis，实现\n"
+                + "  # " + pkg + ".common.auth.AuthContextFilter.RateLimitCounter 接口并注册为 Spring bean，\n"
+                + "  # AuthContextFilter 通过 @Autowired(required=false) 自动接管，未注册则仍用内存实现。\n"
+                + "  # 计数用 Redis INCR + EXPIRE 原子操作（两步之间崩溃会留下永不过期的 key）：\n"
+                + "  # Lua: local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],ARGV[1]) end; return n\n"
+                + "  # 调用: redisTemplate.execute(script, List.of(key), windowSeconds) 返回计数，超限按 PTTL 换算剩余秒数。\n";
     }
 
     static String applicationLocalExample(String pkg) {

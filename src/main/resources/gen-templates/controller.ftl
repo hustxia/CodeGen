@@ -522,8 +522,14 @@ public Result<${className}VO> getById(@PathVariable("id") Long id) {
 <#if hasUnique>
     // ==================== V9.17 唯一性冲突兜底（与前置 checkUnique 同一错误体） ====================
     /** 冲突文案与字段名由模板常量生成，前端 el-form-item prop 与此处 field 同源（联合唯一取首列）。 */
+    <#if multiUniqueGroup>
+    /** V9.20 多组唯一：兜底文案取第一组首列（精确文案在各组 checkUnique 内联生成） */
+    private static final String UNIQUE_CONFLICT_MSG = "${uniqueColumns[0].commentLabel}已存在";
+    private static final String UNIQUE_CONFLICT_FIELD = "${uniqueColumns[0].javaField}";
+    <#else>
     private static final String UNIQUE_CONFLICT_MSG = "<#if hasSingleUnique>${uniqueColumns[0].commentLabel}已存在<#else><#list uniqueColumns as c>${c.commentLabel}<#if c_has_next>+</#if></#list>组合已存在</#if>";
     private static final String UNIQUE_CONFLICT_FIELD = "${uniqueColumns[0].javaField}";
+    </#if>
 
     /**
      * V9.17：DB 层唯一键兜底。前置 checkUnique 是 check-then-insert，存在并发竞态；
@@ -657,6 +663,35 @@ public Result<Void> delete(@PathVariable("id") Long id) {
      * 与 writeWithUniqueGuard 的 DB 兜底同一常量、同一错误体。
      */
     private void checkUnique(${className}SaveDTO dto, Long excludeId) {
+        <#if multiUniqueGroup>
+        <#list uniqueGroups as g>
+        <#if g.single>
+        <#list g.columns as c>
+        // 唯一组 ${g.group}（单列）
+        if (dto.get${c.capField}() != null && !String.valueOf(dto.get${c.capField}()).isBlank()
+                && countBy("${c.dbField}", String.valueOf(dto.get${c.capField}()), excludeId) > 0) {
+            throw BusinessException.unique("${c.commentLabel}已存在", "${c.javaField}");
+        }
+        </#list>
+        <#else>
+        // 唯一组 ${g.group}（联合）
+        boolean group${g.group}AnyNull = <#list g.columns as c>dto.get${c.capField}() == null || </#list>false;
+        if (!group${g.group}AnyNull) {
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<${className}> group${g.group}Wrapper =
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+            <#list g.columns as c>
+            group${g.group}Wrapper.eq(${className}::get${c.capField}, dto.get${c.capField}());
+            </#list>
+            if (excludeId != null) {
+                group${g.group}Wrapper.ne(${className}::getId, excludeId);
+            }
+            if (${varName}Service.count(group${g.group}Wrapper) > 0) {
+                throw BusinessException.unique("<#list g.columns as c>${c.commentLabel}<#if c_has_next>+</#if></#list>组合已存在", "${g.columns[0].javaField}");
+            }
+        }
+        </#if>
+        </#list>
+        <#else>
         <#if hasSingleUnique>
         <#list uniqueColumns as c>
         if (dto.get${c.capField}() != null && !String.valueOf(dto.get${c.capField}()).isBlank()
@@ -679,6 +714,7 @@ public Result<Void> delete(@PathVariable("id") Long id) {
                 throw BusinessException.unique(UNIQUE_CONFLICT_MSG, UNIQUE_CONFLICT_FIELD);
             }
         }
+        </#if>
         </#if>
     }
 

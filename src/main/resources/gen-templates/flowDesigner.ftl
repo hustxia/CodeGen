@@ -1,10 +1,10 @@
 <template>
   <!--
     V9.17 简化版流程设计器（独立页版本）
-    当前接线状态：GenTemplateEngine.renderFlowShared 只渲染 flowApi / flowTodo 两个共享模板，
-    本模板作为「可直接接入的独立页」提供；接入只需在 renderFlowShared 增加一次 resolveFromDb("flowDesigner")
-    并按 pathPattern 写盘（见 docs/design/V9.17工作流深度-设计.md 的取舍说明）。
-    当前产物里同样的设计器已内嵌在 flowTodo.vue 的「流程设计」tab，开箱即用。
+    已接线：GenTemplateEngine.renderFlowShared 在开态（有表绑定 flow_code）时按本模板 pathPattern
+    写盘为 src/views/flow/designer.vue，并在 flow-router-snippet.txt 注册 /flow/designer 路由。
+    入口：flowTodo.vue「流程设计」tab 以 /flow/designer?flowCode=xxx 跳转，created() 读取 query 定位定义；
+    无 flowCode 时保持空表单，可直接新建流程定义。
   -->
   <div class="flow-designer">
     <el-alert type="info" :closable="false" show-icon
@@ -73,7 +73,7 @@
 </template>
 
 <script>
-import { flowValidateDef, flowSaveDef } from '@/api/flow'
+import { getFlowProgress, flowValidateDef, flowSaveDef } from '@/api/flow'
 
 function emptyNode(from) {
   return {
@@ -90,6 +90,14 @@ export default {
       selected: -1,
       dragFrom: -1,
       result: null
+    }
+  },
+  created() {
+    // V9.17 独立路由入口：/flow/designer?flowCode=xxx 定位到对应流程定义
+    const code = String(this.$route.query.flowCode || '').trim()
+    if (code) {
+      this.def.flowCode = code
+      this.loadDef(code)
     }
   },
   computed: {
@@ -138,6 +146,27 @@ export default {
     }
   },
   methods: {
+    // 从 /flow/state 取回既有定义并回填表单；bizId 传 null（草稿预览，不画图只取 nodes）
+    async loadDef(flowCode) {
+      try {
+        const res = await getFlowProgress(flowCode, null)
+        const data = (res && res.data) || {}
+        if (data.flowName) this.def.flowName = data.flowName
+        if (Array.isArray(data.nodes)) {
+          this.def.nodes = data.nodes.map(function (n) {
+            return {
+              from: n.from || '', to: n.to || '', nodeName: n.nodeName || '',
+              roleCode: n.roleCode || '', rejectTo: n.rejectTo || '0',
+              countersignMode: n.countersignMode || 'SINGLE',
+              approvers: Array.isArray(n.approvers) ? n.approvers.join(',') : '',
+              condition: n.condition || ''
+            }
+          })
+        }
+      } catch (e) {
+        // request.js 统一弹出错误；无定义时保留空表单，可新建
+      }
+    },
     addNode() {
       const last = this.def.nodes[this.def.nodes.length - 1]
       this.def.nodes.push(emptyNode(last ? last.to : '0'))

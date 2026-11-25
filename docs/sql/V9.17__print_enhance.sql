@@ -33,3 +33,30 @@ SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_COMMENT
 FROM information_schema.COLUMNS
 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'gen_table'
   AND COLUMN_NAME IN ('print_title', 'print_landscape');
+
+-- V9.20 追加：打印条码/二维码字段（接线 V9.17 模板预留的 printBarcode/printQr 开关）
+SET @col_exists = (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'gen_table'
+      AND COLUMN_NAME = 'print_barcode'
+);
+SET @ddl = IF(@col_exists = 0,
+    'ALTER TABLE gen_table ADD COLUMN print_barcode varchar(64) DEFAULT NULL COMMENT ''打印条码字段名:NULL/空=不渲染'' AFTER print_landscape',
+    'SELECT ''column print_barcode already exists'' AS info');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'gen_table'
+      AND COLUMN_NAME = 'print_qr'
+);
+SET @ddl = IF(@col_exists = 0,
+    'ALTER TABLE gen_table ADD COLUMN print_qr varchar(64) DEFAULT NULL COMMENT ''打印二维码字段名:NULL/空=不渲染'' AFTER print_barcode',
+    'SELECT ''column print_qr already exists'' AS info');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

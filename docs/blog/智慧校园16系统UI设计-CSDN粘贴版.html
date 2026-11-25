@@ -1,0 +1,266 @@
+<h1>给一所大学画 16 个业务系统的 UI 效果图：智慧校园四层架构 + 524 张表怎么分期落地</h1>
+<blockquote>
+<p>场景：一所大学要建智慧校园平台，涉及 SSO 单点登录、统一门户、教务教研、学生服务、OA、人事、采购、档案、资产、维修、能耗、预约、一卡通、物联网、驾驶舱、API 开放平台——16 个系统、估算新增 524 张表。<br />
+这篇文章讲的是落地前的<strong>全景设计怎么做</strong>：四层架构怎么分层、16 个系统怎么分期、UI 效果图先画给谁看、每个系统按什么 SOP 落地。文中的 UI 效果图是按生成器真实产出风格绘制的高保真设计稿（HTML），用于立项汇报与开发对齐。</p>
+<p><strong>代码仓库</strong>：Gitee https://gitee.com/hustxiayuhong/CodeGen ｜ GitHub https://github.com/hustxia/CodeGen （觉得有用请点个 Star ⭐）<br />
+<strong>在线演示</strong>：https://hustxia.github.io/CodeGen/ （浏览器直接看真实生成效果，无需安装任何东西）</p>
+</blockquote>
+<hr />
+<h2>一、接到需求的第一件事：分层，不是开写</h2>
+<p>16 个系统一股脑开工必死。第一步是按<strong>职责分层</strong>，让"谁先行、谁后行"一眼可见：</p>
+<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;max-width:100%;">
+<thead>
+<tr>
+<th>层</th>
+<th>定位</th>
+<th>系统数</th>
+<th>新增表估算</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>基础支撑层</td>
+<td>全校底座，先行</td>
+<td>6</td>
+<td>~77 表</td>
+<td>SSO / 门户 / 一卡通 / 物联网 / 消息总线 / 移动端</td>
+</tr>
+<tr>
+<td>业务应用层</td>
+<td>价值主体，批量复制</td>
+<td>10</td>
+<td>~313 表 + 复用 66</td>
+<td>教务教研、学生服务、OA、人事等</td>
+</tr>
+<tr>
+<td>治理与决策层</td>
+<td>数据汇聚，后行</td>
+<td>7</td>
+<td>~119 表</td>
+<td>驾驶舱 BI 等，依赖前两层业务数据</td>
+</tr>
+<tr>
+<td>开放生态层</td>
+<td>能力输出</td>
+<td>1</td>
+<td>~15 表</td>
+<td>API 开放平台</td>
+</tr>
+</tbody>
+</table>
+<p>合计约 <strong>524 张新表 + 复用 66 张（人才培养方案系统）+ 15 张通用表</strong>。对照智慧村务（85 表当天落地）的实测节奏，总量在代码生成器能力范围内——但必须分期。</p>
+<h3>三条落地原则</h3>
+<ol>
+<li><strong>一域一系统</strong>：按业务域独立建库（<code>campus_sso</code>、<code>campus_oa</code>、<code>campus_bi</code>……），不合并成单体。12 步流水线按项目跑，60~80 张表/库是最佳粒度，超过 100 张菜单和验收都会变重。</li>
+<li><strong>底座先行，数据后聚</strong>：一期先把账号/组织/消息做统一，业务系统全部挂底座；治理层只在四期启动——避免"没数据先建中台"的空转。</li>
+<li><strong>已验证 SOP 全程复用</strong>：每个系统走同一条流水线，前几个系统踩过的坑（枚举三件套、菜单同源）已在模板层修复，新系统不重交学费。</li>
+</ol>
+<hr />
+<h2>二、效果图为什么先画：给两个对象看</h2>
+<p>写代码之前，先给 16 个系统各画一张核心页面的高保真效果图（浏览器窗框 + 侧边栏 + 顶栏 + 业务区的完整布局）。这是给<strong>两类人</strong>看的：</p>
+<ol>
+<li><strong>校方领导</strong>：立项汇报要"看得见"。一张登录页 + 一张业务看板，胜过十页 PPT</li>
+<li><strong>开发自己</strong>：效果图即 UI 契约。布局按生成器真实产出的风格画（Element Plus 组件体系、统计卡 + 工具栏 + 表格 + 状态标签），落地时生成的页面和设计稿天然对齐，不会出现"设计稿一个样、生成出来另一个样"</li>
+</ol>
+<h3>设计规范要点</h3>
+<ul>
+<li><strong>布局骨架统一</strong>：左侧 178px 侧边导航（分组菜单 + 高亮项）、顶部 44px 面包屑栏、内容区按业务类型套用四种模式——统计卡看板、工具栏列表页、步骤条流程页、日历/预约视图</li>
+<li><strong>配色克制</strong>：主色 <code>#409eff</code>，成功/警告/危险用 Element 标准色，大屏用深色渐变</li>
+<li><strong>每个系统只画一张"最能代表它"的页面</strong>：登录画登录页，管理画列表页，监测画看板，审批画看板流，驾驶舱画大屏</li>
+</ul>
+<hr />
+<h2>三、16 系统清单与各自的"代表页"</h2>
+<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;max-width:100%;">
+<thead>
+<tr>
+<th>#</th>
+<th>系统</th>
+<th>库名 / 规模</th>
+<th>代表页与关键细节</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01</td>
+<td>统一身份认证 SSO</td>
+<td>campus_sso · 约 15 表</td>
+<td>渐变登录页 + 应用宫格，文案一句话讲清价值："一次登录，通行 16 个业务系统；账号自动同步，离职离校自动停用"</td>
+</tr>
+<tr>
+<td>02</td>
+<td>统一门户</td>
+<td>campus_portal · 约 12 表</td>
+<td>教职工工作台，待办跨系统聚合（人才培养方案的审批任务直达门户）</td>
+</tr>
+<tr>
+<td>03</td>
+<td>教务教研</td>
+<td>edu_plan 扩展 · +60 表</td>
+<td>复用培养方案 66 表，新增选课排课、成绩学籍、毕业学位域</td>
+</tr>
+<tr>
+<td>04</td>
+<td>学生服务</td>
+<td>campus_student · 约 55 表</td>
+<td>迎新 → 宿舍 → 奖助贷 → 就业校友全链，心理咨询模块做隐私脱敏</td>
+</tr>
+<tr>
+<td>05</td>
+<td>协同办公 OA</td>
+<td>campus_oa · 约 45 表</td>
+<td>多级会签流程引擎、公文流转、督查督办</td>
+</tr>
+<tr>
+<td>06</td>
+<td>人事与费控</td>
+<td>campus_hr · 约 40 表</td>
+<td>教职工档案/合同/薪酬/报销，组织架构与 SSO 同源</td>
+</tr>
+<tr>
+<td>07</td>
+<td>采购合同</td>
+<td>campus_purchase · 约 20 表</td>
+<td>采购 → 招标 → 合同 → 履约验收全留痕</td>
+</tr>
+<tr>
+<td>08</td>
+<td>电子档案</td>
+<td>campus_archive · 约 18 表</td>
+<td>案卷/借阅审批/鉴定销毁</td>
+</tr>
+<tr>
+<td>09</td>
+<td>后勤资产</td>
+<td>campus_asset · 约 30 表</td>
+<td>台账 → 领用 → 调拨 → 报废全周期</td>
+</tr>
+<tr>
+<td>10</td>
+<td>维修工单</td>
+<td>campus_repair · 约 15 表</td>
+<td>报修派单看板，与资产、物联网告警联动</td>
+</tr>
+<tr>
+<td>11</td>
+<td>能源能耗</td>
+<td>campus_energy · 约 15 表</td>
+<td>分区监测看板（细节见下文）</td>
+</tr>
+<tr>
+<td>12</td>
+<td>车辆场馆预约</td>
+<td>campus_booking · 约 15 表</td>
+<td>一周预约视图，冲突自动检测</td>
+</tr>
+<tr>
+<td>13</td>
+<td>一卡通平台</td>
+<td>campus_card · 约 18 表</td>
+<td>卡户/充值消费/商户/门禁水控</td>
+</tr>
+<tr>
+<td>14</td>
+<td>物联网平台</td>
+<td>campus_iot · 约 14 表</td>
+<td>设备接入 + 告警规则，为能耗/门禁提供采集底座</td>
+</tr>
+<tr>
+<td>15</td>
+<td>校级驾驶舱 BI</td>
+<td>campus_bi · 指标库</td>
+<td>7×24 校情大屏，数据来自数据中台统一口径</td>
+</tr>
+<tr>
+<td>16</td>
+<td>API 开放平台</td>
+<td>campus_open · 约 15 表</td>
+<td>应用接入/密钥/限流/调用日志</td>
+</tr>
+</tbody>
+</table>
+<h3>效果图里值得学的一页：能耗监测</h3>
+<p>以能耗系统为例，看效果图的"信息密度"怎么设计（这些数字都是按真实业务口径编的演示数据）：</p>
+<ul>
+<li><strong>顶部统计卡</strong>：本月用电 18.6 万 kWh（同比 -4.2%）、3 条异常告警待确认、486 块联网表计</li>
+<li><strong>分区占比</strong>：教学区 7.2 万 kWh · 39%｜实验区 5.8 万 · 31%｜学生生活区 4.1 万 · 22%｜公共 1.5 万 · 8%</li>
+<li><strong>异常清单</strong>（直接给结论而不是裸数据）："S305 机房夜间基线异常，较上周 +38%，疑似空转"；"金工中心功率因数 0.82（标准 0.9），待整改"</li>
+<li><strong>表计在线状态</strong>：分区域在线率 + 最近抄表时间</li>
+</ul>
+<p>汇报时领导一眼看懂"电用在哪、哪里有问题"；开发拿到页面就知道统计卡要哪几个接口、异常清单查哪张表。<strong>效果图的信息结构 = 后端的接口清单</strong>，这是它最大的工程价值。</p>
+<hr />
+<h2>四、从效果图到真实系统：对齐生成器而不是手写</h2>
+<p>设计稿确认后，每个系统走同一条<strong>已验证的 9 步 SOP</strong>：</p>
+<pre><code>S1 功能设计文档（域锚定 + 表级清单）
+S2 tables JSON（业务表字段内嵌 + 15 通用表标配复制）
+S3 校验（--check-labels + 模板护栏）
+S4 流水线 12 步（ddl-preview 一致性 → create → prepare-db → 生成）
+   —— 60 表规模实测约 7 分钟
+S5 菜单重规划（业务域三级结构，路由与菜单同源）
+S6 页面级后处理（枚举收敛 + 关联下拉 + 悬空外键清理）
+S7 演示数据（真实业务口径灌库，幂等可重跑）
+S8 三层验收（前端 build ✓ + 后端 compile ✓ + 逐页截图 console 0 错误）
+S9 沉淀（坑库补缺 + 增长钩子 + 实战文）
+</code></pre>
+<p>单系统节奏参照已落地系统的实测：<strong>设计建模半天 + 流水线后处理半天 + 数据验收半天，约 1.5~2 人日/系统</strong>；全案 16 系统约 25~30 人日，四期 6~8 周可完成。</p>
+<hr />
+<h2>五、跨系统的五个关键决策（返工都返在这里）</h2>
+<p>多系统最大的坑不在单系统内部，而在<strong>系统之间</strong>：</p>
+<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;max-width:100%;">
+<thead>
+<tr>
+<th>决策点</th>
+<th>方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>统一登录</td>
+<td>SSO 是账号真源，其余系统令牌校验接入；一期先共享登录态，二期升级标准 OIDC/JWT</td>
+</tr>
+<tr>
+<td>跨系统待办</td>
+<td>门户的待办聚合表存各系统审批回执（异步推送），<strong>不做跨库实时 join</strong></td>
+</tr>
+<tr>
+<td>外键跨库</td>
+<td><strong>不建跨库外键</strong>，跨系统引用存"系统标识 + 业务单号"，展示由门户聚合</td>
+</tr>
+<tr>
+<td>编码标准</td>
+<td>组织机构、工号、资产编码在数据标准里先锁定，避免中台期返工</td>
+</tr>
+<tr>
+<td>演示数据</td>
+<td>每系统一个幂等可重跑的种子脚本，主线数据按真实口径</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>六、风险清单（全部来自已踩坑记录）</h2>
+<ol>
+<li><strong>枚举三件套不收敛</strong> → 已在模板层修复；新系统仍须 build + 逐页截图断言 console 0 错误</li>
+<li><strong>业务枚举错配通用映射</strong> → 后处理完跑一次枚举误指检查</li>
+<li><strong>AI 菜单推荐对自定义表返回空</strong> → 一律手动菜单重规划，不依赖 AI 推荐</li>
+<li><strong>后处理后忘重新打包</strong> → 验收清单第一条：jar 时间戳 vs 源码时间戳</li>
+<li><strong>巨型单体诱惑</strong> → 严格一域一库，任何单库超 100 张表即触发拆分评审</li>
+</ol>
+<p>这五条没有一条是理论风险——都是前面九个落地系统真实撞过的墙，直接写进每个系统的验收清单。</p>
+<hr />
+<h2>七、落地检查清单</h2>
+<ul>
+<li>[ ] 四层架构分层图先行，16 系统按"底座先行、数据后聚"排四期</li>
+<li>[ ] 每系统一张代表页效果图（按生成器产出风格画，布局 = 模板布局）</li>
+<li>[ ] 表数估算：单库控制在 60~80 张，复用清单明确（培养方案 66 表 + 通用 15 表）</li>
+<li>[ ] 跨系统决策五件套（登录/待办/外键/编码/种子）先定案再开工</li>
+<li>[ ] 每系统走 9 步 SOP，验收 DoD 不打折</li>
+<li>[ ] 单库超 100 表 → 拆分评审</li>
+</ul>
+<hr />
+<h2>如果这个项目帮到了你</h2>
+<ul>
+<li><strong>点个 Star</strong> ⭐：Gitee https://gitee.com/hustxiayuhong/CodeGen （无需登录代理，顺手一点）｜ GitHub https://github.com/hustxia/CodeGen —— 让更多开发者少写一天 CRUD</li>
+<li><strong>国内克隆</strong>：直接用 Gitee 镜像：<code>git clone https://gitee.com/hustxiayuhong/CodeGen.git</code></li>
+<li><strong>先看效果再决定</strong>：<a href="https://hustxia.github.io/CodeGen/">在线演示</a> 展示真实生成系统的首页与数据看板</li>
+<li><strong>遇到问题</strong>：提 <a href="https://github.com/hustxia/CodeGen/discussions">Discussions</a> 或 Issue，我会回复</li>
+</ul>

@@ -124,6 +124,13 @@ public class GenTableColumn extends BaseEntity {
     private Integer uniqueFlag;
 
     /**
+     * V9.20 多组独立唯一键：唯一组编号（0/空=默认组，与唯一性分组 1 等价）。
+     * 仅当 uniqueFlag=1 时生效；同组列组成联合唯一，不同组互不干扰。
+     * 例：code=1、name=2 → 编码与名称各自独立唯一（旧模型会错误地要求两者同时相等）。
+     */
+    private Integer uniqueGroup;
+
+    /**
      * 表单联动规则 JSON（单条规则，作用于本字段自身）：
      * <pre>
      * {"when":"status","op":"eq","value":"1","effect":"required","else":"optional"}
