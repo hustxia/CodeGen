@@ -1,65 +1,54 @@
-# Majiang · Code Generator (CodeGen) — Project Introduction
+# Majiang CodeGen — DDL to Running Spring Boot + Vue System
 
-**Live demo:** [hustxia.github.io/CodeGen](https://hustxia.github.io/CodeGen/) · **Source:** [github.com/hustxia/CodeGen](https://github.com/hustxia/CodeGen)
+**[Live Demo](https://hustxia.github.io/CodeGen/)** · **[GitHub](https://github.com/hustxia/CodeGen)** · **[简体中文](README_ZH.md)**
 
-[![verify](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml) [![i18n contract](https://github.com/hustxia/CodeGen/actions/workflows/i18n-contract.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/i18n-contract.yml) [![tests 486](https://img.shields.io/badge/tests-486%20passing-green.svg)](#11-documentation-map) [![demo live](https://img.shields.io/badge/demo-live-2563eb.svg)](https://hustxia.github.io/CodeGen/) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-
-> **Try it first:** [open the live demo](https://hustxia.github.io/CodeGen/) — real generated-system homepages and the V9.15 dashboard, no signup and no install. If it saves you a day of CRUD wiring, a Star helps other developers find it.
-> **[简体中文文档 →](README_ZH.md)** · **[Watch Releases →](https://github.com/hustxia/CodeGen/releases)** (get notified for new versions)
-
-**From DDL to a running system — real screenshots, no mockups:**
-
-[![CodeGen demo reel: 8 real generated systems](docs/images/showcase/demo.gif)](docs/images/showcase/demo.gif)
+[![version](https://img.shields.io/badge/V9.19-blue)](https://github.com/hustxia/CodeGen/releases) [![verify](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml) [![i18n contract](https://github.com/hustxia/CodeGen/actions/workflows/i18n-contract.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/i18n-contract.yml) [![tests 574](https://img.shields.io/badge/tests-574%20passing-green.svg)](#11-documentation-map) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 ---
 
-## At a glance
+> **From DDL to a running system — real screenshots, no mockups.**
+> Import your database schema, one click generates compilable Spring Boot + Vue3 full-stack code
+> with menus, permissions and i18n. Zero front/back drift.
 
-**CodeGen turns a database schema into a complete Spring Boot + Vue business system — code that compiles, runs, and ships with menus, permissions and i18n.**
+[![CodeGen demo reel: real generated systems](docs/images/showcase/demo.gif)](docs/images/showcase/demo.gif)
 
-- **Table-driven, not prompt-driven** — import DDL or connect your DB; one click generates Entity / Mapper / Service / Controller / DTO / VO, Vue pages, routes and menus from the same metadata, so front end and back end never drift apart.
-- **Quality gates built in** — real `javac` self-check, structural contract checks, `.gen-backup` batch backups, marker-block merge that preserves hand-written code, and a four-state ledger with one-click rollback.
-- **One-sentence system build** — a 12-step pipeline takes you from a plain-language description to a running system: create DB → scaffold → generate → seed data → register menus.
-- **Proven across industries** — full systems generated end to end for public security, apparel ERP, HR and manufacturing MES (screenshots below); generated pages support 206 languages out of the box.
+---
 
-**Jump to:** [Showcase](#showcase) · [Quick Start](#10-quick-start) · [Documentation](#11-documentation-map) · [Contributing](CONTRIBUTING.md)
-
-<details>
-<summary><b>Why CodeGen? Comparison with other approaches</b></summary>
-
-| Dimension | Traditional CRUD generator | Low-code platform | Prompt-only tool | CodeGen |
-| --- | --- | --- | --- | --- |
-| Input | One-table config | Drag-and-drop model | Natural language | DDL / live DB connection |
-| Front/back consistency | Manually aligned | Platform-internal | Not guaranteed | Same metadata, zero drift |
-| Compile self-check | Rare | Platform-managed | None | Real `javac` self-check |
-| Merge with existing code | Overwrite risk | Platform lock-in | N/A | Marker-block merge preserves hand-written code |
-| Rollback | None | Platform snapshot | None | Four-state ledger + one-click rollback |
-| i18n | Separate work | Partial | Model-dependent | 206-language framework, 12 professionally translated |
-| Deliverable | Code snippets | Platform-only app | Text | Compilable, runnable full project |
-
-</details>
-
-**60-second quick start** (commands verified; full guide in [Quick Start](#10-quick-start)):
+## 60-Second Start
 
 ```bash
+# 1. Create DB & seed
 mysql -uroot -p -e "CREATE DATABASE gen_platform DEFAULT CHARSET utf8mb4;"
 mysql -uroot -p gen_platform < docs/sql/V1.0__init.sql
+
+# 2. Run backend
 cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
-mvn package -DskipTests
-java -jar target/codegen-server.jar
+mvn package -DskipTests && java -jar target/codegen-server.jar
+
+# 3. Run frontend
+cd ../codegen-web && npm install && npm run serve
+# Open http://localhost:9530  →  admin / admin123
 ```
-
-Then `cd ../codegen-web && npm install && npm run serve`, open `http://localhost:9530`, login `admin / admin123`.
-
-> Stuck? Open a [Discussion](https://github.com/hustxia/CodeGen/discussions) with the full error message. If this saved you time, a Star helps other developers find it.
 
 ---
 
-> **Language support**: generated systems ship with full-page internationalization built in. The framework supports switching and fallback across **206 languages**; **12 are professionally translated** (zh-CN, en-US, ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA, ru-RU, pt-BR, id-ID, vi-VN), and all others fall back to Simplified Chinese. Want to contribute a translation? See [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md).
+## What Makes CodeGen Different
 
-> A **code generator** and **low-code scaffold** for **Spring Boot 3 + Vue3**: starting from database table structures (DDL-to-code), it produces **compilable, runnable, menu-and-permission-ready** front-end and back-end CRUD, and supports a **one-sentence system build** — the full delivery loop of writing to disk, backup, ledgering and rollback.
+| Dimension | Traditional Generator | Low-code Platform | CodeGen |
+|---|---|---|---|
+| Input | One-table config | Drag-and-drop | **DDL / live DB** |
+| Front/back drift | Manual fix | Locked in | **Same metadata → zero drift** |
+| Compile self-check | Rare | Platform-internal | **Real `javac` self-check** |
+| Merge with existing | Overwrite risk | Locked in | **Marker-block + three-way merge** |
+| Rollback | None | Snapshot | **Four-state ledger + one-click** |
+| i18n | Separate work | Partial | **206-lang framework, 12 professionally translated** |
+| Deliverable | Snippets | Platform app | **Compilable, runnable full project** |
 
-GitHub: https://github.com/hustxia/CodeGen
+**Jump to:** [Showcase](#showcase) · [Quick Start](#10-quick-start) · [Documentation](#11-documentation-map) · [Releases](https://github.com/hustxia/CodeGen/releases)
+
+---
+
+> **Language support**: the framework covers **206 languages**; **12 are professionally translated** (zh-CN, en-US, ja-JP, ko-KR, fr-FR, de-DE, es-ES, ar-SA, ru-RU, pt-BR, id-ID, vi-VN). Generated pages fall back gracefully when a language is not translated. Want to contribute? See [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md).
 
 <a id="showcase"></a>
 
@@ -377,8 +366,8 @@ The frontend defaults to port **9530**, proxying `/dev-api` to backend port 8120
 | **V9.15** | **Data visualization chart capability pack (generic / domain-agnostic): chart_enabled tri-state switch (NULL/0=off, 1=on; chart-off output byte-identical); GenChartDeriver infers pie/line/bar/gauge purely from column metadata with zero domain keywords; per-table /{module}/stats aggregation endpoint with generation-time field whitelist against SQL injection; ECharts ChartCard + cross-table dashboard with series colors following --app-primary; scaffold / write-to-disk / ZIP / router / dependency full-chain injection; 486/486 platform tests green, 64 generated StatsControllers compiled, 4 chart types rendered in a real browser with 0 console errors** | 69d5a06 (web 5097231), **current** |
 | **V9.16** | **Try-it-in-minutes and demo experience: a multi-stage Dockerfile plus docker-compose (MySQL 8 healthcheck + codegen-server), 33 numerically ordered init scripts under scripts/docker/init (fixing the V9.15/V6.10 lexicographic pitfall), and the built-in V1.0 admin/admin123 seed so no extra seeding step is needed. A new H2 in-memory demo mode ships application-h2.yml (MODE=MySQL, 34 scripts in numeric order) with a SQL converter handling stored procedures and dynamic DDL; known limit: direct DB import and dictionary probing via information_schema are incomplete under H2. The showcase page converts 8 images from PNG to WebP (877KB to 332KB, 38%) with lazy loading and an analytics placeholder, and docs/quick-start-docker.md completes the path.** | d1ca428 |
 | **V9.17** | **Capability-pack depth completion: five agents worked in parallel on payment, workflow, printing, security and uniqueness validation. Payment adds JSAPI/H5 ordering, refund result queries and pay_code table-level binding; workflow adds an SVG node progress chart, countersign/delegation and a lightweight process designer; printing supports print_title, landscape, RMB amount in words and CODE128 barcodes (QR placeholder); security adds API rate limiting, data-scope loading with a config page, password policy and kick notices; uniqueness validation aligns the 400 assertion between front and back end. Template-side contracts stay byte-identical to the V6.3/V4.5 baselines when switches are off, with V917PrintEnhanceTest, PayRefundContractTest and V917UniquenessAlignTemplateTest added; follow-up 6a83e79 regenerated Docker init No.35 and the H2 conversion script.** | 88da5ad, 6a83e79 |
-| **V9.18** | **Generation quality and maintainability: new template impact preview (GET /gen/template/files scans .ftl files under gen-templates/scaffold/scaffold-* on the classpath; GET /gen/template/impact maps each table to its output paths and table-shape hints) plus a "Template Impact" console page injected via permission.js without any sys_menu row. gen_table gains child_save_mode (0 = full replace, the default; 1 = three-way merge by primary key): one-to-many merges children by PK, one-to-one upserts by foreign key, many-to-many adds/removes join rows by relation key. The column is added idempotently to the MySQL source script, docker init 036 and H2; mode=0 output stays byte-identical (14 baseline + 8 contract + 9/9 i18n snapshots all green). S8 screenshot verification (SKIPPED, not blocking, when playwright/puppeteer is absent) and S9 directory diff (pure-Node recursive compare with whitelist and thresholds) join the verification center and persist into tc_case_result/tc_artifact; verify.yml adds a verify-center-gate job that exits 1 on any FAIL, and scheduled test tasks support an interval-minutes mode with next-run display.** | pending |
-| **V9.19** | **Modeling-at-scale wrap-up: confirm-time database creation is now batched via the new gen.pipeline.db-batch-size property (default 50); DDL runs in batches with an independent commit per batch and reports the failing batch number plus a statement excerpt. A pure DdlBatchPlanner backs the logic with 7 unit tests. Translation contribution is automated: scripts/i18n-coverage.mjs produces a coverage matrix (12 languages x 60 keys, 100%), CI adds a backend-i18n-coverage job, and four professional translations (ru-RU, pt-BR, id-ID, vi-VN) raise the README wording from 8 to 12. A template-market prototype adds gen.template.external-dir (default ~/.codegen/industry-templates) with single- and multi-pack ZIP export, .json/.zip import (full validation, conflicts rejected by default, overwrite opt-in, path-traversal guard), user-pack deletion and builtin/user source tags, exposed through a new "Template Market" console page.** | pending |
+| **V9.18** | **Generation quality and maintainability: new template impact preview (GET /gen/template/files scans .ftl files under gen-templates/scaffold/scaffold-* on the classpath; GET /gen/template/impact maps each table to its output paths and table-shape hints) plus a "Template Impact" console page injected via permission.js without any sys_menu row. gen_table gains child_save_mode (0 = full replace, the default; 1 = three-way merge by primary key): one-to-many merges children by PK, one-to-one upserts by foreign key, many-to-many adds/removes join rows by relation key. The column is added idempotently to the MySQL source script, docker init 036 and H2; mode=0 output stays byte-identical (14 baseline + 8 contract + 9/9 i18n snapshots all green). S8 screenshot verification (SKIPPED, not blocking, when playwright/puppeteer is absent) and S9 directory diff (pure-Node recursive compare with whitelist and thresholds) join the verification center and persist into tc_case_result/tc_artifact; verify.yml adds a verify-center-gate job that exits 1 on any FAIL, and scheduled test tasks support an interval-minutes mode with next-run display.** | a5f5b10 |
+| **V9.19** | **Modeling-at-scale wrap-up: confirm-time database creation is now batched via the new gen.pipeline.db-batch-size property (default 50); DDL runs in batches with an independent commit per batch and reports the failing batch number plus a statement excerpt. A pure DdlBatchPlanner backs the logic with 7 unit tests. Translation contribution is automated: scripts/i18n-coverage.mjs produces a coverage matrix (12 languages x 60 keys, 100%), CI adds a backend-i18n-coverage job, and four professional translations (ru-RU, pt-BR, id-ID, vi-VN) raise the README wording from 8 to 12. A template-market prototype adds gen.template.external-dir (default ~/.codegen/industry-templates) with single- and multi-pack ZIP export, .json/.zip import (full validation, conflicts rejected by default, overwrite opt-in, path-traversal guard), user-pack deletion and builtin/user source tags, exposed through a new "Template Market" console page.** | 0863a1f |
 
 ---
 
