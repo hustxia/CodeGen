@@ -142,6 +142,13 @@ jobs:
       - name: 动态冒烟（H2 真启动 + admin 登录）
         run: node scripts/smoke-v9.16.mjs --with-server
 
+      # V9.17~V9.19：能力包/质量/建模三域契约 + 工具链实跑 + 新增端点动态验证
+      - name: 冒烟 V9.17~V9.19（静态契约 + i18n/dir-diff 工具链）
+        run: node scripts/smoke-v9.17-19.mjs
+
+      - name: 动态冒烟 V9.17~V9.19（新增端点，复用已打包 jar）
+        run: node scripts/smoke-v9.17-19.mjs --with-server
+
       - name: 归档冒烟报告
         if: always()
         uses: actions/upload-artifact@v4
