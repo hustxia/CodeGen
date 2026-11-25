@@ -6,6 +6,7 @@ import com.codegen.dto.GenWriteDTO;
 import com.codegen.vo.GenDiffVO;
 import com.codegen.vo.GenFileVO;
 import com.codegen.vo.GenSqlDeliverVO;
+import com.codegen.vo.GenTemplateImpactVO;
 import com.codegen.vo.GenWriteVO;
 import com.codegen.vo.TestVO;
 
@@ -29,6 +30,16 @@ public interface GenCodeService {
      * 生成预览：渲染文件清单（路径+内容），不落盘
      */
     List<GenFileVO> preview(GenDownloadDTO dto);
+
+    /**
+     * 模板影响面预览（只读）：给定模板相对路径，计算每张表会产出哪些文件。
+     *
+     * <p>不写盘、不改库、不产生渲染副作用；路径计算复用生成预览的同一条渲染链。
+     *
+     * @param templatePath 模板相对路径（如 {@code gen-templates/controller.ftl}）；
+     *                     为空表示「全部模板」聚合视图
+     */
+    GenTemplateImpactVO templateImpact(String templatePath);
 
     /**
      * 写盘：按每表 backend_root / frontend_root 写入磁盘

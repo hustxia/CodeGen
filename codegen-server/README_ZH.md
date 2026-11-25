@@ -2,23 +2,22 @@
 
 **Live demo:** [hustxia.github.io/CodeGen](https://hustxia.github.io/CodeGen/) · **Source:** [github.com/hustxia/CodeGen](https://github.com/hustxia/CodeGen)
 
-[![verify](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![verify](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml) [![tests 489](https://img.shields.io/badge/tests-489%20passing-green.svg)](#十一文档导航) [![demo live](https://img.shields.io/badge/demo-live-2563eb.svg)](https://hustxia.github.io/CodeGen/) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 
 <details>
-<summary>All languages / 全部语言（48）</summary>
+<summary>全部语言（48）</summary>
 
 > Languages: **简体中文** · [繁體中文](README_ZH_TW.md) · [English](README.md) · [日本語](README_JA.md) · [한국어](README_KO.md) · [Türkçe](README_TR.md) · [Русский](README_RU.md) · [Tiếng Việt](README_VI.md) · [ไทย](README_TH.md) · [Deutsch](README_DE.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Українська](README_UK.md) · [Polski](README_PL.md) · [Português (Brasil)](README_PT_BR.md) · [Português](README_PT.md) · [العربية](README_AR.md) · [فارسی](README_FA.md) · [Bahasa Indonesia](README_ID.md) · [Italiano](README_IT.md) · [Ελληνικά](README_EL.md) · [മലയാളം](README_ML.md) · [Roman Urdu](README_UR_ROMA.md) · [اردو](README_UR.md) · [Română](README_RO.md) · [Български](README_BG.md) · [हिन्दी](README_HI.md) · [বাংলা](README_BN.md) · [Nederlands](README_NL.md) · [Svenska](README_SV.md) · [Dansk](README_DA.md) · [Suomi](README_FI.md) · [Norsk](README_NO.md) · [Čeština](README_CS.md) · [Magyar](README_HU.md) · [Hrvatski](README_HR.md) · [Slovenčina](README_SK.md) · [Slovenščina](README_SL.md) · [Eesti](README_ET.md) · [עברית](README_HE.md) · [தமிழ்](README_TA.md) · [తెలుగు](README_TE.md) · [မြန်မာ](README_MY.md) · [ខ្មែរ](README_KM.md) · [Filipino](README_TL.md) · [Kiswahili](README_SW.md) · [Հայերեն](README_HY.md) · [ქართული](README_KA.md)
 
 </details>
 
 
-<details>
-<summary>All languages / 全部语言（48）</summary>
+**从 DDL 到一个跑得起来的系统 —— 全部真实截图，绝非示意图：**
 
-> 语言 / Language: **中文** · [English](README.md) · [日本語](README_JA.md) · [Português](README_PT.md) · [Español](README_ES.md) · [한국어](README_KO.md) · [Français](README_FR.md) · [Deutsch](README_DE.md) · [हिन्दी](README_HI.md) · [العربية](README_AR.md) · [বাংলা](README_BN.md) · [Русский](README_RU.md) · [اردو](README_UR.md)
+[![CodeGen 一句话建系统全流程动图](docs/images/showcase/demo.gif)](docs/images/showcase/demo.gif)
 
-</details>
+> **先看效果**：[在线演示](https://hustxia.github.io/CodeGen/)（国内可直连，无需注册安装）——真实生成系统首页实景 + V9.15 数据看板。489 个测试守护，已端到端生成 6 套完整业务系统（智慧警务 / 村务 / 服装 ERP / HR / MES / 学校人才培养方案）。
 
 ## 一眼看懂
 
@@ -30,7 +29,7 @@
 
 > 如果它帮你省下一天 CRUD 时间，请点个 Star，让更多开发者看到。
 
-> **多语言支持**：生成的系统内置整页国际化，框架覆盖 **206 种语言**并可自动回退；其中 **8 种为专业翻译**（zh-CN、en-US、ja-JP、ko-KR、fr-FR、de-DE、es-ES、ar-SA），其余语言统一回退到简体中文。想贡献翻译？见 [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md)。
+> **多语言支持**：生成的系统内置整页国际化，框架覆盖 **206 种语言**并可自动回退；其中 **12 种为专业翻译**（zh-CN、en-US、ja-JP、ko-KR、fr-FR、de-DE、es-ES、ar-SA、ru-RU、pt-BR、id-ID、vi-VN），其余语言统一回退到简体中文。想贡献翻译？见 [`多语言项目介绍/CONTRIBUTING.md`](多语言项目介绍/CONTRIBUTING.md)。
 
 > 面向 **Spring Boot + Vue** 的多工程代码生成器：从数据库表结构出发，产出**可编译、可运行、带菜单权限**的前后端业务代码，并负责写盘、备份、记账、回滚的完整交付闭环。
 
@@ -343,6 +342,10 @@ npm run serve
 | **V9.13** | **智慧村务系统完善：菜单重规划为 12 个村务业务域（替代「其他66页」）；28 张表种子数据（98菜单/5用户/户籍土地三资党建便民流程数据，全部关联）；审批流端到端跑通（提交0→1、通过1→2、驳回1→3）。修复两个生成器缺陷：流程表 id 未自增（submit 500）、鉴权过滤器未注入 userId（approve 403、审计 create_by 空）；3 项防回归测试，468/468 全绿** | 049027a..e4b9df2 |
 | **V9.14** | **智慧村务界面与数据完善：字段中文名（源头修 52 个外键注释 + 同步 129 处页面 label）、12 业务域菜单图标、首页真实统计（DashboardController 白名单 COUNT + 12 统计卡片）、90 张业务表全部演示数据（100% 覆盖、真实外键关联）；修 3 个脚本层坑（Map 图标无效、日期规则误伤、英文 token 注释）；3 项契约测试，474/474 全绿** | 039ae7e |
 | **V9.15** | **数据可视化图表能力包（通用、零领域耦合）：chart_enabled 三态开关（NULL/0=关、1=开，关闭时产物零 diff）；GenChartDeriver 纯按列元数据推导饼图/折线/柱状/仪表盘，零领域关键词；每表 /{module}/stats 聚合接口，生成期字段白名单防 SQL 注入；ECharts 图卡组件 + 跨表看板，系列色跟随 --app-primary；scaffold / 写盘 / ZIP / 路由 / 依赖全链路注入；平台 486/486 单测全绿，产物 64 个 StatsController 编译通过，真浏览器 4 类图表 0 控制台错误** | 69d5a06（web 5097231）, **当前版本** |
+| **V9.16** | **一键试用与演示体验：多阶段 Dockerfile + docker-compose（MySQL8 healthcheck + codegen-server），scripts/docker/init 33 个按数字版本序的初始化 SQL，V1.0 自带 admin/admin123 种子；新增 H2 内存库 demo 模式（application-h2.yml + SQL 转换器）；演示页 8 图 PNG→WebP（877KB→332KB，38%）、懒加载与访问统计占位；补 quick-start-docker 文档。** | d1ca428 |
+| **V9.17** | **能力包深度补全：5 个 agent 并行补齐支付、工作流、打印、安全、唯一性校验。支付补 JSAPI/H5 下单、退款查询与 pay_code 表级绑定；工作流补 SVG 节点进度图、会签/委派与轻量流程设计器；打印支持 print_title、横版、金额大写与 CODE128 条码（二维码占位）；安全补接口限流、数据权限加载与配置页、密码策略、互踢提示；唯一性校验 400 断言前后端对齐。后续 6a83e79 重生成 Docker init 35 号与 H2 转换脚本。** | 88da5ad, 6a83e79 |
+| **V9.18** | **生成质量与可维护性：新增模板影响面预览（扫描 scaffold-*.ftl，按表给出产物路径与形态提示）与控制台页；gen_table 加 child_save_mode（0=全量替换、1=按主键三路合并），一对多按主键、一对一按外键、多对多按关联键，MySQL/docker/H2 幂等加列，mode=0 零 diff（基线 14 + 契约 8 + i18n 快照 9/9）；S8/S9 进验证中心，verify.yml 加 CI 门禁。** | pending |
+| **V9.19** | **建模规模化收尾：confirm 建库分批化，新增 gen.pipeline.db-batch-size（默认 50），DDL 分批、每批独立提交、失败报批号与摘要，DdlBatchPlanner + 7 单测；i18n 覆盖矩阵 12 语言 × 60 键 100%，CI 加 backend-i18n-coverage，补 ru-RU、pt-BR、id-ID、vi-VN；模板市场：外部模板目录支持 ZIP 导出、JSON 导入（校验、冲突拒绝、overwrite、防穿越）与来源标记，控制台新增页。** | pending |
 
 ---
 
@@ -350,7 +353,7 @@ npm run serve
 
 ## 十三、项目状态
 
-- 当前发布版本 **V9.15**：通用数据可视化图表能力包（`chart_enabled` 三态开关 + 零领域耦合的 `GenChartDeriver` 推导饼/线/柱/仪表盘 + 每表 `/{module}/stats` 聚合接口 + ECharts 图卡与跨表看板，关闭时产物零 diff）；往前依次为 V9.14 智慧村务界面与数据完善、V9.13 智慧村务系统完善、V9.12 村务专用模板与全链路修复、V9.11 行业模板升级为完整系统、V9.10 字段展开、V9.9 250+ 模板库、V9.8 多流水线并发运行（`PipelineRunGate` 全局并发上限 + 同系统互斥，跨系统并行安全）+ 服务重启后 `running` 孤儿流水线自动置 failed、V9.7 快速建表（两段式骨架生成，真模型实测提速约 3.6 倍）、V9.6 大型/超大型分批建模、V9.5 AI 建表推荐与人工确认、V9.4 分阶段确认、V9.2 测试中心与验证中心。单测基线 **486/486 全绿**。
+- 当前发布版本 **V9.19**：通用数据可视化图表能力包（`chart_enabled` 三态开关 + 零领域耦合的 `GenChartDeriver` 推导饼/线/柱/仪表盘 + 每表 `/{module}/stats` 聚合接口 + ECharts 图卡与跨表看板，关闭时产物零 diff）；往前依次为 V9.14 智慧村务界面与数据完善、V9.13 智慧村务系统完善、V9.12 村务专用模板与全链路修复、V9.11 行业模板升级为完整系统、V9.10 字段展开、V9.9 250+ 模板库、V9.8 多流水线并发运行（`PipelineRunGate` 全局并发上限 + 同系统互斥，跨系统并行安全）+ 服务重启后 `running` 孤儿流水线自动置 failed、V9.7 快速建表（两段式骨架生成，真模型实测提速约 3.6 倍）、V9.6 大型/超大型分批建模、V9.5 AI 建表推荐与人工确认、V9.4 分阶段确认、V9.2 测试中心与验证中心。单测基线 **486/486 全绿**。
 - 已沉淀配套演示工程 `demo_admin`（后端 8140 / 前端 9040），覆盖树形 / CRUD / 主子表 / 只读 / 打印全场景，可独立运行验证。
 - 两仓库均托管于 Gitee：`https://gitee.com/hustxiayuhong/CodeGen.git`
 

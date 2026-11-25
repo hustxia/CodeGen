@@ -268,12 +268,14 @@ public class DocPreviewEngine implements InitializingBean {
             walk.sorted(Comparator.reverseOrder()).forEach(p -> {
                 try {
                     Files.deleteIfExists(p);
-                } catch (IOException ignored) {
+                } catch (IOException e) {
                     // 临时目录清理失败不影响业务，交给操作系统回收
+                    log.debug("临时目录清理失败: {}", p, e);
                 }
             });
-        } catch (IOException ignored) {
+        } catch (IOException e) {
             // 同上
+            log.debug("临时目录遍历清理失败", e);
         }
     }
 

@@ -140,10 +140,26 @@ public class GenTableSaveDTO implements Serializable {
     private Integer deleteCascadeMode;
 
     /**
+     * V9.18 子表保存模式（仅主子表主表可配）：null/0=全量替换（默认）、1=增量合并。
+     * 非法值（非 0/1）在 Service 层直接返回中文 400 提示，不做静默归一。
+     */
+    private Integer childSaveMode;
+
+    /**
      * V4.5 打印单据：null=跟随系统默认（默认关）、1=生成 print.vue、0=强制不生成。
      * 必须出现在 DTO 里：前端是三态下拉，清空即「改回跟随系统」。
      */
     private Integer genPrint;
+
+    /**
+     * V4.5 打印增强-打印页标题：null/空=回落表注释。前端为可选文本框，清空即「恢复默认」。
+     */
+    private String printTitle;
+
+    /**
+     * V4.5 打印增强-横版打印：null/0=A4 纵向、1=A4 横向。越界值由 Service 层归一为 null。
+     */
+    private Integer printLandscape;
 
     /**
      * 字段配置

@@ -222,6 +222,31 @@ public class RelationDetectServiceImpl implements RelationDetectService {
         for (RelationDetectVO r : detected) {
             byName.put(r.getMiddleTable(), r);
         }
+        // 一次 in 查询取回全部待标记的 gen_table 配置，避免循环内逐表 selectOne（走查 A-03）
+        List<String> wantTables = middleTables.stream()
+                .filter(StringUtils::hasText)
+                .map(String::trim)
+                .map(byName::get)
+                .filter(java.util.Objects::nonNull)
+                .map(RelationDetectVO::getMiddleTable)
+                .distinct()
+                .toList();
+        Map<String, GenTable> tableByName = new java.util.LinkedHashMap<>();
+        if (!wantTables.isEmpty()) {
+            for (GenTable t : genTableMapper.selectList(new LambdaQueryWrapper<GenTable>()
+                    .in(GenTable::getTableName, wantTables))) {
+                tableByName.put(t.getTableName(), t);
+            }
+        }
+        // 字段列同样一次 in 查询回内存按 tableId 分组
+        List<Long> tableIds = tableByName.values().stream().map(GenTable::getId).toList();
+        Map<Long, List<GenTableColumn>> colsByTableId = new java.util.LinkedHashMap<>();
+        if (!tableIds.isEmpty()) {
+            for (GenTableColumn c : genTableColumnMapper.selectList(new LambdaQueryWrapper<GenTableColumn>()
+                    .in(GenTableColumn::getTableId, tableIds))) {
+                colsByTableId.computeIfAbsent(c.getTableId(), k -> new ArrayList<>()).add(c);
+            }
+        }
         int applied = 0;
         for (String name : middleTables) {
             if (!StringUtils.hasText(name)) {
@@ -231,8 +256,7 @@ public class RelationDetectServiceImpl implements RelationDetectService {
             if (r == null) {
                 continue;
             }
-            GenTable t = genTableMapper.selectOne(new LambdaQueryWrapper<GenTable>()
-                    .eq(GenTable::getTableName, r.getMiddleTable()));
+            GenTable t = tableByName.get(r.getMiddleTable());
             if (t == null) {
                 // 中间表还没导入到 gen_table，先跳过（不自动建配置，避免意外生成一套 CRUD 页面）
                 log.info("中间表 {} 尚未导入 gen_table，跳过标记", name);
@@ -242,9 +266,7 @@ public class RelationDetectServiceImpl implements RelationDetectService {
             genTableMapper.updateById(t);
 
             // 两个外键列打标，供生成侧识别
-            List<GenTableColumn> cols = genTableColumnMapper.selectList(
-                    new LambdaQueryWrapper<GenTableColumn>()
-                            .eq(GenTableColumn::getTableId, t.getId()));
+            List<GenTableColumn> cols = colsByTableId.getOrDefault(t.getId(), List.of());
             for (GenTableColumn c : cols) {
                 boolean isLeft = c.getColumnName() != null
                         && c.getColumnName().equalsIgnoreCase(r.getLeftKey());

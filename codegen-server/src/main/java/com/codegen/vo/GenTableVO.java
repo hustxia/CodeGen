@@ -139,11 +139,34 @@ public class GenTableVO implements Serializable {
     private Integer deleteCascadeMode;
 
     /**
+     * V9.18 子表保存模式（表级配置原值）：0=全量替换（默认）、1=增量合并。
+     */
+    private Integer childSaveMode;
+
+    /**
+     * 表关系类型（原值）：middle=多对多中间表；V9.18 起也接受 ONE_TO_MANY / ONE_TO_ONE / MANY_TO_MANY。
+     *
+     * <p>下发原值是为了让控制台能判断「子表保存模式」下拉是否可编辑
+     * （relationType 为 ONE_TO_MANY 或该表确实挂着子表时才可配）。
+     */
+    private String relationType;
+
+    /**
      * V4.5 打印单据（表级配置原值）：null=跟随系统、1=生成、0=强制不生成。
      * 下发原值让前端下拉能如实显示「跟随系统」；生效判定在生成阶段
      * 走 {@code GenTemplateModel.resolveGenPrint} 三级回落。
      */
     private Integer genPrint;
+
+    /**
+     * V4.5 打印增强-打印页标题（表级配置原值）：null/空=回落表注释。
+     */
+    private String printTitle;
+
+    /**
+     * V4.5 打印增强-横版打印（表级配置原值）：null/0=纵向、1=横向。
+     */
+    private Integer printLandscape;
 
     private List<GenColumnDTO> columns;
 }

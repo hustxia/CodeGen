@@ -1,6 +1,8 @@
 package com.codegen.service.impl;
 
 import com.codegen.common.exception.BusinessException;
+import com.codegen.common.result.ResultCode;
+import com.codegen.config.GenPipelineProperties;
 import com.codegen.dto.GenDdlExecuteDTO;
 import com.codegen.dto.GenDdlImportDTO;
 import com.codegen.dto.GenColumnDTO;
@@ -9,6 +11,7 @@ import com.codegen.service.GenDdlService;
 import com.codegen.service.DictDetectService;
 import com.codegen.service.DictService;
 import com.codegen.service.GenTableService;
+import com.codegen.support.DdlBatchPlanner;
 import com.codegen.support.GenDdlPatcher;
 import com.codegen.util.GenUtils;
 import com.codegen.vo.DictDetectItemVO;
@@ -74,6 +77,10 @@ public class GenDdlServiceImpl implements GenDdlService {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    /** 建库分批配置（gen.pipeline.db-batch-size）；单测直接 new 本实现时未注入，按不分批兜底 */
+    @Autowired
+    private GenPipelineProperties pipelineProps;
 
     @Autowired
     private GenTableService genTableService;
@@ -232,9 +239,12 @@ public class GenDdlServiceImpl implements GenDdlService {
             }
         }
 
-        // 2. 逐条执行 —— 必须单连接：HikariCP 每次借还连接都会把 catalog 重置回默认库，
+        // 2. 按批执行 —— 仍必须单连接：HikariCP 每次借还连接都会把 catalog 重置回默认库，
         //    且 Connector/J 的 setCatalog 在本环境下静默无效（实测建表落错库）；
-        //    同一条连接上用 USE 切库是唯一可靠做法，整段脚本一起执行完再归还。
+        //    同一条连接上用 USE 切库是唯一可靠做法，整段脚本执行完再归还。
+        //    按 gen.pipeline.db-batch-size 切批后，每批一个事务、批末各自提交：
+        //    超大型系统几百条 DDL 不会攒成一整段长事务。
+        List<List<String>> batches = DdlBatchPlanner.split(statements, batchSize());
         jdbcTemplate.execute((ConnectionCallback<Void>) conn -> {
             // 记住原库：执行完必须切回去，否则连接带着目标库回池（Hikari 感知不到裸 USE），
             // 后续请求复用到该连接就会打错库（实测登录报 Unknown database）
@@ -245,56 +255,33 @@ public class GenDdlServiceImpl implements GenDdlService {
                     originalDb = rs.getString(1);
                 }
             }
+            boolean originalAutoCommit = true;
             try {
-                try (Statement st = conn.createStatement()) {
-                int idx = 0;
-                for (String stmt : statements) {
-                    idx++;
-                    String summary = summarize(stmt);
-                    if (isDestructive(stmt) && !allowDestructive) {
-                        vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "BLOCKED",
-                                "危险语句已拦截（DROP/TRUNCATE/ALTER DROP）。确认无误请勾选「允许破坏性语句」后重试"));
-                        vo.setBlockedCount(vo.getBlockedCount() + 1);
-                        continue;
-                    }
-                    if (dryRun) {
-                        vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "DRY", null));
-                        vo.setSuccessCount(vo.getSuccessCount() + 1);
-                        continue;
-                    }
-                    // 每条语句前切库：目标库可能由本脚本前一条 CREATE DATABASE 刚创建，
-                    // 库未建时 USE 失败不致命（回落当前库执行，下一条语句前会再切）
-                    try {
-                        st.execute("USE `" + schema + "`");
-                    } catch (Exception ignored) {
-                        // ignore
-                    }
-                    try {
-                        st.execute(stmt);
-                        vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "OK", null));
-                        vo.setSuccessCount(vo.getSuccessCount() + 1);
-                    } catch (Exception e) {
-                        String msg = rootMessage(e);
-                        if (isIdempotentError(e)) {
-                            // 迁移脚本重复执行：列/表已存在属于预期内，不算失败
-                            vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "SKIPPED",
-                                    "已存在，跳过：" + msg));
-                            vo.setSkippedCount(vo.getSkippedCount() + 1);
-                        } else {
-                            vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "FAILED", msg));
-                            vo.setFailedCount(vo.getFailedCount() + 1);
-                            log.warn("DDL 执行失败 [{}]: {} - {}", idx, summary, msg);
-                        }
-                    }
-                }
+                originalAutoCommit = conn.getAutoCommit();
+                conn.setAutoCommit(false);
+                // 已提交批次的累计语句数（跨批单调递增，用于日志与失败定位）
+                int executed = 0;
+                for (int b = 0; b < batches.size(); b++) {
+                    List<String> batch = batches.get(b);
+                    executeBatch(conn, batch, b + 1, batches.size(), executed,
+                            dryRun, allowDestructive, schema, vo);
+                    executed += batch.size();
+                    log.info("[建库] 第 {}/{} 批完成，本批 {} 条，累计 {} 条",
+                            b + 1, batches.size(), batch.size(), executed);
                 }
             } finally {
-                // 归还前切回原库，别让带毒连接回池
+                // 归还前恢复自动提交 + 切回原库，别让带毒连接回池
+                try {
+                    conn.setAutoCommit(originalAutoCommit);
+                } catch (Exception e) {
+                    log.debug("恢复连接自动提交状态失败", e);
+                }
                 if (originalDb != null && !originalDb.isBlank()) {
                     try (Statement st = conn.createStatement()) {
                         st.execute("USE `" + originalDb + "`");
-                    } catch (Exception ignored) {
-                        // ignore
+                    } catch (Exception e) {
+                        // ignore：切回原库失败仅影响连接池复用
+                        log.debug("切回原库 {} 失败", originalDb, e);
                     }
                 }
             }
@@ -327,6 +314,86 @@ public class GenDdlServiceImpl implements GenDdlService {
             }
         }
         return vo;
+    }
+
+    /** 建库批大小：配置缺失或非正数时返回 0，由 DdlBatchPlanner 兜底成「不分批」 */
+    private int batchSize() {
+        return pipelineProps == null ? 0 : pipelineProps.getDbBatchSize();
+    }
+
+    /**
+     * 执行一批 DDL：批内逐条回报（单条失败不中断整批，与分批前的口径一致），批末提交。
+     *
+     * <p>只有批次级故障（建语句失败、提交失败、连接异常等）才抛出带定位信息的
+     * {@link BusinessException}：批序号 / 批内第几条 / 前 200 字符摘要 / 已完成批次数。
+     * DDL 在 MySQL（以及 H2 MODE=MySQL）里会隐式提交，已成功批次天然不回滚，
+     * 异常信息里如实说明已完成的批次与语句数。
+     */
+    private void executeBatch(Connection conn, List<String> batch, int batchNo, int batchTotal,
+                              int executedStatements, boolean dryRun, boolean allowDestructive,
+                              String schema, GenDdlExecuteVO vo) {
+        int inBatch = 0;
+        String current = null;
+        try (Statement st = conn.createStatement()) {
+            for (String stmt : batch) {
+                inBatch++;
+                current = stmt;
+                int idx = executedStatements + inBatch;
+                String summary = summarize(stmt);
+                if (isDestructive(stmt) && !allowDestructive) {
+                    vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "BLOCKED",
+                            "危险语句已拦截（DROP/TRUNCATE/ALTER DROP）。确认无误请勾选「允许破坏性语句」后重试"));
+                    vo.setBlockedCount(vo.getBlockedCount() + 1);
+                    continue;
+                }
+                if (dryRun) {
+                    vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "DRY", null));
+                    vo.setSuccessCount(vo.getSuccessCount() + 1);
+                    continue;
+                }
+                // 每条语句前切库：目标库可能由本脚本前一条 CREATE DATABASE 刚创建，
+                // 库未建时 USE 失败不致命（回落当前库执行，下一条语句前会再切）
+                try {
+                    st.execute("USE `" + schema + "`");
+                } catch (Exception e) {
+                    // ignore：库未建时 USE 失败不致命，回落当前库
+                    log.debug("USE {} 失败，回落当前库执行", schema, e);
+                }
+                try {
+                    st.execute(stmt);
+                    vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "OK", null));
+                    vo.setSuccessCount(vo.getSuccessCount() + 1);
+                } catch (Exception e) {
+                    String msg = rootMessage(e);
+                    if (isIdempotentError(e)) {
+                        // 迁移脚本重复执行：列/表已存在属于预期内，不算失败
+                        vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "SKIPPED",
+                                "已存在，跳过：" + msg));
+                        vo.setSkippedCount(vo.getSkippedCount() + 1);
+                    } else {
+                        vo.getStatements().add(new GenDdlExecuteVO.Statement(idx, summary, "FAILED", msg));
+                        vo.setFailedCount(vo.getFailedCount() + 1);
+                        log.warn("DDL 执行失败 [第 {}/{} 批 第 {} 条 / 全局第 {} 条]: {} - {}",
+                                batchNo, batchTotal, inBatch, idx, summary, msg);
+                    }
+                }
+            }
+            conn.commit();
+        } catch (Exception e) {
+            try {
+                conn.rollback();
+            } catch (Exception ignore) {
+                // ignore：回滚失败不能掩盖原始错误
+            }
+            String position = inBatch > 0
+                    ? "批内第 " + inBatch + " 条语句（全局第 " + (executedStatements + inBatch) + " 条）"
+                    : "批内尚未开始执行任何语句";
+            throw new BusinessException(ResultCode.FAIL.getCode(),
+                    "[建库] 第 " + batchNo + "/" + batchTotal + " 批失败：" + position + "执行异常；"
+                            + "已完成 " + (batchNo - 1) + " 批共 " + executedStatements
+                            + " 条语句（已成功批次不回滚）；语句摘要："
+                            + DdlBatchPlanner.snippet(current) + "；原因：" + rootMessage(e));
+        }
     }
 
     /**

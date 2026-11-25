@@ -38,6 +38,13 @@ public class ${className}SaveDTO implements Serializable {
     private Long id;
 
 <#list formColumns as c>
+<#if c.uniqueFlag>
+    /**
+     * 唯一列：保存前查重 + DB 唯一键兜底，冲突统一返回 HTTP 400
+     * {code:400, msg:"…已存在", data:{field:"${c.javaField}"}}。
+     * V9.17 前后端查重对齐：此处的 field 与 vuePage.ftl 的 el-form-item prop 同源。
+     */
+</#if>
 <#if c.validJava?has_content>    ${c.validJava}
 </#if>    private ${c.javaType} ${c.javaField};
 </#list>

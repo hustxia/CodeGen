@@ -41,6 +41,13 @@ public class GenPipelineProperties {
     /** 子进程启动后等待端口就绪的超时秒数 */
     private int deployTimeoutSeconds = 120;
 
+    /**
+     * 建库 DDL 每批执行的语句数（每批一个事务、批末提交）。
+     * 超大型系统一次几百条 DDL 时不至于攒成一整段长事务，失败也能定位到第几批第几条。
+     * {@code <= 0} 视为不分批。
+     */
+    private int dbBatchSize = 50;
+
     /** 部署日志目录 */
     private String logDir = "logs/pipeline";
 

@@ -235,7 +235,10 @@ export default {
         this.$message.success(this.form.id ? '更新成功' : '创建成功')
         this.dialogVisible = false
         this.fetchList()
-      } catch (e) { /* 拦截器已提示 */ } finally {
+      } catch (e) {
+        // 拦截器已提示；V9.17 唯一冲突(400)时按 data.field 把红字落到对应表单项，弹窗不关
+        
+      } finally {
         this.submitting = false
       }
     },

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>代码生成器的最后一公里：页面级后处理工程化方案</title>
+<style>
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+       font-size: 15px; line-height: 1.85; color: #333; max-width: 860px; margin: 0 auto; padding: 24px; }
+h1 { font-size: 26px; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }
+h2 { font-size: 21px; margin-top: 34px; color: #2c3e50; border-left: 4px solid #4f46e5; padding-left: 10px; }
+h3 { font-size: 17px; color: #34495e; }
+img { border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,.08); margin: 12px 0; }
+blockquote { background: #f6f8ff; border-left: 4px solid #818cf8; padding: 10px 16px; color: #555; margin: 16px 0; }
+code { background: #f4f4f5; padding: 2px 6px; border-radius: 4px; color: #c7254e; font-size: 13px; }
+pre { background: #1e1e2f; color: #e8e8f0; padding: 16px; border-radius: 8px; overflow-x: auto; }
+pre code { background: transparent; color: inherit; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+th, td { border: 1px solid #e2e8f0; padding: 8px 12px; text-align: left; }
+th { background: #eef2ff; }
+.tip { background: #fffbeb; border: 1px solid #fde68a; padding: 12px 16px; border-radius: 8px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="tip">📋 使用说明：全选本页内容（Ctrl+A）→ 复制（Ctrl+C）→ 粘贴到 CSDN 文章编辑器，粘贴后删除本说明条。</div>
+<h1 id="_1">代码生成器的"最后一公里"：页面级后处理的工程化方案（枚举收敛 / 关联下拉 / 悬空外键清理）</h1>
+<blockquote>
+<p>生成器能产出 66 张表对应的 Controller 和 Vue 页面，但产出的页面"能用"和"好用"之间还差最后一公里：
+枚举列显示裸数字、外键是手填数字框、脏数据外键指向已删除的行。这篇文章讲我们如何把这最后一公里做成<strong>可重复、幂等、可验收</strong>的工程化流程。
+全文代码均来自真实项目，跑过 6 个行业系统、最多一次清理 861 条悬空外键。</p>
+<p><strong>代码仓库</strong>：GitHub https://github.com/hustxia/CodeGen ｜ 国内镜像 Gitee https://gitee.com/hustxiayuhong/CodeGen （觉得有用请点个 Star ⭐）
+<strong>在线演示</strong>：https://hustxia.github.io/CodeGen/ （浏览器直接看真实生成效果，无需安装任何东西）</p>
+</blockquote>
+<hr />
+<h2 id="_2">一、问题：模板里缺了什么</h2>
+<p>我们的行业模板（<code>vuePage.ftl</code>）拿到的表元数据只有四列：<code>name / type / comment / pk</code>。没有 <code>dictType</code>（这列是字典还是枚举？取值是什么？），也没有 <code>refTable</code>（这列外键指向哪张表的哪个名称列？）。</p>
+<p>所以生成产物天然长这样：</p>
+<ul>
+<li>状态、类型、等级这类 tinyint 字段 → 列表里显示 <code>2</code>，表单里是个 <code>el-input-number</code> 手填数字框</li>
+<li><code>major_id</code>、<code>college_id</code> 这类外键 → 列表里显示裸 ID，表单里还是手填数字框，用户根本不知道该填几</li>
+</ul>
+<p>有两条路可以修：</p>
+<table>
+<thead>
+<tr>
+<th>路线</th>
+<th>做法</th>
+<th>问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>改模板</td>
+<td>建模时给每张表补 dictType/refTable 元数据</td>
+<td>每个行业都要重新标一遍 66 张表；模板复杂度暴涨</td>
+</tr>
+<tr>
+<td>生成后处理</td>
+<td>生成完，用一个脚本按统一配置批量改产物</td>
+<td>需要解决幂等、原子性、Vue3 兼容等工程问题</td>
+</tr>
+</tbody>
+</table>
+<p>我们选了<strong>后处理</strong>，理由是：枚举/外键的"展示语义"本来就是业务侧知识（哪个字段是枚举、外键指向哪），把它收敛成一份 JSON 配置，比塞进生成模板更可维护——模板管"结构"，后处理管"语义"，职责分离。</p>
+<hr />
+<h2 id="_3">二、总体设计：生成期标记 + 生成后幂等注入</h2>
+<p>后处理脚本要往生成的 <code>.vue</code> 和 <code>Controller.java</code> 里插代码，最容易翻车的点是<strong>重复执行</strong>：跑一遍注入一份 <code>enumMap</code>，跑十遍就有十份，前端直接编译报错。</p>
+<p>所以我们定了一条铁律：<strong>所有注入必须挂在标记锚点上，重跑先清旧块再重写</strong>。</p>
+<p>模板在生成区的末尾预留锚点：</p>
+<pre class="codehilite"><code>// &lt;gen:end key=&quot;vue-methods&quot;&gt;        ← Vue 页面 methods 生成区末尾
+// &lt;gen:end key=&quot;controller-body&quot;&gt;    ← Controller 类体末尾
+</code></pre>
+
+<p>后处理注入自己的标记块：</p>
+<pre class="codehilite"><code class="language-js">// &lt;codegen-polish:data&gt;
+enumMap: { status: [...], planStatus: [...] },
+vvRefOptions: {}, vvRefLoading: {},
+// &lt;/codegen-polish:data&gt;
+
+// &lt;codegen-polish:methods&gt;
+enumText(field, value) { ... },
+vvSearchRef(field, refTable, label, keyword) { ... },
+// &lt;/codegen-polish:methods&gt;
+</code></pre>
+
+<p>重跑时的收敛流程：</p>
+<pre class="codehilite"><code>收集产物中现有 enumMap / ref 映射（含历史版本裸注入的）
+  → 按&quot;配置优先、原生保留&quot;合并
+  → 删除全部旧标记块和历史散落注入（按括号平衡精确删，不能只删标记行）
+  → 重新写入单一标记块
+</code></pre>
+
+<p>两个细节值得一提：</p>
+<ol>
+<li><strong>删除注入代码要用括号平衡匹配，不能正则点到为止</strong>。方法体里有字符串、对象字面量，简单正则会删穿。我们写了个 60 行的 <code>matching_brace</code>：跟踪引号状态（含转义）+ 大括号深度，找到真正匹配的 <code>}</code>，连尾逗号、换行一起吞掉。</li>
+<li><strong>伪幂等比不幂等更隐蔽</strong>。早期版本只删标记行不删缩进，每跑一轮代码整体右移 4 个空格——功能没坏，但 diff 越滚越大，代码评审直接没法看。</li>
+</ol>
+<hr />
+<h2 id="_4">三、枚举收敛："三件套"必须原子化</h2>
+<p>枚举字段的完整改造是三件事：</p>
+<pre class="codehilite"><code class="language-js">// ① data 里有数据源
+enumMap: {
+  planStatus: [{ value: 1, label: '草稿' }, { value: 2, label: '评审中' },
+               { value: 3, label: '已发布' }, { value: 4, label: '执行中' }, { value: 5, label: '废止' }]
+},
+
+// ② methods 里有翻译方法
+enumText(field, value) {
+  const list = (this.enumMap &amp;&amp; this.enumMap[field]) || []
+  const hit = list.find(d =&gt; String(d.value) === String(value))
+  return hit ? hit.label : (value === undefined || value === null ? '' : value)
+},
+
+// ③ 模板里有调用点
+&lt;el-table-column prop=&quot;planStatus&quot; label=&quot;方案状态&quot;
+  :formatter=&quot;(r)=&gt;enumText('planStatus', r.planStatus)&quot; /&gt;
+</code></pre>
+
+<h3 id="64">翻车实录：64 页表格假空白</h3>
+<p>早期版本把这三件事<strong>分两轮跑</strong>：第一轮注入调用点，第二轮才注入方法本体。结果第二轮只处理了"配置里显式声明的枚举页"——其余 <strong>64 个页面</strong>调了 <code>enumText</code> 却没有这个方法，渲染函数抛 <code>_ctx.enumText is not a function</code>，Element Plus 把渲染异常吞掉，表象是 <strong>Total 显示 8、表格体全白、console 没有报错</strong>。</p>
+<p>这是最阴险的一类 bug：页面"看起来加载正常"，数据接口也 200，就是表格空白。截图脚本跑完 66 页，靠 DOM 检查才逮到。</p>
+<p><strong>修法固化成原则：三件套一次注入，绝不分轮。</strong> 哪个页面有枚举调用点，同一轮就必须有 data 和方法；没有就 build 阶段报错拦下。</p>
+<h3 id="enumtextstatus-rowplanstatus">业务枚举错配：enumText('status', row.planStatus)</h3>
+<p>还有一个更隐蔽的坑：生成器对<strong>所有</strong> tinyint 枚举列统一生成 <code>enumText('status', row.xxx)</code>——把业务枚举指到了通用的 <code>status</code> 映射（正常/停用）。业务值 2/3/4 在 status 的 0/1 值域里找不到，回退显示原始数字。</p>
+<p><strong>修法</strong>：枚举映射按 <strong>camelCase 字段名</strong>建立独立条目（<code>planStatus</code>、<code>batchStatus</code>、<code>executionStatus</code>……），调用点和搜索下拉的选项来源（<code>enumMap.planStatus</code>）同步指向同名字段。一句话总结：<strong>一个业务枚举一个值域一份映射，绝不共用通用映射兜底</strong>。</p>
+<hr />
+<h2 id="options">四、关联下拉：远程搜索 + 通用 /options 端点</h2>
+<p>外键字段（<code>major_id</code>、<code>teacher_id</code>、<code>base_id</code>……）的改造同样三件套：</p>
+<pre class="codehilite"><code class="language-js">// 表单：手填数字框 → 远程搜索下拉
+&lt;el-select v-model=&quot;form.majorId&quot; clearable filterable remote style=&quot;width: 100%&quot;
+  placeholder=&quot;输入关键字搜索&quot;
+  :remote-method=&quot;kw =&gt; vvSearchRef('majorId', 'edu_major', 'major_name', kw)&quot;
+  :loading=&quot;vvRefLoading['majorId']&quot;&gt;
+  &lt;el-option v-for=&quot;o in vvRefOptions['majorId'] || []&quot; :key=&quot;o.id&quot; :label=&quot;o.label&quot; :value=&quot;o.id&quot; /&gt;
+&lt;/el-select&gt;
+
+// 列表：裸 ID → 关联名称
+:formatter=&quot;(r)=&gt;refText('majorId', r.majorId)&quot;
+
+// created 时预加载全部关联（页面打开下拉就是满的）
+vvLoadRefs() {
+  const all = { majorId: ['edu_major', 'major_name'], teacherId: ['edu_teacher', 'teacher_name'] }
+  Object.keys(all).forEach(f =&gt; this.vvSearchRef(f, all[f][0], all[f][1], ''))
+}
+</code></pre>
+
+<h3 id="_5">后端：一个通用端点服务所有关联</h3>
+<p>不给每张表单独写 options 接口，而是给每个 Controller 注入同一个通用端点：</p>
+<pre class="codehilite"><code class="language-java">@GetMapping(&quot;/options&quot;)
+public Result&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt; options(@RequestParam(&quot;refTable&quot;) String refTable,
+                                                 @RequestParam(value = &quot;label&quot;, required = false) String label,
+                                                 @RequestParam(value = &quot;keyword&quot;, required = false) String keyword) {
+    // ① 表名白名单：只允许字母数字下划线，杜绝注入
+    if (refTable == null || !refTable.matches(&quot;[A-Za-z0-9_]+&quot;)) {
+        throw new BusinessException(400, &quot;非法关联表名&quot;);
+    }
+    String labelCol = label == null || !label.matches(&quot;[A-Za-z0-9_]+&quot;) ? &quot;name&quot; : label;
+    String base = &quot;SELECT id, &quot; + labelCol + &quot; AS label FROM &quot; + refTable;
+    String like = keyword == null || keyword.isBlank() ? null : &quot;%&quot; + keyword.trim() + &quot;%&quot;;
+    int limit = like == null ? 500 : 20;   // ② 预加载 500 条 / 搜索 20 条
+    String sql = base + &quot; WHERE deleted = 0&quot; + (like == null ? &quot;&quot; : &quot; AND &quot; + labelCol + &quot; LIKE ?&quot;)
+            + &quot; ORDER BY id DESC LIMIT &quot; + limit;
+    ...
+}
+</code></pre>
+
+<p>三个安全/工程细节：</p>
+<ul>
+<li><strong>表名列名过正则白名单</strong>才拼 SQL，参数化查询 + 白名单双保险</li>
+<li><strong>预加载 500 条、关键字搜索 20 条</strong>：下拉打开即有值，搜索走远程不卡顿</li>
+<li><strong>软删除过滤</strong>（<code>deleted = 0</code>）：已被删除的学院不再出现在下拉里</li>
+</ul>
+<h3 id="request-trycatch">翻车实录：request 没导入，错误被 try/catch 吞掉</h3>
+<p>注入的 <code>vvSearchRef</code> 里用了 <code>request</code>，但部分模板版本的页面只用具名 API 函数、不 import 它。<code>ReferenceError</code> 被 <code>try/catch</code> 静默吞掉——表象是<strong>无 JS 报错、无 options 请求、下拉永远空、列表显示裸 ID</strong>，四样凑齐才能定位。</p>
+<p><strong>修法</strong>：注入前检查文件头部有没有 <code>import request</code>，没有就补一行。经验固化：<strong>注入代码引用的每个外部符号，注入前都必须验证依赖存在</strong>。</p>
+<hr />
+<h2 id="label">五、label 列校验 + 悬空外键清理</h2>
+<h3 id="_6">配置写错了怎么办：先校验再应用</h3>
+<p>配置里写 <code>majorId → edu_major.major_name</code>，但如果列名拼错，下拉永远是空的（SQL 查不到 label 列，接口返回空数组，还不报错）。所以应用前先跑校验：</p>
+<pre class="codehilite"><code class="language-bash">python polish_enums_refs.py --config cfg.json --check-labels
+# 坏引用 majorId -&gt; edu_major.majr_name 列不存在
+# label 列校验完成，坏引用: 1
+</code></pre>
+
+<p>直接查 <code>information_schema.columns</code>，坏引用退出的 exit code 非 0，可以挂进 CI。</p>
+<h3 id="left-join-null">悬空外键：LEFT JOIN 找出来，置 NULL 修掉</h3>
+<p>演示数据和迁移数据常见一种脏数据：外键有值，但指向的行已经物理删除。前端 <code>refText</code> 查不到 label，列里显示裸数字，数据看板一打开就很廉价。</p>
+<p>清理逻辑两步走：</p>
+<pre class="codehilite"><code class="language-sql">-- ① 找悬空：左连接目标表，连不上的就是悬空
+SELECT COUNT(*) FROM edu_practice_plan a
+LEFT JOIN edu_internship_base b ON a.base_id = b.id
+WHERE a.base_id IS NOT NULL AND b.id IS NULL;
+
+-- ② 悬空置 NULL（不删业务行，只清引用）
+UPDATE edu_practice_plan a
+LEFT JOIN edu_internship_base b ON a.base_id = b.id
+SET a.base_id = NULL
+WHERE a.base_id IS NOT NULL AND b.id IS NULL;
+</code></pre>
+
+<p>脚本按"每张页面表 × 每个外键字段"全量扫描执行。实战数据：学校人才培养方案系统一次性清理 <strong>861 条悬空外键</strong>（流水线早期测试数据残留），清完 66 页列表再无一个裸 ID。</p>
+<p>注意一个坑：Java 字段到数据库列名的驼峰反推（<code>baseId → base_id</code>）对含随机 slug 的表名不可逆（<code>v94_1a9iwwc_main_id</code> 这种），这类系统必须在配置里显式给 <code>refColumns</code> 映射。</p>
+<hr />
+<h2 id="vue3-thisset">六、Vue3 兼容：this.$set 是颗哑雷</h2>
+<p>从 Vue2 模板迁移过来的生成逻辑里有 <code>this.$set(this.dictMap, key, value)</code>。Vue3 移除了这个 API，运行时直接 <code>TypeError</code>——而且它发生在数据加载回调里，被外层 catch 吞掉，表象又是"页面正常、数据不显示"。</p>
+<p><strong>修法</strong>：后处理阶段全局替换为直接赋值（Vue3 Proxy 响应式不需要 $set）：</p>
+<pre class="codehilite"><code class="language-js">// ❌ Vue2 写法，Vue3 抛 TypeError 且被 catch 吞掉
+this.$set(this.dictMap, key, value)
+
+// ✅ Vue3：对象新增属性直接赋值即可响应
+this.dictMap[key] = value
+</code></pre>
+
+<p>连同类的哑雷还有：注入方法时生成区末方法<strong>没有尾逗号</strong>（<code>import</code> 语法错误）、<code>dictText('sys_status', ...)</code> 旧字典 API 残留。全部收进后处理的清理清单，一次跑完。</p>
+<hr />
+<h2 id="_7">七、工程化闭环：四条命令 + 三道验收</h2>
+<p>后处理最终收敛成一个脚本、四种模式：</p>
+<pre class="codehilite"><code class="language-bash">python polish_enums_refs.py --config cfg.json --check          # 只统计不改（dry run）
+python polish_enums_refs.py --config cfg.json --check-labels   # 校验关联配置的 label 列存在
+python polish_enums_refs.py --config cfg.json                  # 应用到产物
+python polish_enums_refs.py --config cfg.json --fix-dangling   # 悬空外键置 NULL
+</code></pre>
+
+<p>配套三道验收，缺一不可：</p>
+<ol>
+<li><strong><code>npm run build</code></strong>：语法层拦截（尾逗号、未定义引用、模板解析错误）</li>
+<li><strong>逐页截图 + console 检查</strong>：66 页全部截图，断言 console 错误数为 0——专抓"假空白"这类无报错渲染异常</li>
+<li><strong>抽查视觉</strong>：枚举列是否中文、外键列是否名称、下拉是否远程搜索，抽 3-5 页人工确认</li>
+</ol>
+<h3 id="66-66">实战数据（学校人才培养方案系统，66 表 / 66 页）</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>关联下拉注入</td>
+<td>130 处</td>
+</tr>
+<tr>
+<td>Controller 补 /options 端点</td>
+<td>63 个</td>
+</tr>
+<tr>
+<td>悬空外键清理</td>
+<td>861 条</td>
+</tr>
+<tr>
+<td>业务枚举独立映射</td>
+<td>12 个（planStatus / batchStatus / executionStatus 等）</td>
+</tr>
+<tr>
+<td>验收结果</td>
+<td>66 页截图，console 错误 0</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_8">八、总结：三条可复用的设计原则</h2>
+<p>这套"最后一公里"方案跑过 6 个行业系统后，沉淀出三条与具体框架无关的原则：</p>
+<ol>
+<li><strong>语义后置，结构前置</strong>：生成器管表结构和页面骨架，枚举/关联等业务语义收敛成独立 JSON 配置，由后处理落地——改语义不用重跑流水线</li>
+<li><strong>幂等是注入类工具的生命线</strong>：标记锚点 + 括号平衡清理 + 合并重写，保证脚本跑一遍和跑十遍结果一致</li>
+<li><strong>无报错的失败最危险</strong>：try/catch 吞掉的 ReferenceError、Element Plus 吞掉的渲染异常，都要求验收必须包含"逐页 DOM/console 断言"，只看接口 200 是不够的</li>
+</ol>
+<p>下一篇计划写：<strong>12 步生成流水线的失败定位设计</strong>（failReason 如何做到每一步可归因），感兴趣可以关注。</p>
+<hr />
+<h2 id="_9">如果这个项目帮到了你</h2>
+<ul>
+<li><strong>点个 Star</strong> ⭐：GitHub https://github.com/hustxia/CodeGen ｜ Gitee https://gitee.com/hustxiayuhong/CodeGen —— 让更多开发者少写一天 CRUD</li>
+<li><strong>国内克隆慢</strong>：没有代理请直接用 Gitee 镜像：<code>git clone https://gitee.com/hustxiayuhong/CodeGen.git</code></li>
+<li><strong>先看效果再决定</strong>：<a href="https://hustxia.github.io/CodeGen/">在线演示</a> 展示真实生成系统的首页与数据看板</li>
+<li><strong>遇到问题</strong>：提 <a href="https://github.com/hustxia/CodeGen/discussions">Discussions</a> 或 Issue，我会回复</li>
+</ul>
+</body>
+</html>

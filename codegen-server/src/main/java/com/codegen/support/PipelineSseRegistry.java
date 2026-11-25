@@ -64,8 +64,9 @@ public class PipelineSseRegistry {
             for (SseEmitter emitter : list) {
                 try {
                     emitter.complete();
-                } catch (Exception ignored) {
+                } catch (Exception e) {
                     // 已断开的连接 complete 会抛异常，忽略
+                    log.debug("SSE complete 失败（连接可能已断开）pipelineId={}", pipelineId, e);
                 }
             }
         }

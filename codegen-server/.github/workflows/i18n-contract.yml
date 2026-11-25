@@ -6,6 +6,7 @@ name: i18n contract gate
 #      - ON （i18nEnabled=1）  → 输出必须含 $t(
 #      - 零 diff：ON 去 i18n 还原后必须与 OFF 逐字节相等（i18n 只是纯包裹）
 #   2) i18n-core 回落链单测（vitest，覆盖 resolveText 回落 + interpolate + RTL）
+#   3) 精译语言键覆盖矩阵（node，12 精译 × keys.json，缺失/多余键即失败）
 # 任一任务失败即阻断合并。详见 ROADMAP.md V8.1。
 
 on:
@@ -34,7 +35,8 @@ jobs:
       - name: Download Freemarker 2.3.32
         working-directory: scripts/i18n_snapshot
         run: |
-          curl -sSL -o freemarker.jar https://repo1.maven.org/maven2/freemarker/freemarker/2.3.32/freemarker-2.3.32.jar
+          curl -fsSL -o freemarker.jar https://repo.maven.apache.org/maven2/org/freemarker/freemarker/2.3.32/freemarker-2.3.32.jar
+          test "$(stat -c%s freemarker.jar)" -gt 100000
           ls -l freemarker.jar
 
       - name: Compile snapshot contract
@@ -70,17 +72,35 @@ jobs:
       - name: Run i18n-core unit tests
         run: npx vitest run tests/i18n-core.test.mjs
 
+  backend-i18n-coverage:
+    name: 精译语言键覆盖矩阵 (node)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 纯 node 脚本，无第三方依赖；PR 改动任一言文件（keys.json / languages.json /
+      # messages/*.json）都会在这里暴露缺失或多出的键，并打印 12 精译覆盖矩阵。
+      - name: Run i18n coverage gate
+        run: node scripts/i18n-coverage.mjs
+
   gate:
     name: i18n 契约门禁汇总
     if: always()
-    needs: [ backend-ftl-snapshot, frontend-i18n-core ]
+    needs: [ backend-ftl-snapshot, frontend-i18n-core, backend-i18n-coverage ]
     runs-on: ubuntu-latest
     steps:
       - name: 汇总结果
         run: |
-          echo "backend-ftl-snapshot : ${{ needs.backend-ftl-snapshot.result }}"
-          echo "frontend-i18n-core   : ${{ needs.frontend-i18n-core.result }}"
-          if [ "${{ needs.backend-ftl-snapshot.result }}" != "success" ] || [ "${{ needs.frontend-i18n-core.result }}" != "success" ]; then
+          echo "backend-ftl-snapshot  : ${{ needs.backend-ftl-snapshot.result }}"
+          echo "frontend-i18n-core    : ${{ needs.frontend-i18n-core.result }}"
+          echo "backend-i18n-coverage : ${{ needs.backend-i18n-coverage.result }}"
+          if [ "${{ needs.backend-ftl-snapshot.result }}" != "success" ] || [ "${{ needs.frontend-i18n-core.result }}" != "success" ] || [ "${{ needs.backend-i18n-coverage.result }}" != "success" ]; then
             echo "::error::存在未通过的 i18n 契约任务，已阻断合并"
             exit 1
           fi

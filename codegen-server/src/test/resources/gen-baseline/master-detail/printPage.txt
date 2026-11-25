@@ -24,6 +24,8 @@
         </tr>
       </table>
 
+      <div class="rmb-line">金额大写：人民币{{ rmbUpper(master.amount) }}</div>
+
       <div class="section-title">明细1：订单明细</div>
       <table class="detail-table">
         <thead>
@@ -151,6 +153,77 @@ export default {
       })
       return mode === 'cents' ? (sum / 100).toFixed(2) : String(sum)
     },
+    // V4.5 打印增强：人民币大写（生成物零依赖纯 JS）。
+    // 入参为数字或「分」求和后的两位小数字符串；精确到分、支持到万亿级；
+    // 零角零分以「整」收尾（央行票据规范：有角无分不写整，分前零要写）。
+    rmbUpper(v) {
+      const s = String(v).trim()
+      if (s === '' || isNaN(Number(s))) return ''
+      const neg = s.charAt(0) === '-'
+      const body = neg ? s.slice(1) : s
+      // 字符串按位转「分」：万亿级（14 位有效数字）走 Number 乘法会丢分，绕开 n * 100
+      const dot = body.indexOf('.')
+      const intPart = dot === -1 ? body : body.slice(0, dot)
+      const decPart = dot === -1 ? '' : (body.slice(dot + 1) + '00').slice(0, 2)
+      if (!/^\d*$/.test(intPart) || !/^\d*$/.test(decPart)) return ''
+      const cents = Number(intPart) * 100 + Number(decPart === '' ? '0' : decPart)
+      // 规格上限「万亿」：分值超 Number 安全整数区（>9e15 分 ≈ 9 万亿元）不保证精度，显式拒绝
+      if (cents === 0) return '零元整'
+      if (cents > Number.MAX_SAFE_INTEGER) return ''
+      const core = this.rmbCore(cents)
+      return neg ? '负' + core : core
+    },
+    // 非负整数「分」→ 大写主体
+    rmbCore(cents) {
+      const digits = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖']
+      const intUnits = ['', '拾', '佰', '仟']
+      const groupUnits = ['', '万', '亿', '万亿']
+      const yuan = Math.floor(cents / 100)
+      const jiao = Math.floor((cents % 100) / 10)
+      const fen = cents % 10
+      if (yuan === 0) {
+        return jiao > 0 ? digits[jiao] + '角' + (fen > 0 ? digits[fen] + '分' : '')
+            : digits[fen] + '分'
+      }
+      // 整数部分按万进制 4 位分组，高位到低位转换
+      const groups = []
+      let y = yuan
+      while (y > 0) {
+        groups.push(y % 10000)
+        y = Math.floor(y / 10000)
+      }
+      const parts = []
+      let lastGi = -1
+      for (let gi = groups.length - 1; gi >= 0; gi--) {
+        const g = groups[gi]
+        if (g === 0) continue
+        const d4 = [g % 10, Math.floor(g / 10) % 10, Math.floor(g / 100) % 10, Math.floor(g / 1000)]
+        let inner = ''
+        let zero = false
+        for (let pos = 3; pos >= 0; pos--) {
+          if (d4[pos] === 0) {
+            if (inner !== '') zero = true
+          } else {
+            if (zero) inner += '零'
+            inner += digits[d4[pos]] + intUnits[pos]
+            zero = false
+          }
+        }
+        // 组间补零：跳过整组（如 亿→千 跨过 万）或低位组千位缺位（壹万零伍）
+        const lead = lastGi !== -1 && (gi < lastGi - 1 || g < 1000) ? '零' : ''
+        parts.push(lead + inner + groupUnits[gi])
+        lastGi = gi
+      }
+      let out = parts.join('') + '元'
+      if (jiao === 0 && fen === 0) {
+        out += '整'
+      } else if (jiao === 0) {
+        out += '零' + digits[fen] + '分'
+      } else {
+        out += digits[jiao] + '角' + (fen > 0 ? digits[fen] + '分' : '')
+      }
+      return out
+    },
     fmt(v) {
       if (v === null || v === undefined || v === '') return ''
       return String(v).replace('T', ' ')
@@ -273,6 +346,21 @@ export default {
 
 .sum-num {
   text-align: right;
+}
+/* V4.5 打印增强：人民币大写行样式（仅金额列表才会渲染这段） */
+.rmb-line {
+  font-size: 12px;
+  margin-top: 6px;
+  color: #1f2d3d;
+}
+
+.rmb-row td {
+  background: #fbfbfc;
+  font-weight: 700;
+}
+
+.rmb-cell {
+  text-align: left;
 }
 
 .sign-bar {

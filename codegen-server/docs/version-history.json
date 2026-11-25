@@ -1,7 +1,7 @@
 {
   "meta": {
-    "currentVersion": "V9.15",
-    "updated": "2026-11-22",
+    "currentVersion": "V9.19",
+    "updated": "2026-11-24",
     "source": "README.md(en) + README_ZH.md(zh) 为权威源；sync-version-rows*.mjs 仅 harvest 其余语言的 V7.5~V9.1 译本",
     "note": "改动版本表只需编辑本文件，再运行 node scripts/render_version_history.mjs"
   },
@@ -569,6 +569,54 @@
         "en": "69d5a06 (web 5097231), **current**",
         "zh": "69d5a06（web 5097231）, **当前版本**"
       }
+    },
+    {
+      "version": "V9.16",
+      "highlight": true,
+      "theme": {
+        "en": "Try-it-in-minutes and demo experience: a multi-stage Dockerfile plus docker-compose (MySQL 8 healthcheck + codegen-server), 33 numerically ordered init scripts under scripts/docker/init (fixing the V9.15/V6.10 lexicographic pitfall), and the built-in V1.0 admin/admin123 seed so no extra seeding step is needed. A new H2 in-memory demo mode ships application-h2.yml (MODE=MySQL, 34 scripts in numeric order) with a SQL converter handling stored procedures and dynamic DDL; known limit: direct DB import and dictionary probing via information_schema are incomplete under H2. The showcase page converts 8 images from PNG to WebP (877KB to 332KB, 38%) with lazy loading and an analytics placeholder, and docs/quick-start-docker.md completes the path.",
+        "zh": "一键试用与演示体验：多阶段 Dockerfile + docker-compose（MySQL8 healthcheck + codegen-server），scripts/docker/init 33 个按数字版本序的初始化 SQL，V1.0 自带 admin/admin123 种子；新增 H2 内存库 demo 模式（application-h2.yml + SQL 转换器）；演示页 8 图 PNG→WebP（877KB→332KB，38%）、懒加载与访问统计占位；补 quick-start-docker 文档。"
+      },
+      "commit": {
+        "en": "d1ca428",
+        "zh": "d1ca428"
+      }
+    },
+    {
+      "version": "V9.17",
+      "highlight": true,
+      "theme": {
+        "en": "Capability-pack depth completion: five agents worked in parallel on payment, workflow, printing, security and uniqueness validation. Payment adds JSAPI/H5 ordering, refund result queries and pay_code table-level binding; workflow adds an SVG node progress chart, countersign/delegation and a lightweight process designer; printing supports print_title, landscape, RMB amount in words and CODE128 barcodes (QR placeholder); security adds API rate limiting, data-scope loading with a config page, password policy and kick notices; uniqueness validation aligns the 400 assertion between front and back end. Template-side contracts stay byte-identical to the V6.3/V4.5 baselines when switches are off, with V917PrintEnhanceTest, PayRefundContractTest and V917UniquenessAlignTemplateTest added; follow-up 6a83e79 regenerated Docker init No.35 and the H2 conversion script.",
+        "zh": "能力包深度补全：5 个 agent 并行补齐支付、工作流、打印、安全、唯一性校验。支付补 JSAPI/H5 下单、退款查询与 pay_code 表级绑定；工作流补 SVG 节点进度图、会签/委派与轻量流程设计器；打印支持 print_title、横版、金额大写与 CODE128 条码（二维码占位）；安全补接口限流、数据权限加载与配置页、密码策略、互踢提示；唯一性校验 400 断言前后端对齐。后续 6a83e79 重生成 Docker init 35 号与 H2 转换脚本。"
+      },
+      "commit": {
+        "en": "88da5ad, 6a83e79",
+        "zh": "88da5ad, 6a83e79"
+      }
+    },
+    {
+      "version": "V9.18",
+      "highlight": true,
+      "theme": {
+        "en": "Generation quality and maintainability: new template impact preview (GET /gen/template/files scans .ftl files under gen-templates/scaffold/scaffold-* on the classpath; GET /gen/template/impact maps each table to its output paths and table-shape hints) plus a \"Template Impact\" console page injected via permission.js without any sys_menu row. gen_table gains child_save_mode (0 = full replace, the default; 1 = three-way merge by primary key): one-to-many merges children by PK, one-to-one upserts by foreign key, many-to-many adds/removes join rows by relation key. The column is added idempotently to the MySQL source script, docker init 036 and H2; mode=0 output stays byte-identical (14 baseline + 8 contract + 9/9 i18n snapshots all green). S8 screenshot verification (SKIPPED, not blocking, when playwright/puppeteer is absent) and S9 directory diff (pure-Node recursive compare with whitelist and thresholds) join the verification center and persist into tc_case_result/tc_artifact; verify.yml adds a verify-center-gate job that exits 1 on any FAIL, and scheduled test tasks support an interval-minutes mode with next-run display.",
+        "zh": "生成质量与可维护性：新增模板影响面预览（扫描 scaffold-*.ftl，按表给出产物路径与形态提示）与控制台页；gen_table 加 child_save_mode（0=全量替换、1=按主键三路合并），一对多按主键、一对一按外键、多对多按关联键，MySQL/docker/H2 幂等加列，mode=0 零 diff（基线 14 + 契约 8 + i18n 快照 9/9）；S8/S9 进验证中心，verify.yml 加 CI 门禁。"
+      },
+      "commit": {
+        "en": "a5f5b10",
+        "zh": "a5f5b10"
+      }
+    },
+    {
+      "version": "V9.19",
+      "highlight": true,
+      "theme": {
+        "en": "Modeling-at-scale wrap-up: confirm-time database creation is now batched via the new gen.pipeline.db-batch-size property (default 50); DDL runs in batches with an independent commit per batch and reports the failing batch number plus a statement excerpt. A pure DdlBatchPlanner backs the logic with 7 unit tests. Translation contribution is automated: scripts/i18n-coverage.mjs produces a coverage matrix (12 languages x 60 keys, 100%), CI adds a backend-i18n-coverage job, and four professional translations (ru-RU, pt-BR, id-ID, vi-VN) raise the README wording from 8 to 12. A template-market prototype adds gen.template.external-dir (default ~/.codegen/industry-templates) with single- and multi-pack ZIP export, .json/.zip import (full validation, conflicts rejected by default, overwrite opt-in, path-traversal guard), user-pack deletion and builtin/user source tags, exposed through a new \"Template Market\" console page.",
+        "zh": "建模规模化收尾：confirm 建库分批化，新增 gen.pipeline.db-batch-size（默认 50），DDL 分批、每批独立提交、失败报批号与摘要，DdlBatchPlanner + 7 单测；i18n 覆盖矩阵 12 语言 × 60 键 100%，CI 加 backend-i18n-coverage，补 ru-RU、pt-BR、id-ID、vi-VN；模板市场：外部模板目录支持 ZIP 导出、JSON 导入（校验、冲突拒绝、overwrite、防穿越）与来源标记，控制台新增页。"
+      },
+      "commit": {
+        "en": "0863a1f",
+        "zh": "0863a1f"
+      }
     }
   ],
   "i18n": {
@@ -588,7 +636,9 @@
       "V9.9": "行業模板庫擴至 250+ 套 / 19 大類 / 2100+ 表：可複用領域藍圖 + 生成腳本；模板清單改為輕量（不含表明細），明細按需載入，支援分類篩選與搜尋；464/464 單測全綠",
       "V9.10": "行業模板欄位展開：2191 張表依表語義補業務欄位（編碼/單號/金額/聯絡方式/時間區間/正文/排序/狀態/備註），平均每表 6.12 → 7.87 欄，狀態 100% / 備註 96% / 編碼 82% 覆蓋；語義等價組避免重複欄；修復處方表 create_time 與審計欄撞名；465/465 單測全綠",
       "V9.11": "行業模板升級為完整系統：每套追加 15 張平台通用表（審批流/附件/操作日誌/任務/訊息/字典/設定）+ 所屬分類 10-15 張專屬業務表（19 大類共 248 張）。每套 29-45 張表（平均 34.8，原 8.6）、每表 10-20 欄位（平均 14.25，原 7.87）；欄位深化依輔助表語義避免假欄位；466/466 單測全綠",
-      "V9.15": "資料視覺化圖表能力包（通用、零領域耦合）：chart_enabled 三態開關（NULL/0=關、1=開，關閉時產物零 diff）；GenChartDeriver 純按欄位中繼資料推導圓餅/折線/柱狀/儀表板，零領域關鍵詞；每表 /{module}/stats 彙總介面，生成期欄位白名單防 SQL 注入；ECharts 圖卡元件 + 跨表看板，系列色跟隨 --app-primary；486/486 測試全綠，產物 64 個 StatsController 編譯通過，真瀏覽器 4 類圖表 0 主控台錯誤"
+      "V9.15": "資料視覺化圖表能力包（通用、零領域耦合）：chart_enabled 三態開關（NULL/0=關、1=開，關閉時產物零 diff）；GenChartDeriver 純按欄位中繼資料推導圓餅/折線/柱狀/儀表板，零領域關鍵詞；每表 /{module}/stats 彙總介面，生成期欄位白名單防 SQL 注入；ECharts 圖卡元件 + 跨表看板，系列色跟隨 --app-primary；486/486 測試全綠，產物 64 個 StatsController 編譯通過，真瀏覽器 4 類圖表 0 主控台錯誤",
+      "V9.18": "生成品質與可維護性：新增範本影響面預覽與 child_save_mode（0=全量取代、1=依主鍵三路合併，mode=0 產物零 diff），並把 S8 截圖、S9 目錄 diff 納入驗證中心並接入 CI 門禁。",
+      "V9.19": "建模規模化收尾：confirm 建庫 DDL 分批（預設 50，7 個單測）、i18n 覆蓋達 12 語言×60 鍵 100%（新增 4 種精譯），並推出範本市場雛形（外部範本目錄、ZIP/JSON 匯入匯出）。"
     },
     "JA": {
       "V7.5": "プロジェクト言語設定：206 言語リスト / デフォルト / 有効言語、生成物への lang・dir 注入",
@@ -599,7 +649,9 @@
       "V9.9": "業界テンプレートライブラリを 250+  packs / 19 カテゴリ / 2100+ テーブルに拡張：再利用可能なドメイン青写真＋生成スクリプト；一覧は軽量（テーブル明細なし）で明細はオンデマンド、カテゴリ絞り込み・検索対応；464/464 テスト成功",
       "V9.10": "業界テンプレートのフィールド拡張：2191 テーブルに表の意味に応じた業務フィールド（コード/伝票番号/金額/連絡先/期間/本文/並び順/ステータス/備考）を追加、1 テーブル平均 6.12 → 7.87 列、ステータス 100% / 備考 96% / コード 82% カバー。意味的等価グループで重複列を防止；処方箋の create_time と監査列の衝突を修正；465/465 テスト成功",
       "V9.11": "業界テンプレートを完全なシステムへ：各テンプレートに共通プラットフォーム表 15 枚（承認フロー/添付/操作ログ/タスク/メッセージ/辞書/設定）＋業界別表 10〜15 枚（19 カテゴリ計 248 枚）を追加。1 テンプレートあたり 29〜45 テーブル（平均 34.8、従来 8.6）、1 テーブルあたり 10〜20 列（平均 14.25、従来 7.87）；補助テーブルの意味を考慮したフィールド拡張；466/466 テスト成功",
-      "V9.15": "データ可視化チャート機能パック（汎用・ドメイン非依存）：chart_enabled 三状態スイッチ（NULL/0=オフ、1=オン、オフ時は成果物バイト同一）；GenChartDeriver は列メタデータのみから円/折れ線/棒/ゲージを推論しドメインキーワードゼロ；テーブル単位の /{module}/stats 集約エンドポイント、生成時フィールドホワイトリストで SQL インジェクションを防止；ECharts チャートカード＋横断ダッシュボード、シリーズ色は --app-primary に追従；486/486 テスト成功、生成物 64 個の StatsController コンパイル成功、実ブラウザで 4 種類のチャートがコンソールエラー 0 で描画"
+      "V9.15": "データ可視化チャート機能パック（汎用・ドメイン非依存）：chart_enabled 三状態スイッチ（NULL/0=オフ、1=オン、オフ時は成果物バイト同一）；GenChartDeriver は列メタデータのみから円/折れ線/棒/ゲージを推論しドメインキーワードゼロ；テーブル単位の /{module}/stats 集約エンドポイント、生成時フィールドホワイトリストで SQL インジェクションを防止；ECharts チャートカード＋横断ダッシュボード、シリーズ色は --app-primary に追従；486/486 テスト成功、生成物 64 個の StatsController コンパイル成功、実ブラウザで 4 種類のチャートがコンソールエラー 0 で描画",
+      "V9.18": "生成品質と保守性：テンプレート影響範囲プレビューと child_save_mode（0=全量置換、1=主キーによる三方向マージ、mode=0 はゼロ diff）を追加し、S8 スクリーンショットと S9 ディレクトリ diff を検証センターに組み込み CI ゲートに接続。",
+      "V9.19": "モデリング大規模化の仕上げ：confirm 時の DDL をバッチ化（既定50、単体テスト7件）、i18n カバレッジが12言語×60キーで100%（4言語を追加精訳）、テンプレートマーケットの雛形（外部ディレクトリ、ZIP/JSON 入出力）を追加。"
     },
     "KO": {
       "V7.5": "프로젝트 언어 설정: 206개 언어 목록 / 기본 언어 / 사용 언어, 생성물에 lang·dir 주입",
@@ -610,7 +662,9 @@
       "V9.9": "업계 템플릿 라이브러리를 250+세트 / 19개 분류 / 2100+테이블로 확장: 재사용 도메인 블루프린트 + 생성 스크립트; 목록은 경량(테이블 상세 제외), 상세는 필요 시 로드, 분류 필터·검색 지원; 464/464 테스트 통과",
       "V9.10": "업계 템플릿 필드 확장: 2191개 테이블에 테이블 의미에 맞는 비즈니스 필드(코드/전표번호/금액/연락처/기간/본문/정렬/상태/비고) 추가, 테이블당 평균 6.12 → 7.87열, 상태 100% / 비고 96% / 코드 82% 커버리지; 의미 동등 그룹으로 중복 열 방지; 처방전 create_time과 감사 열 충돌 수정; 465/465 테스트 통과",
       "V9.11": "업계 템플릿을 완전한 시스템으로 업그레이드: 각 템플릿에 공통 플랫폼 테이블 15개(결재/첨부/로그/작업/메시지/사전/설정) + 해당 분야 전용 테이블 10~15개(19개 분류 총 248개) 추가. 템플릿당 29~45개 테이블(평균 34.8, 기존 8.6), 테이블당 10~20개 열(평균 14.25, 기존 7.87); 보조 테이블 의미를 고려한 필드 확장; 466/466 테스트 통과",
-      "V9.15": "데이터 시각화 차트 기능 팩(범용·도메인 비종속): chart_enabled 3상 스위치(NULL/0=꺼짐, 1=켜짐, 꺼짐 시 산출물 바이트 동일); GenChartDeriver가 열 메타데이터만으로 원/선/막대/게이지를 추론하며 도메인 키워드 0; 테이블별 /{module}/stats 집계 엔드포인트, 생성기 필드 화이트리스트로 SQL 인젝션 방지; ECharts 차트 카드 + 교차 테이블 대시보드, 시리즈 색상은 --app-primary 추종; 486/486 테스트 통과, 산출물 64개 StatsController 컴파일 통과, 실제 브라우저에서 4종 차트 콘솔 오류 0 렌더링"
+      "V9.15": "데이터 시각화 차트 기능 팩(범용·도메인 비종속): chart_enabled 3상 스위치(NULL/0=꺼짐, 1=켜짐, 꺼짐 시 산출물 바이트 동일); GenChartDeriver가 열 메타데이터만으로 원/선/막대/게이지를 추론하며 도메인 키워드 0; 테이블별 /{module}/stats 집계 엔드포인트, 생성기 필드 화이트리스트로 SQL 인젝션 방지; ECharts 차트 카드 + 교차 테이블 대시보드, 시리즈 색상은 --app-primary 추종; 486/486 테스트 통과, 산출물 64개 StatsController 컴파일 통과, 실제 브라우저에서 4종 차트 콘솔 오류 0 렌더링",
+      "V9.18": "생성 품질과 유지보수성: 템플릿 영향 범위 미리보기와 child_save_mode(0=전체 교체, 1=기본키 기준 3방향 병합, mode=0은 무차이)를 추가하고, S8 스크린샷과 S9 디렉터리 diff를 검증 센터에 통합해 CI 게이트에 연결했습니다.",
+      "V9.19": "모델링 대규모화 마무리: confirm 시 DDL 배치화(기본 50, 단위 테스트 7개), i18n 커버리지 12개 언어×60개 키 100%(4개 언어 추가 번역), 템플릿 마켓 초안(외부 디렉터리, ZIP/JSON 가져오기·내보내기)을 추가했습니다."
     },
     "DE": {
       "V7.5": "Projekt-Sprachkonfiguration: 206-Sprachenliste / Standardsprache / aktivierte Sprachen, Injektion von lang & dir in die generierten Artefakte",
@@ -621,7 +675,9 @@
       "V9.9": "Branchenvorlagen-Bibliothek auf 250+ Pakete / 19 Kategorien / 2100+ Tabellen erweitert: wiederverwendbare Domänen-Bausteine + Generator-Skript; Vorlagenliste jetzt schlank (ohne Tabellendetails), Details bedarfsgerecht, Kategoriefilter + Suche; 464/464 Tests grün",
       "V9.10": "Branchenvorlagen-Felderweiterung: 2191 Tabellen um geschäftliche Felder nach Tabellensemantik ergänzt (Code/Belegnummer/Betrag/Kontakt/Zeitraum/Inhalt/Sortierung/Status/Bemerkung), Ø 6,12 → 7,87 Spalten pro Tabelle, Status 100 % / Bemerkung 96 % / Code 82 % Abdeckung; semantische Äquivalenzgruppen verhindern doppelte Spalten; Kollision von create_time mit Audit-Spalte in Rezept-Tabellen behoben; 465/465 Tests grün",
       "V9.11": "Branchenvorlagen zu vollständigen Systemen ausgebaut: +15 allgemeine Plattformtabellen (Freigabeworkflow, Anhänge, Audit-Log, Aufgaben, Nachrichten, Wörterbuch, Konfiguration) + 10–15 domänenspezifische Tabellen je Kategorie (19 Kategorien, 248 Tabellen). Jede Vorlage jetzt 29–45 Tabellen (Ø 34.8, vorher 8.6) und 10–20 Spalten pro Tabelle (Ø 14.25, vorher 7.87); semantische Feldanreicherung unter Berücksichtigung von Hilfstabellen; 466/466 Tests grün",
-      "V9.15": "Generisches Data-Visualization-Chart-Funktionspaket (domänenunabhängig): chart_enabled-Dreizustandsschalter (NULL/0=aus, 1=an; bei aus byte-identische Ausgabe); GenChartDeriver leitet Kreis/Linie/Balken/Gauge rein aus Spaltenmetadaten ab, keine Domänen-Schlüsselwörter; pro Tabelle /{module}/stats-Aggregationsendpunkt mit Generierungszeit-Feld-Whitelist gegen SQL-Injection; ECharts-ChartCard + tabellenübergreifendes Dashboard, Serienfarben folgen --app-primary; 486/486 Tests grün, 64 generierte StatsController kompiliert, 4 Chart-Typen im echten Browser mit 0 Konsolenfehlern gerendert"
+      "V9.15": "Generisches Data-Visualization-Chart-Funktionspaket (domänenunabhängig): chart_enabled-Dreizustandsschalter (NULL/0=aus, 1=an; bei aus byte-identische Ausgabe); GenChartDeriver leitet Kreis/Linie/Balken/Gauge rein aus Spaltenmetadaten ab, keine Domänen-Schlüsselwörter; pro Tabelle /{module}/stats-Aggregationsendpunkt mit Generierungszeit-Feld-Whitelist gegen SQL-Injection; ECharts-ChartCard + tabellenübergreifendes Dashboard, Serienfarben folgen --app-primary; 486/486 Tests grün, 64 generierte StatsController kompiliert, 4 Chart-Typen im echten Browser mit 0 Konsolenfehlern gerendert",
+      "V9.18": "Generierungsqualität und Wartbarkeit: Vorlagen-Auswirkungsvorschau und child_save_mode (0 = Vollersatz, 1 = Drei-Wege-Merge; mode 0 byte-identisch) sowie S8-Screenshots und S9-Verzeichnisdiff im Verifizierungszentrum mit CI-Gate.",
+      "V9.19": "Modellierung im großen Maßstab: gebatchtes DDL bei confirm (Standard 50, 7 Unit-Tests), i18n-Abdeckung 12 Sprachen × 60 Schlüssel zu 100 % (vier neue Übersetzungen) und ein Template-Market-Prototyp mit externem Verzeichnis sowie ZIP/JSON-Import und -Export."
     },
     "FR": {
       "V7.5": "Configuration linguistique du projet : liste de 206 langues / langue par défaut / langues activées, injection de lang & dir dans les artefacts générés",
@@ -632,7 +688,9 @@
       "V9.9": "Bibliothèque de modèles métier étendue à 250+ packs / 19 catégories / 2100+ tables : blocs de domaine réutilisables + script de génération ; liste allégée (sans détail des tables), détails à la demande, filtre par catégorie et recherche ; 464/464 tests verts",
       "V9.10": "Extension des champs des modèles métier : 2191 tables enrichies de champs métier selon leur sémantique (code / n° de document / montant / contact / période / contenu / tri / statut / remarque), moyenne 6,12 → 7,87 colonnes par table, couverture statut 100 % / remarque 96 % / code 82 % ; des groupes d’équivalence sémantique évitent les colonnes dupliquées ; collision de create_time avec la colonne d’audit dans les tables d’ordonnance corrigée ; 465/465 tests verts",
       "V9.11": "Modèles métier transformés en systèmes complets : +15 tables de plateforme commune (workflow de validation, pièces jointes, journal, tâches, messages, dictionnaire, configuration) + 10 à 15 tables métier par catégorie (19 catégories, 248 tables). Chaque modèle compte désormais 29 à 45 tables (moy. 34,8 contre 8,6) et 10 à 20 colonnes par table (moy. 14,25 contre 7,87) ; enrichissement sémantique des champs adapté aux tables auxiliaires ; 466/466 tests verts",
-      "V9.15": "Pack de fonctionnalités de graphiques de visualisation de données (générique / indépendant du domaine) : interrupteur à trois états chart_enabled (NULL/0=désactivé, 1=activé ; sortie octet-identique quand désactivé) ; GenChartDeriver déduit camembert/ligne/barre/jauge uniquement des métadonnées de colonnes, zéro mot-clé de domaine ; endpoint d'agrégation /{module}/stats par table avec liste blanche de champs à la génération contre l'injection SQL ; composant ChartCard ECharts + tableau de bord multi-tables, couleurs de séries suivant --app-primary ; 486/486 tests verts, 64 StatsController générés compilés, 4 types de graphiques rendus en navigateur réel avec 0 erreur console"
+      "V9.15": "Pack de fonctionnalités de graphiques de visualisation de données (générique / indépendant du domaine) : interrupteur à trois états chart_enabled (NULL/0=désactivé, 1=activé ; sortie octet-identique quand désactivé) ; GenChartDeriver déduit camembert/ligne/barre/jauge uniquement des métadonnées de colonnes, zéro mot-clé de domaine ; endpoint d'agrégation /{module}/stats par table avec liste blanche de champs à la génération contre l'injection SQL ; composant ChartCard ECharts + tableau de bord multi-tables, couleurs de séries suivant --app-primary ; 486/486 tests verts, 64 StatsController générés compilés, 4 types de graphiques rendus en navigateur réel avec 0 erreur console",
+      "V9.18": "Qualité de génération et maintenabilité : aperçu d'impact des modèles et child_save_mode (0 = remplacement complet, 1 = fusion à trois voies ; mode 0 identique octet par octet), avec captures S8 et diff S9 intégrés au centre de vérification et au gate CI.",
+      "V9.19": "Modélisation à grande échelle : DDL par lots lors du confirm (50 par défaut, 7 tests unitaires), couverture i18n de 12 langues × 60 clés à 100 % (quatre nouvelles traductions) et prototype de place de modèles avec répertoire externe et import/export ZIP/JSON."
     },
     "ES": {
       "V7.5": "Configuración de idiomas del proyecto: lista de 206 idiomas / idioma predeterminado / idiomas habilitados, inyección de lang y dir en los generados",
@@ -643,7 +701,9 @@
       "V9.9": "Biblioteca de plantillas industriales ampliada a 250+ paquetes / 19 categorías / 2100+ tablas: bloques de dominio reutilizables + script generador; lista ligera (sin detalle de tablas), detalle bajo demanda, filtro por categoría y búsqueda; 464/464 pruebas en verde",
       "V9.10": "Ampliación de campos de plantillas industriales: 2191 tablas enriquecidas con campos de negocio según su semántica (código / n.º de documento / importe / contacto / periodo / contenido / orden / estado / observación), media 6,12 → 7,87 columnas por tabla, cobertura estado 100 % / observación 96 % / código 82 %; grupos de equivalencia semántica evitan columnas duplicadas; corregida colisión de create_time con columna de auditoría en tablas de receta; 465/465 pruebas en verde",
       "V9.11": "Plantillas industriales convertidas en sistemas completos: +15 tablas de plataforma común (flujo de aprobación, adjuntos, registro, tareas, mensajes, diccionario, configuración) + 10-15 tablas específicas por categoría (19 categorías, 248 tablas). Cada plantilla tiene ahora 29-45 tablas (media 34,8, antes 8,6) y 10-20 columnas por tabla (media 14,25, antes 7,87); enriquecimiento semántico de campos con conciencia de tablas auxiliares; 466/466 pruebas en verde",
-      "V9.15": "Paquete de gráficos de visualización de datos (genérico / independiente del dominio): interruptor de tres estados chart_enabled (NULL/0=desactivado, 1=activado; salida byte-idéntica cuando desactivado); GenChartDeriver infiere circular/línea/barra/gauge únicamente de metadatos de columna, cero palabras clave de dominio; endpoint de agregación /{module}/stats por tabla con lista blanca de campos en generación contra inyección SQL; componente ChartCard de ECharts + panel entre tablas, colores de serie siguen --app-primary; 486/486 pruebas verdes, 64 StatsController generados compilados, 4 tipos de gráficos renderizados en navegador real con 0 errores de consola"
+      "V9.15": "Paquete de gráficos de visualización de datos (genérico / independiente del dominio): interruptor de tres estados chart_enabled (NULL/0=desactivado, 1=activado; salida byte-idéntica cuando desactivado); GenChartDeriver infiere circular/línea/barra/gauge únicamente de metadatos de columna, cero palabras clave de dominio; endpoint de agregación /{module}/stats por tabla con lista blanca de campos en generación contra inyección SQL; componente ChartCard de ECharts + panel entre tablas, colores de serie siguen --app-primary; 486/486 pruebas verdes, 64 StatsController generados compilados, 4 tipos de gráficos renderizados en navegador real con 0 errores de consola",
+      "V9.18": "Calidad de generación y mantenibilidad: vista previa de impacto de plantillas y child_save_mode (0 = reemplazo total, 1 = fusión en tres vías; mode 0 idéntico byte a byte), con capturas S8 y diff S9 en el centro de verificación y el gate de CI.",
+      "V9.19": "Modelización a escala: DDL por lotes en confirm (50 por defecto, 7 pruebas unitarias), cobertura i18n de 12 idiomas × 60 claves al 100 % (cuatro traducciones nuevas) y prototipo de mercado de plantillas con directorio externo e importación/exportación ZIP/JSON."
     },
     "RU": {
       "V7.5": "Языковая конфигурация проекта: список 206 языков / язык по умолчанию / включённые языки, вставка lang и dir в генерируемые файлы",
@@ -654,240 +714,320 @@
       "V9.9": "Библиотека отраслевых шаблонов расширена до 250+ пакетов / 19 категорий / 2100+ таблиц: переиспользуемые доменные блоки + скрипт генерации; список стал лёгким (без деталей таблиц), детали по запросу, фильтр по категориям и поиск; 464/464 тестов зелёные",
       "V9.10": "Расширение полей отраслевых шаблонов: 2191 таблица дополнена бизнес-полями по семантике таблицы (код / номер документа / сумма / контакт / период / содержание / сортировка / статус / примечание), в среднем 6,12 → 7,87 столбцов на таблицу, покрытие статуса 100 % / примечания 96 % / кода 82 %; семантические группы эквивалентности предотвращают дублирование столбцов; исправлен конфликт create_time со служебным столбцом в таблицах рецептов; 465/465 тестов зелёные",
       "V9.11": "Отраслевые шаблоны превращены в полные системы: +15 общих таблиц платформы (согласование, вложения, журнал, задачи, сообщения, справочник, настройки) + 10–15 отраслевых таблиц на категорию (19 категорий, 248 таблиц). Каждый шаблон теперь содержит 29–45 таблиц (в среднем 34,8 против 8,6) и 10–20 столбцов на таблицу (в среднем 14,25 против 7,87); семантическое обогащение полей с учётом вспомогательных таблиц; 466/466 тестов зелёные",
-      "V9.15": "Пакет функций визуализации данных (универсальный / независимый от домена): трёхсостоятельный переключатель chart_enabled (NULL/0=выкл, 1=вкл; при выкл вывод побайтово идентичен); GenChartDeriver выводит круговую/линейную/столбчатую/шкалу диаграммы исключительно из метаданных колонок, без доменных ключевых слов; для каждой таблицы endpoint агрегации /{module}/stats с whitelist полей на этапе генерации против SQL-инъекций; компонент ChartCard на ECharts + дашборд по нескольким таблицам, цвета серий следуют --app-primary; 486/486 тестов зелёные, 64 сгенерированных StatsController скомпилированы, 4 типа диаграмм отрисованы в реальном браузере с 0 ошибок консоли"
+      "V9.15": "Пакет функций визуализации данных (универсальный / независимый от домена): трёхсостоятельный переключатель chart_enabled (NULL/0=выкл, 1=вкл; при выкл вывод побайтово идентичен); GenChartDeriver выводит круговую/линейную/столбчатую/шкалу диаграммы исключительно из метаданных колонок, без доменных ключевых слов; для каждой таблицы endpoint агрегации /{module}/stats с whitelist полей на этапе генерации против SQL-инъекций; компонент ChartCard на ECharts + дашборд по нескольким таблицам, цвета серий следуют --app-primary; 486/486 тестов зелёные, 64 сгенерированных StatsController скомпилированы, 4 типа диаграмм отрисованы в реальном браузере с 0 ошибок консоли",
+      "V9.18": "Качество генерации и сопровождаемость: предпросмотр влияния шаблонов и child_save_mode (0 = полная замена, 1 = трёхстороннее слияние; mode 0 — побайтово идентично), а также снимки S8 и diff S9 в центре верификации с CI-гейтом.",
+      "V9.19": "Масштабное моделирование: пакетный DDL при confirm (по умолчанию 50, 7 модульных тестов), покрытие i18n 12 языков × 60 ключей на 100 % (четыре новых перевода) и прототип рынка шаблонов с внешним каталогом и импортом/экспортом ZIP/JSON."
     },
     "PT": {
       "V7.5": "Configuração de idiomas do projeto: lista de 206 idiomas / idioma padrão / idiomas habilitados, injeção de lang e dir nos gerados",
       "V8.0": "i18n de página inteira: framework de 206 idiomas (8 traduzidos profissionalmente), i18n de via dupla com contrato de diff zero em OFF",
       "V8.1": "Endurecimento de qualidade: arnês de contrato offline (9 modos, diff zero OFF) + testes unitários i18n-core + portão de CI + divisão honesta do README (framework 206 / traduzidos 8) + check-locale-keys.mjs",
       "V9.0": "Artefatos gerados modernizados para Vue 3 + Element Plus + Vite; verificados em execução (40/40 asserções, vite build com sucesso, 14 capturas incl. ar-SA RTL); 3 defeitos de execução corrigidos",
-      "V9.1": "Refatoração de manutenibilidade · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refatoração de manutenibilidade · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Qualidade de geração e manutenibilidade: pré-visualização de impacto de templates e child_save_mode (0 = substituição total, 1 = fusão em três vias; mode 0 idêntico byte a byte), com capturas S8 e diff S9 no centro de verificação e gate de CI.",
+      "V9.19": "Modelação em escala: DDL por lotes no confirm (50 por omissão, 7 testes unitários), cobertura i18n de 12 idiomas × 60 chaves a 100% (quatro novas traduções) e protótipo de mercado de templates com diretório externo e importação/exportação ZIP/JSON."
     },
     "IT": {
       "V7.5": "Configurazione lingua del progetto: elenco di 206 lingue / lingua predefinita / lingue abilitate, iniezione di lang e dir nei generati",
       "V8.0": "i18n a pagina intera: framework di 206 lingue (8 tradotte professionalmente), i18n a doppia via con contratto zero-diff in OFF",
       "V8.1": "Rafforzamento qualità: harness di contratto offline (9 modalità, zero-diff OFF) + test unitari i18n-core + gate CI + suddivisione onesta del README (framework 206 / tradotte 8) + check-locale-keys.mjs",
       "V9.0": "Artefatti generati modernizzati a Vue 3 + Element Plus + Vite; verificati a runtime (40/40 asserzioni, vite build riuscita, 14 screenshot incl. ar-SA RTL); 3 difetti runtime corretti",
-      "V9.1": "Refactoring per manutenibilità · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refactoring per manutenibilità · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Qualità della generazione e manutenibilità: anteprima dell'impatto dei template e child_save_mode (0 = sostituzione totale, 1 = fusione a tre vie; mode 0 identico byte per byte), con screenshot S8 e diff S9 nel centro di verifica e nel gate CI.",
+      "V9.19": "Modellazione su larga scala: DDL a lotti in confirm (50 predefinito, 7 test unitari), copertura i18n di 12 lingue × 60 chiavi al 100% (quattro nuove traduzioni) e prototipo di mercato template con directory esterna e import/export ZIP/JSON."
     },
     "NL": {
       "V7.5": "Projecttaalconfiguratie: lijst van 206 talen / standaardtaal / ingeschakelde talen, injectie van lang & dir in gegenereerde code",
       "V8.0": "Volledige pagina-i18n: framework van 206 talen (8 professioneel vertaald), tweespoors i18n met OFF zero-diff contract",
       "V8.1": "Kwaliteitsverharding: offline contract-harness (9 modi, OFF zero-diff) + i18n-core unittests + CI-poort + eerlijke README-splitsing (framework 206 / vertaald 8) + check-locale-keys.mjs",
       "V9.0": "Gegenereerde artefacten gemoderniseerd naar Vue 3 + Element Plus + Vite; runtime geverifieerd (40/40 asserts, geslaagde vite build, 14 screenshots incl. ar-SA RTL); 3 runtimefouten gevonden & opgelost",
-      "V9.1": "Onderhoudbaarheidsrefactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Onderhoudbaarheidsrefactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Generatiekwaliteit en onderhoudbaarheid: impactpreview voor templates en child_save_mode (0 = volledige vervanging, 1 = driewegsamenvoeging; mode 0 byte-identiek), met S8-screenshots en S9-mapdiff in het verificatiecentrum en de CI-gate.",
+      "V9.19": "Modelleren op schaal: gebatchte DDL bij confirm (standaard 50, 7 unit tests), i18n-dekking van 12 talen × 60 sleutels op 100% (vier nieuwe vertalingen) en een templatemarkt-prototype met externe map en ZIP/JSON-import en -export."
     },
     "PL": {
       "V7.5": "Konfiguracja językowa projektu: lista 206 języków / język domyślny / włączone języki, wstrzykiwanie lang i dir do generowanych plików",
       "V8.0": "i18n całej strony: framework 206 języków (8 przetłumaczonych profesjonalnie), dwutorowa i18n z kontraktem zerowej różnicy przy OFF",
       "V8.1": "Hardening jakości: offline harness kontraktu (9 trybów, zerowa różnica OFF) + testy jednostkowe i18n-core + bramka CI + uczciwy podział README (framework 206 / przetłumaczone 8) + check-locale-keys.mjs",
       "V9.0": "Generowane artefakty zmodernizowane do Vue 3 + Element Plus + Vite; zweryfikowane w czasie działania (40/40 asercji, udany vite build, 14 zrzutów ekranu incl. ar-SA RTL); naprawiono 3 defekty runtime",
-      "V9.1": "Refaktoryzacja pod kątem utrzymywalności · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktoryzacja pod kątem utrzymywalności · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Jakość generowania i utrzymywalność: podgląd wpływu szablonów i child_save_mode (0 = pełne zastąpienie, 1 = scalanie trójdrożne; mode 0 bez różnic bajtowych), a także zrzuty S8 i diff S9 w centrum weryfikacji z bramką CI.",
+      "V9.19": "Modelowanie w skali: wsadowy DDL przy confirm (domyślnie 50, 7 testów jednostkowych), pokrycie i18n 12 języków × 60 kluczy na 100% (cztery nowe tłumaczenia) i prototyp rynku szablonów z katalogiem zewnętrznym oraz importem/eksportem ZIP/JSON."
     },
     "SV": {
       "V7.5": "Projektspråkskonfiguration: lista över 206 språk / standardspråk / aktiverade språk, injicering av lang och dir i genererad kod",
       "V8.0": "Helsides-i18n: ramverk med 206 språk (8 professionellt översatta), tvåspårig i18n med OFF zero-diff-kontrakt",
       "V8.1": "Kvalitetshärdning: offline kontrakts-harness (9 lägen, OFF zero-diff) + i18n-core enhetstester + CI-grind + ärlig README-fördelning (ramverk 206 / översatta 8) + check-locale-keys.mjs",
       "V9.0": "Genererade artefakter moderniserade till Vue 3 + Element Plus + Vite; verifierade i drift (40/40 asserteringar, lyckad vite build, 14 skärmbilder inkl. ar-SA RTL); 3 runtime-fel åtgärdade",
-      "V9.1": "Underhållsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Underhållsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Genereringskvalitet och underhållbarhet: mallpåverkansförhandsvisning och child_save_mode (0 = full ersättning, 1 = trevägssammanslagning; mode 0 byte-identisk), med S8-skärmbilder och S9-katalogdiff i verifieringscentret och CI-gaten.",
+      "V9.19": "Modellering i skala: batchad DDL vid confirm (standard 50, 7 enhetstester), i18n-täckning 12 språk × 60 nycklar till 100 % (fyra nya översättningar) och en mallmarknadsprototyp med extern katalog samt ZIP/JSON-import och -export."
     },
     "DA": {
       "V7.5": "Projekt-sprogkonfiguration: liste over 206 sprog / standardsprog / aktiverede sprog, injektion af lang & dir i genereret kode",
       "V8.0": "Fuldside-i18n: framework med 206 sprog (8 professionelt oversat), tosporet i18n med OFF zero-diff-kontrakt",
       "V8.1": "Kvalitetshærdning: offline kontrakt-harness (9 tilstande, OFF zero-diff) + i18n-core enhedstests + CI-port + ærlig README-opdeling (framework 206 / oversat 8) + check-locale-keys.mjs",
       "V9.0": "Genererede artefakter moderniseret til Vue 3 + Element Plus + Vite; runtime-verificeret (40/40 assertions, vellykket vite build, 14 skærmbilleder inkl. ar-SA RTL); 3 runtime-fejl rettet",
-      "V9.1": "Vedligeholdelsesrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Vedligeholdelsesrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Genereringskvalitet og vedligeholdbarhed: forhåndsvisning af skabelonpåvirkning og child_save_mode (0 = fuld erstatning, 1 = trevejsfletning; mode 0 byte-identisk), med S8-skærmbilleder og S9-mappediff i verifikationscentret og CI-gaten.",
+      "V9.19": "Modellering i skala: batch-DDL ved confirm (standard 50, 7 enhedstests), i18n-dækning 12 sprog × 60 nøgler på 100 % (fire nye oversættelser) og en skabelonmarkedsprototype med ekstern mappe samt ZIP/JSON-import og -eksport."
     },
     "NO": {
       "V7.5": "Prosjektspråkkonfigurasjon: liste over 206 språk / standardspråk / aktiverte språk, injisering av lang & dir i generert kode",
       "V8.0": "Fullside-i18n: rammeverk med 206 språk (8 profesjonelt oversatt), tosporet i18n med OFF zero-diff-kontrakt",
       "V8.1": "Kvalitetsherdning: offline kontrakt-harness (9 moduser, OFF zero-diff) + i18n-core enhetstester + CI-port + ærlig README-inndeling (rammeverk 206 / oversatt 8) + check-locale-keys.mjs",
       "V9.0": "Genererte artefakter modernisert til Vue 3 + Element Plus + Vite; runtime-verifisert (40/40 asserts, vellykket vite build, 14 skjermbilder inkl. ar-SA RTL); 3 runtime-feil rettet",
-      "V9.1": "Vedlikeholdsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Vedlikeholdsrefaktorering · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Genereringskvalitet og vedlikeholdbarhet: forhåndsvisning av malpåvirkning og child_save_mode (0 = full erstatning, 1 = treveisfletting; mode 0 byte-identisk), med S8-skjermbilder og S9-katalogdiff i verifiseringssenteret og CI-gaten.",
+      "V9.19": "Modellering i skala: batch-DDL ved confirm (standard 50, 7 enhetstester), i18n-dekning 12 språk × 60 nøkler på 100 % (fire nye oversettelser) og en malmarkedsprototype med ekstern mappe samt ZIP/JSON-import og -eksport."
     },
     "FI": {
       "V7.5": "Projektin kieliasetukset: 206 kielen luettelo / oletuskieli / käytössä olevat kielet, lang- ja dir-kenttien lisäys generoituihin tiedostoihin",
       "V8.0": "Koko sivun i18n: 206 kielen kehys (8 ammattimaisesti käännetty), kaksiraiteinen i18n OFF zero-diff-sopimuksella",
       "V8.1": "Laadun vahvistus: offline-sopimustesti (9 tilaa, OFF zero-diff) + i18n-core-yksikkötestit + CI-portti + rehellinen README-jako (kehys 206 / käännetty 8) + check-locale-keys.mjs",
       "V9.0": "Generoidut artefaktit päivitetty Vue 3 + Element Plus + Viteen; ajonaikaisesti todennettu (40/40 assertiota, onnistunut vite build, 14 kuvakaappausta incl. ar-SA RTL); 3 ajonaikaista virhettä korjattu",
-      "V9.1": "Ylläpidettävyyden refaktorointi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Ylläpidettävyyden refaktorointi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Generoinnin laatu ja ylläpidettävyys: mallien vaikutusanalyysi ja child_save_mode (0 = täysi korvaus, 1 = kolmitieyhdistäminen; mode 0 tavuittain identtinen) sekä S8-kuvat ja S9-hakemistodiff varmennuskeskuksessa ja CI-portissa.",
+      "V9.19": "Mallinnus suuressa mittakaavassa: erätetty DDL confirmissa (oletus 50, 7 yksikkötestiä), i18n-kattavuus 12 kieltä × 60 avainta 100 %:iin (neljä uutta käännöstä) ja mallimarkkinan prototyyppi ulkoisella hakemistolla sekä ZIP/JSON-tuonnilla ja -viennillä."
     },
     "CS": {
       "V7.5": "Jazyková konfigurace projektu: seznam 206 jazyků / výchozí jazyk / povolené jazyky, vkládání lang a dir do generovaného kódu",
       "V8.0": "i18n celé stránky: rámec 206 jazyků (8 profesionálně přeloženo), dvoustopá i18n s kontraktem nulového rozdílu při OFF",
       "V8.1": "Posílení kvality: offline kontraktní harness (9 režimů, nulový rozdíl OFF) + unit testy i18n-core + CI brána + čestné rozdělení README (rámec 206 / přeloženo 8) + check-locale-keys.mjs",
       "V9.0": "Generované artefakty modernizovány na Vue 3 + Element Plus + Vite; ověřeno za běhu (40/40 assertion, úspěšný vite build, 14 snímků vč. ar-SA RTL); opraveny 3 běhové defekty",
-      "V9.1": "Refaktoring pro udržovatelnost · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktoring pro udržovatelnost · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Kvalita generování a udržovatelnost: náhled dopadu šablon a child_save_mode (0 = úplné nahrazení, 1 = třícestné sloučení; mode 0 bajtově identický), se snímky S8 a diffem S9 v centru ověřování a CI branou.",
+      "V9.19": "Modelování ve velkém: dávkový DDL při confirm (výchozí 50, 7 jednotkových testů), pokrytí i18n 12 jazyků × 60 klíčů na 100 % (čtyři nové překlady) a prototyp tržiště šablon s externím adresářem a importem/exportem ZIP/JSON."
     },
     "SK": {
       "V7.5": "Jazyková konfigurácia projektu: zoznam 206 jazykov / predvolený jazyk / povolené jazyky, vkladanie lang a dir do generovaného kódu",
       "V8.0": "i18n celej stránky: rámec 206 jazykov (8 profesionálne preložených), dvojstopňová i18n s kontraktom nulového rozdielu pri OFF",
       "V8.1": "Posilnenie kvality: offline kontraktný harness (9 režimov, nulový rozdiel OFF) + unit testy i18n-core + CI brána + úprimné rozdelenie README (rámec 206 / preložené 8) + check-locale-keys.mjs",
       "V9.0": "Generované artefakty modernizované na Vue 3 + Element Plus + Vite; overené za behu (40/40 assertion, úspešný vite build, 14 snímok vrátane ar-SA RTL); opravené 3 behové defekty",
-      "V9.1": "Refaktoring pre udržateľnosť · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktoring pre udržateľnosť · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Kvalita generovania a udržiavateľnosť: náhľad dopadu šablón a child_save_mode (0 = úplné nahradenie, 1 = trojcestné zlúčenie; mode 0 bajtovo identický), so snímkami S8 a diffom S9 v centre overovania a CI bránou.",
+      "V9.19": "Modelovanie vo veľkom: dávkový DDL pri confirm (predvolené 50, 7 jednotkových testov), pokrytie i18n 12 jazykov × 60 kľúčov na 100 % (štyri nové preklady) a prototyp trhoviska šablón s externým adresárom a importom/exportom ZIP/JSON."
     },
     "HR": {
       "V7.5": "Jezična konfiguracija projekta: popis 206 jezika / zadani jezik / omogućeni jezici, ubacivanje lang i dir u generirani kod",
       "V8.0": "i18n cijele stranice: okvir 206 jezika (8 stručno prevedenih), dvokolosiječna i18n s ugovorom nulte razlike u OFF",
       "V8.1": "Očvršćivanje kvalitete: offline ugovorni harness (9 načina, nulta razlika OFF) + jedinični testovi i18n-core + CI kapija + poštena podjela README (okvir 206 / prevedenih 8) + check-locale-keys.mjs",
       "V9.0": "Generirani artefakti modernizirani na Vue 3 + Element Plus + Vite; provjereno u izvođenju (40/40 tvrdnji, uspješan vite build, 14 snimki zaslona incl. ar-SA RTL); popravljene 3 izvedbene greške",
-      "V9.1": "Refaktoriranje održivosti · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktoriranje održivosti · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Kvaliteta generiranja i održivost: pregled utjecaja predložaka i child_save_mode (0 = potpuna zamjena, 1 = trostruko spajanje; mode 0 bajtno identičan), sa S8 snimkama i S9 diffom u centru za provjeru i CI vratima.",
+      "V9.19": "Modeliranje na velikoj skali: paketni DDL pri confirm (zadano 50, 7 jediničnih testova), i18n pokrivenost 12 jezika × 60 ključeva na 100 % (četiri nova prijevoda) i prototip tržnice predložaka s vanjskim direktorijem te ZIP/JSON uvozom i izvozom."
     },
     "RO": {
       "V7.5": "Configurarea lingvistică a proiectului: lista de 206 limbi / limba implicită / limbile activate, injectarea lang și dir în codul generat",
       "V8.0": "i18n pe pagina întreagă: cadru cu 206 limbi (8 traduse profesional), i18n pe două căi cu contract de diferență zero în OFF",
       "V8.1": "Întărirea calității: harness offline de contract (9 moduri, diferență zero OFF) + teste unitare i18n-core + poartă CI + împărțire onestă în README (cadru 206 / traduse 8) + check-locale-keys.mjs",
       "V9.0": "Artefactele generate modernizate la Vue 3 + Element Plus + Vite; verificate la runtime (40/40 aserțiuni, vite build reușit, 14 capturi incl. ar-SA RTL); 3 defecte de runtime reparate",
-      "V9.1": "Refactorizare pentru mentenabilitate · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refactorizare pentru mentenabilitate · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Calitatea generării și mentenabilitate: previzualizarea impactului șabloanelor și child_save_mode (0 = înlocuire completă, 1 = îmbinare în trei căi; mode 0 identic octet cu octet), cu capturi S8 și diff S9 în centrul de verificare și poarta CI.",
+      "V9.19": "Modelare la scară: DDL în loturi la confirm (implicit 50, 7 teste unitare), acoperire i18n 12 limbi × 60 chei la 100 % (patru traduceri noi) și prototip de piață de șabloane cu director extern și import/export ZIP/JSON."
     },
     "BG": {
       "V7.5": "Езикова конфигурация на проекта: списък от 206 езика / език по подразбиране / включени езици, вмъкване на lang и dir в генерирания код",
       "V8.0": "i18n на цялата страница: рамка от 206 езика (8 професионално преведени), двупътна i18n с договор за нулева разлика при OFF",
       "V8.1": "Втвърдяване на качеството: офлайн стенд за контракт (9 режима, нулева разлика OFF) + unit тестове i18n-core + CI порта + честно разделяне в README (рамка 206 / преведени 8) + check-locale-keys.mjs",
       "V9.0": "Генерираните артефакти модернизирани към Vue 3 + Element Plus + Vite; проверено по време на изпълнение (40/40 проверки, успешен vite build, 14 екранни снимки incl. ar-SA RTL); коригирани 3 runtime дефекта",
-      "V9.1": "Рефакторинг за по-лесна поддръжка · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Рефакторинг за по-лесна поддръжка · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Качество на генериране и поддръжка: преглед на влиянието на шаблоните и child_save_mode (0 = пълна замяна, 1 = трипосочно сливане; mode 0 — байтово идентично), със S8 снимки и S9 diff в центъра за проверка и CI gate.",
+      "V9.19": "Моделиране в мащаб: пакетен DDL при confirm (по подразбиране 50, 7 unit теста), i18n покритие 12 езика × 60 ключа на 100 % (четири нови превода) и прототип на пазар за шаблони с външна директория и ZIP/JSON импорт и експорт."
     },
     "UK": {
       "V7.5": "Мовна конфігурація проєкту: список 206 мов / типова мова / увімкнені мови, вставлення lang і dir у згенерований код",
       "V8.0": "Повносторінкова i18n: каркас на 206 мов (8 професійно перекладено), двоконтурна i18n з контрактом нульової різниці в режимі OFF",
       "V8.1": "Зміцнення якості: офлайн-стенд контракту (9 режимів, нульова різниця OFF) + юніт-тести i18n-core + CI-шлюз + чесний розподіл у README (каркас 206 / перекладено 8) + check-locale-keys.mjs",
       "V9.0": "Згенеровані артефакти переведено на Vue 3 + Element Plus + Vite; перевірено в рантаймі (40/40 перевірок, успішний vite build, 14 скріншотів incl. ar-SA RTL); виправлено 3 рантайм-дефекти",
-      "V9.1": "Рефакторинг для зручності супроводу · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Рефакторинг для зручності супроводу · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Якість генерації та супроводжуваність: перегляд впливу шаблонів і child_save_mode (0 = повна заміна, 1 = тристороннє злиття; mode 0 — побайтово ідентично), а також S8-скриншоти й S9-diff у центрі верифікації з CI-гейтом.",
+      "V9.19": "Масштабне моделювання: пакетний DDL під час confirm (типово 50, 7 модульних тестів), покриття i18n 12 мов × 60 ключів на 100 % (чотири нові переклади) і прототип ринку шаблонів із зовнішнім каталогом та імпортом/експортом ZIP/JSON."
     },
     "TR": {
       "V7.5": "Proje dil yapılandırması: 206 dillik liste / varsayılan dil / etkin diller, üretilen koda lang ve dir enjeksiyonu",
       "V8.0": "Tam sayfa i18n: 206 dilli çerçeve (8'i profesyonelce çevrildi), OFF sıfır fark sözleşmeli çift hatlı i18n",
       "V8.1": "Kalite sertleştirme: çevrimdışı sözleşme düzeneği (9 mod, OFF sıfır fark) + i18n-core birim testleri + CI kapısı + dürüst README ayrımı (çerçeve 206 / çevrili 8) + check-locale-keys.mjs",
       "V9.0": "Üretilen artefaktlar Vue 3 + Element Plus + Vite'a modernize edildi; çalışma zamanında doğrulandı (40/40 iddia, başarılı vite build, ar-SA RTL dahil 14 ekran görüntüsü); 3 çalışma zamanı hatası giderildi",
-      "V9.1": "Bakım yapılabilirlik refaktörü · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Bakım yapılabilirlik refaktörü · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Üretim kalitesi ve sürdürülebilirlik: şablon etki önizlemesi ve child_save_mode (0 = tam değiştirme, 1 = üç yönlü birleştirme; mode 0 bayt düzeyinde aynı), ayrıca S8 ekran görüntüleri ve S9 dizin diff'i doğrulama merkezinde ve CI kapısında.",
+      "V9.19": "Ölçekli modelleme: confirm'de toplu DDL (varsayılan 50, 7 birim testi), i18n kapsamı 12 dil × 60 anahtar %100 (dört yeni çeviri) ve harici dizin ile ZIP/JSON içe/dışa aktarma sunan şablon pazarı prototipi."
     },
     "EL": {
       "V7.5": "Γλωσσική διαμόρφωση έργου: λίστα 206 γλωσσών / προεπιλεγμένη γλώσσα / ενεργοποιημένες γλώσσες, έγχυση lang και dir στον παραγόμενο κώδικα",
       "V8.0": "i18n πλήρους σελίδας: πλαίσιο 206 γλωσσών (8 επαγγελματικά μεταφρασμένες), i18n δύο τροχιών με σύμβαση μηδενικής διαφοράς σε OFF",
       "V8.1": "Ενίσχυση ποιότητας: offline harness συμβολαίου (9 λειτουργίες, μηδενική διαφορά OFF) + unit tests i18n-core + πύλη CI + ειλικρινής διαίρεση README (πλαίσιο 206 / μεταφρασμένες 8) + check-locale-keys.mjs",
       "V9.0": "Τα παραγόμενα τεχνουργήματα εκσυγχρονίστηκαν σε Vue 3 + Element Plus + Vite; επαληθευμένα κατά την εκτέλεση (40/40 ισχυρισμοί, επιτυχές vite build, 14 στιγμιότυπα incl. ar-SA RTL); διορθώθηκαν 3 σφάλματα εκτέλεσης",
-      "V9.1": "Αναδιάρθρωση συντηρησιμότητας · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Αναδιάρθρωση συντηρησιμότητας · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Ποιότητα παραγωγής και συντηρησιμότητα: προεπισκόπηση επίδρασης προτύπων και child_save_mode (0 = πλήρης αντικατάσταση, 1 = τρισδιάστατη συγχώνευση· mode 0 byte-identical), με S8 στιγμιότυπα και S9 diff στο κέντρο επαλήθευσης και στην πύλη CI.",
+      "V9.19": "Μοντελοποίηση σε κλίμακα: παρτίδες DDL στο confirm (προεπιλογή 50, 7 unit tests), κάλυψη i18n 12 γλώσσες × 60 κλειδιά στο 100% (τέσσερις νέες μεταφράσεις) και πρωτότυπο αγοράς προτύπων με εξωτερικό κατάλογο και εισαγωγή/εξαγωγή ZIP/JSON."
     },
     "HE": {
       "V7.5": "תצורת שפת הפרויקט: רשימת 206 שפות / שפת ברירת מחדל / שפות מופעלות, הזרקת lang ו-dir לקוד שנוצר",
       "V8.0": "i18n לעמוד מלא: מסגרת של 206 שפות (8 מתורגמות מקצועית), i18n דו-מסלולית עם חוזה אפס הפרש ב-OFF",
       "V8.1": "חיזוק איכות: מנגנון חוזה אופליין (9 מצבים, אפס הפרש ב-OFF) + בדיקות יחידה i18n-core + שער CI + פיצול כן ב-README (מסגרת 206 / מתורגמות 8) + check-locale-keys.mjs",
       "V9.0": "ה-artifacts שנוצרו שודרגו ל-Vue 3 + Element Plus + Vite; אומתו בזמן ריצה (40/40 טענות, vite build מוצלח, 14 צילומי מסך incl. ar-SA RTL); תוקנו 3 באגים בזמן ריצה",
-      "V9.1": "רפקטור לתחזוקתיות · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "רפקטור לתחזוקתיות · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "איכות יצירה ותחזוקתיות: תצוגת השפעת תבניות ו-child_save_mode (0 = החלפה מלאה, 1 = מיזוג תלת-כיווני; mode 0 זהה בית-בית), עם צילומי S8 ו-diff S9 במרכז האימות ובשער ה-CI.",
+      "V9.19": "מידול בקנה מידה: DDL בקבוצות ב-confirm (ברירת מחדל 50, 7 בדיקות יחידה), כיסוי i18n של 12 שפות × 60 מפתחות ב-100% (ארבעה תרגומים חדשים) ואב-טיפוס של שוק תבניות עם ספרייה חיצונית וייבוא/ייצוא ZIP/JSON."
     },
     "FA": {
       "V7.5": "پیکربندی زبان پروژه: فهرست ۲۰۶ زبان / زبان پیش‌فرض / زبان‌های فعال، تزریق lang و dir در خروجی تولیدی",
       "V8.0": "i18n تمام‌صفحه: چارچوب ۲۰۶ زبانه (۸ زبان ترجمه حرفه‌ای)، i18n دورخط با قرارداد صفر دیف در OFF",
       "V8.1": "سخت‌سازی کیفیت: هارنس قرارداد آفلاین (۹ حالت، صفر دیف OFF) + تست واحد i18n-core + گیت CI + تفکیک صادقانه README (چارچوب ۲۰۶ / ترجمه‌شده ۸) + check-locale-keys.mjs",
       "V9.0": "خروجی‌های تولیدی به Vue 3 + Element Plus + Vite مدرن شدند؛ در زمان اجرا راستی‌آزمایی شد (۴۰/۴۰ ادعا، vite build موفق، ۱۴ اسکرین‌شات شامل ar-SA RTL)؛ ۳ عیب زمان اجرا برطرف شد",
-      "V9.1": "بازآرایی برای نگهداریپذیری · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "بازآرایی برای نگهداریپذیری · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "کیفیت تولید و نگهداشت‌پذیری: پیش‌نمایش تأثیر قالب‌ها و child_save_mode (0 = جایگزینی کامل، 1 = ادغام سه‌طرفه؛ mode 0 بایت‌به‌بایت یکسان)، همراه با اسکرین‌شات‌های S8 و diff دایرکتوری S9 در مرکز اعتبارسنجی و گیت CI.",
+      "V9.19": "مدل‌سازی در مقیاس: DDL دسته‌ای در confirm (پیش‌فرض 50، ۷ آزمون واحد)، پوشش i18n ۱۲ زبان × ۶۰ کلید به ۱۰۰٪ (چهار ترجمه جدید) و نمونه اولیه بازار قالب با پوشه خارجی و ورود/خروج ZIP/JSON."
     },
     "UR": {
       "V7.5": "پروجیکٹ کی زبان کنفیگریشن: ۲۰۶ زبانوں کی فہرست / ڈیفالٹ زبان / فعال زبانیں، تیار شدہ کوڈ میں lang اور dir کا داخلہ",
       "V8.0": "مکمل صفحہ i18n: ۲۰۶ زبانوں کا فریم ورک (۸ پیشہ ورانہ ترجمہ شدہ)، OFF صفر فرق معاہدے کے ساتھ دوہرا i18n",
       "V8.1": "معیار کی مضبوطی: آف لائن معاہدہ ہارنس (۹ موڈ، OFF صفر فرق) + i18n-core یونٹ ٹیسٹ + CI گیٹ + ایماندار README تقسیم (فریم ورک ۲۰۶ / ترجمہ شدہ ۸) + check-locale-keys.mjs",
       "V9.0": "تیار شدہ artifacts کو Vue 3 + Element Plus + Vite پر جدید بنایا گیا؛ رن ٹائم پر تصدیق شدہ (۴۰/۴۰، کامیاب vite build، ۱۴ اسکرین شاٹس بشمول ar-SA RTL)؛ ۳ رن ٹائم خرابیاں درست کی گئیں",
-      "V9.1": "دیکھ بھال کے لیے ری فیکٹرنگ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "دیکھ بھال کے لیے ری فیکٹرنگ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "تیاری کا معیار اور دیکھ بھال: ٹیمپلیٹ اثر کا پیش منظر اور child_save_mode (0 = مکمل تبدیلی، 1 = سہ رخی ضم؛ mode 0 بائٹ بہ بائٹ یکساں)، نیز S8 اسکرین شاٹس اور S9 ڈائریکٹری diff توثیقی مرکز اور CI گیٹ میں۔",
+      "V9.19": "بڑے پیمانے پر ماڈلنگ: confirm پر بیچ DDL (ڈیفالٹ 50، 7 یونٹ ٹیسٹ)، i18n کوریج 12 زبانیں × 60 کلیدیں 100% (چار نئے تراجم) اور بیرونی ڈائریکٹری کے ساتھ ZIP/JSON درآمد/برآمد والا ٹیمپلیٹ مارکیٹ کا نمونہ۔"
     },
     "UR_ROMA": {
       "V7.5": "Project ki zubaan configuration: 206 zabanoon ki list / default zubaan / enabled zabanein, generated code mein lang aur dir injection",
       "V8.0": "Full-page i18n: 206 zabanoon ka framework (8 professional tarjuma shuda), OFF zero-diff contract ke saath dual-track i18n",
       "V8.1": "Quality hardening: offline contract harness (9 modes, OFF zero-diff) + i18n-core unit tests + CI gate + imandaar README taqseem (framework 206 / tarjuma 8) + check-locale-keys.mjs",
       "V9.0": "Generated artifacts ko Vue 3 + Element Plus + Vite par modernize kiya; runtime par verify shuda (40/40 assertions, kamyab vite build, 14 screenshots incl. ar-SA RTL); 3 runtime defects theek kiye",
-      "V9.1": "Dekh bhaal ke liye refactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Dekh bhaal ke liye refactoring · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Tayyari ka miyar aur maintainability: template impact preview aur child_save_mode (0 = mukammal tabdeeli, 1 = teen-tarfa merge; mode 0 byte-by-byte wahi), sath hi S8 screenshots aur S9 directory diff verification center aur CI gate mein.",
+      "V9.19": "Bade paimane par modeling: confirm par batch DDL (default 50, 7 unit tests), i18n coverage 12 zubanein × 60 keys 100% (chaar naye tarjumay) aur external directory ke sath ZIP/JSON import/export wala template market prototype."
     },
     "HI": {
       "V7.5": "प्रोजेक्ट भाषा कॉन्फ़िगरेशन: 206 भाषाओं की सूची / डिफ़ॉल्ट भाषा / सक्षम भाषाएँ, जनरेट कोड में lang और dir इंजेक्शन",
       "V8.0": "पूर्ण पेज i18n: 206 भाषाओं का फ्रेमवर्क (8 पेशेवर रूप से अनूदित), OFF शून्य-डिफ़ संधि वाली दोहरी-ट्रैक i18n",
       "V8.1": "गुणवत्ता सुदृढ़ीकरण: ऑफ़लाइन अनुबंध हार्नेस (9 मोड, OFF शून्य-डिफ़) + i18n-core यूनिट टेस्ट + CI गेट + ईमानदार README विभाजन (फ्रेमवर्क 206 / अनूदित 8) + check-locale-keys.mjs",
       "V9.0": "जनरेट किए गए आर्टिफैक्ट्स Vue 3 + Element Plus + Vite पर आधुनिक किए गए; रनटाइम पर सत्यापित (40/40 अभिकथन, सफल vite build, ar-SA RTL सहित 14 स्क्रीनशॉट); 3 रनटाइम दोष ठीक किए गए",
-      "V9.1": "रखरखाव-योग्यता हेतु रीफ़ैक्टरिंग · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "रखरखाव-योग्यता हेतु रीफ़ैक्टरिंग · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "जनरेशन गुणवत्ता और रखरखाव: टेम्पलेट प्रभाव पूर्वावलोकन और child_save_mode (0 = पूर्ण प्रतिस्थापन, 1 = तीन-तरफ़ा विलय; mode 0 बाइट-दर-बाइट समान), साथ ही S8 स्क्रीनशॉट और S9 निर्देशिका diff सत्यापन केंद्र और CI गेट में।",
+      "V9.19": "बड़े पैमाने पर मॉडलिंग: confirm पर बैच DDL (डिफ़ॉल्ट 50, 7 यूनिट परीक्षण), i18n कवरेज 12 भाषाएँ × 60 कुंजियाँ 100% (चार नए अनुवाद) और बाहरी निर्देशिका के साथ ZIP/JSON आयात/निर्यात वाला टेम्पलेट मार्केट प्रारूप।"
     },
     "BN": {
       "V7.5": "প্রজেক্ট ভাষা কনফিগারেশন: ২০৬টি ভাষার তালিকা / ডিফল্ট ভাষা / সক্রিয় ভাষা, জেনারেট করা কোডে lang ও dir ইনজেকশন",
       "V8.0": "সম্পূর্ণ পেজ i18n: ২০৬ ভাষার ফ্রেমওয়ার্ক (৮টি পেশাদারভাবে অনূদিত), OFF শূন্য-ডিফ চুক্তিসহ দ্বৈত-ট্র্যাক i18n",
       "V8.1": "মানোন্নয়ন: অফলাইন চুক্তি হার্নেস (৯ মোড, OFF শূন্য-ডিফ) + i18n-core ইউনিট টেস্ট + CI গেট + সৎ README বিভাজন (ফ্রেমওয়ার্ক ২০৬ / অনূদিত ৮) + check-locale-keys.mjs",
       "V9.0": "জেনারেট করা আর্টিফ্যাক্ট Vue 3 + Element Plus + Vite-এ আধুনিকীকৃত; রানটাইমে যাচাইকৃত (৪০/৪০ অ্যাসারশন, সফল vite build, ar-SA RTL সহ ১৪টি স্ক্রিনশট); ৩টি রানটাইম ত্রুটি সংশোধিত",
-      "V9.1": "রক্ষণাবেক্ষণযোগ্যতার রিফ্যাক্টরিং · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "রক্ষণাবেক্ষণযোগ্যতার রিফ্যাক্টরিং · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "জেনারেশন মান ও রক্ষণাবেক্ষণ: টেমপ্লেট প্রভাব প্রিভিউ ও child_save_mode (0 = সম্পূর্ণ প্রতিস্থাপন, 1 = ত্রিমুখী মার্জ; mode 0 বাইট-প্রতি-বাইট অপরিবর্তিত), সাথে S8 স্ক্রিনশট ও S9 ডিরেক্টরি diff যাচাই কেন্দ্র ও CI গেটে।",
+      "V9.19": "বৃহৎ পরিসরে মডেলিং: confirm-এ ব্যাচ DDL (ডিফল্ট 50, 7 ইউনিট টেস্ট), i18n কভারেজ 12 ভাষা × 60 কী 100% (চারটি নতুন অনুবাদ) এবং বাহ্যিক ডিরেক্টরিসহ ZIP/JSON আমদানি/রপ্তানি সমর্থিত টেমপ্লেট মার্কেট প্রোটোটাইপ।"
     },
     "TA": {
       "V7.5": "திட்ட மொழி அமைப்பு: 206 மொழிகள் பட்டியல் / இயல்புநிலை மொழி / இயக்கப்பட்ட மொழிகள், உருவாக்கப்பட்ட குறியீட்டில் lang & dir செலுத்துதல்",
       "V8.0": "முழு பக்க i18n: 206 மொழி கட்டமைப்பு (8 தொழில்முறை மொழிபெயர்ப்பு), OFF பூஜ்ஜிய-வேறுபாடு ஒப்பந்தத்துடன் இருவழி i18n",
       "V8.1": "தர வலுவூட்டல்: ஆஃப்லைன் ஒப்பந்த ஹார்னஸ் (9 முறைகள், OFF பூஜ்ஜிய-வேறுபாடு) + i18n-core யூனிட் சோதனைகள் + CI கேட் + நேர்மையான README பிரிவு (கட்டமைப்பு 206 / மொழிபெயர்ப்பு 8) + check-locale-keys.mjs",
       "V9.0": "உருவாக்கப்பட்ட ஆர்டிஃபேக்ட்கள் Vue 3 + Element Plus + Vite ஆக நவீனமாக்கப்பட்டன; இயக்க நேரத்தில் சரிபார்க்கப்பட்டது (40/40 உறுதிப்பாடுகள், வெற்றிகரமான vite build, ar-SA RTL உட்பட 14 ஸ்கிரீன்ஷாட்கள்); 3 இயக்க குறைபாடுகள் சரிசெய்யப்பட்டன",
-      "V9.1": "பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "பராமரிப்புத்திறன் மறுசீரமைப்பு · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "உருவாக்கத் தரம் மற்றும் பராமரிப்பு: டெம்ப்ளேட் தாக்கக் காட்சி மற்றும் child_save_mode (0 = முழு மாற்று, 1 = மூவழி இணைப்பு; mode 0 பைட் அளவில் அப்படியே), S8 ஸ்கிரீன்ஷாட் மற்றும் S9 அடைவு diff சரிபார்ப்பு மையம் மற்றும் CI வாயிலில்.",
+      "V9.19": "பெரிய அளவிலான மாடலிங்: confirm இல் தொகுதி DDL (இயல்புநிலை 50, 7 அலகு சோதனைகள்), i18n கவரேஜ் 12 மொழிகள் × 60 விசைகள் 100% (நான்கு புதிய மொழிபெயர்ப்புகள்) மற்றும் வெளிப்புற அடைவுடன் ZIP/JSON இறக்குமதி/ஏற்றுமதி கொண்ட டெம்ப்ளேட் சந்தை முன்மாதிரி."
     },
     "TE": {
       "V7.5": "ప్రాజెక్ట్ భాష కాన్ఫిగరేషన్: 206 భాషల జాబితా / డిఫాల్ట్ భాష / ప్రారంభించిన భాషలు, జనరేట్ చేసిన కోడ్‌లో lang & dir ఇన్జెక్షన్",
       "V8.0": "పూర్తి పేజీ i18n: 206 భాషల ఫ్రేమ్‌వర్క్ (8 వృత్తిపరంగా అనువదించబడింది), OFF జీరో-డిఫ్ ఒప్పందంతో ద్విమార్గ i18n",
       "V8.1": "నాణ్యత సుధారణ: ఆఫ్‌లైన్ ఒప్పంద హార్నెస్ (9 మోడ్‌లు, OFF జీరో-డిఫ్) + i18n-core యూనిట్ టెస్ట్‌లు + CI గేట్ + నిజాయితీ README విభజన (ఫ్రేమ్‌వర్క్ 206 / అనువదించిన 8) + check-locale-keys.mjs",
       "V9.0": "జనరేట్ చేసిన ఆర్టిఫ్యాక్ట్‌లు Vue 3 + Element Plus + Vite కు ఆధునీకరించబడ్డాయి; రన్‌టైమ్‌లో ధృవీకరించబడింది (40/40 అసర్షన్లు, విజయవంతమైన vite build, ar-SA RTL తో సహా 14 స్క్రీన్‌షాట్‌లు); 3 రన్‌టైమ్ లోపాలు సరిచేయబడ్డాయి",
-      "V9.1": "నిర్వహణ సౌలభ్య పునర్నిర్మాణం · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "నిర్వహణ సౌలభ్య పునర్నిర్మాణం · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "జనరేషన్ నాణ్యత మరియు నిర్వహణ: టెంప్లేట్ ప్రభావ పూర్వదర్శనం మరియు child_save_mode (0 = పూర్తి భర్తీ, 1 = త్రిముఖ కలయిక; mode 0 బైట్-బైట్ సమానం), S8 స్క్రీన్షాట్లు మరియు S9 డైరెక్టరీ diff ధృవీకరణ కేంద్రం మరియు CI గేట్లో.",
+      "V9.19": "పెద్ద ఎత్తున మోడలింగ్: confirm వద్ద బ్యాచ్ DDL (డిఫాల్ట్ 50, 7 యూనిట్ పరీక్షలు), i18n కవరేజ్ 12 భాషలు × 60 కీలు 100% (నాలుగు కొత్త అనువాదాలు) మరియు బాహ్య డైరెక్టరీతో ZIP/JSON దిగుమతి/ఎగుమతి ఉన్న టెంప్లేట్ మార్కెట్ నమూనా."
     },
     "ML": {
       "V7.5": "പ്രോജക്റ്റ് ഭാഷ കോൺഫിഗറേഷൻ: 206 ഭാഷകളുടെ പട്ടിക / സ്ഥിര ഭാഷ / പ്രവർത്തനക്ഷമമാക്കിയ ഭാഷകൾ, ജനറേറ്റ് ചെയ്ത കോഡിൽ lang & dir ഇൻജക്ഷൻ",
       "V8.0": "പൂർണ്ണ പേജ് i18n: 206 ഭാഷാ ഫ്രെയിംവർക്ക് (8 പ്രൊഫഷണൽ വിവർത്തനം), OFF സീറോ-ഡിഫ് കരാറുള്ള ഇരട്ട-ട്രാക്ക് i18n",
       "V8.1": "ഗുണനിലവാര ശക്തിപ്പെടുത്തൽ: ഓഫ്‌ലൈൻ കരാർ ഹാർനസ് (9 മോഡുകൾ, OFF സീറോ-ഡിഫ്) + i18n-core യൂണിറ്റ് ടെസ്റ്റുകൾ + CI ഗേറ്റ് + സത്യസന്ധമായ README വിഭജനം (ഫ്രെയിംവർക്ക് 206 / വിവർത്തനം 8) + check-locale-keys.mjs",
       "V9.0": "ജനറേറ്റ് ചെയ്ത ആർട്ടിഫാക്ടുകൾ Vue 3 + Element Plus + Vite ലേക്ക് ആധുനികവൽക്കരിച്ചു; റൺടൈമിൽ സ്ഥിരീകരിച്ചു (40/40 അസെർഷനുകൾ, വിജയകരമായ vite build, ar-SA RTL ഉൾപ്പെടെ 14 സ്ക്രീൻഷോട്ടുകൾ); 3 റൺടൈം വൈകല്യങ്ങൾ ശരിയാക്കി",
-      "V9.1": "പരിപാലനക്ഷമത പുനഃക്രമീകരണം · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "പരിപാലനക്ഷമത പുനഃക്രമീകരണം · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "നിർമ്മാണ ഗുണനിലവാരവും പരിപാലനവും: ടെംപ്ലേറ്റ് സ്വാധീന പ്രിവ്യൂവും child_save_mode-ഉം (0 = പൂർണ്ണ മാറ്റിസ്ഥാപനം, 1 = ത്രിവഴി ലയനം; mode 0 ബൈറ്റ്-ബൈറ്റ് സമാനം), S8 സ്ക്രീൻഷോട്ടുകളും S9 ഡയറക്ടറി diff-ഉം പരിശോധനാ കേന്ദ്രത്തിലും CI ഗേറ്റിലും.",
+      "V9.19": "വലിയ തോതിലുള്ള മോഡലിംഗ്: confirm-ൽ ബാച്ച് DDL (സ്ഥിരസ്ഥിതി 50, 7 യൂണിറ്റ് ടെസ്റ്റുകൾ), i18n കവറേജ് 12 ഭാഷകൾ × 60 കീകൾ 100% (നാല് പുതിയ വിവർത്തനങ്ങൾ), ബാഹ്യ ഡയറക്ടറിയോടെ ZIP/JSON ഇംപോർട്ട്/എക്സ്പോർട്ടുള്ള ടെംപ്ലേറ്റ് മാർക്കറ്റ് മാതൃക."
     },
     "ID": {
       "V7.5": "Konfigurasi bahasa proyek: daftar 206 bahasa / bahasa default / bahasa yang diaktifkan, injeksi lang & dir ke hasil yang dibuat",
       "V8.0": "i18n halaman penuh: framework 206 bahasa (8 diterjemahkan profesional), i18n jalur ganda dengan kontrak zero-diff saat OFF",
       "V8.1": "Penguatan kualitas: harness kontrak offline (9 mode, zero-diff OFF) + unit test i18n-core + gate CI + pembagian README yang jujur (framework 206 / diterjemahkan 8) + check-locale-keys.mjs",
       "V9.0": "Artefak yang dihasilkan dimodernisasi ke Vue 3 + Element Plus + Vite; terverifikasi saat runtime (40/40 assertion, vite build sukses, 14 tangkapan layar incl. ar-SA RTL); 3 defect runtime diperbaiki",
-      "V9.1": "Refaktor untuk kemudahan pemeliharaan · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktor untuk kemudahan pemeliharaan · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Kualitas generasi dan kemudahan perawatan: pratinjau dampak template dan child_save_mode (0 = penggantian penuh, 1 = penggabungan tiga arah; mode 0 identik byte), serta screenshot S8 dan diff S9 di pusat verifikasi dan gate CI.",
+      "V9.19": "Pemodelan berskala: DDL batch saat confirm (default 50, 7 unit test), cakupan i18n 12 bahasa × 60 kunci 100% (empat terjemahan baru) dan prototipe pasar template dengan direktori eksternal serta impor/ekspor ZIP/JSON."
     },
     "TH": {
       "V7.5": "การตั้งค่าภาษาของโปรเจกต์: รายการ 206 ภาษา / ภาษาเริ่มต้น / ภาษาที่เปิดใช้, ฉีด lang และ dir ลงในโค้ดที่สร้าง",
       "V8.0": "i18n ทั้งหน้า: เฟรมเวิร์ก 206 ภาษา (แปลมืออาชีพ 8 ภาษา), i18n สองแทร็กพร้อมสัญญา zero-diff เมื่อ OFF",
       "V8.1": "เสริมความแข็งแกร่งด้านคุณภาพ: offline contract harness (9 โหมด, OFF zero-diff) + unit test i18n-core + CI gate + แบ่ง README อย่างตรงไปตรงมา (เฟรมเวิร์ก 206 / แปลแล้ว 8) + check-locale-keys.mjs",
       "V9.0": "สิ่งที่สร้างได้รับการปรับให้ทันสมัยเป็น Vue 3 + Element Plus + Vite; ตรวจสอบขณะรันจริง (40/40 assertions, vite build สำเร็จ, ภาพหน้าจอ 14 รูป รวม ar-SA RTL); แก้ไขข้อบกพร่อง runtime 3 จุด",
-      "V9.1": "การปรับโครงสร้างเพื่อความสามารถในการดูแลรักษา · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "การปรับโครงสร้างเพื่อความสามารถในการดูแลรักษา · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "คุณภาพการสร้างและความง่ายในการบำรุงรักษา: พรีวิวผลกระทบเทมเพลตและ child_save_mode (0 = แทนที่ทั้งหมด, 1 = รวมสามทาง; mode 0 เหมือนเดิมทุกไบต์) พร้อมภาพหน้าจอ S8 และ diff ไดเรกทอรี S9 ในศูนย์ตรวจสอบและ CI gate",
+      "V9.19": "การสร้างโมเดลขนาดใหญ่: DDL แบบแบตช์ตอน confirm (ค่าเริ่มต้น 50, 7 ยูนิตเทสต์) ความครอบคลุม i18n 12 ภาษา × 60 คีย์ 100% (คำแปลใหม่สี่ภาษา) และต้นแบบตลาดเทมเพลตที่มีไดเรกทอรีภายนอกพร้อมนำเข้า/ส่งออก ZIP/JSON"
     },
     "VI": {
       "V7.5": "Cấu hình ngôn ngữ dự án: danh sách 206 ngôn ngữ / ngôn ngữ mặc định / các ngôn ngữ bật, chèn lang & dir vào mã được tạo",
       "V8.0": "i18n toàn trang: khung 206 ngôn ngữ (8 bản dịch chuyên nghiệp), i18n hai luồng với hợp đồng zero-diff khi OFF",
       "V8.1": "Tăng cường chất lượng: harness hợp đồng offline (9 chế độ, zero-diff OFF) + unit test i18n-core + cổng CI + phân tách README trung thực (khung 206 / đã dịch 8) + check-locale-keys.mjs",
       "V9.0": "Artifact được tạo hiện đại hóa lên Vue 3 + Element Plus + Vite; đã xác minh lúc runtime (40/40 assertion, vite build thành công, 14 ảnh chụp incl. ar-SA RTL); sửa 3 lỗi runtime",
-      "V9.1": "Tái cấu trúc để dễ bảo trì · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Tái cấu trúc để dễ bảo trì · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Chất lượng sinh mã và bảo trì: xem trước ảnh hưởng mẫu và child_save_mode (0 = thay thế toàn bộ, 1 = hợp nhất ba chiều; mode 0 giữ nguyên từng byte), cùng ảnh chụp S8 và diff thư mục S9 trong trung tâm kiểm định và cổng CI.",
+      "V9.19": "Mô hình hóa quy mô lớn: DDL theo lô khi confirm (mặc định 50, 7 unit test), độ phủ i18n 12 ngôn ngữ × 60 khóa đạt 100% (bốn bản dịch mới) và nguyên mẫu chợ mẫu với thư mục ngoài cùng nhập/xuất ZIP/JSON."
     },
     "AR": {
       "V7.5": "إعداد لغة المشروع: قائمة 206 لغة / اللغة الافتراضية / اللغات المفعلة، حقن lang و dir في المولَّد",
       "V8.0": "تدويل كامل الصفحة: إطار 206 لغة (8 مترجمة احترافياً)، i18n ثنائي المسار مع عقد فرق صفري عند OFF",
       "V8.1": "تحصين الجودة: حزام عقد offline (9 أوضاع، فرق صفري OFF) + اختبارات وحدة i18n-core + بوابة CI + تقسيم صادق في README (إطار 206 / مترجمة 8) + check-locale-keys.mjs",
       "V9.0": "تحديث المخرجات المولدة إلى Vue 3 + Element Plus + Vite؛ تم التحقق وقت التشغيل (40/40 تأكيدات، vite build ناجح، 14 لقطة شاشة تشمل ar-SA RTL)؛ إصلاح 3 عيوب تشغيل",
-      "V9.1": "إعادة هيكلة لقابلية الصيانة · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "إعادة هيكلة لقابلية الصيانة · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "جودة التوليد وقابلية الصيانة: معاينة أثر القوالب وchild_save_mode (0 = استبدال كامل، 1 = دمج ثلاثي؛ mode 0 متطابق بايت ببايت)، مع لقطات S8 وفرق الدلائل S9 في مركز التحقق وبوابة CI.",
+      "V9.19": "النمذجة على نطاق واسع: DDL دفعي عند confirm (الافتراضي 50، 7 اختبارات وحدة)، وتغطية i18n لـ12 لغة × 60 مفتاحاً بنسبة 100% (أربع ترجمات جديدة)، ونموذج سوق قوالب بمجلد خارجي واستيراد/تصدير ZIP/JSON."
     },
     "ET": {
-      "V9.1": "Hooldatavuse refaktoreerimine · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Hooldatavuse refaktoreerimine · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Genereerimise kvaliteet ja hooldatavus: mallide mõju eelvaade ja child_save_mode (0 = täielik asendus, 1 = kolmesuunaline ühendamine; mode 0 baithaaval sama), lisaks S8 ekraanipildid ja S9 kataloogidiff verifitseerimiskeskuses ja CI väravas.",
+      "V9.19": "Suuremahuline modelleerimine: partiiline DDL confirm'il (vaikimisi 50, 7 ühiktesti), i18n katvus 12 keelt × 60 võtit 100% (neli uut tõlget) ning mallituru prototüüp väliskataloogiga ja ZIP/JSON impordi/ekspordiga."
     },
     "HY": {
-      "V9.1": "Սպասարկելիության ռեֆակտորինգ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Սպասարկելիության ռեֆակտորինգ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Գեներացման որակ և պահպանելիություն. ձևանմուշների ազդեցության նախադիտում և child_save_mode (0 = ամբողջական փոխարինում, 1 = եռակողմ միավորում; mode 0 բայթ առ բայթ նույն), ինչպես նաև S8 էկրանապատկերներ և S9 պանակների diff ստուգման կենտրոնում և CI դարպասում։",
+      "V9.19": "Խոշոր մասշտաբի մոդելավորում. խմբաքանակային DDL confirm-ում (լռելյայն 50, 7 միավոր թեստ), i18n ծածկույթ 12 լեզու × 60 բանալի 100% (չորս նոր թարգմանություն) և ձևանմուշների շուկայի նախատիպ՝ արտաքին պանակով և ZIP/JSON ներմուծմամբ/արտահանմամբ։"
     },
     "KA": {
-      "V9.1": "მოვლადობის რეფაქტორინგი · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "მოვლადობის რეფაქტორინგი · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "გენერაციის ხარისხი და შენარჩუნებადობა: შაბლონების გავლენის გადახედვა და child_save_mode (0 = სრული ჩანაცვლება, 1 = სამმხრივი შერწყმა; mode 0 ბაიტობრივად იგივე), ასევე S8 სკრინშოტები და S9 კატალოგის diff ვერიფიკაციის ცენტრსა და CI კარში.",
+      "V9.19": "მასშტაბური მოდელირება: პარტიული DDL confirm-ზე (ნაგულისხმევი 50, 7 ერთეული ტესტი), i18n დაფარვა 12 ენა × 60 გასაღები 100% (ოთხი ახალი თარგმანი) და შაბლონების ბაზრის პროტოტიპი გარე საქაღალდითა და ZIP/JSON იმპორტი/ექსპორტით."
     },
     "KM": {
-      "V9.1": "ការរៀបចំឡើងវិញដើម្បីងាយថែទាំ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "ការរៀបចំឡើងវិញដើម្បីងាយថែទាំ · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "គុណភាពបង្កើត និងភាពងាយថែទាំ៖ ការមើលជាមុនផលប៉ះពាល់គំរូ និង child_save_mode (0 = ជំនួសទាំងស្រុង, 1 = បញ្ចូលបីផ្លូវ; mode 0 ដូចដើមបៃនឹងបៃ) ព្រមទាំងរូបថត S8 និង diff ថត S9 ក្នុងមជ្ឈមណ្ឌលផ្ទៀងផ្ទាត់ និង CI gate។",
+      "V9.19": "ការធ្វើគំរូខ្នាតធំ៖ DDL ជាក្រុមនៅ confirm (លំនាំដើម 50, 7 តេស្តឯកតា), គម្រប i18n 12 ភាសា × 60 សោ 100% (ការបកប្រែថ្មីបួន) និងគំរូទីផ្សារគំរូដែលមានថតខាងក្រៅ និងនាំចូល/នាំចេញ ZIP/JSON។"
     },
     "MY": {
-      "V9.1": "ပြုပြင်ထိန်းသိမ်းလွယ်မှု ပြန်လည်ဖွဲ့စည်းခြင်း · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "ပြုပြင်ထိန်းသိမ်းလွယ်မှု ပြန်လည်ဖွဲ့စည်းခြင်း · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "ထုတ်လုပ်မှု အရည်အသွေးနှင့် ထိန်းသိမ်းနိုင်မှု- တမ်းပလိတ် သက်ရောက်မှု အစမ်းကြည့်ရှုမှုနှင့် child_save_mode (0 = အပြည့်အစုံ အစားထိုး၊ 1 = သုံးလမ်းပေါင်းစပ်၊ mode 0 ဘိုက်တူ)၊ S8 မျက်နှာပြင်ဓာတ်ပုံများနှင့် S9 ဖိုလ်ဒါ diff ကို စစ်ဆေးရေးစင်တာနှင့် CI ဂိတ်တွင် ထည့်သွင်းထားသည်။",
+      "V9.19": "အကြီးစား မော်ဒယ်ဖော်ဆောင်မှု- confirm တွင် အသုတ်လိုက် DDL (မူလ 50၊ ယူနစ်စမ်းသပ်မှု 7 ခု)၊ i18n ဖုံးလွှမ်းမှု ဘာသာ 12 × ကီး 60၊ 100% (ဘာသာပြန်အသစ် 4 ခု) နှင့် ပြင်ပ ဖိုလ်ဒါပါ ZIP/JSON တင်သွင်း/တင်ပို့နိုင်သော တမ်းပလိတ် ဈေးကွက် ရှေ့ပြေးပုံစံ။"
     },
     "SW": {
-      "V9.1": "Urekebishaji kwa matengenezo rahisi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Urekebishaji kwa matengenezo rahisi · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Ubora wa uzalishaji na matengenezo: onyesho la athari ya viole na child_save_mode (0 = uingizwaji kamili, 1 = muunganisho wa njia tatu; mode 0 sawa baiti kwa baiti), pamoja na picha za S8 na diff ya folda S9 katika kituo cha uthibitishaji na lango la CI.",
+      "V9.19": "Uundaji wa modeli kwa kiwango kikubwa: DDL ya bechi wakati wa confirm (chaguo-msingi 50, majaribio 7 ya vitengo), ufunikaji wa i18n lugha 12 × funguo 60 kwa 100% (tafsiri nne mpya) na mfano wa soko la viole lenye folda ya nje na uingizaji/utoaji wa ZIP/JSON."
     },
     "SL": {
-      "V9.1": "Refaktoriranje za vzdrževanje · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refaktoriranje za vzdrževanje · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Kakovost generiranja in vzdržljivost: predogled vpliva predlog in child_save_mode (0 = popolna zamenjava, 1 = tristransko združevanje; mode 0 bajtno enak), skupaj s posnetki S8 in diffom map S9 v centru za preverjanje in vratih CI.",
+      "V9.19": "Modeliranje v velikem obsegu: paketni DDL pri confirm (privzeto 50, 7 enotskih testov), pokritost i18n 12 jezikov × 60 ključev pri 100 % (štirje novi prevodi) in prototip tržnice predlog z zunanjo mapo ter uvozom/izvozom ZIP/JSON."
     },
     "TL": {
-      "V9.1": "Refactoring para sa maintainability · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refactoring para sa maintainability · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Kalidad ng pagbuo at pagpapanatili: preview ng epekto ng template at child_save_mode (0 = buong pagpapalit, 1 = three-way merge; mode 0 byte-identical), kasama ang S8 screenshots at S9 directory diff sa verification center at CI gate.",
+      "V9.19": "Modeling sa malaking sukat: batch DDL sa confirm (default 50, 7 unit tests), i18n coverage na 12 wika × 60 key sa 100% (apat na bagong salin) at prototype ng template market na may external directory at ZIP/JSON import/export."
     },
     "HU": {
-      "V9.1": "Karbantarthatósági refaktorálás · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Karbantarthatósági refaktorálás · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Generálási minőség és karbantarthatóság: sablonhatás-előnézet és child_save_mode (0 = teljes csere, 1 = háromutas egyesítés; mode 0 bájtra azonos), valamint S8 képernyőképek és S9 könyvtárdiff az ellenőrző központban és a CI-kapuban.",
+      "V9.19": "Nagyszabású modellezés: kötegelt DDL confirmkor (alapértelmezés 50, 7 egységteszt), i18n-lefedettség 12 nyelv × 60 kulcs 100%-on (négy új fordítás) és sablonpiac-prototípus külső könyvtárral, ZIP/JSON importtal és exporttal."
     },
     "PT_BR": {
-      "V9.1": "Refatoração de manutenibilidade · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9"
+      "V9.1": "Refatoração de manutenibilidade · `GenScaffoldServiceImpl` 5,072 → 931 lines / 8 Writers; generated output byte-identical (new vs old jar: 119 + 62 files, `diff -r` empty); 312/312 tests; offline i18n contract 9/9",
+      "V9.18": "Qualidade de geração e manutenção: preview de impacto de templates e child_save_mode (0 = substituição total, 1 = mesclagem em três vias; mode 0 idêntico byte a byte), com capturas S8 e diff S9 no centro de verificação e no gate de CI.",
+      "V9.19": "Modelagem em escala: DDL em lotes no confirm (padrão 50, 7 testes unitários), cobertura i18n de 12 idiomas × 60 chaves em 100% (quatro novas traduções) e protótipo de marketplace de templates com diretório externo e importação/exportação ZIP/JSON."
     }
   }
 }

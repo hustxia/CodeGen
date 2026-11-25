@@ -37,7 +37,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="170" />
-        <el-table-column label="操作" width="210" fixed="right">
+        <el-table-column label="操作" width="270" fixed="right">
           <template slot-scope="{ row }">
             <el-button type="text" @click="openDialog(row)">编辑</el-button>
             <el-tooltip :disabled="!isSuperRole(row)" content="超管固定拥有全部权限，不允许在界面上删减" placement="top">
@@ -45,6 +45,8 @@
                 <el-button type="text" :disabled="isSuperRole(row)" @click="openPermDrawer(row)">分配权限</el-button>
               </span>
             </el-tooltip>
+            <!-- V9.17 数据权限入口：目标工程注册 /system/data-scope 路由后可用；平台未注册时静默提示，不影响其它操作 -->
+            <el-button type="text" @click="openDataScope(row)">数据权限</el-button>
             <el-button type="text" class="danger-btn" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -213,6 +215,20 @@ export default {
     },
     isSuperRole(row) {
       return !!row && (String(row.id) === '1' || ['admin', 'super_admin'].indexOf(row.code) !== -1)
+    },
+    /* V9.17 数据权限：跳转到数据范围配置页；平台未注册该路由时静默提示，不阻断其它操作 */
+    openDataScope(row) {
+      if (this.isSuperRole(row)) {
+        this.$message.info('超级管理员默认拥有全部数据范围，无需配置')
+        return
+      }
+      const target = { path: '/system/data-scope', query: { roleId: String(row.id) } }
+      try {
+        const p = this.$router.push(target)
+        if (p && typeof p.catch === 'function') p.catch(() => this.$message.info('当前平台未启用数据权限页，目标工程接入后可用'))
+      } catch (e) {
+        this.$message.info('当前平台未启用数据权限页，目标工程接入后可用')
+      }
     },
     /* ---------- 分配权限 ---------- */
     async openPermDrawer(row) {

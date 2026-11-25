@@ -1,8 +1,8 @@
 -- H2 MODE=MySQL 版本（demo 模式用），由 convert_sql_to_h2.py 自动生成
 -- 原始脚本: docs/sql/V4.3__oper_log_region.sql
 -- 转换记录:
-  [条件DDL] ADD COLUMN IF NOT EXISTS sys_oper_log province
-  [条件DDL] ADD COLUMN IF NOT EXISTS sys_oper_log city
+-- [条件DDL] ADD COLUMN IF NOT EXISTS sys_oper_log province
+-- [条件DDL] ADD COLUMN IF NOT EXISTS sys_oper_log city
 
 ALTER TABLE `sys_oper_log` ADD COLUMN IF NOT EXISTS province varchar(32) NULL;
 

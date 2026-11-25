@@ -262,8 +262,9 @@ public class GenPipelineServiceImpl implements GenPipelineService {
                 Path replay = Paths.get(props.getLogDir(), pipeline.getPipelineNo(), "db.sql");
                 Files.createDirectories(replay.getParent());
                 Files.writeString(replay, ddl, StandardCharsets.UTF_8);
-            } catch (IOException ignored) {
+            } catch (IOException e) {
                 // 落盘失败不阻断主流程；重试时 stepDb 会给出可读的报错引导
+                log.warn("DDL 回放文件落盘失败 pipelineNo={}", pipeline.getPipelineNo(), e);
             }
 
             GenPipelinePrepareVO vo = new GenPipelinePrepareVO();
@@ -675,8 +676,9 @@ public class GenPipelineServiceImpl implements GenPipelineService {
                 if (used == null || used == 0) {
                     return candidate;
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
                 // 绑定失败 = 被占用，顺延
+                log.debug("端口 {} 探测失败，顺延下一个", candidate, e);
             }
         }
         throw new BusinessException(ResultCode.FAIL.getCode(), "端口分配失败：" + base + " 起连续 200 个端口均不可用");

@@ -5,8 +5,12 @@ import com.codegen.dto.GenTemplateCopyDTO;
 import com.codegen.dto.GenTemplatePageDTO;
 import com.codegen.dto.GenTemplateValidateDTO;
 import com.codegen.entity.GenTemplate;
+import com.codegen.service.GenCodeService;
+import com.codegen.service.GenTemplateCatalogService;
 import com.codegen.service.GenTemplateService;
 import com.codegen.vo.GenTemplateHistoryVO;
+import com.codegen.vo.GenTemplateImpactVO;
+import com.codegen.vo.GenTemplateListItemVO;
 import com.codegen.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,6 +37,25 @@ public class GenTemplateController {
 
     @Autowired
     private GenTemplateService genTemplateService;
+
+    @Autowired
+    private GenCodeService genCodeService;
+
+    @Autowired
+    private GenTemplateCatalogService genTemplateCatalogService;
+
+    @Operation(summary = "模板文件清单（扫描 gen-templates/scaffold* 下的 *.ftl）")
+    @GetMapping("/files")
+    public Result<List<GenTemplateListItemVO>> files() {
+        return Result.ok(genTemplateCatalogService.listTemplates());
+    }
+
+    @Operation(summary = "模板影响面预览（只读：给定模板会影响哪些表、产出哪些文件）")
+    @GetMapping("/impact")
+    public Result<GenTemplateImpactVO> impact(
+            @RequestParam(value = "template", required = false) String template) {
+        return Result.ok(genCodeService.templateImpact(template));
+    }
 
     @Operation(summary = "模板分页查询")
     @PostMapping("/page")

@@ -23,6 +23,14 @@ public class PayOrderVO {
     private String payForm;
     private String businessType;
     private Long businessId;
+    /** V6.3 补全 表级绑定支付码（gen_table.pay_code） */
+    private String payCode;
+    /** V6.3 补全 已累计退款金额：分 */
+    private Long refundAmountFen;
+    /** V6.3 补全 已累计退款金额：元（前端直接展示） */
+    private String refundAmountYuan;
+    /** V6.3 补全 最近退款时间 */
+    private LocalDateTime refundAt;
 
     public String getOutTradeNo() { return outTradeNo; }
     public void setOutTradeNo(String v) { this.outTradeNo = v; }
@@ -50,4 +58,12 @@ public class PayOrderVO {
     public void setBusinessType(String v) { this.businessType = v; }
     public Long getBusinessId() { return businessId; }
     public void setBusinessId(Long v) { this.businessId = v; }
+    public String getPayCode() { return payCode; }
+    public void setPayCode(String v) { this.payCode = v; }
+    public Long getRefundAmountFen() { return refundAmountFen; }
+    public void setRefundAmountFen(Long v) { this.refundAmountFen = v; }
+    public String getRefundAmountYuan() { return refundAmountYuan; }
+    public void setRefundAmountYuan(String v) { this.refundAmountYuan = v; }
+    public LocalDateTime getRefundAt() { return refundAt; }
+    public void setRefundAt(LocalDateTime v) { this.refundAt = v; }
 }

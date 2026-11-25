@@ -32,6 +32,7 @@ import java.util.Map;
  * V9.1 拆分自 {@link GenScaffoldServiceImpl}：工作流（Flow/Activiti/BPMN）与流程注册 SQL 的产物字符串工厂。
  * 纯函数集合，无实例状态；产物内容与拆分前逐字节一致。
  */
+@Slf4j
 final class ScaffoldFlowWriter {
 
     /** 产物 FlowService 接口：双引擎共用契约（submit/approve/reject/records/state + todo/done/taskDetail） */
@@ -55,6 +56,7 @@ final class ScaffoldFlowWriter {
                 + "    List<Map<String, Object>> done();\n\n"
                 + "    /** 任务详情：任务 + 业务单据 + 审批记录聚合 */\n"
                 + "    Map<String, Object> taskDetail(String taskId);\n"
+                + V917_FLOW_SERVICE_EXTRA
                 + "}\n";
     }
 
@@ -224,6 +226,7 @@ final class ScaffoldFlowWriter {
                 + "                actions.add(\"REJECT\");\n"
                 + "            }\n"
                 + "        }\n"
+                + "        data.put(\"nodeStatuses\", nodeStatuses(def, current, bizId));\n"
                 + "        data.put(\"actions\", actions);\n"
                 + "        return data;\n"
                 + "    }\n\n"
@@ -411,6 +414,7 @@ final class ScaffoldFlowWriter {
                 + "        String statusCol;\n"
                 + "        List<Map<String, Object>> nodes = List.of();\n"
                 + "    }\n"
+                + V917_BUILTIN_EXTRA
                 + "}\n";
     }
 
@@ -538,8 +542,10 @@ final class ScaffoldFlowWriter {
                 + "        Map<String, Object> data = new LinkedHashMap<>();\n"
                 + "        data.put(\"flowCode\", flowCode);\n"
                 + "        data.put(\"flowName\", def.name);\n"
-                + "        data.put(\"status\", bizId == null ? DRAFT : currentStatus(def, bizId));\n"
+                + "        String current = bizId == null ? DRAFT : currentStatus(def, bizId);\n"
+                + "        data.put(\"status\", current);\n"
                 + "        data.put(\"nodes\", def.nodes);\n"
+                + "        data.put(\"nodeStatuses\", nodeStatuses(def, current, bizId));\n"
                 + "        return data;\n"
                 + "    }\n\n"
                 + "    /** 我的待办：全部进行中的引擎任务（产物基座暂无角色体系，登录用户可见全部） */\n"
@@ -686,6 +692,7 @@ final class ScaffoldFlowWriter {
                 + "        String statusCol;\n"
                 + "        List<Map<String, Object>> nodes = List.of();\n"
                 + "    }\n"
+                + V917_ACTIVITI_EXTRA
                 + "}\n";
     }
 
@@ -777,6 +784,8 @@ final class ScaffoldFlowWriter {
                 + "import io.swagger.v3.oas.annotations.Operation;\n"
                 + "import org.springframework.beans.factory.annotation.Autowired;\n"
                 + "import org.springframework.web.bind.annotation.*;\n\n"
+                + "import java.util.ArrayList;\n"
+                + "import java.util.LinkedHashMap;\n"
                 + "import java.util.List;\n"
                 + "import java.util.Map;\n\n"
                 + "/**\n"
@@ -836,6 +845,7 @@ final class ScaffoldFlowWriter {
                 + "    public Result<Map<String, Object>> taskDetail(@PathVariable String taskId) {\n"
                 + "        return Result.ok(flowService.taskDetail(taskId));\n"
                 + "    }\n\n"
+                + V917_CONTROLLER_EXTRA
                 + "    private Long asLong(Object v) {\n"
                 + "        return v == null ? null : Long.valueOf(String.valueOf(v));\n"
                 + "    }\n"
@@ -895,8 +905,9 @@ final class ScaffoldFlowWriter {
             try {
                 nodesJson = new com.fasterxml.jackson.databind.ObjectMapper()
                         .writeValueAsString(d.getNodes() == null ? List.of() : d.getNodes());
-            } catch (Exception ignore) {
+            } catch (Exception e) {
                 // 序列化失败按空节点下发，产物侧报错可读
+                log.warn("流程节点序列化失败，按空节点下发 flowCode={}", d.getFlowCode(), e);
             }
             String bpmn = d.getBpmnXml() == null ? "NULL" : "'" + escSql(d.getBpmnXml()) + "'";
             sql.append("\n-- 流程定义：").append(d.getFlowName() == null ? d.getFlowCode() : d.getFlowName())
@@ -928,6 +939,640 @@ final class ScaffoldFlowWriter {
         return String.valueOf(System.currentTimeMillis() * 1000 % 1_000_000_000_000L * 1000
                 + java.util.concurrent.ThreadLocalRandom.current().nextInt(1000));
     }
+
+    // ============================ V9.17 工作流深度 ============================
+
+    /**
+     * V9.17 FlowService 新增默认方法。用 default 而非 abstract：
+     * 第三方自定义 FlowService 实现不因平台升级而编译断裂；两个内置实现各自 override。
+     */
+    private static final String V917_FLOW_SERVICE_EXTRA = """
+
+    /** V9.17 会签投票：approvers 为空时用当前登录人；mode=ALL/ANY/VETO */
+    default void countersign(String flowCode, Long bizId, List<Map<String, Object>> approvers,
+                             String mode, String comment, boolean approved) {
+        throw new UnsupportedOperationException("当前 FlowService 实现未支持会签");
+    }
+
+    /** V9.17 会签意见（投影成 approval_node 同构结构） */
+    default List<Map<String, Object>> countersignOpinions(String flowCode, Long bizId, String nodeName) {
+        throw new UnsupportedOperationException("当前 FlowService 实现未支持会签意见查询");
+    }
+
+    /** V9.17 委派（转办）：留 DELEGATE + DELEGATE_ASSIGN 流水 */
+    default void delegate(String flowCode, Long bizId, Long toUserId, String toUserName, String reason) {
+        throw new UnsupportedOperationException("当前 FlowService 实现未支持委派");
+    }
+
+    /** V9.17 设计器：流程定义 JSON 校验，返回 {valid, errors, normalized} */
+    default Map<String, Object> validateDef(String defJson) {
+        throw new UnsupportedOperationException("当前 FlowService 实现未支持流程定义校验");
+    }
+
+    /** V9.17 设计器：流程定义按 flowCode 幂等 upsert */
+    default void saveDef(String defJson) {
+        throw new UnsupportedOperationException("当前 FlowService 实现未支持流程定义保存");
+    }
+""";
+
+    /** V9.17 BuiltinFlowService 增量：进度状态、会签、委派、设计器校验/保存 */
+    private static final String V917_BUILTIN_EXTRA = """
+    /** V9.17 节点进度：DONE/CURRENT/DELEGATED/REJECTED/PENDING，供前端 SVG 进度图消费 */
+    private List<Map<String, Object>> nodeStatuses(Def def, String current, Long bizId) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        if (bizId == null) {
+            return result;
+        }
+        int idx = 0;
+        for (Map<String, Object> node : def.nodes) {
+            idx++;
+            String from = str(node.get("from"));
+            String to = str(node.get("to"));
+            if (!StringUtils.hasText(from) && !StringUtils.hasText(to)) {
+                continue;
+            }
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("nodeKey", from + "_" + to);
+            String nodeName = str(node.get("nodeName"));
+            row.put("nodeName", StringUtils.hasText(nodeName) ? nodeName : from + "->" + to);
+            row.put("order", idx);
+            String status = "PENDING";
+            Integer done = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(1) FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND to_status=? "
+                            + "AND action IN ('SUBMIT','APPROVE','COUNTERSIGN_RESULT')",
+                    Integer.class, def.code, bizId, from);
+            Integer rejected = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(1) FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND from_status=? AND action='REJECT'",
+                    Integer.class, def.code, bizId, from);
+            Integer delegated = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(1) FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND from_status=? AND action='DELEGATE'",
+                    Integer.class, def.code, bizId, from);
+            if (from.equals(current)) {
+                status = "CURRENT";
+            } else if (rejected != null && rejected > 0) {
+                status = "REJECTED";
+            } else if (delegated != null && delegated > 0) {
+                status = "DELEGATED";
+            } else if (done != null && done > 0) {
+                status = "DONE";
+            }
+            row.put("status", status);
+            List<Map<String, Object>> last = jdbcTemplate.queryForList(
+                    "SELECT oper_name, oper_time FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND from_status=? "
+                            + "ORDER BY oper_time DESC, id DESC LIMIT 1", def.code, bizId, from);
+            if (!last.isEmpty()) {
+                row.put("assigneeName", last.get(0).get("oper_name"));
+                Object time = last.get(0).get("oper_time");
+                row.put("finishTime", time == null ? null : String.valueOf(time));
+            }
+            result.add(row);
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void countersign(String flowCode, Long bizId, List<Map<String, Object>> approvers,
+                            String mode, String comment, boolean approved) {
+        Def def = loadDef(flowCode);
+        String current = currentStatus(def, bizId);
+        Map<String, Object> node = findNode(def, current);
+        if (node == null) {
+            throw new BusinessException(400, "当前状态没有可会签的节点：" + current);
+        }
+        String modeNorm = StringUtils.hasText(mode) ? mode.trim().toUpperCase() : "ALL";
+        if (!List.of("ALL", "ANY", "VETO").contains(modeNorm)) {
+            throw new BusinessException(400, "会签模式非法：" + modeNorm);
+        }
+        List<Map<String, Object>> voters = approvers;
+        if (voters == null || voters.isEmpty()) {
+            Map<String, Object> self = new LinkedHashMap<>();
+            self.put("userId", UserContext.getUserId());
+            self.put("userName", UserContext.getUsername());
+            voters = List.of(self);
+        }
+        for (Map<String, Object> voter : voters) {
+            Object uidObj = voter == null ? null : voter.get("userId");
+            Long uid = uidObj == null ? UserContext.getUserId() : Long.valueOf(String.valueOf(uidObj));
+            String uname = voter == null ? "" : str(voter.get("userName"));
+            jdbcTemplate.update(
+                    "INSERT INTO sys_flow_task(flow_code, biz_table, biz_id, from_status, to_status, action, "
+                            + "comment, oper_user_id, oper_name) VALUES(?,?,?,?,?,?,?,?,?)",
+                    def.code, def.tableName, bizId, current, current,
+                    approved ? "COUNTERSIGN_AGREE" : "COUNTERSIGN_REJECT",
+                    "会签" + (approved ? "同意" : "反对") + (StringUtils.hasText(comment) ? "：" + comment : ""),
+                    uid, StringUtils.hasText(uname) ? uname
+                            : (UserContext.getUsername() == null ? "system" : UserContext.getUsername()));
+        }
+        Integer agree = jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND from_status=? AND action='COUNTERSIGN_AGREE'",
+                Integer.class, def.code, bizId, current);
+        Integer reject = jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND from_status=? AND action='COUNTERSIGN_REJECT'",
+                Integer.class, def.code, bizId, current);
+        int agreeN = agree == null ? 0 : agree;
+        int rejectN = reject == null ? 0 : reject;
+        int expected = voters.size();
+        Object configured = node.get("approvers");
+        if (configured instanceof List<?> cfg && !cfg.isEmpty()) {
+            expected = cfg.size();
+        }
+        boolean pass;
+        if ("ANY".equals(modeNorm)) {
+            pass = agreeN >= 1;
+            if (!pass) {
+                return;
+            }
+        } else {
+            pass = rejectN == 0 && agreeN >= expected;
+        }
+        if (pass) {
+            String to = str(node.get("to"));
+            move(def, bizId, current, StringUtils.hasText(to) ? to : PENDING, "COUNTERSIGN_RESULT", comment);
+        } else {
+            String back = StringUtils.hasText(str(node.get("rejectTo"))) ? str(node.get("rejectTo")) : DRAFT;
+            move(def, bizId, current, back, "COUNTERSIGN_RESULT", comment);
+        }
+    }
+
+    @Override
+    public List<Map<String, Object>> countersignOpinions(String flowCode, Long bizId, String nodeName) {
+        if (!StringUtils.hasText(flowCode) || bizId == null) {
+            return List.of();
+        }
+        String sql = "SELECT oper_user_id, oper_name, action, comment, oper_time FROM sys_flow_task "
+                + "WHERE flow_code=? AND biz_id=? AND action LIKE 'COUNTERSIGN%'";
+        Object[] args;
+        if (StringUtils.hasText(nodeName)) {
+            sql += " AND from_status=?";
+            args = new Object[]{flowCode, bizId, nodeName};
+        } else {
+            args = new Object[]{flowCode, bizId};
+        }
+        sql += " ORDER BY oper_time, id";
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, args);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            Map<String, Object> vo = new LinkedHashMap<>();
+            vo.put("assigneeId", row.get("oper_user_id"));
+            vo.put("assigneeName", row.get("oper_name"));
+            vo.put("result", "COUNTERSIGN_REJECT".equals(row.get("action")) ? "反对" : "同意");
+            vo.put("comment", row.get("comment"));
+            vo.put("handleTime", String.valueOf(row.get("oper_time")));
+            result.add(vo);
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delegate(String flowCode, Long bizId, Long toUserId, String toUserName, String reason) {
+        if (toUserId == null || toUserId <= 0) {
+            throw new BusinessException(400, "目标审批人ID不能为空");
+        }
+        Def def = loadDef(flowCode);
+        String current = currentStatus(def, bizId);
+        if (DRAFT.equals(current)) {
+            throw new BusinessException(400, "草稿状态无需委派");
+        }
+        String operName = UserContext.getUsername();
+        String note = "委派给 " + toUserId + (StringUtils.hasText(toUserName) ? "(" + toUserName + ")" : "")
+                + (StringUtils.hasText(reason) ? "；原因：" + reason : "");
+        jdbcTemplate.update(
+                "INSERT INTO sys_flow_task(flow_code, biz_table, biz_id, from_status, to_status, action, "
+                        + "comment, oper_user_id, oper_name) VALUES(?,?,?,?,?,?,?,?,?)",
+                def.code, def.tableName, bizId, current, String.valueOf(toUserId), "DELEGATE", note,
+                UserContext.getUserId(), StringUtils.hasText(operName) ? operName : "system");
+        jdbcTemplate.update(
+                "INSERT INTO sys_flow_task(flow_code, biz_table, biz_id, from_status, to_status, action, "
+                        + "comment, oper_user_id, oper_name) VALUES(?,?,?,?,?,?,?,?,?)",
+                def.code, def.tableName, bizId, current, current, "DELEGATE_ASSIGN", "接收委派：" + note,
+                toUserId, StringUtils.hasText(toUserName) ? toUserName : String.valueOf(toUserId));
+    }
+
+    @Override
+    public Map<String, Object> validateDef(String defJson) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        List<String> errors = new ArrayList<>();
+        List<Map<String, Object>> normalized = new ArrayList<>();
+        try {
+            Map<String, Object> def = objectMapper.readValue(defJson, new TypeReference<>() {});
+            String flowCode = str(def.get("flowCode"));
+            if (!flowCode.matches("[A-Za-z0-9_]{1,64}")) {
+                errors.add("flowCode 只能含字母数字下划线，长度 1-64");
+            }
+            String tableName = str(def.get("tableName"));
+            if (!IDENT.matcher(tableName).matches()) {
+                errors.add("tableName 非法（白名单 [A-Za-z0-9_]）");
+            }
+            String statusCol = str(def.get("statusCol"));
+            if (StringUtils.hasText(statusCol) && !IDENT.matcher(statusCol).matches()) {
+                errors.add("statusCol 非法（白名单 [A-Za-z0-9_]）");
+            }
+            Object nodesObj = def.get("nodes");
+            if (!(nodesObj instanceof List<?> nodes)) {
+                errors.add("nodes 必须是数组");
+            } else {
+                int i = 0;
+                for (Object o : nodes) {
+                    i++;
+                    if (!(o instanceof Map<?, ?> raw)) {
+                        errors.add("第 " + i + " 个节点不是对象");
+                        continue;
+                    }
+                    Map<String, Object> node = new LinkedHashMap<>();
+                    for (Map.Entry<?, ?> e : raw.entrySet()) {
+                        node.put(String.valueOf(e.getKey()), e.getValue());
+                    }
+                    String from = str(node.get("from"));
+                    String to = str(node.get("to"));
+                    if (!StringUtils.hasText(from) || !StringUtils.hasText(to)) {
+                        errors.add("第 " + i + " 个节点缺少 from/to");
+                    }
+                    String mode = str(node.get("countersignMode"));
+                    if (StringUtils.hasText(mode) && !List.of("SINGLE", "ALL", "ANY", "VETO").contains(mode)) {
+                        errors.add("第 " + i + " 个节点会签模式非法：" + mode);
+                    }
+                    Object approversObj = node.get("approvers");
+                    if (approversObj instanceof List<?> list) {
+                        for (Object a : list) {
+                            if (!(a instanceof Number)) {
+                                errors.add("第 " + i + " 个节点 approvers 必须是数字ID数组");
+                                break;
+                            }
+                        }
+                    }
+                    node.put("from", from);
+                    node.put("to", to);
+                    normalized.add(node);
+                }
+            }
+        } catch (Exception e) {
+            errors.add("流程定义 JSON 解析失败：" + e.getMessage());
+        }
+        result.put("valid", errors.isEmpty());
+        result.put("errors", errors);
+        result.put("normalized", normalized);
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveDef(String defJson) {
+        Map<String, Object> check = validateDef(defJson);
+        if (!Boolean.TRUE.equals(check.get("valid"))) {
+            List<?> errors = (List<?>) check.get("errors");
+            throw new BusinessException(400, "流程定义非法：" + (errors.isEmpty() ? "未知错误" : errors.get(0)));
+        }
+        Map<String, Object> def;
+        String nodesJson;
+        try {
+            def = objectMapper.readValue(defJson, new TypeReference<>() {});
+            nodesJson = objectMapper.writeValueAsString(check.get("normalized"));
+        } catch (Exception e) {
+            throw new BusinessException(400, "流程定义序列化失败：" + e.getMessage());
+        }
+        String flowCode = str(def.get("flowCode"));
+        String flowName = StringUtils.hasText(str(def.get("flowName"))) ? str(def.get("flowName")) : flowCode;
+        String tableName = str(def.get("tableName"));
+        String statusCol = StringUtils.hasText(str(def.get("statusCol"))) ? str(def.get("statusCol")) : "status";
+        int updated = jdbcTemplate.update(
+                "UPDATE sys_flow_def SET flow_name=?, table_name=?, status_col=?, nodes=?, update_time=NOW() "
+                        + "WHERE flow_code=? AND deleted=0", flowName, tableName, statusCol, nodesJson, flowCode);
+        if (updated == 0) {
+            jdbcTemplate.update(
+                    "INSERT INTO sys_flow_def(id, flow_code, flow_name, table_name, status_col, nodes, enabled) "
+                            + "VALUES(?,?,?,?,?,?,1)",
+                    System.currentTimeMillis() * 1000 % 1_000_000_000_000L, flowCode, flowName,
+                    tableName, statusCol, nodesJson);
+        }
+    }
+""";
+
+    /** V9.17 ActivitiFlowService 增量：与 builtin 同契约，会签/委派经引擎任务 + sys_flow_task 双写 */
+    private static final String V917_ACTIVITI_EXTRA = """
+    /** V9.17 节点进度：sys_flow_task 投影（submit/approve/complete 均双写该表） */
+    private List<Map<String, Object>> nodeStatuses(Def def, String current, Long bizId) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        if (bizId == null) {
+            return result;
+        }
+        int idx = 0;
+        for (Map<String, Object> node : def.nodes) {
+            idx++;
+            String from = str(node.get("from"));
+            String to = str(node.get("to"));
+            if (!StringUtils.hasText(from) && !StringUtils.hasText(to)) {
+                continue;
+            }
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("nodeKey", from + "_" + to);
+            String nodeName = str(node.get("nodeName"));
+            row.put("nodeName", StringUtils.hasText(nodeName) ? nodeName : from + "->" + to);
+            row.put("order", idx);
+            Integer done = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(1) FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND to_status=? "
+                            + "AND action IN ('SUBMIT','APPROVE','COUNTERSIGN_RESULT')",
+                    Integer.class, def.code, bizId, from);
+            Integer rejected = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(1) FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND from_status=? AND action='REJECT'",
+                    Integer.class, def.code, bizId, from);
+            Integer delegated = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(1) FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND from_status=? AND action='DELEGATE'",
+                    Integer.class, def.code, bizId, from);
+            String status = from.equals(current) ? "CURRENT"
+                    : (rejected != null && rejected > 0) ? "REJECTED"
+                    : (delegated != null && delegated > 0) ? "DELEGATED"
+                    : (done != null && done > 0) ? "DONE" : "PENDING";
+            row.put("status", status);
+            List<Map<String, Object>> last = jdbcTemplate.queryForList(
+                    "SELECT oper_name, oper_time FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND from_status=? "
+                            + "ORDER BY oper_time DESC, id DESC LIMIT 1", def.code, bizId, from);
+            if (!last.isEmpty()) {
+                row.put("assigneeName", last.get(0).get("oper_name"));
+                Object time = last.get(0).get("oper_time");
+                row.put("finishTime", time == null ? null : String.valueOf(time));
+            }
+            result.add(row);
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void countersign(String flowCode, Long bizId, List<Map<String, Object>> approvers,
+                            String mode, String comment, boolean approved) {
+        Def def = loadDef(flowCode);
+        String current = currentStatus(def, bizId);
+        Map<String, Object> node = findNode(def, current);
+        if (node == null) {
+            throw new BusinessException(400, "当前状态没有可会签的节点：" + current);
+        }
+        String modeNorm = StringUtils.hasText(mode) ? mode.trim().toUpperCase() : "ALL";
+        if (!List.of("ALL", "ANY", "VETO").contains(modeNorm)) {
+            throw new BusinessException(400, "会签模式非法：" + modeNorm);
+        }
+        List<Map<String, Object>> voters = approvers;
+        if (voters == null || voters.isEmpty()) {
+            Map<String, Object> self = new HashMap<>();
+            self.put("userId", UserContext.getUserId());
+            self.put("userName", UserContext.getUsername());
+            voters = List.of(self);
+        }
+        for (Map<String, Object> voter : voters) {
+            Object uidObj = voter == null ? null : voter.get("userId");
+            Long uid = uidObj == null ? UserContext.getUserId() : Long.valueOf(String.valueOf(uidObj));
+            String uname = voter == null ? "" : str(voter.get("userName"));
+            jdbcTemplate.update(
+                    "INSERT INTO sys_flow_task(flow_code, biz_table, biz_id, from_status, to_status, action, "
+                            + "comment, oper_user_id, oper_name) VALUES(?,?,?,?,?,?,?,?,?)",
+                    def.code, def.tableName, bizId, current, current,
+                    approved ? "COUNTERSIGN_AGREE" : "COUNTERSIGN_REJECT",
+                    "会签" + (approved ? "同意" : "反对") + (StringUtils.hasText(comment) ? "：" + comment : ""),
+                    uid, StringUtils.hasText(uname) ? uname
+                            : (UserContext.getUsername() == null ? "system" : UserContext.getUsername()));
+        }
+        Integer agree = jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND from_status=? AND action='COUNTERSIGN_AGREE'",
+                Integer.class, def.code, bizId, current);
+        Integer reject = jdbcTemplate.queryForObject(
+                "SELECT COUNT(1) FROM sys_flow_task WHERE flow_code=? AND biz_id=? AND from_status=? AND action='COUNTERSIGN_REJECT'",
+                Integer.class, def.code, bizId, current);
+        int agreeN = agree == null ? 0 : agree;
+        int rejectN = reject == null ? 0 : reject;
+        int expected = voters.size();
+        Object configured = node.get("approvers");
+        if (configured instanceof List<?> cfg && !cfg.isEmpty()) {
+            expected = cfg.size();
+        }
+        boolean pass;
+        if ("ANY".equals(modeNorm)) {
+            pass = agreeN >= 1;
+            if (!pass) {
+                return;
+            }
+        } else {
+            pass = rejectN == 0 && agreeN >= expected;
+        }
+        // 复用 complete 走引擎网关，保证 ACT_HI_* 与业务状态列一致
+        complete(flowCode, bizId, pass, comment);
+    }
+
+    @Override
+    public List<Map<String, Object>> countersignOpinions(String flowCode, Long bizId, String nodeName) {
+        if (!StringUtils.hasText(flowCode) || bizId == null) {
+            return List.of();
+        }
+        String sql = "SELECT oper_user_id, oper_name, action, comment, oper_time FROM sys_flow_task "
+                + "WHERE flow_code=? AND biz_id=? AND action LIKE 'COUNTERSIGN%'";
+        Object[] args;
+        if (StringUtils.hasText(nodeName)) {
+            sql += " AND from_status=?";
+            args = new Object[]{flowCode, bizId, nodeName};
+        } else {
+            args = new Object[]{flowCode, bizId};
+        }
+        sql += " ORDER BY oper_time, id";
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, args);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            Map<String, Object> vo = new LinkedHashMap<>();
+            vo.put("assigneeId", row.get("oper_user_id"));
+            vo.put("assigneeName", row.get("oper_name"));
+            vo.put("result", "COUNTERSIGN_REJECT".equals(row.get("action")) ? "反对" : "同意");
+            vo.put("comment", row.get("comment"));
+            vo.put("handleTime", String.valueOf(row.get("oper_time")));
+            result.add(vo);
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delegate(String flowCode, Long bizId, Long toUserId, String toUserName, String reason) {
+        if (toUserId == null || toUserId <= 0) {
+            throw new BusinessException(400, "目标审批人ID不能为空");
+        }
+        Def def = loadDef(flowCode);
+        String current = currentStatus(def, bizId);
+        if (DRAFT.equals(current)) {
+            throw new BusinessException(400, "草稿状态无需委派");
+        }
+        setIdentity();
+        Task task = taskService.createTaskQuery()
+                .processInstanceBusinessKey(String.valueOf(bizId)).singleResult();
+        if (task != null) {
+            taskService.setAssignee(task.getId(), String.valueOf(toUserId));
+        }
+        String note = "委派给 " + toUserId + (StringUtils.hasText(toUserName) ? "(" + toUserName + ")" : "")
+                + (StringUtils.hasText(reason) ? "；原因：" + reason : "");
+        writeTask(def, bizId, current, String.valueOf(toUserId), "DELEGATE", note);
+        writeTask(def, bizId, current, current, "DELEGATE_ASSIGN", "接收委派：" + note);
+    }
+
+    @Override
+    public Map<String, Object> validateDef(String defJson) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        List<String> errors = new ArrayList<>();
+        List<Map<String, Object>> normalized = new ArrayList<>();
+        try {
+            Map<String, Object> def = objectMapper.readValue(defJson, new TypeReference<>() {});
+            String flowCode = str(def.get("flowCode"));
+            if (!flowCode.matches("[A-Za-z0-9_]{1,64}")) {
+                errors.add("flowCode 只能含字母数字下划线，长度 1-64");
+            }
+            String tableName = str(def.get("tableName"));
+            if (!IDENT.matcher(tableName).matches()) {
+                errors.add("tableName 非法（白名单 [A-Za-z0-9_]）");
+            }
+            String statusCol = str(def.get("statusCol"));
+            if (StringUtils.hasText(statusCol) && !IDENT.matcher(statusCol).matches()) {
+                errors.add("statusCol 非法（白名单 [A-Za-z0-9_]）");
+            }
+            Object nodesObj = def.get("nodes");
+            if (!(nodesObj instanceof List<?> nodes)) {
+                errors.add("nodes 必须是数组");
+            } else {
+                int i = 0;
+                for (Object o : nodes) {
+                    i++;
+                    if (!(o instanceof Map<?, ?> raw)) {
+                        errors.add("第 " + i + " 个节点不是对象");
+                        continue;
+                    }
+                    Map<String, Object> node = new LinkedHashMap<>();
+                    for (Map.Entry<?, ?> e : raw.entrySet()) {
+                        node.put(String.valueOf(e.getKey()), e.getValue());
+                    }
+                    String from = str(node.get("from"));
+                    String to = str(node.get("to"));
+                    if (!StringUtils.hasText(from) || !StringUtils.hasText(to)) {
+                        errors.add("第 " + i + " 个节点缺少 from/to");
+                    }
+                    String mode = str(node.get("countersignMode"));
+                    if (StringUtils.hasText(mode) && !List.of("SINGLE", "ALL", "ANY", "VETO").contains(mode)) {
+                        errors.add("第 " + i + " 个节点会签模式非法：" + mode);
+                    }
+                    Object approversObj = node.get("approvers");
+                    if (approversObj instanceof List<?> list) {
+                        for (Object a : list) {
+                            if (!(a instanceof Number)) {
+                                errors.add("第 " + i + " 个节点 approvers 必须是数字ID数组");
+                                break;
+                            }
+                        }
+                    }
+                    node.put("from", from);
+                    node.put("to", to);
+                    normalized.add(node);
+                }
+            }
+        } catch (Exception e) {
+            errors.add("流程定义 JSON 解析失败：" + e.getMessage());
+        }
+        result.put("valid", errors.isEmpty());
+        result.put("errors", errors);
+        result.put("normalized", normalized);
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveDef(String defJson) {
+        Map<String, Object> check = validateDef(defJson);
+        if (!Boolean.TRUE.equals(check.get("valid"))) {
+            List<?> errors = (List<?>) check.get("errors");
+            throw new BusinessException(400, "流程定义非法：" + (errors.isEmpty() ? "未知错误" : errors.get(0)));
+        }
+        Map<String, Object> def;
+        String nodesJson;
+        try {
+            def = objectMapper.readValue(defJson, new TypeReference<>() {});
+            nodesJson = objectMapper.writeValueAsString(check.get("normalized"));
+        } catch (Exception e) {
+            throw new BusinessException(400, "流程定义序列化失败：" + e.getMessage());
+        }
+        String flowCode = str(def.get("flowCode"));
+        String flowName = StringUtils.hasText(str(def.get("flowName"))) ? str(def.get("flowName")) : flowCode;
+        String tableName = str(def.get("tableName"));
+        String statusCol = StringUtils.hasText(str(def.get("statusCol"))) ? str(def.get("statusCol")) : "status";
+        int updated = jdbcTemplate.update(
+                "UPDATE sys_flow_def SET flow_name=?, table_name=?, status_col=?, nodes=?, update_time=NOW() "
+                        + "WHERE flow_code=? AND deleted=0", flowName, tableName, statusCol, nodesJson, flowCode);
+        if (updated == 0) {
+            jdbcTemplate.update(
+                    "INSERT INTO sys_flow_def(id, flow_code, flow_name, table_name, status_col, nodes, enabled) "
+                            + "VALUES(?,?,?,?,?,?,1)",
+                    System.currentTimeMillis() * 1000 % 1_000_000_000_000L, flowCode, flowName,
+                    tableName, statusCol, nodesJson);
+        }
+    }
+""";
+
+    /** V9.17 FlowController 增量：会签/意见/委派/设计器校验与保存端点 */
+    private static final String V917_CONTROLLER_EXTRA = """
+
+    @Operation(summary = "V9.17 会签投票")
+    @PostMapping("/countersign")
+    public Result<Void> countersign(@RequestBody Map<String, Object> body) {
+        flowService.countersign((String) body.get("flowCode"), asLong(body.get("bizId")),
+                asVoters(body.get("approvers")), (String) body.get("mode"),
+                (String) body.get("comment"), Boolean.TRUE.equals(body.get("approved")));
+        return Result.ok();
+    }
+
+    @Operation(summary = "V9.17 会签意见列表")
+    @GetMapping("/countersign/opinions")
+    public Result<List<Map<String, Object>>> countersignOpinions(@RequestParam String flowCode,
+                                                                @RequestParam Long bizId,
+                                                                @RequestParam(required = false) String nodeName) {
+        return Result.ok(flowService.countersignOpinions(flowCode, bizId, nodeName));
+    }
+
+    @Operation(summary = "V9.17 委派（转办）")
+    @PostMapping("/delegate")
+    public Result<Void> delegate(@RequestBody Map<String, Object> body) {
+        flowService.delegate((String) body.get("flowCode"), asLong(body.get("bizId")),
+                asLong(body.get("toUserId")), (String) body.get("toUserName"), (String) body.get("reason"));
+        return Result.ok();
+    }
+
+    @Operation(summary = "V9.17 流程定义校验")
+    @PostMapping("/def/validate")
+    public Result<Map<String, Object>> validateDef(@RequestBody Map<String, Object> body) {
+        return Result.ok(flowService.validateDef((String) body.get("defJson")));
+    }
+
+    @Operation(summary = "V9.17 流程定义保存")
+    @PostMapping("/def/save")
+    public Result<Void> saveDef(@RequestBody Map<String, Object> body) {
+        flowService.saveDef((String) body.get("defJson"));
+        return Result.ok();
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> asVoters(Object v) {
+        if (!(v instanceof List<?> list)) {
+            return List.of();
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Object o : list) {
+            if (o instanceof Map<?, ?> m) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                Object uid = m.get("userId");
+                row.put("userId", uid == null ? null : Long.valueOf(String.valueOf(uid)));
+                row.put("userName", m.get("userName"));
+                out.add(row);
+            } else if (o instanceof Number n) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("userId", n.longValue());
+                row.put("userName", "");
+                out.add(row);
+            }
+        }
+        return out;
+    }
+""";
 
     // ============================ V6.2 部署物 ============================
 }

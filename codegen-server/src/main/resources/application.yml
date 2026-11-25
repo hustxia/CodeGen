@@ -139,6 +139,18 @@ gen:
     outlet: artifact
 
   # ============================================================
+  # V9.19 模板市场：用户自定义行业模板包
+  #
+  # 预置包仍在 classpath:industry-templates/*.json；这里只放用户导入的包。
+  # 同名 key 由用户包覆盖预置包（来源标记为 user），删除用户包后自动回落到预置包。
+  # max-pack-size-mb 同时限制上传文件与 ZIP 解压后总量，防炸内存。
+  # ============================================================
+  template:
+    external-dir: ${GEN_TEMPLATE_EXTERNAL_DIR:${user.home}/.codegen/industry-templates}
+    max-pack-size-mb: ${GEN_TEMPLATE_MAX_SIZE_MB:5}
+    max-tables: ${GEN_TEMPLATE_MAX_TABLES:200}
+
+  # ============================================================
   # V5.0「一句话建系统」流水线
   # AI 的 base-url/api-key/model 放 application-local.yml（不入库）；
   # enabled=false 时前端自动降级「手动粘贴 DDL」，不影响其余步骤。
@@ -157,6 +169,10 @@ gen:
     frontend-port-base: 9040
     deploy-timeout-seconds: 120
     log-dir: logs/pipeline
+    # 建库 DDL 分批：每批 N 条语句、每批一个事务批末提交。
+    # 超大型系统一次执行几百条 DDL 时不至于攒成一整段长事务，失败也能定位到第几批第几条；
+    # <= 0 视为不分批（与分批前行为一致）。
+    db-batch-size: 50
     # V9.8 同时运行的流水线上限：跨系统并行、同系统串行（同一系统的两条流水线
     # 共用生成目录与目标库，闸门会拒绝）。打包/部署是重 IO，不建议调太大
     max-running: 2
@@ -187,6 +203,23 @@ app:
     api: http://ip-api.com/json/{ip}?lang=zh-CN
     timeout-ms: 3000
     # proxy: http://127.0.0.1:7890   # 需要走代理才配，不配则强制直连（绕开 HTTP_PROXY）
+
+# ============================================================
+# V9.18 验证契约（S8 截图 / S9 产物等价性）
+#
+# 阈值只在后端维护，执行器注入子进程环境变量，页面 / CLI / CI 共用同一份判定。
+# new-dir / baseline-dir 为空时 S9 如实 SKIPPED，不伪造通过。
+# ============================================================
+verify:
+  contract:
+    max-added: ${VERIFY_CONTRACT_MAX_ADDED:20}
+    max-removed: ${VERIFY_CONTRACT_MAX_REMOVED:0}
+    max-modified: ${VERIFY_CONTRACT_MAX_MODIFIED:50}
+    whitelist: ${VERIFY_CONTRACT_WHITELIST:node_modules,dist,.cache,.git}
+    new-dir: ${VERIFY_CONTRACT_NEW_DIR:}
+    baseline-dir: ${VERIFY_CONTRACT_BASELINE_DIR:}
+    # 形如 login=http://127.0.0.1:9530/#/login；留空则用脚本内置的默认控制台登录页
+    shot-urls: ${VERIFY_CONTRACT_SHOT_URLS:}
 
 # ============================================================
 # V6.9 平台文档中心

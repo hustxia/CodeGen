@@ -1,9 +1,9 @@
 -- H2 MODE=MySQL 版本（demo 模式用），由 convert_sql_to_h2.py 自动生成
 -- 原始脚本: docs/sql/V3.0__multi_project.sql
 -- 转换记录:
-  [条件DDL] ADD COLUMN IF NOT EXISTS gen_table project_id
-  [条件DDL] CREATE INDEX IF NOT EXISTS idx_project
-  [条件DDL] ADD COLUMN IF NOT EXISTS gen_output project_id
+-- [条件DDL] ADD COLUMN IF NOT EXISTS gen_table project_id
+-- [条件DDL] CREATE INDEX IF NOT EXISTS idx_project
+-- [条件DDL] ADD COLUMN IF NOT EXISTS gen_output project_id
 
 CREATE TABLE IF NOT EXISTS `sys_project` (
   id bigint NOT NULL,
