@@ -1,28 +1,28 @@
 -- H2 MODE=MySQL 版本（demo 模式用），由 convert_sql_to_h2.py 自动生成
 -- 原始脚本: docs/sql/V1.0__init.sql
 -- 转换记录:
-  [丢弃] DROP 语句（内存库每次全新建）
-  [丢弃] DROP 语句（内存库每次全新建）
-  [丢弃] DROP 语句（内存库每次全新建）
-  [丢弃] DROP 语句（内存库每次全新建）
-  [序列] gen_template_history.id RESTART WITH 4
-  [丢弃] DROP 语句（内存库每次全新建）
-  [丢弃] DROP 语句（内存库每次全新建）
-  [序列] gen_history.id RESTART WITH 139
-  [丢弃] DROP 语句（内存库每次全新建）
-  [序列] sys_menu.id RESTART WITH 2112600000000000676
-  [丢弃] DROP 语句（内存库每次全新建）
-  [序列] sys_role.id RESTART WITH 4
-  [丢弃] DROP 语句（内存库每次全新建）
-  [序列] sys_role_menu.id RESTART WITH 141
-  [丢弃] DROP 语句（内存库每次全新建）
-  [序列] sys_user.id RESTART WITH 4
-  [丢弃] DROP 语句（内存库每次全新建）
-  [序列] sys_user_role.id RESTART WITH 4
-  [丢弃] DROP 语句（内存库每次全新建）
-  [序列] sys_dict_type.id RESTART WITH 8
-  [丢弃] DROP 语句（内存库每次全新建）
-  [序列] sys_dict_data.id RESTART WITH 21
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [序列] gen_template_history.id RESTART WITH 4
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [序列] gen_history.id RESTART WITH 139
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [序列] sys_menu.id RESTART WITH 2112600000000000676
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [序列] sys_role.id RESTART WITH 4
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [序列] sys_role_menu.id RESTART WITH 141
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [序列] sys_user.id RESTART WITH 4
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [序列] sys_user_role.id RESTART WITH 4
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [序列] sys_dict_type.id RESTART WITH 8
+-- [丢弃] DROP 语句（内存库每次全新建）
+-- [序列] sys_dict_data.id RESTART WITH 21
 
 CREATE TABLE IF NOT EXISTS `gen_table` (
   `id` bigint NOT NULL,

@@ -1,8 +1,9 @@
--- H2 MODE=MySQL 版本（demo 模式用）
+-- H2 MODE=MySQL 版本（demo 模式用），由 convert_sql_to_h2.py 自动生成
 -- 原始脚本: docs/sql/V9.18__child_save_mode.sql
 -- 转换记录:
---   [条件DDL] ADD COLUMN IF NOT EXISTS gen_table child_save_mode
---   [丢弃] information_schema 条件语句/验证 SELECT（H2 内存库每次启动都是新库）
+-- [丢弃] information_schema 条件语句/诊断 SELECT
+-- [条件DDL] ADD COLUMN IF NOT EXISTS gen_table child_save_mode
+-- [丢弃] 纯 SELECT 诊断语句
 
 ALTER TABLE `gen_table` ADD COLUMN IF NOT EXISTS child_save_mode tinyint NOT NULL DEFAULT 0;
 

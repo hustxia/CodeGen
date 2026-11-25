@@ -368,29 +368,67 @@ def convert_script(path: Path):
     out, notes = [], []
 
     # 先把 DELIMITER 包裹的存储过程整块摘出来（CREATE PROCEDURE ... END$$）
-    proc_blocks = []
+    # 用 (过程名, 过程体) 存：CALL <name> 处必须就地展开，否则展开的 ADD COLUMN
+    # 会排到后面的 UPDATE 之后，导致 "Column not found"（V4.1 踩坑）。
+    proc_blocks = []  # list[(name, body)]
     filtered = []
     i = 0
     while i < len(raw_stmts):
         s = raw_stmts[i]
         if re.match(r"^CREATE\s+PROCEDURE\b", s, flags=re.I):
-            # 存储过程体可能因 DELIMITER 分割错误而断成多条；合并到 END$$ 或最后一个 END
+            # 存储过程体可能因 DELIMITER 分割错误而断成多条；合并到 END$$ 或最后一个 END。
+            # 注意：END$$ 后可能紧跟 CALL（同一条 raw stmt 内），必须切出来放回队列，
+            # 否则 CALL 被吞进过程体，展开的 ADD COLUMN 排到 UPDATE 之后 → Column not found。
             block = s
-            while not re.search(r"\bEND\s*\$\$|\bEND\s*$", block, flags=re.I) and i + 1 < len(raw_stmts):
-                i += 1
-                block += ";\n" + raw_stmts[i]
-            block = re.sub(r"\bEND\s*\$\$\s*$", "", block, flags=re.I)
-            proc_blocks.append(block)
+            tail = ""
+            end_m = re.search(r"\bEND\s*\$\$([\s\S]*)$", block, flags=re.I)
+            if end_m:
+                tail = end_m.group(1).strip()
+                block = block[:end_m.start()]
+            else:
+                while not re.search(r"\bEND\s*$", block, flags=re.I) and i + 1 < len(raw_stmts):
+                    i += 1
+                    nxt = raw_stmts[i]
+                    end_m = re.search(r"\bEND\s*\$\$([\s\S]*)$", nxt, flags=re.I)
+                    if end_m:
+                        block += ";\n" + nxt[:end_m.start()]
+                        tail = end_m.group(1).strip()
+                        break
+                    block += ";\n" + nxt
+            block = re.sub(r"\bEND\s*$", "", block, flags=re.I).strip()
+            name_m = re.match(r"CREATE\s+PROCEDURE\s+`?([A-Za-z0-9_]+)`?", block, flags=re.I)
+            proc_blocks.append((name_m.group(1) if name_m else "", block))
+            if tail:
+                # tail 可能含 CALL 与 DROP 等多条：插到当前位置之后，下一轮循环自然读到，
+                # 保证 CALL 在主循环被识别、在调用点就地展开（不能 i 跳过多条）。
+                parts = [p.strip() for p in tail.split(";") if p.strip()]
+                raw_stmts[i + 1:i + 1] = parts
             i += 1
             continue
         filtered.append(s)
         i += 1
 
+    called = set()
     for stmt in filtered:
         # 归一化首词
         lead = re.match(r"^\s*(--.*\n\s*)*([A-Za-z`]+)", stmt)
         kw = lead.group(2).strip("`").upper() if lead else ""
         upper = stmt.upper()
+
+        # CALL <proc>：在调用点就地展开过程体（ADD COLUMN 必须先于后续 UPDATE）
+        call_m = re.match(r"^\s*CALL\s+`?([A-Za-z0-9_]+)`?", stmt, flags=re.I)
+        if call_m:
+            proc_name = call_m.group(1)
+            called.add(proc_name.lower())
+            expanded = False
+            for pname, pbody in proc_blocks:
+                if pname.lower() == proc_name.lower():
+                    out.extend(transform_procedure(pbody, notes))
+                    expanded = True
+                    break
+            if not expanded:
+                notes.append("  [丢弃] CALL 未找到过程体: %s" % proc_name)
+            continue
 
         if DROP_PREFIX.match(stmt):
             continue
@@ -438,8 +476,10 @@ def convert_script(path: Path):
         else:
             notes.append("  [丢弃] 未识别语句: %s..." % re.sub(r"\s+", " ", stmt)[:60])
 
-    for block in proc_blocks:
-        out.extend(transform_procedure(block, notes))
+    # 兜底：未被 CALL 的孤立过程才展开到末尾（正常脚本过程都在 CALL 处就地展开）
+    for pname, pbody in proc_blocks:
+        if pname.lower() not in called:
+            out.extend(transform_procedure(pbody, notes))
 
     return out, notes
 
@@ -462,11 +502,19 @@ def main():
     total = 0
     for f in files:
         stmts, notes = convert_script(f)
+        # 每条 note 必须带 `-- ` 前缀：spring.sql.init 按分号切分脚本，
+        # 裸文本（如 "  [丢弃] DROP 语句"）会被当成 SQL 交给 H2 执行，直接语法错（V9.19 踩坑）。
+        commented_notes = [("-- " + n.lstrip()) if not n.lstrip().startswith("--") else n for n in notes]
+        # 全被丢弃的脚本（如 V6.0 只改 information_schema 列注释）不能生成空文件：
+        # spring.sql.init 对空脚本抛 IllegalArgumentException: 'script' must not be null or empty。
+        if not stmts:
+            stmts = ["SELECT 1; -- H2 无对应语义，原脚本全部丢弃，留无害占位保证脚本可执行"]
+            commented_notes.append("-- [空脚本] 原脚本在 H2 下无可执行语句，注入 SELECT 1 占位")
         header = [
             "-- H2 MODE=MySQL 版本（demo 模式用），由 convert_sql_to_h2.py 自动生成",
             "-- 原始脚本: docs/sql/%s" % f.name,
             "-- 转换记录:",
-        ] + notes
+        ] + commented_notes
         content = "\n".join(header) + "\n\n" + "\n\n".join(stmts) + "\n"
         (DST_DIR / f.name).write_text(content, encoding="utf-8")
         total += len(stmts)
