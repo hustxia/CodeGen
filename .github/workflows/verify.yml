@@ -115,3 +115,37 @@ jobs:
             target/verify-diff/
             target/verify-center/
           retention-days: 7
+
+  # V9.16 冒烟门禁：Docker/H2/演示页静态契约 + H2 profile 真启动 + admin 登录。
+  # 静态层秒级返回；动态层打包后起 jar 指向内存库，不依赖 MySQL/Docker daemon。
+  smoke-v916:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 静态冒烟（Docker/H2/演示页契约）
+        run: node scripts/smoke-v9.16.mjs
+
+      - name: 打包 fat jar（供 H2 动态冒烟）
+        run: mvn -B -q package -DskipTests
+
+      - name: 动态冒烟（H2 真启动 + admin 登录）
+        run: node scripts/smoke-v9.16.mjs --with-server
+
+      - name: 归档冒烟报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-v916-report
+          path: logs/smoke/
+          retention-days: 7
