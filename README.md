@@ -2,7 +2,7 @@
 
 **[Live Demo](https://hustxia.github.io/CodeGen/)** · **[GitHub](https://github.com/hustxia/CodeGen)** · **[简体中文](README_ZH.md)**
 
-[![version](https://img.shields.io/badge/V9.19-blue)](https://github.com/hustxia/CodeGen/releases) [![verify](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml) [![i18n contract](https://github.com/hustxia/CodeGen/actions/workflows/i18n-contract.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/i18n-contract.yml) [![tests 574](https://img.shields.io/badge/tests-574%20passing-green.svg)](#11-documentation-map) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![version](https://img.shields.io/badge/V9.19-blue)](https://github.com/hustxia/CodeGen/releases) [![verify](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/verify.yml) [![i18n contract](https://github.com/hustxia/CodeGen/actions/workflows/i18n-contract.yml/badge.svg?branch=main)](https://github.com/hustxia/CodeGen/actions/workflows/i18n-contract.yml) [![tests 574](https://img.shields.io/badge/tests-574%20passing-green.svg)](#11-documentation-map) [![License: MulanPSL-2.0](https://img.shields.io/badge/License-MulanPSL--2.0-blue.svg)](LICENSE)
 
 ---
 
