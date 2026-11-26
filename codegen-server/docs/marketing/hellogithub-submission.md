@@ -34,7 +34,7 @@ https://github.com/hustxia/CodeGen
 https://hustxia.github.io/CodeGen/
 
 ## 开源协议
-Apache-2.0
+MulanPSL-2.0（木兰宽松许可证第 2 版，宽松许可，可商用）
 
 ## 一句话介绍
 输入数据库表结构，一键生成可编译、可运行的 Spring Boot 3 + Vue3 全栈业务系统。
@@ -88,7 +88,7 @@ Java 21 / Spring Boot 3 / MyBatis-Plus / MySQL 8 / Vue 3 / Element Plus / Vite
 它的特别之处在生成之后：内存 javac 自检保证能编译，标记块合并让它可以接管存量项目，
 四态台账支持一键回滚。自带 12 步流水线和 486 个单测，已完整跑通警务、村务两套真实系统。
 
-Apache-2.0 开源，有在线演示，双击即看。
+MulanPSL-2.0 开源，有在线演示，双击即看。
 ```
 
 ---

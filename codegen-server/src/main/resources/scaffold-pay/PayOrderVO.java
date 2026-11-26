@@ -31,6 +31,14 @@ public class PayOrderVO {
     private String refundAmountYuan;
     /** V6.3 补全 最近退款时间 */
     private LocalDateTime refundAt;
+    /** V9.20 JSAPI 调起支付：prepay_id（createJsapiOrder 返回，前端换签名调起） */
+    private String prepayId;
+    /** V9.20 JSAPI 调起支付：appId */
+    private String jsapiAppId;
+    /** V9.20 H5 下单：微信返回的 mweb_url（H5 跳转地址，可空时回落 payUrl） */
+    private String h5PayUrl;
+    /** V9.20 JSAPI/H5 场景标识：native / jsapi / h5 */
+    private String payScene;
 
     public String getOutTradeNo() { return outTradeNo; }
     public void setOutTradeNo(String v) { this.outTradeNo = v; }
@@ -66,4 +74,12 @@ public class PayOrderVO {
     public void setRefundAmountYuan(String v) { this.refundAmountYuan = v; }
     public LocalDateTime getRefundAt() { return refundAt; }
     public void setRefundAt(LocalDateTime v) { this.refundAt = v; }
+    public String getPrepayId() { return prepayId; }
+    public void setPrepayId(String v) { this.prepayId = v; }
+    public String getJsapiAppId() { return jsapiAppId; }
+    public void setJsapiAppId(String v) { this.jsapiAppId = v; }
+    public String getH5PayUrl() { return h5PayUrl; }
+    public void setH5PayUrl(String v) { this.h5PayUrl = v; }
+    public String getPayScene() { return payScene; }
+    public void setPayScene(String v) { this.payScene = v; }
 }

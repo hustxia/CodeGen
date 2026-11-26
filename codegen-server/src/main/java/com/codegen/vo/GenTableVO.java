@@ -168,5 +168,11 @@ public class GenTableVO implements Serializable {
      */
     private Integer printLandscape;
 
+    /** V9.20 打印条码：master 字段名（表级配置原值），null/空=不渲染 */
+    private String printBarcode;
+
+    /** V9.20 打印二维码：master 字段名（表级配置原值），null/空=不渲染 */
+    private String printQr;
+
     private List<GenColumnDTO> columns;
 }

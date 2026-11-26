@@ -255,6 +255,18 @@ public class GenTable extends BaseEntity {
     private Integer printLandscape;
 
     /**
+     * V9.20 打印条码：master 上的字段名（如 order_no），非空时打印页渲染 CODE128-B 条码区。
+     * 三态可空：null/空=不渲染（存量零 diff）；值必须是 master 的真实列名，非法列名在生成期被忽略。
+     */
+    private String printBarcode;
+
+    /**
+     * V9.20 打印二维码：master 上的字段名（如 qr_text），非空时打印页渲染二维码区（占位实现，见设计 §5）。
+     * 三态可空约定同 printBarcode。
+     */
+    private String printQr;
+
+    /**
      * 所属系统（sys_project.id）。为空表示沿用 application.yml 的全局默认，
      * 这是 V3.0 之前的存量表兼容路径。
      *

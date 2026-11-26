@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -335,12 +336,17 @@ public class GenTemplateEngine {
         try {
             ResolvedTemplate api = resolveFromDb("flowApi", 0L);
             ResolvedTemplate page = resolveFromDb("flowTodo", 0L);
+            // V9.17 未尽事项接线：独立设计器页从 flowTodo 的 tab 拆出，按自己的 pathPattern 写盘。
+            // 与 flowTodo 同属能力包：仅开态产出；关态在上面已提前 return，零 diff 不受影响。
+            ResolvedTemplate designer = resolveFromDb("flowDesigner", 0L);
             Map<String, String> shared = new LinkedHashMap<>();
             shared.put(renderString(api.pathPattern(), Map.of()), renderString(api.content(), Map.of()));
             shared.put(renderString(page.pathPattern(), Map.of()), renderString(page.content(), Map.of()));
+            shared.put(renderString(designer.pathPattern(), Map.of()), renderString(designer.content(), Map.of()));
             shared.put("flow-router-snippet.txt",
-                    "// V6.1 待办中心路由：追加到 src/router/index.js 主布局 children\n"
-                            + "{ path: 'flow/todo', name: 'FlowTodo', component: () => import('@/views/flow/todo.vue'), meta: { title: '待办中心' } }\n");
+                    "// V6.1/V9.17 工作流路由：追加到 src/router/index.js 主布局 children\n"
+                            + "{ path: 'flow/todo', name: 'FlowTodo', component: () => import('@/views/flow/todo.vue'), meta: { title: '待办中心' } }\n"
+                            + "{ path: 'flow/designer', name: 'FlowDesigner', component: () => import('@/views/flow/designer.vue'), meta: { title: '流程设计器' } }\n");
             return shared;
         } catch (Exception e) {
             // 模板缺失（老库未跑 Seeder）不阻断主产物；但要把原因吐进日志，静默吞掉排查不动
@@ -368,10 +374,19 @@ public class GenTemplateEngine {
             ResolvedTemplate api = resolveFromDb("payApi", 0L);
             ResolvedTemplate cashier = resolveFromDb("payCashier", 0L);
             ResolvedTemplate orderPage = resolveFromDb("payOrderPage", 0L);
+            // V9.20 开关接线：payEnabled=1 即启用完整支付能力，五个深度子开关默认全开。
+            // 模板侧契约 <#if (key!0)==1>，传空 Map 时全关（V9.17 遗留问题），这里显式置 1。
+            // 真渠道未配置时后端端点已做 try/catch 降级，不会 404 阻断生成物运行。
+            Map<String, Object> payModel = new HashMap<>();
+            payModel.put("payJsapiEnabled", 1);
+            payModel.put("payH5Enabled", 1);
+            payModel.put("payRefundNoEnabled", 1);
+            payModel.put("payRefundQueryEnabled", 1);
+            payModel.put("payAlipaySandboxEnabled", 1);
             Map<String, String> shared = new LinkedHashMap<>();
-            shared.put(renderString(api.pathPattern(), Map.of()), renderString(api.content(), Map.of()));
-            shared.put(renderString(cashier.pathPattern(), Map.of()), renderString(cashier.content(), Map.of()));
-            shared.put(renderString(orderPage.pathPattern(), Map.of()), renderString(orderPage.content(), Map.of()));
+            shared.put(renderString(api.pathPattern(), payModel), renderString(api.content(), payModel));
+            shared.put(renderString(cashier.pathPattern(), payModel), renderString(cashier.content(), payModel));
+            shared.put(renderString(orderPage.pathPattern(), payModel), renderString(orderPage.content(), payModel));
             shared.put("pay-router-snippet.txt",
                     "// V6.3 收银台与支付记录路由：追加到 src/router/index.js 主布局 children\n"
                             + "{ path: 'pay/cashier', name: 'PayCashier', component: () => import('@/views/pay/cashier.vue'), meta: { title: '收银台' } }\n"

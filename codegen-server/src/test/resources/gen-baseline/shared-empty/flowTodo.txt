@@ -26,63 +26,21 @@
         </el-table>
       </el-tab-pane>
 
-      <!-- V9.17 简化版流程设计器：节点拖拽排序 + 审批人配置 + 条件分支配置 -->
+      <!-- V9.17 流程设计：内嵌设计器已拆到独立页 /flow/designer，这里只保留入口，避免两台设计器重复 -->
       <el-tab-pane label="流程设计" name="designer">
         <el-alert type="info" :closable="false" show-icon
-                  title="简化版设计器：拖拽节点卡片排序，配置审批角色/会签人/条件分支；右侧 JSON 实时预览，校验通过后可保存为流程定义。" />
-        <el-form :inline="true" size="small" class="designer-meta" label-width="80px">
-          <el-form-item label="流程编码"><el-input v-model="defForm.flowCode" placeholder="如 hr_leave_flow" /></el-form-item>
-          <el-form-item label="流程名称"><el-input v-model="defForm.flowName" placeholder="如 请假审批" /></el-form-item>
-          <el-form-item label="业务表"><el-input v-model="defForm.tableName" placeholder="如 hr_leave" /></el-form-item>
-          <el-form-item label="状态列"><el-input v-model="defForm.statusCol" placeholder="status" /></el-form-item>
+                  title="设计器已独立为 /flow/designer：从待办/已办选择流程后打开，可定位到对应流程定义，拖拽排序、配置审批人与条件分支、校验并保存。" />
+        <el-form :inline="true" size="small" class="designer-entry" label-width="90px">
+          <el-form-item label="选择流程">
+            <el-select v-model="designerFlowCode" filterable allow-create default-first-option clearable
+                       placeholder="选择待办/已办中的流程，或直接输入流程编码" style="width: 320px">
+              <el-option v-for="f in flowOptions" :key="f.flowCode" :label="f.label" :value="f.flowCode" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" size="small" @click="openDesigner">打开设计器</el-button>
+          </el-form-item>
         </el-form>
-        <div class="designer-toolbar">
-          <el-button size="small" type="primary" plain @click="addNode">新增节点</el-button>
-          <el-button size="small" @click="moveNode(-1)">上移</el-button>
-          <el-button size="small" @click="moveNode(1)">下移</el-button>
-          <el-button size="small" type="warning" @click="validateDef">校验</el-button>
-          <el-button size="small" type="success" @click="saveDef">保存</el-button>
-          <span class="designer-tip">选中节点后可用上移/下移，或直接拖拽卡片</span>
-        </div>
-        <div class="designer-body">
-          <div class="designer-nodes">
-            <div v-for="(node, i) in defForm.nodes" :key="'node-' + i"
-                 class="designer-node" :class="{ 'is-active': i === selectedNodeIndex }"
-                 draggable="true"
-                 @dragstart="onDragStart(i)" @dragover.prevent @drop="onDrop(i)"
-                 @click="selectedNodeIndex = i">
-              <div class="designer-node-head">
-                <span class="drag-handle" title="拖拽排序">⠿</span>
-                <b>节点 {{ i + 1 }}</b>
-                <el-button size="mini" type="danger" text @click.stop="removeNode(i)">删除</el-button>
-              </div>
-              <div class="designer-node-grid">
-                <el-input v-model="node.from" size="mini" placeholder="起始状态(如 0)" />
-                <el-input v-model="node.to" size="mini" placeholder="目标状态(如 1)" />
-                <el-input v-model="node.nodeName" size="mini" placeholder="节点名称(如 主管审批)" />
-                <el-input v-model="node.roleCode" size="mini" placeholder="审批角色(如 manager)" />
-                <el-input v-model="node.condition" size="mini" placeholder="条件分支表达式(可选，如 amount>1000)" />
-                <el-input v-model="node.approvers" size="mini" placeholder="会签人ID，逗号分隔(可选)" />
-                <el-select v-model="node.countersignMode" size="mini" placeholder="会签模式" style="width:100%">
-                  <el-option label="普通审批(单机)" value="SINGLE" />
-                  <el-option label="全部同意(ALL)" value="ALL" />
-                  <el-option label="一人同意(ANY)" value="ANY" />
-                  <el-option label="一票否决(VETO)" value="VETO" />
-                </el-select>
-                <el-input v-model="node.rejectTo" size="mini" placeholder="驳回目标状态(可选)" />
-              </div>
-            </div>
-            <div v-if="!defForm.nodes.length" class="designer-empty">还没有节点，点「新增节点」开始</div>
-          </div>
-          <div class="designer-preview">
-            <div class="designer-preview-title">流程定义 JSON（可直接编辑）</div>
-            <el-input v-model="defJson" type="textarea" :rows="18" spellcheck="false" />
-            <div v-if="validateResult" class="validate-result" :class="validateResult.valid ? 'ok' : 'bad'">
-              <span v-if="validateResult.valid">校验通过，可保存</span>
-              <span v-else>校验失败：{{ (validateResult.errors || []).join('；') }}</span>
-            </div>
-          </div>
-        </div>
       </el-tab-pane>
     </el-tabs>
 
@@ -212,7 +170,7 @@
 import {
   getFlowTodo, getFlowDone, flowApprove, flowReject, getFlowRecords,
   getFlowProgress, flowCountersign, getFlowCountersignOpinions,
-  flowDelegate, flowValidateDef, flowSaveDef
+  flowDelegate
 } from '@/api/flow'
 
 export default {
@@ -236,13 +194,8 @@ export default {
       delegateVisible: false,
       delegateTarget: null,
       delegateForm: { toUserId: null, toUserName: '', reason: '' },
-      // V9.17 设计器
-      defForm: {
-        flowCode: '', flowName: '', tableName: '', statusCol: 'status', nodes: []
-      },
-      selectedNodeIndex: -1,
-      dragIndex: -1,
-      validateResult: null
+      // V9.17 设计器入口：只保存目标 flowCode，设计器本体在独立页 /flow/designer
+      designerFlowCode: ''
     }
   },
   computed: {
@@ -251,49 +204,16 @@ export default {
       const n = (this.progressData && this.progressData.nodeStatuses || []).length
       return Math.max(360, 120 + n * 150)
     },
-    // 设计器 JSON 双向绑定：左侧表单 <-> 右侧 JSON
-    defJson: {
-      get() {
-        const def = {
-          flowCode: this.defForm.flowCode,
-          flowName: this.defForm.flowName,
-          tableName: this.defForm.tableName,
-          statusCol: this.defForm.statusCol || 'status',
-          nodes: (this.defForm.nodes || []).map(function (n) {
-            return {
-              from: n.from, to: n.to, nodeName: n.nodeName, roleCode: n.roleCode,
-              rejectTo: n.rejectTo || undefined,
-              condition: n.condition || undefined,
-              approvers: (n.approvers || '').split(',').map(function (s) { return s.trim() }).filter(Boolean),
-              countersignMode: n.countersignMode || 'SINGLE'
-            }
-          })
-        }
-        return JSON.stringify(def, null, 2)
-      },
-      set(v) {
-        try {
-          const o = JSON.parse(v)
-          if (!o || typeof o !== 'object') return
-          this.defForm.flowCode = o.flowCode || ''
-          this.defForm.flowName = o.flowName || ''
-          this.defForm.tableName = o.tableName || ''
-          this.defForm.statusCol = o.statusCol || 'status'
-          if (Array.isArray(o.nodes)) {
-            this.defForm.nodes = o.nodes.map(function (n) {
-              const a = Array.isArray(n.approvers) ? n.approvers : []
-              return {
-                from: n.from || '', to: n.to || '', nodeName: n.nodeName || '',
-                roleCode: n.roleCode || '', rejectTo: n.rejectTo || '',
-                condition: n.condition || '', approvers: a.join(','),
-                countersignMode: n.countersignMode || 'SINGLE'
-              }
-            })
-          }
-        } catch (e) {
-          // JSON 编辑中允许临时不合法，不打断输入
-        }
+    // 待办/已办里出现过的流程：设计器入口据此定位到对应流程定义
+    flowOptions() {
+      const map = new Map()
+      for (const r of this.todoList) {
+        if (r.flowCode) map.set(r.flowCode, (r.flowName || r.flowCode) + '（' + r.flowCode + '）')
       }
+      for (const r of this.doneList) {
+        if (r.flowCode && !map.has(r.flowCode)) map.set(r.flowCode, (r.flowName || r.flowCode) + '（' + r.flowCode + '）')
+      }
+      return Array.from(map, function (e) { return { flowCode: e[0], label: e[1] } })
     }
   },
   created() {
@@ -405,62 +325,15 @@ export default {
         // request.js 统一弹出错误
       }
     },
-    // ---------- 设计器 ----------
-    addNode() {
-      const last = this.defForm.nodes[this.defForm.nodes.length - 1]
-      this.defForm.nodes.push({
-        from: last ? last.to : '0', to: '', nodeName: '', roleCode: '',
-        rejectTo: '0', condition: '', approvers: '', countersignMode: 'SINGLE'
-      })
-      this.selectedNodeIndex = this.defForm.nodes.length - 1
-      this.validateResult = null
-    },
-    removeNode(i) {
-      this.defForm.nodes.splice(i, 1)
-      this.selectedNodeIndex = -1
-      this.validateResult = null
-    },
-    onDragStart(i) {
-      this.dragIndex = i
-    },
-    onDrop(i) {
-      const from = this.dragIndex
-      if (from < 0 || from === i) return
-      const node = this.defForm.nodes.splice(from, 1)[0]
-      this.defForm.nodes.splice(i, 0, node)
-      this.selectedNodeIndex = i
-      this.dragIndex = -1
-      this.validateResult = null
-    },
-    moveNode(delta) {
-      const i = this.selectedNodeIndex
-      const j = i + delta
-      if (i < 0 || j < 0 || j >= this.defForm.nodes.length) return
-      const node = this.defForm.nodes.splice(i, 1)[0]
-      this.defForm.nodes.splice(j, 0, node)
-      this.selectedNodeIndex = j
-      this.validateResult = null
-    },
-    async validateDef() {
-      try {
-        const res = await flowValidateDef(this.defJson)
-        this.validateResult = (res && res.data) || { valid: false, errors: ['校验接口无返回'] }
-      } catch (e) {
-        this.validateResult = { valid: false, errors: ['校验接口调用失败'] }
-      }
-    },
-    async saveDef() {
-      await this.validateDef()
-      if (!this.validateResult || !this.validateResult.valid) {
-        this.$message.warning('请先修正流程定义中的错误')
+    // ---------- 设计器入口（本体在独立页） ----------
+    openDesigner() {
+      const code = (this.designerFlowCode || '').trim()
+      if (!code) {
+        this.$message.warning('请先选择或输入流程编码')
         return
       }
-      try {
-        await flowSaveDef(this.defJson)
-        this.$message.success('流程定义已保存')
-      } catch (e) {
-        // request.js 统一弹出错误
-      }
+      // 带上 flowCode，独立页 created() 据此定位到对应流程定义
+      this.$router.push({ path: '/flow/designer', query: { flowCode: code } })
     }
   }
 }
@@ -476,20 +349,5 @@ export default {
 .progress-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; }
 .flow-empty { color: #c0c4cc; font-size: 12px; padding: 8px 0; }
 .countersign-bar { margin-top: 10px; }
-.designer-meta { margin-top: 12px; }
-.designer-toolbar { display: flex; align-items: center; gap: 8px; margin: 8px 0 12px; }
-.designer-tip { color: #909399; font-size: 12px; margin-left: 8px; }
-.designer-body { display: flex; gap: 12px; align-items: flex-start; }
-.designer-nodes { flex: 1; min-width: 0; }
-.designer-node { border: 1px solid #ebeef5; border-radius: 4px; padding: 8px; margin-bottom: 8px; background: #fff; }
-.designer-node.is-active { border-color: #409eff; box-shadow: 0 0 0 2px rgba(64,158,255,.12); }
-.designer-node-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
-.drag-handle { cursor: move; color: #909399; font-size: 16px; }
-.designer-node-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.designer-empty { color: #c0c4cc; font-size: 13px; padding: 24px; text-align: center; border: 1px dashed #ebeef5; }
-.designer-preview { width: 380px; flex: none; }
-.designer-preview-title { font-size: 13px; color: #606266; margin-bottom: 6px; }
-.validate-result { margin-top: 8px; font-size: 12px; padding: 6px 8px; border-radius: 4px; }
-.validate-result.ok { color: #67c23a; background: #f0f9eb; }
-.validate-result.bad { color: #f56c6c; background: #fef0f0; }
+.designer-entry { margin-top: 12px; }
 </style>

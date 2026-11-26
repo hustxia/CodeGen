@@ -161,6 +161,12 @@ public class GenTableSaveDTO implements Serializable {
      */
     private Integer printLandscape;
 
+    /** V9.20 打印条码：master 字段名（如 order_no），null/空=不渲染 */
+    private String printBarcode;
+
+    /** V9.20 打印二维码：master 字段名，null/空=不渲染 */
+    private String printQr;
+
     /**
      * 字段配置
      */

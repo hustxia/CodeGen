@@ -186,6 +186,42 @@ class PayRefundContractTest {
         assertTrue(page.length() > 20 && api.length() > 20, "空模型渲染产物不应为空");
     }
 
+    @Test
+    @DisplayName("V9.20 支付深度：五个新端点与前端 API 同源，配置下发不含密钥")
+    void paymentDeepEndpointsAlign() {
+        String ctrl = scaffold("PayController.java");
+        // 五个后端端点齐全（设计文档 §3.2 契约）
+        assertTrue(ctrl.contains("@GetMapping(\"/config\")"), "缺 GET /pay/config（运行时配置下发）");
+        assertTrue(ctrl.contains("@PostMapping(\"/jsapi/order\")"), "缺 POST /pay/jsapi/order");
+        assertTrue(ctrl.contains("@GetMapping(\"/jsapi/signature\")"), "缺 GET /pay/jsapi/signature");
+        assertTrue(ctrl.contains("@PostMapping(\"/h5/order\")"), "缺 POST /pay/h5/order");
+        assertTrue(ctrl.contains("@GetMapping(\"/refund/{outTradeNo}/result\")"), "缺 GET /pay/refund/{outTradeNo}/result");
+        // 资金安全红线：配置下发只返非敏感项，不能出现密钥 getter
+        int cfgAt = ctrl.indexOf("@GetMapping(\"/config\")");
+        String cfgBlock = ctrl.substring(cfgAt, Math.min(cfgAt + 900, ctrl.length()));
+        assertFalse(cfgBlock.contains("getWxApiV3Key()") || cfgBlock.contains("getAliPrivateKey()"),
+                "/pay/config 不得下发 API v3 密钥或商户私钥");
+        assertTrue(cfgBlock.contains("getWxAppId()") && cfgBlock.contains("isAliSandbox()"),
+                "/pay/config 必须下发 appId 与沙箱标识");
+        // JSAPI/H5 下单沿用统一状态机（幂等/金额单一精度来源）
+        assertTrue(ctrl.contains("PayOrderVO vo = create(req)"), "JSAPI/H5 下单必须复用 PaymentService 状态机");
+        // 前端 API 与后端端点路径逐字对齐
+        Map<String, Object> on = new java.util.HashMap<>();
+        on.put("payJsapiEnabled", 1);
+        on.put("payH5Enabled", 1);
+        on.put("payRefundQueryEnabled", 1);
+        on.put("payAlipaySandboxEnabled", 1);
+        String api = render("payApi", on);
+        assertTrue(api.contains("export function getPayConfig()") && api.contains("'/pay/config'"), "前端配置函数缺失");
+        assertTrue(api.contains("export function createJsapiOrder(data)") && api.contains("'/pay/jsapi/order'"), "前端 JSAPI 下单缺失");
+        assertTrue(api.contains("export function getJsapiSignature(url)") && api.contains("'/pay/jsapi/signature'"), "前端签名函数缺失");
+        assertTrue(api.contains("export function createH5Order(data)") && api.contains("'/pay/h5/order'"), "前端 H5 下单缺失");
+        assertTrue(api.contains("export function getRefundResult(outTradeNo)") && api.contains("'/pay/refund/'"), "前端退款结果函数缺失");
+        // 空模型（旧行为）仍全关，零 diff 契约不破
+        String offApi = render("payApi", Map.of());
+        assertFalse(offApi.contains("export function createJsapiOrder(data)"), "空模型渲染不应产出 JSAPI 函数（零 diff 契约）");
+    }
+
     // ------------------------------------------------------------------
     // 工具
     // ------------------------------------------------------------------
