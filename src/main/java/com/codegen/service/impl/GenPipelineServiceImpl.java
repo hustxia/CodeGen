@@ -92,6 +92,8 @@ public class GenPipelineServiceImpl implements GenPipelineService {
     private PipelineAssembler assembler;
     @Autowired
     private PipelineExecutor executor;
+    @Autowired
+    private com.codegen.support.PipelineSpecGuard specGuard;
 
     @Autowired
     private com.codegen.support.GenSeedGenerator seedGenerator;
@@ -360,6 +362,8 @@ public class GenPipelineServiceImpl implements GenPipelineService {
         if (pipeline.getProjectId() == null) {
             throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "请先完成建库建表");
         }
+        // M2.1 规格一致性护栏：规格未确认不启动，避免产出与 SDD 规格脱节
+        specGuard.requireConfirmedSpec(pipeline.getProjectId());
         // V9.8 先占闸门再分配端口：被拒绝时不产生任何副作用（不写库、不占端口）
         final Long projectId = pipeline.getProjectId();
         try {
@@ -615,6 +619,7 @@ public class GenPipelineServiceImpl implements GenPipelineService {
                 {"seed", "数据初始化", "pipeline"},
                 {"scaffold", "前后端骨架", "pipeline"},
                 {"gen", "代码生成+自检", "pipeline"},
+                {"converge", "规格一致性对账", "pipeline"},
                 {"package_backend", "后端打包", "backend"},
                 {"deploy_backend", "后端启动", "backend"},
                 {"package_frontend", "前端依赖安装", "frontend"},

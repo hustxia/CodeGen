@@ -10,10 +10,12 @@ import com.codegen.dto.GenScaffoldDTO;
 import com.codegen.entity.GenPipeline;
 import com.codegen.entity.GenPipelineStep;
 import com.codegen.entity.GenTable;
+import com.codegen.entity.GenConvergeReport;
 import com.codegen.mapper.GenPipelineMapper;
 import com.codegen.mapper.GenPipelineStepMapper;
 import com.codegen.monitor.MonitorMetrics;
 import com.codegen.service.GenApplyService;
+import com.codegen.service.GenConvergeService;
 import com.codegen.service.GenDdlService;
 import com.codegen.service.GenScaffoldService;
 import com.codegen.service.GenTableService;
@@ -21,6 +23,7 @@ import com.codegen.service.SysProjectService;
 import com.codegen.support.PipelineAssembler;
 import com.codegen.support.PipelineSseRegistry;
 import com.codegen.vo.GenApplyStageVO;
+import com.codegen.vo.GenQualityGateVO;
 import com.codegen.vo.GenScaffoldVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +69,7 @@ public class PipelineExecutor {
 
     /** 步骤 key 常量（与 gen_pipeline_step 种子一致）。V5.2 起 db 后插入 seed；V7.0 起 db 后插入 ai_recommend */
     public static final String[] STEP_KEYS = {
-            "model", "db", "ai_recommend", "seed", "scaffold", "gen",
+            "model", "db", "ai_recommend", "seed", "scaffold", "gen", "converge",
             "package_backend", "deploy_backend",
             "package_frontend", "package_mobile", "deploy_frontend",
             "health"
@@ -95,6 +98,7 @@ public class PipelineExecutor {
     private final com.codegen.service.AiModelService aiModelService;
     private final com.codegen.service.GenSqlDeliverService sqlDeliverService;
     private final MonitorMetrics monitorMetrics;
+    private final GenConvergeService convergeService;
 
     public PipelineExecutor(GenPipelineMapper pipelineMapper,
                             GenPipelineStepMapper stepMapper,
@@ -115,7 +119,8 @@ public class PipelineExecutor {
                             com.codegen.service.AiRecommendService aiRecommendService,
                             com.codegen.service.AiModelService aiModelService,
                             com.codegen.service.GenSqlDeliverService sqlDeliverService,
-                            MonitorMetrics monitorMetrics) {
+                            MonitorMetrics monitorMetrics,
+                            GenConvergeService convergeService) {
         this.pipelineMapper = pipelineMapper;
         this.stepMapper = stepMapper;
         this.scaffoldService = scaffoldService;
@@ -136,6 +141,7 @@ public class PipelineExecutor {
         this.aiModelService = aiModelService;
         this.sqlDeliverService = sqlDeliverService;
         this.monitorMetrics = monitorMetrics;
+        this.convergeService = convergeService;
     }
 
     /**
@@ -194,6 +200,7 @@ public class PipelineExecutor {
                         case "seed" -> stepSeed(pipeline);
                         case "scaffold" -> stepScaffold(pipeline);
                         case "gen" -> stepGen(pipeline);
+                        case "converge" -> stepConverge(pipeline);
                         case "package_backend" -> stepPackageBackend(pipeline);
                         case "deploy_backend" -> stepDeployBackend(pipeline);
                         case "package_frontend" -> stepPackageFrontend(pipeline);
@@ -645,10 +652,17 @@ public class PipelineExecutor {
         dto.setSkipCheck(false);
         dto.setDryRun(false);
         var vo = applyService.apply(dto);
+        GenQualityGateVO gate = vo.getQualityGate();
         // V5.0 修复：apply 在自检不通过时只返回 passed=false（不抛异常），
         // 此前这里从不校验，把「写盘 0 个文件」包装成自检通过继续往下跑，
         // 直到打包步才以 CreateProcess error=267 的形式炸出来。
         if (!Boolean.TRUE.equals(vo.getPassed())) {
+            if (gate != null && gate.isBlocked()) {
+                // M2.2：质量门禁命中 BLOCKER，生成已在落盘前中止
+                throw new IllegalStateException("质量门禁未通过：" + gate.getMessage()
+                        + (gate.getReportId() == null ? "" : "（报告 #" + gate.getReportId() + "）")
+                        + "；请按报告中的 ❌→✅ 修复后重跑");
+            }
             StringBuilder detail = new StringBuilder("自检未通过，未写盘：");
             var stages = vo.getStages() == null ? List.<GenApplyStageVO>of() : vo.getStages();
             for (GenApplyStageVO stage : stages) {
@@ -669,7 +683,31 @@ public class PipelineExecutor {
             }
             throw new IllegalStateException(detail.toString());
         }
-        return "生成 " + tables.size() + " 张表，写盘 " + vo.getWritten() + " 个文件，自检通过";
+        String gateNote = gate == null ? "" : String.format("；质量门禁 %s（BLOCKER %d / WARN %d%s）",
+                gate.isBlocked() ? "FAIL" : "PASS", gate.getBlockerCount(), gate.getWarnCount(),
+                gate.getReportId() == null ? "" : "，报告 #" + gate.getReportId());
+        return "生成 " + tables.size() + " 张表，写盘 " + vo.getWritten() + " 个文件，自检通过" + gateNote;
+    }
+
+    /**
+     * converge（M2.1）：生成完成后立即以 CONFIRMED SPEC 为期望清单对账。
+     * 报告与明细落 gen_converge_report / gen_converge_item 作为审计留痕；
+     * 偏差率超过 gen.pipeline.converge-max-deviation-ratio 即阻断流水线。
+     */
+    String stepConverge(GenPipeline pipeline) {
+        GenConvergeReport report = convergeService.run(pipeline.getProjectId());
+        String summary = "对账 " + report.getStatus()
+                + "：缺失 " + report.getMissingCount()
+                + " / 多余 " + report.getExtraCount()
+                + " / 一致 " + report.getOkCount()
+                + "（报告 #" + report.getId() + "）";
+        if (GenConvergeReport.STATUS_UNCONVERGED.equals(report.getStatus())) {
+            // 未收敛一律告警；超阈值再阻断，避免个别多余项把整条流水线拦死
+            log.warn("规格对账未收敛 {}: {}", pipeline.getPipelineNo(), summary);
+            com.codegen.support.PipelineSpecGuard.assertWithinThreshold(
+                    report, props.getConvergeMaxDeviationRatio());
+        }
+        return summary;
     }
 
     /** package_backend：mvn package */

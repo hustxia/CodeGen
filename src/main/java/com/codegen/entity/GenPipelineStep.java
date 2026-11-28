@@ -21,7 +21,7 @@ public class GenPipelineStep extends BaseEntity {
     /** gen_pipeline.id */
     private Long pipelineId;
 
-    /** 步骤 key：model/db/scaffold/gen/package_backend/deploy_backend/package_frontend/deploy_frontend/health */
+    /** 步骤 key：model/db/ai_recommend/seed/scaffold/gen/converge/package_backend/deploy_backend/package_frontend/package_mobile/deploy_frontend/health */
     private String stepKey;
 
     /** 步骤中文名 */

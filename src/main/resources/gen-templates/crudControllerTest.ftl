@@ -29,7 +29,7 @@ class ${className}ControllerTest extends LoginStateTestSupport {
                         .content(saveBody()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
-        return jdbcTemplate.queryForObject("SELECT MAX(id) FROM ${tableName}", Long.class);
+        return jdbcTemplate.queryForObject("SELECT id FROM ${tableName} ORDER BY id DESC LIMIT 1", Long.class);
     }
 
     /** 业务字段 JSON（平台按列模型生成；唯一列值运行时随机，避免测试互撞唯一键） */

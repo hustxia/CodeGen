@@ -14,11 +14,13 @@ import com.codegen.service.GenApplyService;
 import com.codegen.service.GenCodeService;
 import com.codegen.service.GenMenuService;
 import com.codegen.service.GenSelfCheckService;
+import com.codegen.service.QualityGateService;
 import com.codegen.util.GenDigestUtils;
 import com.codegen.vo.GenApplyStageVO;
 import com.codegen.vo.GenApplyVO;
 import com.codegen.vo.GenCheckIssueVO;
 import com.codegen.vo.GenDiffVO;
+import com.codegen.vo.GenQualityGateVO;
 import com.codegen.vo.GenImpactVO;
 import com.codegen.vo.GenRollbackVO;
 import com.codegen.vo.GenSelfCheckVO;
@@ -78,6 +80,9 @@ public class GenApplyServiceImpl implements GenApplyService {
 
     @Autowired
     private GenSelfCheckService selfCheckService;
+
+    @Autowired
+    private QualityGateService qualityGateService;
 
     @Autowired
     private GenCodeService genCodeService;
@@ -154,6 +159,40 @@ public class GenApplyServiceImpl implements GenApplyService {
             return result;
         }
 
+        // ---------- 1.5 生成代码质量门禁（M2.2）：落盘前执行，命中 BLOCKER 不写盘 ----------
+        if (skipCheck) {
+            result.stage(new GenApplyStageVO("QUALITY", "SKIPPED",
+                    "已跳过生成质量门禁（skipCheck=true）", 0L));
+        } else {
+            long qt = System.currentTimeMillis();
+            try {
+                GenQualityGateVO gate = qualityGateService.run(ids);
+                result.setQualityGate(gate);
+                GenApplyStageVO gateStage = new GenApplyStageVO("QUALITY",
+                        gate.isBlocked() ? "FAILED" : "PASS", gate.getMessage(), elapsed(qt));
+                gate.getIssues().stream()
+                        .filter(i -> "BLOCKER".equals(i.getSeverity())).limit(8)
+                        .forEach(i -> gateStage.detail("BLOCKER " + i.getFile()
+                                + (i.getLineNo() != null && i.getLineNo() > 0 ? ":" + i.getLineNo() : "")
+                                + " " + i.getRuleId() + " " + i.getMessage()));
+                result.stage(gateStage);
+                if (gate.isBlocked() && !dryRun) {
+                    gateStage.setMessage(gateStage.getMessage() + " —— 命中 BLOCKER，已中止，未写入任何文件");
+                    result.setPassed(false);
+                    result.setWritten(0);
+                    result.setSkipped(0);
+                    result.setFailed(0);
+                    result.setElapsedMs(elapsed(started));
+                    return result;
+                }
+            } catch (Exception e) {
+                // 门禁自身异常不阻断生成：自检已通过，质量门禁是增强护栏
+                log.warn("质量门禁执行异常，已跳过: {}", e.getMessage(), e);
+                result.stage(new GenApplyStageVO("QUALITY", "SKIPPED",
+                        "质量门禁执行异常，已跳过：" + e.getMessage(), elapsed(qt)));
+            }
+        }
+
         if (dryRun) {
             // V6.8：dryRun 不再只回一句「不写盘」，要给文件级影响面——
             // 新增/修改/未变/受保护四类计数 + 逐文件明细，重生成前先看清会动什么
@@ -163,7 +202,8 @@ public class GenApplyServiceImpl implements GenApplyService {
                     String.format("dryRun：新增 %d，修改 %d，未变 %d，受保护跳过 %d（共 %d 个文件），不写盘不注册",
                             impact.getNewCount(), impact.getModifiedCount(), impact.getUnchangedCount(),
                             impact.getProtectedCount(), impact.getTotal()), 0L));
-            result.setPassed(Boolean.TRUE.equals(check.isPassed()));
+            result.setPassed(Boolean.TRUE.equals(check.isPassed())
+                    && (result.getQualityGate() == null || !result.getQualityGate().isBlocked()));
             result.setWritten(0);
             result.setSkipped(0);
             result.setFailed(0);

@@ -50,6 +50,12 @@ public class GenApplyVO implements Serializable {
     private GenSelfCheckVO selfCheck;
 
     /**
+     * 生成代码质量门禁结果（stage=QUALITY，M2.2）：
+     * blocked=true 表示命中 BLOCKER，本次未写盘
+     */
+    private GenQualityGateVO qualityGate;
+
+    /**
      * 菜单注册结果（stage=MENU 时有值）
      */
     private GenMenuRegisterVO menu;

@@ -78,7 +78,7 @@ public class ${className}PayController {
 
     /** 查询支付状态：返回该业务单最新一笔支付单（含退款进度 refundAmount，单位分） */
     @GetMapping("/status/{bizNo}")
-    public Result<PayOrder> status(@PathVariable String bizNo) {
+    public Result<PayOrder> status(@PathVariable("bizNo") String bizNo) {
         PayOrder latest = latestOrder(bizNo);
         if (latest == null) {
             throw new BusinessException(404, "该业务单还没有支付记录：" + bizNo);
@@ -91,7 +91,7 @@ public class ${className}PayController {
      * amount 缺省全额退（剩余可退）；refundNo 可传幂等键（同值重放不二次退款）。
      */
     @PostMapping("/refund/{bizNo}")
-    public Result<PayOrderVO> refund(@PathVariable String bizNo,
+    public Result<PayOrderVO> refund(@PathVariable("bizNo") String bizNo,
                                      @org.springframework.web.bind.annotation.RequestBody(required = false) RefundBizReq req) {
         PayOrder latest = latestOrder(bizNo);
         if (latest == null || latest.getPayStatus() != PayOrder.STATUS_PAID) {
@@ -124,7 +124,7 @@ public class ${className}PayController {
 <#if (payRefundQueryEnabled!0) == 1>
     /** V9.17 退款结果查询：按业务单号拿到最新支付单的退款进度（金额单位分） */
     @GetMapping("/refund/{bizNo}/result")
-    public Result<Map<String, Object>> refundResult(@PathVariable String bizNo) {
+    public Result<Map<String, Object>> refundResult(@PathVariable("bizNo") String bizNo) {
         PayOrder latest = latestOrder(bizNo);
         if (latest == null || latest.getRefundAmount() == null || latest.getRefundAmount() <= 0) {
             throw new BusinessException(404, "该业务单没有退款记录：" + bizNo);

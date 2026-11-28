@@ -277,7 +277,7 @@ export default {
       this.loading = true
       try {
         const res = await getDemoOrderList(this.query)
-        this.list = res.data.list || []
+        this.list = res.data.records || []
         this.total = res.data.total || 0
       } catch (e) {
         this.list = []

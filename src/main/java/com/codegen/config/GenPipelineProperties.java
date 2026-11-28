@@ -51,6 +51,12 @@ public class GenPipelineProperties {
     /** 部署日志目录 */
     private String logDir = "logs/pipeline";
 
+    /**
+     * M2.1 规格一致性护栏：生成后 Converge 对账允许的最大偏差率
+     * （缺失 + 多余 占总比对项比例），超过即阻断流水线。
+     */
+    private double convergeMaxDeviationRatio = 0.2d;
+
     @Data
     public static class Ai {
         /** 是否启用 AI 建模；false 时接口直接报错，前端降级手动 DDL */

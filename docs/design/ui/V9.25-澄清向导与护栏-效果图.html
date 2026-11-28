@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>V9.25 澄清向导与护栏 · UI 效果图</title>
+<style>
+:root{
+  --cg-primary:#3d6df5; --cg-primary-soft:#ecf0fe; --cg-text:#1f2d50; --cg-text-regular:#3b4867;
+  --cg-text-secondary:#7c87a3; --cg-bg-page:#f3f5fa; --cg-bg-container:#fff; --cg-border:#dde5f2;
+  --cg-border-light:#e9eef8; --cg-success:#18a058; --cg-warning:#e6a23c; --cg-danger:#e05252;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--cg-text);background:#e8ebf2;font-size:13px;line-height:1.6}
+.wrap{max-width:1280px;margin:24px auto}
+.browser{background:var(--cg-bg-container);border-radius:10px;box-shadow:0 8px 32px rgba(31,45,80,.14);overflow:hidden;margin-bottom:26px;border:1px solid var(--cg-border)}
+.bar{height:38px;background:#f7f9fc;border-bottom:1px solid var(--cg-border);display:flex;align-items:center;padding:0 14px;gap:7px}
+.dot{width:10px;height:10px;border-radius:50%;background:#d5dbe6}.dot.r{background:#ee6a6a}.dot.y{background:#e6b84a}.dot.g{background:#4db86a}
+.url{margin-left:14px;background:#fff;border:1px solid var(--cg-border);border-radius:4px;padding:3px 12px;color:var(--cg-text-secondary);font-size:11px;flex:1}
+.app{display:flex;min-height:610px}
+.side{width:176px;background:#1d2842;color:#aab8d8;padding:14px 0;flex-shrink:0}
+.side .logo{color:#fff;font-weight:700;font-size:14px;padding:6px 18px 4px}.side .logo small{display:block;font-weight:400;font-size:10px;color:#8292b8}
+.side .grp{font-size:10px;color:#7384aa;padding:12px 18px 5px;letter-spacing:1px}
+.side a{display:block;padding:8px 18px;color:#aab8d8;text-decoration:none;font-size:12px}
+.side a.on{background:var(--cg-primary);color:#fff}
+.side .foot{margin:16px 18px 0;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);font-size:10px;color:#8292b8}
+.main{flex:1;background:var(--cg-bg-page);padding:18px 22px;min-width:0}
+.crumb{color:var(--cg-text-secondary);font-size:11px;margin-bottom:12px}
+.page-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.page-title{font-size:18px;font-weight:700}.page-desc{color:var(--cg-text-secondary);font-size:11.5px;margin-top:3px}
+.btn{border:1px solid var(--cg-border);background:#fff;color:var(--cg-text-regular);border-radius:4px;padding:6px 12px;font-size:12px;cursor:pointer}
+.btn.pri{background:var(--cg-primary);color:#fff;border-color:var(--cg-primary)}
+.btn.dis{background:#eef1f7;color:#a0a9bd;border-color:var(--cg-border);cursor:not-allowed}
+.tag{font-size:10px;padding:2px 7px;border-radius:3px}.tag.g{background:#e8f7ef;color:var(--cg-success)}.tag.o{background:#fdf3e5;color:var(--cg-warning)}.tag.r{background:#fdeaea;color:var(--cg-danger)}.tag.b{background:var(--cg-primary-soft);color:var(--cg-primary)}.tag.gray{background:#f0f2f6;color:#79839b}
+.cols{display:grid;grid-template-columns:190px 1fr 300px;gap:14px}
+.panel{background:#fff;border:1px solid var(--cg-border-light);border-radius:7px;overflow:hidden}
+.panel h4{font-size:12px;padding:10px 12px;background:#fbfcfe;border-bottom:1px solid var(--cg-border-light);display:flex;justify-content:space-between;align-items:center}
+.panel .body{padding:12px}
+.sess{border:1px solid var(--cg-border-light);border-radius:5px;padding:9px 10px;margin-bottom:8px;font-size:11px;cursor:pointer}
+.sess.on{border-color:var(--cg-primary);background:var(--cg-primary-soft)}
+.sess b{display:block;font-size:11.5px;margin-bottom:3px}.sess span{color:var(--cg-text-secondary)}
+.progress{display:flex;gap:5px;margin-bottom:12px}
+.progress i{flex:1;height:4px;border-radius:2px;background:#e9edf5}.progress i.done{background:var(--cg-primary)}.progress i.cur{background:#a8c0ff}
+.chat{height:352px;overflow:hidden;padding:12px}
+.bubble{max-width:88%;border-radius:8px;padding:9px 11px;font-size:11.5px;margin-bottom:11px;line-height:1.65}
+.bubble.ai{background:#f2f5fb;color:var(--cg-text-regular);border-top-left-radius:2px}
+.bubble.me{background:var(--cg-primary);color:#fff;margin-left:auto;border-top-right-radius:2px}
+.bubble .q{display:block;margin-top:6px;background:#fff;border-left:3px solid var(--cg-primary);padding:6px 9px;color:var(--cg-text);border-radius:0 4px 4px 0}
+.opts{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.opt{border:1px solid var(--cg-border);border-radius:14px;padding:4px 10px;font-size:10.5px;color:var(--cg-text-regular);cursor:pointer;background:#fff}
+.opt.sel{border-color:var(--cg-primary);color:var(--cg-primary);background:var(--cg-primary-soft)}
+.askbar{border-top:1px solid var(--cg-border-light);padding:10px 12px;display:flex;gap:8px;align-items:center}
+.askbar input{flex:1;border:1px solid var(--cg-border);border-radius:4px;padding:7px 10px;font-size:11.5px}
+.guard{border-left:3px solid var(--cg-danger);background:#fef6f6;border-radius:0 5px 5px 0;padding:9px 10px;margin-bottom:9px;font-size:11px}
+.guard.warn{border-left-color:var(--cg-warning);background:#fdf9f1}
+.guard b{display:block;color:var(--cg-danger);font-size:11.5px;margin-bottom:4px}.guard.warn b{color:#a37018}
+.guard .why{color:var(--cg-text-regular);margin-bottom:5px}.guard .fix{color:var(--cg-success)}
+.mode{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--cg-text-secondary);margin-top:10px}
+.footbar{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--cg-border-light);border-radius:7px;padding:10px 14px;margin-top:14px;font-size:11.5px}
+.footbar .summary{color:var(--cg-text-secondary)}.footbar .acts{display:flex;gap:9px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:#f7f9fc;color:var(--cg-text-secondary);text-align:left;padding:8px 10px;border-bottom:1px solid var(--cg-border);font-weight:600}
+td{padding:7px 10px;border-bottom:1px solid var(--cg-border-light);color:var(--cg-text-regular)}
+.toolbar{background:#fff;border:1px solid var(--cg-border-light);border-radius:6px;padding:11px 13px;display:flex;gap:10px;align-items:center;margin-bottom:13px}
+.toolbar select,.toolbar input{border:1px solid var(--cg-border);border-radius:4px;padding:6px 9px;font-size:11.5px;background:#fff;color:var(--cg-text)}
+.count{font-size:11.5px;color:var(--cg-text-secondary);margin-left:auto}
+.count b{font-size:17px;color:var(--cg-primary)}
+.cap{font-size:11px;color:var(--cg-text-secondary);text-align:center;margin:-12px 0 24px}
+.note{background:#f6f8fd;border:1px dashed var(--cg-border);border-radius:6px;padding:10px 13px;font-size:11px;color:var(--cg-text-secondary);margin-top:13px}
+</style>
+</head>
+<body><div class="wrap">
+
+<!-- 屏1 澄清向导 -->
+<div class="browser">
+<div class="bar"><i class="dot r"></i><i class="dot y"></i><i class="dot g"></i><div class="url">localhost:9530/#/gen/clarify — 智慧种植 + 水肥一体化</div></div>
+<div class="app">
+<div class="side">
+  <div class="logo">码匠代码生成器<small>V10 · AI 生成工作台</small></div>
+  <div class="grp">生成</div><a href="#">规格工件链</a><a href="#">行业范式市场</a><a href="#" class="on">澄清向导</a>
+  <div class="grp">质量</div><a href="#">护栏规则</a><a href="#">质量门禁</a><a href="#">后处理引擎</a><a href="#">验收巡检</a>
+  <div class="foot">护栏引擎 v2 · 28 条规则</div>
+</div>
+<div class="main">
+  <div class="crumb">生成向导 / <b>Step 1 意图澄清</b></div>
+  <div class="page-head"><div><div class="page-title">意图澄清与领域护栏</div><div class="page-desc">一次只问一个关键问题，命中时解释「为什么拦 + 怎么做才对」，结论写入 SPEC 非目标章节</div></div>
+    <div><span class="tag gray">标准模式</span> <button class="btn pri">+ 新建澄清</button></div></div>
+  <div class="cols">
+    <div class="panel"><h4>澄清会话 <span class="tag b">3</span></h4><div class="body">
+      <div class="sess on"><b>智慧种植 + 水肥一体化</b><span>CLARIFYING · 4/5 问</span></div>
+      <div class="sess"><b>渣土车智慧监管系统</b><span>READY · 2 次拦截</span></div>
+      <div class="sess"><b>村务网格化事件处置</b><span>CONFIRMED · SPEC v5</span></div>
+      <div class="note" style="margin-top:12px">会话答案与拦截记录全留痕；确认后生成 SPEC 草案，仍需在规格工件页人工确认。</div>
+    </div></div>
+
+    <div class="panel">
+      <h4>澄清对话 · 第 4 / 5 问 <span class="tag gray">agr_crop 智慧种植</span></h4>
+      <div class="progress"><i class="done"></i><i class="done"></i><i class="done"></i><i class="cur"></i><i></i></div>
+      <div class="chat">
+        <div class="bubble ai">检测到你选择了「智慧种植 + 水肥一体化」。<span class="q">关键问题：这次要建的核心业务对象是什么？</span></div>
+        <div class="bubble me">地块与种植季，农事作业全部挂种植季。</div>
+        <div class="bubble ai">好。主数据由本系统建，则地块/种植季须第一批生成并锁定。<span class="q">主数据由谁维护？</span></div>
+        <div class="bubble me">本系统建。</div>
+        <div class="bubble ai">是否包含审批流？<span class="q">是否涉及设备接入与控制？</span></div>
+        <div class="bubble me">含审批流；设备这块要接水肥机，厂商说提供 Modbus 文档。</div>
+        <div class="bubble ai">收到。<span class="q">最后一问：水肥机厂商协议是否开放？</span>
+          <div class="opts"><span class="opt sel">提供 Modbus 接口文档</span><span class="opt">提供私有 SDK</span><span class="opt">合同未约定</span></div>
+        </div>
+      </div>
+      <div class="askbar"><input value="提供 Modbus 接口文档，合同写明联调配合"><button class="btn pri">发送答复</button><button class="btn">跳过</button></div>
+    </div>
+
+    <div class="panel"><h4>护栏拦截记录 <span class="tag r">1 BLOCK</span> <span class="tag o">2 WARN</span></h4><div class="body">
+      <div class="guard"><b>⛔ AGR-C01 水肥控制不得直驱</b><div class="why">你选择了「含直连设备」且系统含水肥：灌溉控制失败 = 作物损失，直驱阀门无人工兜底。</div><div class="fix">✓ 处方下发 → 农技员审核 → 设备执行 → 回读对账，设备端保留脱网兜底。</div></div>
+      <div class="guard warn"><b>⚠ AGR-W01 农事记录挂种植季</b><div class="why">候选模块未显式包含「种植季」，同一块地一年两茬会按地块混算成本。</div><div class="fix">✓ 先建地块+种植季主数据，农事记录引用 season_id。</div></div>
+      <div class="guard warn"><b>⚠ AGR-BD1 识别算法边界外</b><div class="why">病害识别为垂直 AI 领域，不承诺自研。</div><div class="fix">✓ 外接成熟算法，平台只做预警到处置闭环。</div></div>
+      <div class="mode"><input type="checkbox"> 高级模式：显式忽略 BLOCK（留痕）</div>
+    </div></div>
+  </div>
+  <div class="footbar"><div class="summary">已答 4/5 · 命中 3 条（1 拦截 / 2 提示）· 行业规则 7 条</div>
+    <div class="acts"><button class="btn">重新检测</button><button class="btn dis">确认并写入 SPEC</button></div></div>
+</div></div></div>
+<div class="cap">屏 1　澄清向导：一次一问 + 左右对照拦截解释 + 人工确认卡点</div>
+
+<!-- 屏2 规则库 -->
+<div class="browser">
+<div class="bar"><i class="dot r"></i><i class="dot y"></i><i class="dot g"></i><div class="url">localhost:9530/#/gen/guardrail</div></div>
+<div class="app">
+<div class="side">
+  <div class="logo">码匠代码生成器<small>V10 · AI 生成工作台</small></div>
+  <div class="grp">生成</div><a href="#">规格工件链</a><a href="#">行业范式市场</a><a href="#">澄清向导</a>
+  <div class="grp">质量</div><a href="#" class="on">护栏规则</a><a href="#">质量门禁</a><a href="#">后处理引擎</a><a href="#">验收巡检</a>
+  <div class="foot">护栏引擎 v2 · 28 条规则</div>
+</div>
+<div class="main">
+  <div class="crumb">质量 / <b>护栏规则库</b></div>
+  <div class="page-head"><div><div class="page-title">行业护栏规则库</div><div class="page-desc">规则存表可启停；deterministic 引擎的解释文本即命中文案，改规则不改代码</div></div><button class="btn">新增规则</button></div>
+  <div class="toolbar"><select><option>全部行业</option><option>村务治理</option><option>城市管理</option><option>智慧种植</option><option>智慧园区</option></select>
+    <select><option>全部类别</option><option>黑名单 BLACKLIST</option><option>白名单 WHITELIST</option><option>冲突 CONFLICT</option><option>边界 BOUNDARY</option><option>澄清 CLARIFY</option></select>
+    <input placeholder="搜索编码 / 标题"><div class="count">规则总数 <b>28</b> · 四行业各 7 条</div></div>
+  <div class="panel"><table>
+    <tr><th style="width:88px">编码</th><th style="width:92px">行业</th><th style="width:96px">类别</th><th style="width:62px">级别</th><th>触发条件</th><th>规则标题</th><th>怎么做才对</th><th style="width:56px">启用</th></tr>
+    <tr><td><b>AGR-C01</b></td><td>智慧种植</td><td><span class="tag r">CONFLICT</span></td><td><span class="tag r">BLOCK</span></td><td>Q_DEVICE=含直连设备 且 含「水肥/灌溉」</td><td>水肥控制不得直驱</td><td>处方下发→人工审核→回读对账</td><td><span class="tag g">启用</span></td></tr>
+    <tr><td><b>AGR-W01</b></td><td>智慧种植</td><td><span class="tag o">WHITELIST</span></td><td><span class="tag o">WARN</span></td><td>缺「种植季」模块</td><td>农事记录挂种植季</td><td>先建地块+种植季主数据</td><td><span class="tag g">启用</span></td></tr>
+    <tr><td><b>CM-B02</b></td><td>城市管理</td><td><span class="tag r">BLACKLIST</span></td><td><span class="tag r">BLOCK</span></td><td>含「GPS轨迹入库/轨迹直接入库」</td><td>GPS 轨迹不进业务库</td><td>轨迹落位置服务，只存告警与案件</td><td><span class="tag g">启用</span></td></tr>
+    <tr><td><b>CM-W01</b></td><td>城市管理</td><td><span class="tag o">WHITELIST</span></td><td><span class="tag o">WARN</span></td><td>缺「事件中心」模块</td><td>必须挂事件中心</td><td>先建 cm_event，其余系统挂接</td><td><span class="tag g">启用</span></td></tr>
+    <tr><td><b>GOV-B01</b></td><td>村务治理</td><td><span class="tag r">BLACKLIST</span></td><td><span class="tag r">BLOCK</span></td><td>含「用户管理/角色管理/菜单管理/数据字典」</td><td>基座不得作为业务系统单独生成</td><td>建业务系统，基座自动随附</td><td><span class="tag g">启用</span></td></tr>
+    <tr><td><b>PARK-C01</b></td><td>智慧园区</td><td><span class="tag r">CONFLICT</span></td><td><span class="tag r">BLOCK</span></td><td>Q_DEVICE=含直连设备 且 含「消防」</td><td>消防联动不得平台自研</td><td>消防主机执行，平台只监视+工单</td><td><span class="tag gray">停用</span></td></tr>
+  </table></div>
+  <div class="note">每条规则含「为什么拦（reason）」与「怎么做才对（suggestion）」两段，命中时原样展示；停用后不参与检测，历史会话命中记录保留。</div>
+</div></div></div>
+<div class="cap">屏 2　护栏规则库：28 条按四行业 × 七条组织，可筛选、启停、改解释文案</div>
+
+</div></body></html>

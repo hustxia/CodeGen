@@ -142,4 +142,13 @@ public class GenPipelineController {
                                             @RequestBody com.codegen.dto.GenAiRecommendApplyDTO dto) {
         return Result.ok(aiRecommendService.apply(id, dto));
     }
+
+    @Autowired
+    private com.codegen.service.QualityGateService qualityGateService;
+
+    @Operation(summary = "M2.2 质量门禁报告详情：行级 ❌→✅ 明细")
+    @GetMapping("/quality-report/{reportId}")
+    public Result<com.codegen.vo.GenQualityGateVO> qualityReport(@PathVariable("reportId") Long reportId) {
+        return Result.ok(qualityGateService.reportDetail(reportId));
+    }
 }
