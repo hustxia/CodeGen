@@ -21,6 +21,29 @@ const V95_AIBUILD_MENU = {
   children: []
 }
 
+
+// V9.21 SDD 规格工件链 + Converge 对账静态入口：工件版本化（五类）+ 规格对账报告。
+// 与上面入口同理，只追加菜单节点；正式权限走 sys_menu（path=/gen/spec、/gen/converge）。
+const SPEC_MENU = {
+  id: 'gen_spec',
+  title: '规格工件链',
+  icon: 'form',
+  type: 2,
+  path: '/gen/spec',
+  component: 'gen/spec/index',
+  children: []
+}
+
+const CONVERGE_MENU = {
+  id: 'gen_converge',
+  title: '规格对账',
+  icon: 'monitor',
+  type: 2,
+  path: '/gen/converge',
+  component: 'gen/converge/index',
+  children: []
+}
+
 // 一次性把所有页面收进 map，运行时按字符串取组件（webpack 会静态收集这里的依赖）
 const viewContext = require.context('@/views', true, /\.vue$/)
 const viewKeys = viewContext.keys()
@@ -156,7 +179,7 @@ const actions = {
   generateRoutes({ commit }) {
     return getRouters().then(res => {
       const data = res.data || {}
-      const menus = (data.routers || []).concat([V95_AIBUILD_MENU])
+      const menus = (data.routers || []).concat([V95_AIBUILD_MENU, SPEC_MENU, CONVERGE_MENU])
       const { routes, leafPaths } = buildRoutes(menus)
       // 根路径按角色落到"第一个能进的页面"，避免非管理员登录后停在空白 dashboard
       if (leafPaths.length > 0) {
