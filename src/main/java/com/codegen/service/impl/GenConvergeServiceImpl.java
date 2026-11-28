@@ -1,6 +1,7 @@
 package com.codegen.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.codegen.common.exception.BusinessException;
 import com.codegen.entity.GenConvergeItem;
 import com.codegen.entity.GenConvergeReport;
 import com.codegen.entity.GenSpecArtifact;
@@ -64,20 +65,24 @@ public class GenConvergeServiceImpl implements GenConvergeService {
     public GenConvergeReport run(Long projectId) {
         GenSpecArtifact spec = genSpecService.latestEffectiveSpec(projectId);
         if (spec == null) {
-            throw new IllegalStateException("项目暂无可用 SPEC 工件，请先完成 Step2 模块规格");
+            throw new BusinessException(400, "项目暂无可用 SPEC 工件，请先完成 Step2 模块规格并确认生效");
         }
 
         // 1) 解析期望清单
         Expectation expect = parseExpectation(spec.getStructuredJson());
 
-        // 2) 采集实际产物
+        // 2) 采集实际产物（最小列查询：对账只依赖 tableName/columnName/dictType 等比对键，
+        //    不做全列 select——gen_table 后续版本加列不会让对账跟着碎）
         List<GenTable> actualTables = genTableMapper.selectList(new LambdaQueryWrapper<GenTable>()
+                .select(GenTable::getId, GenTable::getTableName, GenTable::getProjectId)
                 .eq(GenTable::getProjectId, projectId));
         Map<String, GenTable> actualTableMap = actualTables.stream()
                 .collect(Collectors.toMap(GenTable::getTableName, Function.identity(), (a, b) -> a));
 
         List<GenTableColumn> actualColumns = actualTables.isEmpty() ? List.of()
                 : genTableColumnMapper.selectList(new LambdaQueryWrapper<GenTableColumn>()
+                        .select(GenTableColumn::getId, GenTableColumn::getTableId,
+                                GenTableColumn::getColumnName, GenTableColumn::getDictType)
                         .in(GenTableColumn::getTableId,
                                 actualTables.stream().map(GenTable::getId).toList()));
         Set<String> actualFieldKeys = actualColumns.stream()
@@ -134,7 +139,7 @@ public class GenConvergeServiceImpl implements GenConvergeService {
     public ReportDetail reportDetail(Long reportId) {
         GenConvergeReport report = reportMapper.selectById(reportId);
         if (report == null) {
-            throw new IllegalArgumentException("对账报告不存在: " + reportId);
+            throw new BusinessException(400, "对账报告不存在: " + reportId);
         }
         List<GenConvergeItem> items = itemMapper.selectList(new LambdaQueryWrapper<GenConvergeItem>()
                 .eq(GenConvergeItem::getReportId, reportId));
@@ -281,7 +286,7 @@ public class GenConvergeServiceImpl implements GenConvergeService {
                 }
             }
         } catch (Exception ex) {
-            throw new IllegalStateException("SPEC 工件 structured_json 解析失败: " + ex.getMessage(), ex);
+            throw new BusinessException(500, "SPEC 工件 structured_json 解析失败: " + ex.getMessage());
         }
         return e;
     }

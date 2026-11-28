@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>V9.21 SDD 规格工件链与 Converge 对账 — UI 效果图</title>
+<style>
+  /* 色值取自 codegen-web/src/styles/theme.css 的 --cg-* token（效果图静态化，开发时一律用 token） */
+  :root{
+    --cg-primary:#3d6df5; --cg-primary-light-9:#ecf0fe; --cg-primary-soft:#ecf0fe;
+    --cg-success:#0f9d58; --cg-success-bg:rgba(15,157,88,.1);
+    --cg-warning:#d97706; --cg-warning-bg:rgba(217,119,6,.12);
+    --cg-danger:#e5484d;  --cg-danger-bg:rgba(229,72,77,.09);
+    --cg-info:#64748b;    --cg-info-bg:rgba(100,116,139,.1);
+    --cg-text:#1f2329; --cg-text-secondary:#5c6470; --cg-border:#e3e7ec; --cg-bg:#f5f7fa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--cg-bg);color:var(--cg-text);font-size:14px;padding:28px}
+  .shot{max-width:1180px;margin:0 auto 44px;background:#fff;border:1px solid var(--cg-border);border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(31,35,41,.06)}
+  .shot-title{padding:12px 20px;background:var(--cg-primary-light-9);color:var(--cg-primary);font-weight:600;font-size:14px}
+  .app-container{padding:18px 20px 26px}
+  .page-head{margin-bottom:14px}
+  .page-title{font-size:18px;font-weight:600;margin-right:12px}
+  .page-desc{font-size:12.5px;color:var(--cg-text-secondary)}
+  .el-card{border:1px solid var(--cg-border);border-radius:6px;background:#fff}
+  .toolbar-card{padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .el-input{display:inline-flex;align-items:center;border:1px solid var(--cg-border);border-radius:4px;background:#fff;padding:0 10px;height:32px;font-size:13px;color:var(--cg-text-secondary)}
+  .el-select{width:220px;justify-content:space-between}
+  .el-button{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 14px;border-radius:4px;font-size:13px;border:1px solid var(--cg-border);background:#fff;color:var(--cg-text-secondary);cursor:default}
+  .el-button--primary{background:var(--cg-primary);border-color:var(--cg-primary);color:#fff}
+  .el-button--success{background:var(--cg-success);border-color:var(--cg-success);color:#fff}
+  .el-button.is-disabled{opacity:.45}
+  .el-tag{display:inline-block;font-size:11.5px;line-height:1;padding:4px 8px;border-radius:3px;font-weight:400}
+  .tag-info{background:var(--cg-info-bg);color:var(--cg-info)}
+  .tag-success{background:var(--cg-success-bg);color:var(--cg-success)}
+  .tag-warning{background:var(--cg-warning-bg);color:var(--cg-warning)}
+  .tag-danger{background:var(--cg-danger-bg);color:var(--cg-danger)}
+  .tag-primary{background:var(--cg-primary-soft);color:var(--cg-primary)}
+  .el-table{width:100%;border:1px solid var(--cg-border);border-collapse:collapse;font-size:13px}
+  .el-table th{background:#f5f7fa;text-align:left;padding:9px 12px;font-weight:600;border-bottom:1px solid var(--cg-border);white-space:nowrap}
+  .el-table td{padding:9px 12px;border-bottom:1px solid #ebeef5;vertical-align:top;line-height:1.6}
+  .el-table tr:last-child td{border-bottom:none}
+  /* 布局 */
+  .spec-layout{display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start}
+  .tree-card{padding:12px}
+  .tree-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .tree-head b{font-size:14px}
+  .artifact-item{border:1px solid var(--cg-border);border-radius:6px;padding:10px 12px;margin-bottom:8px;cursor:default;transition:.2s}
+  .artifact-item.active{border-color:var(--cg-primary);background:var(--cg-primary-soft)}
+  .artifact-item .row1{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+  .artifact-item .type{font-weight:600;font-size:13px}
+  .artifact-item .title{font-size:12.5px;color:var(--cg-text-secondary);margin-bottom:5px}
+  .artifact-item.empty{color:var(--cg-text-secondary);font-style:italic}
+  .ver{font-size:12px;color:var(--cg-primary)}
+  /* 编辑区 */
+  .edit-card{padding:0}
+  .el-tabs{display:flex;gap:0;border-bottom:1px solid var(--cg-border);padding:0 14px}
+  .el-tabs .tab{padding:11px 4px;margin-right:24px;font-size:13.5px;color:var(--cg-text-secondary);border-bottom:2px solid transparent}
+  .el-tabs .tab.active{color:var(--cg-primary);border-bottom-color:var(--cg-primary);font-weight:600}
+  .edit-body{padding:14px}
+  .form-row{margin-bottom:12px}
+  .form-row label{display:block;font-size:12.5px;color:var(--cg-text-secondary);margin-bottom:5px}
+  .form-row .el-input{width:100%}
+  .textarea{border:1px solid var(--cg-border);border-radius:4px;padding:10px 12px;font-family:Consolas,Monaco,monospace;font-size:12.5px;line-height:1.75;color:var(--cg-text);background:#fff;white-space:pre-wrap}
+  .textarea.md{min-height:200px}
+  .textarea.json{min-height:96px;background:#f8fafc}
+  .edit-foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+  .hint{font-size:12px;color:var(--cg-text-secondary)}
+  /* 汇总数字 */
+  .stat-strip{display:flex;gap:12px;margin-bottom:14px}
+  .stat{flex:1;border:1px solid var(--cg-border);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+  .stat .num{font-size:24px;font-weight:700}
+  .stat .lbl{font-size:12.5px;color:var(--cg-text-secondary)}
+  .ok .num{color:var(--cg-success)} .miss .num{color:var(--cg-danger)} .extra .num{color:var(--cg-warning)} .conv .num{color:var(--cg-primary)}
+  .detail-wrap{margin-top:14px}
+  .detail-title{font-size:13.5px;font-weight:600;margin-bottom:8px}
+  .callout{margin-top:14px;border-left:3px solid var(--cg-warning);background:var(--cg-warning-bg);padding:10px 14px;font-size:12.5px;color:#6b4a15;border-radius:0 4px 4px 0}
+  .design-notes{max-width:1180px;margin:0 auto;font-size:13px;line-height:1.9;color:var(--cg-text-secondary)}
+  .design-notes h2{font-size:15px;color:var(--cg-text);margin:18px 0 8px}
+  .design-notes code{background:#f2f3f5;color:#c7254e;padding:1px 5px;border-radius:3px;font-family:Consolas,monospace;font-size:12.5px}
+</style>
+</head>
+<body>
+
+<div class="shot">
+  <div class="shot-title">页面 1 · 规格工件链（src/views/gen/spec/index.vue）—— 工件树 + 编辑/历史</div>
+  <div class="app-container">
+    <div class="page-head">
+      <span class="page-title">规格工件链</span>
+      <span class="page-desc">SDD 规格先行：constitution → spec → plan → tables → tasks，保存即版本快照；spec 确认（CONFIRMED）后才能作为对账依据。</span>
+    </div>
+
+    <div class="el-card toolbar-card">
+      <span style="font-size:13px;color:var(--cg-text-secondary)">所属系统</span>
+      <span class="el-input el-select">默认系统 <span>▾</span></span>
+      <el-button class="el-button" style="margin-left:auto">初始化基本法</el-button>
+    </div>
+
+    <div class="spec-layout">
+      <!-- 左栏 工件树 -->
+      <div class="el-card tree-card">
+        <div class="tree-head"><b>工件树</b><span class="hint">各类型最新版本</span></div>
+
+        <div class="artifact-item">
+          <div class="row1"><span class="type">① 基本法 CONSTITUTION</span><span class="el-tag tag-success">已生效</span></div>
+          <div class="title">项目基本法 v1</div>
+          <div class="row1"><span class="ver">v1 · 2026-11-27 09:30</span><span class="el-tag tag-primary">5 条硬约定</span></div>
+        </div>
+
+        <div class="artifact-item active">
+          <div class="row1"><span class="type">② 规格 SPEC</span><span class="el-tag tag-success">已生效</span></div>
+          <div class="title">村务事件模块规格 v3</div>
+          <div class="row1"><span class="ver">v3（另有 v4 草稿）· 2026-11-27 10:15</span><span class="el-tag tag-success">对账依据</span></div>
+        </div>
+
+        <div class="artifact-item">
+          <div class="row1"><span class="type">③ 技术方案 PLAN</span><span class="el-tag tag-success">已生效</span></div>
+          <div class="title">村务事件技术方案 v1</div>
+          <div class="row1"><span class="ver">v1 · 2026-11-27 10:20</span></div>
+        </div>
+
+        <div class="artifact-item">
+          <div class="row1"><span class="type">④ 表设计 TABLES</span><span class="el-tag tag-success">已生效</span></div>
+          <div class="title">表设计清单 v1</div>
+          <div class="row1"><span class="ver">v1 · 2026-11-27 10:25</span></div>
+        </div>
+
+        <div class="artifact-item">
+          <div class="row1"><span class="type">⑤ 任务 TASKS</span><span class="el-tag tag-info">草稿</span></div>
+          <div class="title">生成任务清单 v2</div>
+          <div class="row1"><span class="ver">v2 · 2026-11-27 17:00</span></div>
+        </div>
+
+        <div class="callout" style="margin-top:10px">spec v4 为草稿（含积分激励扩展）。对账只认 v3 已生效版本；v4 评审确认后自动成为新对账依据。</div>
+      </div>
+
+      <!-- 右栏 编辑区 -->
+      <div class="el-card edit-card">
+        <div class="el-tabs">
+          <span class="tab active">编辑</span>
+          <span class="tab">历史版本（4）</span>
+        </div>
+        <div class="edit-body">
+          <div class="form-row">
+            <label>标题</label>
+            <span class="el-input" style="width:100%">村务事件模块规格 v3</span>
+          </div>
+          <div class="form-row">
+            <label>Markdown 正文（人与 Agent 共读）</label>
+            <div class="textarea md"># 村务事件模块规格 v3
+
+## 一、范围
+村民事件上报、网格派单、办结回访。不含 GIS 展示与视频接入（nonGoals）。
+
+## 二、数据模型
+- 事件表 `cm_event`：标题、类型枚举、紧急程度枚举、状态、网格 id、上报人
+- 处理记录表 `cm_event_record`：事件 id、处理意见、处理人、时间
+
+## 三、枚举
+- 事件状态 `cg_event_status`
+- 紧急程度 `cg_urgent_level`
+
+## 四、验收口径
+对账 CONVERGED 后进入截图验收。</div>
+          </div>
+          <div class="form-row">
+            <label>期望清单 JSON（converge 比对数据源）</label>
+            <div class="textarea json">{
+  "tables": [
+    { "name": "cm_event",        "fields": ["event_title","event_type","urgent_level","event_status","grid_id","report_user"] },
+    { "name": "cm_event_record", "fields": ["event_id","record_content","deal_user","deal_time"] }
+  ],
+  "enums": ["cg_event_status", "cg_urgent_level"]
+}</div>
+          </div>
+          <div class="edit-foot">
+            <span class="hint">保存即新增版本快照（当前 v3 → 保存后生成 v4 草稿，历史不可覆盖）</span>
+            <span>
+              <span class="el-button">保存为新版本</span>
+              <span class="el-button is-disabled">确认生效</span>
+              <span class="el-button el-button--primary">另存为草稿</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="shot">
+  <div class="shot-title">页面 2 · Converge 对账（src/views/gen/converge/index.vue）—— 报告列表 + 明细</div>
+  <div class="app-container">
+    <div class="page-head">
+      <span class="page-title">规格对账</span>
+      <span class="page-desc">以已生效 SPEC 的期望清单为依据，核对实际产物（表 / 字段 / 枚举三类）；CONVERGED 后才提示可进入验收。</span>
+    </div>
+
+    <div class="el-card toolbar-card">
+      <span style="font-size:13px;color:var(--cg-text-secondary)">所属系统</span>
+      <span class="el-input el-select">默认系统 <span>▾</span></span>
+      <span class="el-button el-button--primary" style="margin-left:auto">⟳ 执行对账</span>
+    </div>
+
+    <div class="stat-strip">
+      <div class="stat ok"><span class="num">41</span><span class="lbl">已实现<br>OK</span></div>
+      <div class="stat miss"><span class="num">2</span><span class="lbl">缺失<br>MISSING</span></div>
+      <div class="stat extra"><span class="num">1</span><span class="lbl">多余<br>EXTRA</span></div>
+      <div class="stat conv"><span class="num">43 / 44</span><span class="lbl">收敛进度<br>missing=0 且 extra=0 → CONVERGED</span></div>
+    </div>
+
+    <div class="el-card" style="padding:14px">
+      <div class="detail-title">对账报告列表</div>
+      <table class="el-table">
+        <tr><th>对账依据</th><th>状态</th><th>已实现</th><th>缺失</th><th>多余</th><th>对账时间</th><th>操作</th></tr>
+        <tr style="background:var(--cg-primary-soft)">
+          <td>SPEC v3</td><td><span class="el-tag tag-warning">UNCONVERGED</span></td>
+          <td>41</td><td style="color:var(--cg-danger);font-weight:600">2</td><td style="color:var(--cg-warning);font-weight:600">1</td>
+          <td>2026-11-27 11:00:00</td><td>查看明细</td>
+        </tr>
+        <tr>
+          <td>SPEC v3</td><td><span class="el-tag tag-success">CONVERGED</span></td>
+          <td>44</td><td>0</td><td>0</td>
+          <td>2026-11-27 15:30:00</td><td>查看明细</td>
+        </tr>
+      </table>
+
+      <div class="detail-wrap">
+        <div class="detail-title">报告明细（#9901001 · 排序：MISSING → EXTRA → OK）</div>
+        <table class="el-table">
+          <tr><th>类型</th><th>项键</th><th>结论</th><th>规格来源</th><th>处理建议</th></tr>
+          <tr><td><span class="el-tag tag-info">TABLE</span></td><td><code>cm_worker</code></td>
+              <td><span class="el-tag tag-danger">MISSING</span></td><td>spec v3 §二</td><td>表缺失：导入结构或补任务重跑</td></tr>
+          <tr><td><span class="el-tag tag-info">ENUM</span></td><td><code>cg_urgent_level</code></td>
+              <td><span class="el-tag tag-danger">MISSING</span></td><td>spec v3 §三</td><td>字典缺失：建立字典项后重跑</td></tr>
+          <tr><td><span class="el-tag tag-info">TABLE</span></td><td><code>cm_demo_old</code></td>
+              <td><span class="el-tag tag-warning">EXTRA</span></td><td>实际产物</td><td>规格外整表：确认后从产物侧下线</td></tr>
+          <tr style="color:var(--cg-text-secondary)"><td><span class="el-tag tag-info">TABLE</span></td><td><code>cm_event</code></td>
+              <td><span class="el-tag tag-success">OK</span></td><td>spec v3 §二</td><td>已导入并生成</td></tr>
+          <tr style="color:var(--cg-text-secondary)"><td><span class="el-tag tag-info">TABLE</span></td><td><code>cm_event_record</code></td>
+              <td><span class="el-tag tag-success">OK</span></td><td>spec v3 §二</td><td>已导入并生成</td></tr>
+          <tr style="color:var(--cg-text-secondary)"><td><span class="el-tag tag-info">FIELD</span></td><td><code>cm_event.grid_id</code></td>
+              <td><span class="el-tag tag-danger">MISSING</span>（汇总 2 中含此条，明细共 10 行，截图截断）</td><td>spec v3 §二</td><td>字段缺失：同步列结构后重跑流水线</td></tr>
+        </table>
+      </div>
+
+      <div class="callout">人工卡点：UNCONVERGED 时页面提示「存在缺口，处理建议见明细列」；全部收敛（CONVERGED）后才显示「可进入截图验收」绿色提示。</div>
+    </div>
+  </div>
+</div>
+
+<div class="design-notes">
+  <h2>开发参照（S7 依据）</h2>
+  <p>① 色值全部来自 <code>src/styles/theme.css</code> 的 <code>--cg-*</code> token，开发时禁止硬编码；② 数据即种子数据（V9.21.1，项目 1，工件 6 份 / 报告 2 份 / 明细 10 条）；③ 状态映射穷举：工件 DRAFT=info/CONFIRMED=success，报告 CONVERGED=success/UNCONVERGED=warning，明细 OK=success/MISSING=danger/EXTRA=warning，类型 TABLE/FIELD/ENUM=info；④ 接口取值一律 <code>res.data</code>（拦截器返回整包 body）；⑤ 路由按 templateMarket 模式注册到 permission.js 内置开发路由（<code>/gen/spec</code>、<code>/gen/converge</code>）。</p>
+</div>
+
+</body>
+</html>

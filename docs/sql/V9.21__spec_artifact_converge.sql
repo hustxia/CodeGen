@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS gen_converge_item (
     suggestion  varchar(500) DEFAULT '' COMMENT '处理建议',
     create_time datetime    DEFAULT CURRENT_TIMESTAMP,
     update_time datetime    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    create_by   bigint      DEFAULT NULL,
+    update_by   bigint      DEFAULT NULL,
     deleted     tinyint     NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
     KEY idx_conv_item (report_id, kind)
