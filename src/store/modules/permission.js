@@ -21,6 +21,29 @@ const V95_AIBUILD_MENU = {
   children: []
 }
 
+// 模板影响面预览静态入口：与 V9.5 同理，不依赖后端菜单表即可在侧边栏出现并可达。
+// 正式环境若需权限管控，在 sys_menu 补 path=/gen/template-impact、component=gen/templateImpact 的记录即可。
+const TEMPLATE_IMPACT_MENU = {
+  id: 'gen_template_impact',
+  title: '模板影响面',
+  icon: 'documentation',
+  type: 2,
+  path: '/gen/template-impact',
+  component: 'gen/templateImpact',
+  children: []
+}
+
+// V9.19 模板市场静态入口：预置/用户包列表、导入导出、删除用户包。
+// 与上面两个入口同理，只追加菜单节点，不改动既有路由与页面。
+const TEMPLATE_MARKET_MENU = {
+  id: 'gen_template_market',
+  title: '模板市场',
+  icon: 'shopping',
+  type: 2,
+  path: '/gen/template-market',
+  component: 'gen/templateMarket',
+  children: []
+}
 
 // V9.21 SDD 规格工件链 + Converge 对账静态入口：工件版本化（五类）+ 规格对账报告。
 // 与上面入口同理，只追加菜单节点；正式权限走 sys_menu（path=/gen/spec、/gen/converge）。
@@ -41,6 +64,46 @@ const CONVERGE_MENU = {
   type: 2,
   path: '/gen/converge',
   component: 'gen/converge/index',
+  children: []
+}
+
+// V9.22 行业范式市场：四包清单 + 安装向导 + 我的安装（静态入口，正式权限走 sys_menu）
+const INDUSTRY_PACK_MENU = {
+  id: 'gen_industry_pack',
+  title: '行业范式市场',
+  icon: 'shopping',
+  type: 2,
+  path: '/gen/industry-pack',
+  component: 'gen/industryPack/index',
+  children: []
+}
+const INDUSTRY_INSTALL_MENU = {
+  id: 'gen_industry_install',
+  title: '范式安装',
+  icon: 'plus',
+  type: 2,
+  path: '/gen/industry-pack/install',
+  component: 'gen/industryPack/install',
+  children: []
+}
+const INDUSTRY_INSTALLED_MENU = {
+  id: 'gen_industry_installed',
+  title: '我的范式安装',
+  icon: 'list',
+  type: 2,
+  path: '/gen/industry-pack/installed',
+  component: 'gen/industryPack/installed',
+  children: []
+}
+
+// V9.23 MCP Server：连接配置、工具目录与调用审计静态入口。
+const MCP_MENU = {
+  id: 'gen_mcp',
+  title: 'MCP Server',
+  icon: 'monitor',
+  type: 2,
+  path: '/gen/mcp',
+  component: 'gen/mcp/index',
   children: []
 }
 
@@ -179,7 +242,7 @@ const actions = {
   generateRoutes({ commit }) {
     return getRouters().then(res => {
       const data = res.data || {}
-      const menus = (data.routers || []).concat([V95_AIBUILD_MENU, SPEC_MENU, CONVERGE_MENU])
+      const menus = (data.routers || []).concat([V95_AIBUILD_MENU, TEMPLATE_IMPACT_MENU, TEMPLATE_MARKET_MENU, SPEC_MENU, CONVERGE_MENU, INDUSTRY_PACK_MENU, INDUSTRY_INSTALL_MENU, INDUSTRY_INSTALLED_MENU, MCP_MENU])
       const { routes, leafPaths } = buildRoutes(menus)
       // 根路径按角色落到"第一个能进的页面"，避免非管理员登录后停在空白 dashboard
       if (leafPaths.length > 0) {
@@ -195,7 +258,7 @@ const actions = {
       commit('SET_ROUTES', {
         routes,
         menus,
-        allPaths: (data.allPaths || []).concat(['/gen/aibuild']),
+        allPaths: (data.allPaths || []).concat(['/gen/aibuild', '/gen/template-impact', '/gen/template-market', '/gen/mcp']),
         accessiblePaths: collectPaths(menus),
         superAdmin: !!data.superAdmin
       })
