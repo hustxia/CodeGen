@@ -1,0 +1,1203 @@
+{
+  "key": "cm_city",
+  "name": "智慧城管范式包",
+  "category": "城市管理",
+  "desc": "城管15系统范式：1事件中心+4监管对象+1考核引擎；底座29表先行，11系统直建、渣土车/灯杆/供排水/指挥调度4类外接",
+  "modules": [
+    {
+      "name": "事件底座(29表先行)",
+      "tables": [
+        {
+          "tableName": "cm_event",
+          "tableComment": "城管事件主表",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "event_no",
+              "type": "varchar(64)",
+              "comment": "事件编号",
+              "pk": false
+            },
+            {
+              "name": "event_type_code",
+              "type": "varchar(32)",
+              "comment": "GB/T 30428事件分类",
+              "pk": false
+            },
+            {
+              "name": "source",
+              "type": "varchar(20)",
+              "comment": "来源:巡查/上报/设备/视频",
+              "pk": false
+            },
+            {
+              "name": "grid_id",
+              "type": "bigint",
+              "comment": "所属网格",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态:发现/立案/派遣/处置/核查/结案",
+              "pk": false
+            },
+            {
+              "name": "deadline",
+              "type": "datetime",
+              "comment": "处置时限",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "cm_event_record",
+          "tableComment": "事件流转记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "event_id",
+              "type": "bigint",
+              "comment": "事件ID",
+              "pk": false
+            },
+            {
+              "name": "action",
+              "type": "varchar(32)",
+              "comment": "动作",
+              "pk": false
+            },
+            {
+              "name": "operator_id",
+              "type": "bigint",
+              "comment": "操作人",
+              "pk": false
+            },
+            {
+              "name": "remark",
+              "type": "varchar(512)",
+              "comment": "说明",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "cm_part",
+          "tableComment": "城管部件库",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "part_no",
+              "type": "varchar(64)",
+              "comment": "部件编号",
+              "pk": false
+            },
+            {
+              "name": "part_type",
+              "type": "varchar(32)",
+              "comment": "部件类型",
+              "pk": false
+            },
+            {
+              "name": "grid_id",
+              "type": "bigint",
+              "comment": "所在网格",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "cm_grid",
+          "tableComment": "网格责任区",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "grid_code",
+              "type": "varchar(64)",
+              "comment": "网格编码",
+              "pk": false
+            },
+            {
+              "name": "grid_name",
+              "type": "varchar(128)",
+              "comment": "网格名称",
+              "pk": false
+            },
+            {
+              "name": "parent_id",
+              "type": "bigint",
+              "comment": "上级网格",
+              "pk": false
+            },
+            {
+              "name": "owner_dept",
+              "type": "varchar(128)",
+              "comment": "责任部门",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "cm_dispatch_rule",
+          "tableComment": "派遣规则",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "event_type_code",
+              "type": "varchar(32)",
+              "comment": "事件类型",
+              "pk": false
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "派遣部门",
+              "pk": false
+            },
+            {
+              "name": "deadline_hours",
+              "type": "int",
+              "comment": "时限小时",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "智慧环卫与垃圾分类",
+      "tables": [
+        {
+          "tableName": "env_vehicle",
+          "tableComment": "环卫车辆",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "plate_no",
+              "type": "varchar(32)",
+              "comment": "车牌",
+              "pk": false
+            },
+            {
+              "name": "vehicle_type",
+              "type": "varchar(32)",
+              "comment": "车型",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "env_clean_task",
+          "tableComment": "清扫任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "task_no",
+              "type": "varchar(64)",
+              "comment": "任务编号",
+              "pk": false
+            },
+            {
+              "name": "grid_id",
+              "type": "bigint",
+              "comment": "网格",
+              "pk": false
+            },
+            {
+              "name": "vehicle_id",
+              "type": "bigint",
+              "comment": "车辆",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "gm_station",
+          "tableComment": "垃圾压缩站",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "station_no",
+              "type": "varchar(64)",
+              "comment": "站点编号",
+              "pk": false
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "站点名称",
+              "pk": false
+            },
+            {
+              "name": "capacity",
+              "type": "decimal(12,2)",
+              "comment": "日处理能力",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "gm_collection_task",
+          "tableComment": "收运任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "task_no",
+              "type": "varchar(64)",
+              "comment": "任务编号",
+              "pk": false
+            },
+            {
+              "name": "station_id",
+              "type": "bigint",
+              "comment": "压缩站",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "pt_account",
+          "tableComment": "居民积分账户(与商城共用)",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "用户ID",
+              "pk": false
+            },
+            {
+              "name": "balance",
+              "type": "int",
+              "comment": "积分余额",
+              "pk": false
+            },
+            {
+              "name": "version",
+              "type": "int",
+              "comment": "乐观锁版本",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "建废渣土与治违",
+      "tables": [
+        {
+          "tableName": "cw_permit",
+          "tableComment": "建筑废弃物处置许可",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "permit_no",
+              "type": "varchar(64)",
+              "comment": "许可证号",
+              "pk": false
+            },
+            {
+              "name": "project_name",
+              "type": "varchar(128)",
+              "comment": "工程名称",
+              "pk": false
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "处置量",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "cw_transport_record",
+          "tableComment": "渣土运输记录",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "permit_id",
+              "type": "bigint",
+              "comment": "许可ID",
+              "pk": false
+            },
+            {
+              "name": "plate_no",
+              "type": "varchar(32)",
+              "comment": "车牌",
+              "pk": false
+            },
+            {
+              "name": "weight",
+              "type": "decimal(12,2)",
+              "comment": "载重",
+              "pk": false
+            },
+            {
+              "name": "event_id",
+              "type": "bigint",
+              "comment": "关联事件",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "il_case",
+          "tableComment": "违建案卷",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "case_no",
+              "type": "varchar(64)",
+              "comment": "案卷号",
+              "pk": false
+            },
+            {
+              "name": "address",
+              "type": "varchar(256)",
+              "comment": "地址",
+              "pk": false
+            },
+            {
+              "name": "area",
+              "type": "decimal(12,2)",
+              "comment": "违建面积",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "阶段",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "il_evidence",
+          "tableComment": "执法证据",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "case_id",
+              "type": "bigint",
+              "comment": "案卷ID",
+              "pk": false
+            },
+            {
+              "name": "file_url",
+              "type": "varchar(512)",
+              "comment": "证据文件",
+              "pk": false
+            },
+            {
+              "name": "evidence_type",
+              "type": "varchar(32)",
+              "comment": "证据类型",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "设施监管(公厕/园林/灯杆/市容)",
+      "tables": [
+        {
+          "tableName": "fac_toilet",
+          "tableComment": "公厕档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "toilet_no",
+              "type": "varchar(64)",
+              "comment": "公厕编号",
+              "pk": false
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "名称",
+              "pk": false
+            },
+            {
+              "name": "grid_id",
+              "type": "bigint",
+              "comment": "网格",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "gd_green",
+          "tableComment": "园林绿化档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "green_no",
+              "type": "varchar(64)",
+              "comment": "绿地编号",
+              "pk": false
+            },
+            {
+              "name": "area",
+              "type": "decimal(12,2)",
+              "comment": "面积",
+              "pk": false
+            },
+            {
+              "name": "type",
+              "type": "varchar(32)",
+              "comment": "绿地类型",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "lt_pole",
+          "tableComment": "智慧灯杆",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "pole_no",
+              "type": "varchar(64)",
+              "comment": "灯杆编号",
+              "pk": false
+            },
+            {
+              "name": "location",
+              "type": "varchar(256)",
+              "comment": "位置",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "sc_ads",
+          "tableComment": "户外广告牌",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "ads_no",
+              "type": "varchar(64)",
+              "comment": "广告编号",
+              "pk": false
+            },
+            {
+              "name": "location",
+              "type": "varchar(256)",
+              "comment": "位置",
+              "pk": false
+            },
+            {
+              "name": "permit_no",
+              "type": "varchar(64)",
+              "comment": "许可号",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "燃气供排水与考核",
+      "tables": [
+        {
+          "tableName": "gas_company",
+          "tableComment": "燃气企业",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "company_no",
+              "type": "varchar(64)",
+              "comment": "企业编号",
+              "pk": false
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "名称",
+              "pk": false
+            },
+            {
+              "name": "license_no",
+              "type": "varchar(64)",
+              "comment": "经营许可证",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "gas_inspection",
+          "tableComment": "燃气巡检",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "company_id",
+              "type": "bigint",
+              "comment": "企业",
+              "pk": false
+            },
+            {
+              "name": "location",
+              "type": "varchar(256)",
+              "comment": "巡检位置",
+              "pk": false
+            },
+            {
+              "name": "result",
+              "type": "tinyint",
+              "comment": "结果",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "water_pipe",
+          "tableComment": "供排水管网",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "pipe_no",
+              "type": "varchar(64)",
+              "comment": "管段编号",
+              "pk": false
+            },
+            {
+              "name": "type",
+              "type": "varchar(32)",
+              "comment": "给水/排水",
+              "pk": false
+            },
+            {
+              "name": "length",
+              "type": "decimal(12,2)",
+              "comment": "长度",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "ev_scheme",
+          "tableComment": "考核方案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "scheme_no",
+              "type": "varchar(64)",
+              "comment": "方案编号",
+              "pk": false
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "方案名称",
+              "pk": false
+            },
+            {
+              "name": "period",
+              "type": "varchar(20)",
+              "comment": "考核周期",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "ev_result",
+          "tableComment": "考核结果",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "scheme_id",
+              "type": "bigint",
+              "comment": "方案",
+              "pk": false
+            },
+            {
+              "name": "dept_id",
+              "type": "bigint",
+              "comment": "被考核部门",
+              "pk": false
+            },
+            {
+              "name": "score",
+              "type": "decimal(6,2)",
+              "comment": "得分",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

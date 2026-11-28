@@ -1,0 +1,1130 @@
+{
+  "key": "park_park",
+  "name": "智慧园区范式包",
+  "category": "智慧园区",
+  "desc": "园区55项去重后范式：统一身份/一卡通+空间主数据+工单引擎三底座先行；14类IoT走物模型集成，4个驾驶舱=1引擎4视图",
+  "modules": [
+    {
+      "name": "身份与一卡通底座",
+      "tables": [
+        {
+          "tableName": "pk_account",
+          "tableComment": "一卡通账户",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "account_no",
+              "type": "varchar(64)",
+              "comment": "账户编号",
+              "pk": false
+            },
+            {
+              "name": "user_id",
+              "type": "bigint",
+              "comment": "用户ID",
+              "pk": false
+            },
+            {
+              "name": "balance",
+              "type": "decimal(12,2)",
+              "comment": "余额",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "pk_card",
+          "tableComment": "卡片档案",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "card_no",
+              "type": "varchar(64)",
+              "comment": "卡号",
+              "pk": false
+            },
+            {
+              "name": "account_id",
+              "type": "bigint",
+              "comment": "账户",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "pk_recharge",
+          "tableComment": "充值流水",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "account_id",
+              "type": "bigint",
+              "comment": "账户",
+              "pk": false
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额",
+              "pk": false
+            },
+            {
+              "name": "channel",
+              "type": "varchar(32)",
+              "comment": "渠道",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "pk_consume",
+          "tableComment": "消费流水",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "account_id",
+              "type": "bigint",
+              "comment": "账户",
+              "pk": false
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额",
+              "pk": false
+            },
+            {
+              "name": "merchant",
+              "type": "varchar(128)",
+              "comment": "商户",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "空间主数据",
+      "tables": [
+        {
+          "tableName": "pk_campus",
+          "tableComment": "园区",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "campus_no",
+              "type": "varchar(64)",
+              "comment": "园区编号",
+              "pk": false
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "园区名称",
+              "pk": false
+            },
+            {
+              "name": "address",
+              "type": "varchar(256)",
+              "comment": "地址",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "pk_building",
+          "tableComment": "楼栋",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "campus_id",
+              "type": "bigint",
+              "comment": "园区",
+              "pk": false
+            },
+            {
+              "name": "building_no",
+              "type": "varchar(64)",
+              "comment": "楼栋编号",
+              "pk": false
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "名称",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "pk_floor",
+          "tableComment": "楼层",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "building_id",
+              "type": "bigint",
+              "comment": "楼栋",
+              "pk": false
+            },
+            {
+              "name": "floor_no",
+              "type": "varchar(32)",
+              "comment": "楼层号",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "pk_room",
+          "tableComment": "房间",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "floor_id",
+              "type": "bigint",
+              "comment": "楼层",
+              "pk": false
+            },
+            {
+              "name": "room_no",
+              "type": "varchar(64)",
+              "comment": "房间号",
+              "pk": false
+            },
+            {
+              "name": "area",
+              "type": "decimal(12,2)",
+              "comment": "面积",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "pk_lease_area",
+          "tableComment": "租区(带生效区间)",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "room_id",
+              "type": "bigint",
+              "comment": "房间",
+              "pk": false
+            },
+            {
+              "name": "tenant_id",
+              "type": "bigint",
+              "comment": "承租企业",
+              "pk": false
+            },
+            {
+              "name": "start_date",
+              "type": "date",
+              "comment": "生效日",
+              "pk": false
+            },
+            {
+              "name": "end_date",
+              "type": "date",
+              "comment": "失效日",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "工单引擎",
+      "tables": [
+        {
+          "tableName": "wo_ticket",
+          "tableComment": "工单主表",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "ticket_no",
+              "type": "varchar(64)",
+              "comment": "工单编号",
+              "pk": false
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(32)",
+              "comment": "报修/巡检异常/设备告警/投诉",
+              "pk": false
+            },
+            {
+              "name": "source",
+              "type": "varchar(32)",
+              "comment": "来源",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "assignee",
+              "type": "bigint",
+              "comment": "处理人",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "wo_task",
+          "tableComment": "工单任务",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "ticket_id",
+              "type": "bigint",
+              "comment": "工单",
+              "pk": false
+            },
+            {
+              "name": "task_name",
+              "type": "varchar(128)",
+              "comment": "任务",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "wo_sla",
+          "tableComment": "时效约定",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "biz_type",
+              "type": "varchar(32)",
+              "comment": "业务类型",
+              "pk": false
+            },
+            {
+              "name": "deadline_min",
+              "type": "int",
+              "comment": "时限分钟",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "招商租赁与物业",
+      "tables": [
+        {
+          "tableName": "lease_tenant",
+          "tableComment": "入驻企业",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "tenant_no",
+              "type": "varchar(64)",
+              "comment": "企业编号",
+              "pk": false
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "企业名称",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "lease_contract",
+          "tableComment": "租赁合同",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "contract_no",
+              "type": "varchar(64)",
+              "comment": "合同编号",
+              "pk": false
+            },
+            {
+              "name": "tenant_id",
+              "type": "bigint",
+              "comment": "企业",
+              "pk": false
+            },
+            {
+              "name": "start_date",
+              "type": "date",
+              "comment": "起租日",
+              "pk": false
+            },
+            {
+              "name": "end_date",
+              "type": "date",
+              "comment": "到期日",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "prop_fee",
+          "tableComment": "物业收费",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "fee_no",
+              "type": "varchar(64)",
+              "comment": "账单号",
+              "pk": false
+            },
+            {
+              "name": "tenant_id",
+              "type": "bigint",
+              "comment": "企业",
+              "pk": false
+            },
+            {
+              "name": "amount",
+              "type": "decimal(12,2)",
+              "comment": "金额",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "ent_profile",
+          "tableComment": "企业画像",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "tenant_id",
+              "type": "bigint",
+              "comment": "企业",
+              "pk": false
+            },
+            {
+              "name": "industry",
+              "type": "varchar(64)",
+              "comment": "所属行业",
+              "pk": false
+            },
+            {
+              "name": "scale",
+              "type": "varchar(32)",
+              "comment": "规模",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IoT物模型与能耗",
+      "tables": [
+        {
+          "tableName": "dev_device",
+          "tableComment": "设备台账",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "device_no",
+              "type": "varchar(64)",
+              "comment": "设备编号",
+              "pk": false
+            },
+            {
+              "name": "device_type",
+              "type": "varchar(32)",
+              "comment": "设备类型(14类)",
+              "pk": false
+            },
+            {
+              "name": "model_key",
+              "type": "varchar(64)",
+              "comment": "物模型key",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "tinyint",
+              "comment": "状态",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "dev_alarm",
+          "tableComment": "设备告警",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "device_id",
+              "type": "bigint",
+              "comment": "设备",
+              "pk": false
+            },
+            {
+              "name": "alarm_code",
+              "type": "varchar(64)",
+              "comment": "告警码",
+              "pk": false
+            },
+            {
+              "name": "level",
+              "type": "tinyint",
+              "comment": "级别",
+              "pk": false
+            },
+            {
+              "name": "ticket_id",
+              "type": "bigint",
+              "comment": "生成工单",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "en_meter",
+          "tableComment": "能耗表具",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "meter_no",
+              "type": "varchar(64)",
+              "comment": "表具编号",
+              "pk": false
+            },
+            {
+              "name": "type",
+              "type": "varchar(32)",
+              "comment": "水/电/气",
+              "pk": false
+            },
+            {
+              "name": "room_id",
+              "type": "bigint",
+              "comment": "归属房间",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "en_reading",
+          "tableComment": "能耗读数",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "meter_id",
+              "type": "bigint",
+              "comment": "表具",
+              "pk": false
+            },
+            {
+              "name": "reading",
+              "type": "decimal(12,2)",
+              "comment": "读数",
+              "pk": false
+            },
+            {
+              "name": "read_time",
+              "type": "datetime",
+              "comment": "采集时间",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "数据中台与驾驶舱",
+      "tables": [
+        {
+          "tableName": "bi_indicator",
+          "tableComment": "指标库",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "indicator_code",
+              "type": "varchar(64)",
+              "comment": "指标编码",
+              "pk": false
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "指标名",
+              "pk": false
+            },
+            {
+              "name": "sql_text",
+              "type": "text",
+              "comment": "取数SQL",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        },
+        {
+          "tableName": "bi_dashboard",
+          "tableComment": "驾驶舱视图",
+          "columns": [
+            {
+              "name": "id",
+              "type": "bigint",
+              "comment": "主键",
+              "pk": true
+            },
+            {
+              "name": "dash_code",
+              "type": "varchar(64)",
+              "comment": "视图编码",
+              "pk": false
+            },
+            {
+              "name": "name",
+              "type": "varchar(128)",
+              "comment": "视图名(4视图共用1引擎)",
+              "pk": false
+            },
+            {
+              "name": "layout",
+              "type": "text",
+              "comment": "布局JSON",
+              "pk": false
+            },
+            {
+              "name": "create_time",
+              "type": "datetime",
+              "comment": "创建时间",
+              "pk": false
+            },
+            {
+              "name": "update_time",
+              "type": "datetime",
+              "comment": "更新时间",
+              "pk": false
+            },
+            {
+              "name": "deleted",
+              "type": "tinyint",
+              "comment": "逻辑删除",
+              "pk": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

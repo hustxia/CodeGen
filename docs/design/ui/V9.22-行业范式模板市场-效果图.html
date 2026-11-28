@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>V9.22 行业范式模板市场 · UI 效果图</title>
+<style>
+:root{
+  --cg-primary:#3d6df5; --cg-primary-soft:#ecf0fe; --cg-primary-hover:#5c84f7;
+  --cg-text:#1f2d50; --cg-text-regular:#3b4867; --cg-text-secondary:#7c87a3;
+  --cg-bg-page:#f3f5fa; --cg-bg-container:#ffffff; --cg-bg-hover:#f5f8fe;
+  --cg-border:#dde5f2; --cg-border-light:#e9eef8;
+  --cg-success:#18a058; --cg-warning:#e6a23c; --cg-danger:#e05252;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--cg-text);background:#e8ebf2;font-size:13px;line-height:1.6}
+.wrap{max-width:1240px;margin:24px auto}
+.browser{background:var(--cg-bg-container);border-radius:10px;box-shadow:0 8px 32px rgba(31,45,80,.14);overflow:hidden;margin-bottom:28px;border:1px solid var(--cg-border)}
+.bar{height:38px;background:#f7f9fc;border-bottom:1px solid var(--cg-border);display:flex;align-items:center;padding:0 14px;gap:7px}
+.dot{width:10px;height:10px;border-radius:50%;background:#d5dbe6}.dot.r{background:#ee6a6a}.dot.y{background:#e6b84a}.dot.g{background:#4db86a}
+.url{margin-left:14px;background:#fff;border:1px solid var(--cg-border);border-radius:4px;padding:3px 12px;color:var(--cg-text-secondary);font-size:11px;flex:1}
+.app{display:flex;min-height:560px}
+.side{width:180px;background:#1d2842;color:#aab8d8;padding:14px 0;flex-shrink:0}
+.side .logo{color:#fff;font-weight:700;font-size:14px;padding:6px 18px 18px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:10px}
+.side .grp{font-size:10px;color:#7384aa;padding:12px 18px 5px;letter-spacing:1px}
+.side a{display:block;padding:8px 18px;color:#aab8d8;text-decoration:none;font-size:12px}
+.side a.on{background:var(--cg-primary);color:#fff}
+.main{flex:1;background:var(--cg-bg-page);padding:20px 24px;min-width:0}
+.crumb{color:var(--cg-text-secondary);font-size:11px;margin-bottom:12px}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.page-title{font-size:19px;font-weight:700}.page-desc{color:var(--cg-text-secondary);font-size:12px;margin-top:3px}
+.btn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--cg-border);background:#fff;color:var(--cg-text-regular);border-radius:4px;padding:6px 13px;font-size:12px;cursor:pointer}
+.btn.pri{background:var(--cg-primary);color:#fff;border-color:var(--cg-primary)}
+.toolbar{background:#fff;border:1px solid var(--cg-border-light);border-radius:6px;padding:12px 14px;display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.toolbar select,.toolbar input{border:1px solid var(--cg-border);border-radius:4px;padding:6px 10px;font-size:12px;color:var(--cg-text);background:#fff}
+.toolbar input{min-width:200px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.card{background:#fff;border:1px solid var(--cg-border-light);border-radius:8px;padding:16px;transition:.2s}
+.card:hover{border-color:var(--cg-primary);box-shadow:0 4px 16px rgba(61,109,245,.10)}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
+.card h3{font-size:15px}.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;background:var(--cg-primary-soft);color:var(--cg-primary);font-weight:600}
+.badge.gray{background:#f0f2f6;color:#79839b}
+.card .desc{color:var(--cg-text-secondary);font-size:11.5px;min-height:38px;margin-bottom:10px}
+.metrics{display:flex;gap:16px;margin-bottom:9px;font-size:11px;color:var(--cg-text-secondary)}
+.metrics b{display:block;font-size:16px;color:var(--cg-text);font-weight:700}
+.hit{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--cg-text-secondary);margin-bottom:10px}
+.hit .bar-bg{flex:1;height:6px;background:#eef1f7;border-radius:3px;overflow:hidden}
+.hit .bar-fg{height:100%;background:var(--cg-primary);border-radius:3px}
+.card .boundary{background:#fdf8ef;border-left:2px solid var(--cg-warning);padding:6px 9px;font-size:10.5px;color:#7a5a20;border-radius:0 4px 4px 0;margin-bottom:11px}
+.card .actions{display:flex;gap:8px;justify-content:flex-end}
+.link{color:var(--cg-primary);cursor:pointer;font-size:12px}
+.section-title{font-size:13px;font-weight:700;margin:18px 0 10px;padding-left:9px;border-left:3px solid var(--cg-primary)}
+table{width:100%;border-collapse:collapse;background:#fff;font-size:11.5px}
+th{background:#f7f9fc;color:var(--cg-text-secondary);text-align:left;padding:8px 10px;border-bottom:1px solid var(--cg-border);font-weight:600}
+td{padding:8px 10px;border-bottom:1px solid var(--cg-border-light)}
+.tag{font-size:10px;padding:2px 7px;border-radius:3px}.tag.g{background:#e8f7ef;color:var(--cg-success)}.tag.o{background:#fdf3e5;color:var(--cg-warning)}.tag.b{background:var(--cg-primary-soft);color:var(--cg-primary)}
+.steps{display:flex;align-items:center;gap:0;margin:14px 0 20px}
+.step{display:flex;align-items:center;gap:7px;color:var(--cg-text-secondary);font-size:11.5px}
+.step .n{width:22px;height:22px;border-radius:50%;background:#e9edf5;color:#8590a8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px}
+.step.on .n{background:var(--cg-primary);color:#fff}.step.on{color:var(--cg-primary);font-weight:700}
+.step .line{width:56px;height:1px;background:var(--cg-border);margin:0 10px}
+.form{background:#fff;border:1px solid var(--cg-border-light);border-radius:6px;padding:18px;margin-bottom:14px}
+.row{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+.row label{width:92px;text-align:right;color:var(--cg-text-secondary);font-size:12px;flex-shrink:0}
+.row .ctl{flex:1;border:1px solid var(--cg-border);border-radius:4px;padding:7px 10px;font-size:12px;color:var(--cg-text);background:#fff;max-width:420px}
+.row .ctl.dis{background:#f7f9fc;color:var(--cg-text-secondary)}
+.mods{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-left:104px;margin-bottom:8px}
+.mod{border:1px solid var(--cg-border);border-radius:5px;padding:9px 11px;display:flex;gap:8px;align-items:center;font-size:11.5px}
+.mod input{accent-color:var(--cg-primary)}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-left:104px;margin-top:16px}
+.summary div{background:var(--cg-primary-soft);border-radius:6px;padding:11px;text-align:center}
+.summary b{display:block;font-size:21px;color:var(--cg-primary)}.summary span{font-size:10.5px;color:var(--cg-text-secondary)}
+.note{background:#f6f8fd;border:1px dashed var(--cg-border);border-radius:6px;padding:11px 14px;font-size:11px;color:var(--cg-text-secondary);margin-top:14px}
+.cap{font-size:11px;color:var(--cg-text-secondary);text-align:center;margin:-14px 0 26px}
+.hl{background:var(--cg-primary-soft);padding:1px 6px;border-radius:3px;color:var(--cg-primary);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- 屏1 市场页 -->
+<div class="browser">
+  <div class="bar"><i class="dot r"></i><i class="dot y"></i><i class="dot g"></i><div class="url">localhost:9530/#/gen/industry-pack</div></div>
+  <div class="app">
+    <div class="side"><div class="logo">码匠代码生成器</div>
+      <div class="grp">总览</div><a href="#">工作台</a>
+      <div class="grp">生成</div><a href="#">规格工件链</a><a href="#" class="on">行业范式市场</a><a href="#">规格对账</a>
+      <div class="grp">质量</div><a href="#">质量门禁</a><a href="#">截图验收</a>
+      <div class="grp">生态</div><a href="#">MCP 管理</a><a href="#">模型路由</a>
+    </div>
+    <div class="main">
+      <div class="crumb">总览 / 生成 / 行业范式市场</div>
+      <div class="page-head"><div><div class="page-title">行业范式市场</div><div class="page-desc">交付级范式包：经过工程化去重、含命中度与外接边界判断，一键安装到项目生成建模方案</div></div><div><button class="btn">导入包</button> <button class="btn">导出所选</button></div></div>
+      <div class="toolbar"><select><option>全部行业</option><option>村务治理</option><option>城市管理</option><option>智慧种植</option><option>智慧园区</option></select><input placeholder="搜索范式包名称 / 业务主线"><span style="color:var(--cg-text-secondary);font-size:11px">共 4 套范式包 · 165 张直建表</span></div>
+      <div class="grid">
+        <div class="card">
+          <div class="top"><h3>🏘 智慧村务管理</h3><span class="badge">v1.0 · 预置</span></div>
+          <div class="desc">村务12域61页合并为5模块；通用15表一次建成</div>
+          <div class="metrics"><div>命中度<b>92%</b></div><div>直建表<b>85</b></div><div>外接系统<b>0</b></div></div>
+          <div class="hit"><span>生成器命中</span><div class="bar-bg"><div class="bar-fg" style="width:92%"></div></div></div>
+          <div class="boundary">不接 GIS 平台 / 视频算法 / 涉密系统</div>
+          <div class="actions"><span class="link">查看详情</span><button class="btn pri">安装到项目</button></div>
+        </div>
+        <div class="card">
+          <div class="top"><h3>🚛 智慧城管范式包</h3><span class="badge">v1.0 · 预置</span></div>
+          <div class="desc">15系统 = 1事件中心 + 4监管对象 + 1考核引擎；底座先行</div>
+          <div class="metrics"><div>命中度<b>88%</b></div><div>直建表<b>23</b></div><div>外接系统<b style="color:var(--cg-warning)">4</b></div></div>
+          <div class="hit"><span>生成器命中</span><div class="bar-bg"><div class="bar-fg" style="width:88%"></div></div></div>
+          <div class="boundary">渣土车GPS / 单灯控制 / SCADA / 视频会商必须外接</div>
+          <div class="actions"><span class="link">查看详情</span><button class="btn pri">安装到项目</button></div>
+        </div>
+        <div class="card">
+          <div class="top"><h3>🌱 智慧种植范式包</h3><span class="badge">v1.0 · 预置</span></div>
+          <div class="desc">2底座+1中枢；农事作业一张主表承接施肥/灌溉/打药</div>
+          <div class="metrics"><div>命中度<b>90%</b></div><div>直建表<b>35</b></div><div>外接系统<b style="color:var(--cg-warning)">1</b></div></div>
+          <div class="hit"><span>生成器命中</span><div class="bar-bg"><div class="bar-fg" style="width:90%"></div></div></div>
+          <div class="boundary">水肥一体化控制权在设备厂商；病害AI识别人工确认</div>
+          <div class="actions"><span class="link">查看详情</span><button class="btn pri">安装到项目</button></div>
+        </div>
+        <div class="card">
+          <div class="top"><h3>🏢 智慧园区范式包</h3><span class="badge">v1.0 · 预置</span></div>
+          <div class="desc">55项去重：4驾驶舱=1引擎4视图；三底座先行</div>
+          <div class="metrics"><div>命中度<b>85%</b></div><div>直建表<b>22</b></div><div>外接系统<b style="color:var(--cg-warning)">14</b></div></div>
+          <div class="hit"><span>生成器命中</span><div class="bar-bg"><div class="bar-fg" style="width:85%"></div></div></div>
+          <div class="boundary">消防联动由消防主机做；人脸敏感信息单独同意</div>
+          <div class="actions"><span class="link">查看详情</span><button class="btn pri">安装到项目</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="cap">屏 1 · 市场页 — 四包卡片，命中度/直建表/外接系统三维指标 + 边界提示（数据即种子数据）</div>
+
+<!-- 屏2 详情抽屉 -->
+<div class="browser">
+  <div class="bar"><i class="dot r"></i><i class="dot y"></i><i class="dot g"></i><div class="url">localhost:9530/#/gen/industry-pack — 详情抽屉</div></div>
+  <div class="app">
+    <div class="side"><div class="logo">码匠代码生成器</div>
+      <div class="grp">生成</div><a href="#">规格工件链</a><a href="#" class="on">行业范式市场</a><a href="#">规格对账</a>
+    </div>
+    <div class="main" style="padding:0;position:relative">
+      <div style="padding:20px 24px;opacity:.45">
+        <div class="page-title">行业范式市场</div>
+        <div style="margin-top:16px;height:120px;background:#fff;border:1px solid var(--cg-border-light);border-radius:6px"></div>
+      </div>
+      <div style="position:absolute;top:0;right:0;bottom:0;width:560px;background:#fff;border-left:1px solid var(--cg-border);box-shadow:-6px 0 24px rgba(31,45,80,.10);padding:20px 22px;overflow:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-size:16px;font-weight:700">🚛 智慧城管范式包 <span class="badge" style="margin-left:6px">v1.0</span></div><span style="color:var(--cg-text-secondary);cursor:pointer;font-size:18px">×</span></div>
+        <div style="background:var(--cg-primary-soft);border-radius:6px;padding:11px 13px;margin-bottom:15px;font-size:11.5px;color:var(--cg-text-regular)">15系统 = 1事件中心 + 4监管对象 + 1考核引擎；底座 29 表先行，11 系统直建、渣土车/灯杆/供排水/指挥调度 4 类外接</div>
+        <div class="section-title" style="margin-top:0">模块与表（5 模块 / 23 表）</div>
+        <div style="border:1px solid var(--cg-border-light);border-radius:6px;overflow:hidden;margin-bottom:16px">
+          <table><thead><tr><th>模块</th><th>代表表</th><th>表数</th><th>策略</th></tr></thead><tbody>
+            <tr><td>事件底座(29表先行)</td><td><code>cm_event</code></td><td>5</td><td><span class="tag b">直建</span></td></tr>
+            <tr><td>智慧环卫与垃圾分类</td><td><code>env_vehicle</code></td><td>5</td><td><span class="tag b">直建</span></td></tr>
+            <tr><td>建废渣土与治违</td><td><code>cw_permit</code></td><td>4</td><td><span class="tag b">直建</span></td></tr>
+            <tr><td>设施监管</td><td><code>lt_pole</code></td><td>4</td><td><span class="tag o">部分外接</span></td></tr>
+            <tr><td>燃气供排水与考核</td><td><code>gas_company</code></td><td>5</td><td><span class="tag o">含SCADA</span></td></tr>
+          </tbody></table>
+        </div>
+        <div class="section-title">去重说明</div>
+        <div style="font-size:11.5px;color:var(--cg-text-regular);margin-bottom:14px">15 系统按 15 个项目分别建设 → 会变成 15 套账号、15 张事件表，考核取不到数。统一为 1 个事件中心 + 4 类监管对象 + 1 个考核引擎。</div>
+        <div class="section-title">不承诺边界</div>
+        <div style="background:#fdf3f3;border-left:2px solid var(--cg-danger);padding:9px 12px;font-size:11.5px;color:#8a3b3b;border-radius:0 4px 4px 0;margin-bottom:14px">渣土车 GPS 轨迹 / 灯杆单灯控制 / 供排水 SCADA / 视频会商 — 台账照常生成，控制与流数据必须接外部平台</div>
+        <div class="section-title">业务主线</div>
+        <div style="background:#f6f8fd;border:1px dashed var(--cg-border);border-radius:6px;padding:10px 12px;font-family:Consolas,monospace;font-size:11px;color:var(--cg-text-regular);margin-bottom:16px">发现 → 立案 → 派遣 → 处置 → 核查 → 结案 → 考核</div>
+        <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn">导出此包</button><button class="btn pri">安装到项目</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="cap">屏 2 · 详情抽屉 — 模块/表清单 + 去重说明 + 边界 + 业务主线（与四行业方案结论一致）</div>
+
+<!-- 屏3 安装向导 -->
+<div class="browser">
+  <div class="bar"><i class="dot r"></i><i class="dot y"></i><i class="dot g"></i><div class="url">localhost:9530/#/gen/industry-pack/install</div></div>
+  <div class="app">
+    <div class="side"><div class="logo">码匠代码生成器</div>
+      <div class="grp">生成</div><a href="#">规格工件链</a><a href="#" class="on">行业范式市场</a><a href="#">规格对账</a>
+    </div>
+    <div class="main">
+      <div class="crumb">行业范式市场 / 安装向导</div>
+      <div class="page-head"><div><div class="page-title">安装范式包到项目</div><div class="page-desc">克隆表结构生成建模方案（plan），不直接建库 — Step2 建库仍需人工二次确认</div></div></div>
+      <div class="steps">
+        <div class="step on"><span class="n">1</span>选择范式包</div><div class="line"></div>
+        <div class="step on"><span class="n">2</span>选项目与模块</div><div class="line"></div>
+        <div class="step"><span class="n">3</span>确认安装</div>
+      </div>
+      <div class="form">
+        <div class="row"><label>范式包</label><div class="ctl dis">cm_city · 智慧城管范式包 v1.0（命中度 88%）</div></div>
+        <div class="row"><label>目标项目</label><div class="ctl" style="max-width:420px">默认系统 <span style="color:var(--cg-text-secondary);font-size:10px">（id=1）</span></div></div>
+        <div class="row"><label>安装范围</label><div class="ctl" style="max-width:420px">新建系统 new</div></div>
+        <div class="row"><label style="align-self:flex-start;padding-top:7px">选择模块</label><div>
+          <div class="mods">
+            <div class="mod"><input type="checkbox" checked>事件底座(29表先行)</div>
+            <div class="mod"><input type="checkbox" checked>智慧环卫与垃圾分类</div>
+            <div class="mod"><input type="checkbox" checked>建废渣土与治违</div>
+            <div class="mod"><input type="checkbox" checked>设施监管</div>
+            <div class="mod"><input type="checkbox" checked>燃气供排水与考核</div>
+          </div>
+          <div style="margin-left:104px;font-size:10.5px;color:var(--cg-text-secondary);margin-top:6px">全选 5 个模块，共 23 张表；取消勾选可只安装部分模块</div>
+        </div></div>
+      </div>
+      <div class="section-title">安装预览（plan 摘要 · 由 V9.7 克隆链路实时生成）</div>
+      <div class="summary">
+        <div><b>23</b><span>规划表数</span></div><div><b>5</b><span>模块数</span></div><div><b>0</b><span>排除表数</span></div><div><b>template</b><span>plan 来源</span></div>
+      </div>
+      <div class="note">⚠ 安装只生成建模方案与安装台账，<b>不会自动建库、不会自动生成代码</b>。下一步在「规格工件链」确认 TABLES 工件后，走流水线 Step2 二次确认建库。</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button class="btn">上一步</button><button class="btn pri">确认安装</button></div>
+    </div>
+  </div>
+</div>
+<div class="cap">屏 3 · 安装向导 — 选包→选项目模块→plan 预览；明确"只生成 plan 不建库"的人工卡点</div>
+
+<div style="background:#fff;border:1px solid var(--cg-border);border-radius:8px;padding:18px 22px">
+  <div style="font-weight:700;margin-bottom:9px">设计说明（开发参照）</div>
+  <div style="color:var(--cg-text-secondary);font-size:11.5px;line-height:1.9">
+    ① 主题全部用 <span class="hl">--cg-*</span> token（--cg-primary #3d6df5 / --cg-bg-page / --cg-border），无硬编码色值，与 codegen-web/src/styles/theme.css 一致。<br>
+    ② 卡片三维指标（命中度/直建表/外接系统）对应 <span class="hl">gen_industry_paradigm</span> 字段 hit_rate/direct_tables/external_systems，开发时直接绑定。<br>
+    ③ 四包数据即 V9.22.1 种子数据；城管/园区包为新增 JSON（cm_city/park_park），村务/种植复用已有包。<br>
+    ④ 安装向导 Step3 的 plan 摘要由后端 <span class="hl">POST /gen/industry-pack/install</span> 返回（内部调 V9.7 planFromTemplate），前端不自行计算。<br>
+    ⑤ 边界提示（琥珀色）与"不建库"说明（虚线框）是产品可信度关键，不可省略。
+  </div>
+</div>
+
+</div>
+</body>
+</html>
