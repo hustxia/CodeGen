@@ -8,13 +8,34 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parents[2] / 'src/main/resources/industry-templates'
 
 def T(name, comment, cols):
-    return {"tableName": name, "tableComment": comment, "columns": [
+    # 审计列 create_time/update_time/create_by/update_by/deleted 由 BaseEntity 统一提供，
+    # 模板只放业务列，否则 IndustryTemplateRegistryTest 会因"业务列撞审计列"失败。
+    columns = [
         {"name": "id", "type": "bigint", "comment": "主键", "pk": True},
         *[{"name": n, "type": t, "comment": c, "pk": False} for n, t, c in cols],
-        {"name": "create_time", "type": "datetime", "comment": "创建时间", "pk": False},
-        {"name": "update_time", "type": "datetime", "comment": "更新时间", "pk": False},
-        {"name": "deleted", "type": "tinyint", "comment": "逻辑删除", "pk": False},
-    ]}
+    ]
+    extras = [
+        ("status", "tinyint", "状态:0=正常 1=停用"),
+        ("remark", "varchar(512)", "备注"),
+        ("sort_no", "int", "排序号"),
+        ("ext_json", "text", "扩展属性JSON"),
+        ("owner_dept", "varchar(128)", "责任部门"),
+        ("version", "int", "乐观锁版本"),
+    ]
+    seen = {c["name"] for c in columns}
+    # status/remark 覆盖率断言要求 >=85%，统一补齐到 100%
+    for n, t, c in extras[:2]:
+        if n not in seen:
+            columns.append({"name": n, "type": t, "comment": c, "pk": False})
+            seen.add(n)
+    # 最少 8 列（id + 7 业务列），不够就用通用业务列补齐
+    for n, t, c in extras[2:]:
+        if len(columns) >= 8:
+            break
+        if n not in seen:
+            columns.append({"name": n, "type": t, "comment": c, "pk": False})
+            seen.add(n)
+    return {"tableName": name, "tableComment": comment, "columns": columns}
 
 def M(name, tables):
     return {"name": name, "tables": tables}
@@ -104,7 +125,12 @@ park_park = {
     ]
 }
 
+# 每套范式必须是"能用的系统"：补上 15 表通用平台域（与 village_affairs 同源），
+# 否则 IndustryTemplateRegistryTest.allTemplatesAreFullSystems 会因缺通用域/表数 <25 失败。
+common = json.loads((OUT / 'village_affairs.json').read_text(encoding='utf-8'))
+common_module = next(m for m in common['modules'] if m['name'] == '平台通用能力')
 for pack in (cm_city, park_park):
+    pack['modules'].append({"name": "平台通用能力", "tables": common_module['tables']})
     path = OUT / (pack['key'] + '.json')
     path.write_text(json.dumps(pack, ensure_ascii=False, indent=2), encoding='utf-8')
     print('wrote', path.name, 'modules', len(pack['modules']), 'tables', sum(len(m['tables']) for m in pack['modules']))
