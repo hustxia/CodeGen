@@ -60,6 +60,7 @@ spring:
         classpath:db/h2/V9.17__print_enhance.sql,
         classpath:db/h2/V9.18__child_save_mode.sql,
         classpath:db/h2/V9.20__unique_group.sql,
+        classpath:db/h2/V9.24__quality_gate.sql,
         classpath:db/h2/999_demo_seed.sql
       data-locations: ""
       mode: always

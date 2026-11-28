@@ -89,8 +89,20 @@ const create = sql(`CREATE DATABASE IF NOT EXISTS \`${DB}\` DEFAULT CHARACTER SE
 if (!create.ok) fail(`建库失败：${create.err}`)
 say('PASS  空库已就绪')
 
-const files = readdirSync(SQL_DIR).filter((f) => f.endsWith('.sql')).sort()
-say(`脚本清单（按顺序，共 ${files.length} 个）：${files.join(', ')}`)
+// 数字版本序：V9.21__ 必须先于 V9.21.1__/V9.21.2__，文件名字典序会把补丁排到基线前面
+function versionKey(name) {
+  const m = name.match(/^V(\d+(?:\.\d+)*)/)
+  return m ? m[1].split('.').map(Number) : [999]
+}
+const files = readdirSync(SQL_DIR).filter((f) => f.endsWith('.sql')).sort((a, b) => {
+  const ka = versionKey(a), kb = versionKey(b)
+  for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
+    const d = (ka[i] || 0) - (kb[i] || 0)
+    if (d !== 0) return d
+  }
+  return a < b ? -1 : a > b ? 1 : 0
+})
+say(`脚本清单（数字版本序，共 ${files.length} 个）：${files.join(', ')}`)
 
 /** 去掉 SQL 注释（-- 行注释 / # 行注释 / 块注释），供残留检测用 */
 function stripSqlComments(s) {

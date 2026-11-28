@@ -49,6 +49,7 @@ jobs:
         run: echo "CG_MYSQL=$(command -v mysql)" >> "$GITHUB_ENV"
 
       # 部分迁移脚本带 UTF-8 BOM，MySQL 8.0 会当成非法字符；测试库统一去 BOM
+      # 版本排序按数字段而非文件名字典序：V9.21__ 必须先于 V9.21.1__/V9.21.2__（否则种子表不存在）
       - name: 初始化测试库 gen_platform_test
         run: |
           python3 - <<'PY'
@@ -56,14 +57,22 @@ jobs:
           from pathlib import Path
           out = Path('/tmp/codegen-sql')
           out.mkdir(exist_ok=True)
-          for p in sorted(Path('docs/sql').glob('*.sql')):
+          def version_key(p):
+              m = re.match(r'V(\d+(?:\.\d+)*)', p.name)
+              return ([int(x) for x in m.group(1).split('.')] if m else [999], p.name)
+          files = sorted(Path('docs/sql').glob('*.sql'), key=version_key)
+          for p in files:
               s = p.read_text(encoding='utf-8-sig')
               s = re.sub(r'(?im)^\s*(?:CREATE\s+(?:DATABASE|SCHEMA)\b[^;]*;|USE\s+`?\w+`?\s*;)\s*$', '', s)
               (out / p.name).write_text(s, encoding='utf-8')
+          with (out / 'ORDER.txt').open('w', encoding='utf-8', newline='\n') as fh:
+              fh.write('\n'.join(p.name for p in files))
           PY
           for db in gen_platform gen_platform_test; do
             mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS $db DEFAULT CHARSET utf8mb4;"
-            for f in /tmp/codegen-sql/*.sql; do mysql -h 127.0.0.1 -uroot -proot "$db" < "$f"; done
+            while IFS= read -r f; do
+              mysql -h 127.0.0.1 -uroot -proot "$db" < "/tmp/codegen-sql/$f" || exit 1
+            done < /tmp/codegen-sql/ORDER.txt
           done
 
       # 空库冒烟要连本机 MySQL：127.0.0.1:3306 / root / root
