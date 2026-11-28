@@ -59,6 +59,11 @@ export function getPipeline(id) {
   return request({ url: `/gen/pipeline/${id}`, method: 'get' })
 }
 
+// M2.2 质量门禁报告详情：行级 ❌→✅
+export function getQualityReport(reportId) {
+  return request({ url: `/gen/pipeline/quality-report/${reportId}`, method: 'get' })
+}
+
 // 任务分页
 export function getPipelinePage(params) {
   return request({ url: '/gen/pipeline/page', method: 'post', data: toPageQuery(params) }).then(toPageData)

@@ -96,6 +96,27 @@ const INDUSTRY_INSTALLED_MENU = {
   children: []
 }
 
+// V9.25 M2.1 护栏澄清向导：一次一问 + 28 条行业规则（静态入口，正式权限走 sys_menu）。
+const CLARIFY_MENU = {
+  id: 'gen_clarify',
+  title: '澄清向导',
+  icon: 'edit-form',
+  type: 2,
+  path: '/gen/clarify',
+  component: 'gen/clarify/index',
+  children: []
+}
+
+const GUARDRAIL_MENU = {
+  id: 'gen_guardrail',
+  title: '护栏规则',
+  icon: 'lock',
+  type: 2,
+  path: '/gen/guardrail',
+  component: 'gen/guardrail/index',
+  children: []
+}
+
 // V9.23 MCP Server：连接配置、工具目录与调用审计静态入口。
 const MCP_MENU = {
   id: 'gen_mcp',
@@ -105,6 +126,79 @@ const MCP_MENU = {
   path: '/gen/mcp',
   component: 'gen/mcp/index',
   children: []
+}
+
+/**
+ * V9.26 按功能域重组：后端下发的 /gen 子项 + 11 个静态入口统一归类。
+ * 目录全部为 type=1（Layout 包裹），叶子沿用绝对路径，component 解析逻辑不变。
+ */
+const FUNCTION_GROUPS = [
+  { id: 'fg_project', title: '项目与数据', icon: 'el-icon-folder-opened', path: '/gen-project',
+    order: ['/gen/project', '/gen/table', '/gen/i18n'] },
+  { id: 'fg_spec', title: '规格与质量', icon: 'el-icon-document-checked', path: '/gen-spec',
+    order: ['/gen/clarify', '/gen/guardrail', '/gen/spec', '/gen/converge'] },
+  { id: 'fg_template', title: '模板与范式', icon: 'el-icon-files', path: '/gen-template',
+    order: ['/gen/template', '/gen/template-market', '/gen/template-impact', '@industry'] },
+  { id: 'fg_build', title: '生成作业', icon: 'el-icon-set-up', path: '/gen-build',
+    order: ['/gen/pipeline', '/gen/aibuild', '/gen/wizard', '/gen/output'] },
+  { id: 'fg_integration', title: '集成服务', icon: 'el-icon-connection', path: '/gen-integration',
+    order: ['/gen/mcp'] }
+]
+
+// 展示名覆盖：消除 /gen/project 与 /system 重名、去版本号前缀、统一中文
+const TITLE_OVERRIDES = {
+  '/gen/project': '项目管理',
+  '/gen/table': '数据表管理',
+  '/gen/aibuild': 'AI 智能建表',
+  '/gen/mcp': 'MCP 服务',
+  '/gen/industry-pack': '范式市场'
+}
+
+const STATIC_MENUS = [
+  V95_AIBUILD_MENU, TEMPLATE_IMPACT_MENU, TEMPLATE_MARKET_MENU, SPEC_MENU, CONVERGE_MENU,
+  INDUSTRY_PACK_MENU, INDUSTRY_INSTALL_MENU, INDUSTRY_INSTALLED_MENU, MCP_MENU,
+  CLARIFY_MENU, GUARDRAIL_MENU
+]
+
+function regroupMenus(serverRouters) {
+  const byPath = new Map()
+  const others = []
+  for (const node of serverRouters || []) {
+    if (node.path === '/gen') {
+      for (const child of node.children || []) byPath.set(child.path, child)
+    } else {
+      others.push(node)
+    }
+  }
+  for (const menu of STATIC_MENUS) byPath.set(menu.path, menu)
+
+  const groups = FUNCTION_GROUPS.map(g => {
+    const children = []
+    for (const key of g.order) {
+      if (key === '@industry') {
+        const industryChildren = ['/gen/industry-pack', '/gen/industry-pack/install', '/gen/industry-pack/installed']
+          .map(p => byPath.get(p)).filter(Boolean)
+          .map(n => ({ ...n, title: TITLE_OVERRIDES[n.path] || n.title }))
+        children.push({ id: 'fg_industry', title: '行业范式', icon: 'el-icon-menu', type: 1, path: '/gen-industry', children: industryChildren })
+      } else {
+        const node = byPath.get(key)
+        if (node) children.push({ ...node, title: TITLE_OVERRIDES[key] || node.title })
+      }
+    }
+    return { id: g.id, title: g.title, icon: g.icon, type: 1, path: g.path, children }
+  })
+
+  // 后端新增但未登记的 /gen 子项保底挂到第一组，避免菜单丢失
+  const claimed = new Set()
+  groups.forEach(g => g.children.forEach(c => {
+    if (c.type === 1) (c.children || []).forEach(x => claimed.add(x.path))
+    else claimed.add(c.path)
+  }))
+  byPath.forEach((node, path) => {
+    if (!claimed.has(path)) groups[0].children.push({ ...node, title: TITLE_OVERRIDES[path] || node.title })
+  })
+
+  return groups.concat(others)
 }
 
 // 一次性把所有页面收进 map，运行时按字符串取组件（webpack 会静态收集这里的依赖）
@@ -242,8 +336,10 @@ const actions = {
   generateRoutes({ commit }) {
     return getRouters().then(res => {
       const data = res.data || {}
-      const menus = (data.routers || []).concat([V95_AIBUILD_MENU, TEMPLATE_IMPACT_MENU, TEMPLATE_MARKET_MENU, SPEC_MENU, CONVERGE_MENU, INDUSTRY_PACK_MENU, INDUSTRY_INSTALL_MENU, INDUSTRY_INSTALLED_MENU, MCP_MENU])
+      const menus = regroupMenus(data.routers || [])
       const { routes, leafPaths } = buildRoutes(menus)
+      // 兼容旧书签：/gen 历史上是代码生成目录，重定向到新的第一个功能组
+      routes.push({ path: '/gen', redirect: leafPaths[0] || '/gen/project', hidden: true })
       // 根路径按角色落到"第一个能进的页面"，避免非管理员登录后停在空白 dashboard
       if (leafPaths.length > 0) {
         routes.push({ path: '/', redirect: leafPaths[0], hidden: true })
@@ -255,10 +351,13 @@ const actions = {
         component: () => import('@/views/error-page/404.vue'),
         meta: { title: '404' }
       })
+      // allPaths 由菜单树自动收集，避免历史硬编码漏项导致 404/403 误判
+      const systemPaths = (data.allPaths || []).filter(p => p !== '/gen')
+      const allPaths = systemPaths.concat(collectPaths(menus))
       commit('SET_ROUTES', {
         routes,
         menus,
-        allPaths: (data.allPaths || []).concat(['/gen/aibuild', '/gen/template-impact', '/gen/template-market', '/gen/mcp']),
+        allPaths: Array.from(new Set(allPaths)),
         accessiblePaths: collectPaths(menus),
         superAdmin: !!data.superAdmin
       })

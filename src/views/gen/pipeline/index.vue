@@ -324,30 +324,33 @@
           <div class="track">
             <div class="track-title">主流程</div>
             <div class="track-steps">
-              <div v-for="s in stepsOf('pipeline')" :key="s.id" class="step-chip" :class="'st-' + s.status">
+              <div v-for="s in stepsOf('pipeline')" :key="s.id" class="step-chip" :class="['st-' + s.status, { 'st-report': !!reportIdOf(s) }]" @click="openQualityReport(s)">
                 <i :class="STEP_ICON[s.status] || 'el-icon-more'" />
                 <span class="step-name">{{ s.stepName }}</span>
                 <span v-if="s.message" class="step-msg">{{ s.message }}</span>
+                <span v-if="reportIdOf(s)" class="step-report">❌→✅ 查看报告</span>
               </div>
             </div>
           </div>
           <div class="track">
             <div class="track-title">后端轨</div>
             <div class="track-steps">
-              <div v-for="s in stepsOf('backend')" :key="s.id" class="step-chip" :class="'st-' + s.status">
+              <div v-for="s in stepsOf('backend')" :key="s.id" class="step-chip" :class="['st-' + s.status, { 'st-report': !!reportIdOf(s) }]" @click="openQualityReport(s)">
                 <i :class="STEP_ICON[s.status] || 'el-icon-more'" />
                 <span class="step-name">{{ s.stepName }}</span>
                 <span v-if="s.message" class="step-msg">{{ s.message }}</span>
+                <span v-if="reportIdOf(s)" class="step-report">❌→✅ 查看报告</span>
               </div>
             </div>
           </div>
           <div class="track">
             <div class="track-title">前端轨</div>
             <div class="track-steps">
-              <div v-for="s in stepsOf('frontend')" :key="s.id" class="step-chip" :class="'st-' + s.status">
+              <div v-for="s in stepsOf('frontend')" :key="s.id" class="step-chip" :class="['st-' + s.status, { 'st-report': !!reportIdOf(s) }]" @click="openQualityReport(s)">
                 <i :class="STEP_ICON[s.status] || 'el-icon-more'" />
                 <span class="step-name">{{ s.stepName }}</span>
                 <span v-if="s.message" class="step-msg">{{ s.message }}</span>
+                <span v-if="reportIdOf(s)" class="step-report">❌→✅ 查看报告</span>
               </div>
             </div>
           </div>
@@ -432,11 +435,62 @@
       :drops="recData.drops"
       @apply="onApplyRecommend"
     />
+
+    <!-- M2.2 生成代码质量门禁报告：行级 ❌→✅ -->
+    <el-dialog title="生成代码质量门禁报告" :visible.sync="qualityVisible" width="1080px" top="6vh" append-to-body>
+      <div v-loading="qualityLoading" class="qg-body">
+        <template v-if="qualityReport">
+          <div class="qg-summary">
+            <el-tag size="mini" :type="qualityReport.blocked ? 'danger' : 'success'">
+              {{ qualityReport.blocked ? 'BLOCKED 已阻断落盘' : 'PASS 通过' }}
+            </el-tag>
+            <el-tag size="mini" type="info">引擎 {{ qualityReport.engine }}</el-tag>
+            <el-tag size="mini" type="danger">BLOCKER {{ qualityReport.blockerCount }}</el-tag>
+            <el-tag size="mini" type="warning">WARN {{ qualityReport.warnCount }}</el-tag>
+            <el-tag size="mini" type="info">{{ qualityReport.ruleCount }} 条规则</el-tag>
+            <span class="meta">{{ qualityReport.message }}</span>
+          </div>
+          <el-alert
+            v-if="qualityReport.llmState !== 'APPLIED'"
+            type="warning"
+            :closable="false"
+            style="margin-bottom: 10px"
+            :title="qualityReport.llmState === 'DEGRADED' ? 'LLM 引擎不可用，已回落确定性引擎' : 'AI 未启用，仅执行确定性引擎'"
+            :description="qualityReport.degradedReason || ''"
+          />
+          <el-table v-if="qualityReport.issues && qualityReport.issues.length" :data="qualityReport.issues" size="mini" border max-height="520">
+            <el-table-column label="级别" width="82">
+              <template slot-scope="{ row }">
+                <el-tag size="mini" :type="row.severity === 'BLOCKER' ? 'danger' : 'warning'">{{ row.severity }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="ruleId" label="规则" width="72" />
+            <el-table-column label="文件:行" min-width="220">
+              <template slot-scope="{ row }">
+                <span class="qg-file">{{ row.file }}<b v-if="row.lineNo">:{{ row.lineNo }}</b></span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="message" label="问题" min-width="180" />
+            <el-table-column label="❌ 命中" min-width="200">
+              <template slot-scope="{ row }"><code class="qg-bad">{{ row.badSnippet }}</code></template>
+            </el-table-column>
+            <el-table-column label="✅ 修正" min-width="200">
+              <template slot-scope="{ row }"><code class="qg-good">{{ row.fixSnippet }}</code></template>
+            </el-table-column>
+            <el-table-column prop="sourceRef" label="坑库来源" width="130" />
+          </el-table>
+          <div v-else class="qg-empty">未发现问题，52 条规则全部通过</div>
+        </template>
+      </div>
+      <span slot="footer">
+        <el-button size="mini" @click="qualityVisible = false">关闭</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { aiModel, aiModules, previewPipelineDdl, createPipeline, preparePipelineDb, runPipeline, getPipeline, getPipelinePage, stopPipeline, getConfig, lintDb, fixPipelineLint, aiRecommendPreview, aiRecommendApply } from '@/api/pipeline'
+import { aiModel, aiModules, previewPipelineDdl, createPipeline, preparePipelineDb, runPipeline, getPipeline, getPipelinePage, stopPipeline, getConfig, lintDb, fixPipelineLint, aiRecommendPreview, aiRecommendApply, getQualityReport } from '@/api/pipeline'
 import { getToken } from '@/utils/auth'
 import AiRecommendDialog from '../components/AiRecommendDialog.vue'
 
@@ -506,6 +560,9 @@ export default {
       recApplyLoading: false,
       recExists: false,
       recData: { tables: [], menus: [], drops: [] },
+      qualityVisible: false,
+      qualityLoading: false,
+      qualityReport: null,
       STATUS_TEXT,
       STATUS_TYPE,
       STEP_ICON,
@@ -817,6 +874,26 @@ export default {
     stepsOf(side) {
       return (this.detail && this.detail.steps || []).filter(s => s.side === side)
     },
+    /* M2.2 从步骤消息里提取质量门禁报告号（后端 gen 步骤会带「报告 #123」） */
+    reportIdOf(step) {
+      const m = step && step.message ? /报告\s*#(\d+)/.exec(step.message) : null
+      return m ? m[1] : null
+    },
+    async openQualityReport(step) {
+      const reportId = this.reportIdOf(step)
+      if (!reportId) return
+      this.qualityVisible = true
+      this.qualityLoading = true
+      this.qualityReport = null
+      try {
+        const res = await getQualityReport(reportId)
+        this.qualityReport = res.data
+      } catch (e) {
+        this.$message.error(`加载质量门禁报告失败：${e.message || '未知错误'}`)
+      } finally {
+        this.qualityLoading = false
+      }
+    },
     async loadDetail(id) {
       const res = await getPipeline(id)
       this.detail = res.data
@@ -994,6 +1071,17 @@ export default {
 .st-failed { border-color: #fab6b6; background: #fef0f0; color: #f56c6c; }
 .st-pending { color: #909399; }
 .step-msg { color: #909399; font-size: 12px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-report { cursor: pointer; }
+.st-report:hover { border-color: #409eff; box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.12); }
+.step-report { color: #409eff; font-size: 12px; white-space: nowrap; }
+
+/* M2.2 质量门禁报告弹层 */
+.qg-body { min-height: 120px; }
+.qg-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.qg-file { font-family: Consolas, Monaco, monospace; font-size: 12px; word-break: break-all; }
+.qg-bad { color: #f56c6c; background: #fef0f0; padding: 1px 4px; border-radius: 3px; white-space: pre-wrap; word-break: break-all; }
+.qg-good { color: #67c23a; background: #f0f9eb; padding: 1px 4px; border-radius: 3px; white-space: pre-wrap; word-break: break-all; }
+.qg-empty { color: #909399; font-size: 13px; padding: 24px 0; text-align: center; }
 .done-card { margin-top: 10px; }
 .done-url { font-size: 14px; }
 .fail-bar { margin-top: 10px; }

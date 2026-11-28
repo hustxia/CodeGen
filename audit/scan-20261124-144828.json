@@ -1,0 +1,118 @@
+{
+  "root": "D:\\workspace\\xyh-devbranch\\codegen-web",
+  "scanned_at": "2026-11-24 14:48:28",
+  "elapsed_sec": 0.45,
+  "file_count": 68,
+  "line_count": 16799,
+  "git_diff_only": false,
+  "summary": {
+    "P0": 0,
+    "P1": 1,
+    "P2": 7
+  },
+  "by_rule": [
+    {
+      "rule": "FE-02",
+      "severity": "P1",
+      "category": "前端",
+      "title": "前端硬编码内网地址",
+      "hits": 1
+    },
+    {
+      "rule": "STY-03",
+      "severity": "P2",
+      "category": "规范",
+      "title": "单文件超过 800 行",
+      "hits": 4
+    },
+    {
+      "rule": "FE-01",
+      "severity": "P2",
+      "category": "前端",
+      "title": "残留 console.log / debugger",
+      "hits": 3
+    }
+  ],
+  "findings": [
+    {
+      "rule": "FE-02",
+      "severity": "P1",
+      "category": "前端",
+      "title": "前端硬编码内网地址",
+      "advice": "改环境变量或 baseURL 配置，否则换环境必挂",
+      "file": "shot-manual.js",
+      "line": 10,
+      "snippet": "const BASE = 'http://127.0.0.1:9530'"
+    },
+    {
+      "rule": "FE-01",
+      "severity": "P2",
+      "category": "前端",
+      "title": "残留 console.log / debugger",
+      "advice": "生产构建前清除，或改统一日志工具",
+      "file": "shot-manual.js",
+      "line": 36,
+      "snippet": "console.log('saved', name)"
+    },
+    {
+      "rule": "FE-01",
+      "severity": "P2",
+      "category": "前端",
+      "title": "残留 console.log / debugger",
+      "advice": "生产构建前清除，或改统一日志工具",
+      "file": "shot-manual.js",
+      "line": 49,
+      "snippet": "if (dlg) { await shot('02-field-config.png') } else { console.log('字段配置弹窗未打开') }"
+    },
+    {
+      "rule": "FE-01",
+      "severity": "P2",
+      "category": "前端",
+      "title": "残留 console.log / debugger",
+      "advice": "生产构建前清除，或改统一日志工具",
+      "file": "shot-manual.js",
+      "line": 90,
+      "snippet": "else console.log('流水线页不可直达:', text.slice(0, 80).replace(/\\s+/g, ' '))"
+    },
+    {
+      "rule": "STY-03",
+      "severity": "P2",
+      "category": "规范",
+      "title": "单文件超过 800 行",
+      "advice": "按领域拆分；同时确认是否有生成代码混入",
+      "file": "src/views/gen/aibuild/index.vue",
+      "line": 1,
+      "snippet": "文件共 802 行"
+    },
+    {
+      "rule": "STY-03",
+      "severity": "P2",
+      "category": "规范",
+      "title": "单文件超过 800 行",
+      "advice": "按领域拆分；同时确认是否有生成代码混入",
+      "file": "src/views/gen/pipeline/index.vue",
+      "line": 1,
+      "snippet": "文件共 1016 行"
+    },
+    {
+      "rule": "STY-03",
+      "severity": "P2",
+      "category": "规范",
+      "title": "单文件超过 800 行",
+      "advice": "按领域拆分；同时确认是否有生成代码混入",
+      "file": "src/views/gen/table/index.vue",
+      "line": 1,
+      "snippet": "文件共 2166 行"
+    },
+    {
+      "rule": "STY-03",
+      "severity": "P2",
+      "category": "规范",
+      "title": "单文件超过 800 行",
+      "advice": "按领域拆分；同时确认是否有生成代码混入",
+      "file": "src/views/monitor/index.vue",
+      "line": 1,
+      "snippet": "文件共 847 行"
+    }
+  ]
+}
