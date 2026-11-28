@@ -104,6 +104,56 @@
         </el-table>
       </el-tab-pane>
 
+      <!-- ==================== 定时任务（V9.18 补齐间隔模式与下次执行时间） ==================== -->
+      <el-tab-pane label="定时任务" name="schedules">
+        <div class="schedule-bar">
+          <el-button size="small" type="primary" @click="openScheduleDialog()">新增定时任务</el-button>
+          <span class="hint">服务端每 30 秒扫描一次到期任务；间隔模式与 cron 二选一，间隔优先</span>
+        </div>
+        <el-table v-loading="loadingSchedules" :data="schedules" size="mini" border>
+          <el-table-column prop="name" label="任务名" min-width="150" show-overflow-tooltip />
+          <el-table-column label="执行环境" width="130">
+            <template slot-scope="{ row }">{{ envName(row.envId) }}</template>
+          </el-table-column>
+          <el-table-column label="套件" min-width="170" show-overflow-tooltip>
+            <template slot-scope="{ row }">{{ suiteNames(row.suiteIds) }}</template>
+          </el-table-column>
+          <el-table-column label="触发规则" width="150">
+            <template slot-scope="{ row }">
+              <span v-if="row.intervalMinutes">每 {{ row.intervalMinutes }} 分钟</span>
+              <span v-else class="mono">{{ row.cron }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="启用" width="80" align="center">
+            <template slot-scope="{ row }">
+              <el-switch :value="row.enabled === 1" @change="toggleSchedule(row, $event)" />
+            </template>
+          </el-table-column>
+          <el-table-column label="最近执行" width="200">
+            <template slot-scope="{ row }">
+              <span v-if="row.lastRunAt" class="mono">{{ fmtTime(row.lastRunAt) }}</span>
+              <span v-else class="muted">未执行</span>
+              <el-tag v-if="row.lastRunStatus" size="mini" :type="runType(row.lastRunStatus)" style="margin-left: 6px">
+                {{ row.lastRunStatus }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="下次执行" width="170">
+            <template slot-scope="{ row }">
+              <span v-if="row.enabled !== 1" class="muted">已停用</span>
+              <span v-else-if="row.nextRunAt" class="mono">{{ fmtTime(row.nextRunAt) }}</span>
+              <span v-else class="muted">-</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="110" align="center">
+            <template slot-scope="{ row }">
+              <el-button type="text" size="mini" @click="openScheduleDialog(row)">编辑</el-button>
+              <el-button type="text" size="mini" class="danger" @click="removeSchedule(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
+
       <!-- ==================== 环境配置 ==================== -->
       <el-tab-pane label="环境配置" name="envs">
         <el-button size="small" type="primary" style="margin-bottom: 10px" @click="openEnvDialog()">
@@ -248,6 +298,39 @@
       </template>
     </el-dialog>
 
+    <!-- 定时任务编辑 -->
+    <el-dialog :title="scheduleForm.id ? '编辑定时任务' : '新增定时任务'" :visible.sync="scheduleDialog" width="560px">
+      <el-form label-width="96px" size="small">
+        <el-form-item label="任务名">
+          <el-input v-model="scheduleForm.name" placeholder="如：订单模块每 30 分钟回归" />
+        </el-form-item>
+        <el-form-item label="执行环境">
+          <el-select v-model="scheduleForm.envId" placeholder="选择环境" style="width: 100%">
+            <el-option v-for="e in envs" :key="e.id" :label="e.name" :value="e.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="套件">
+          <el-select v-model="scheduleForm.suiteIdList" multiple placeholder="选择要回归的套件" style="width: 100%">
+            <el-option v-for="s in suites" :key="s.id" :label="s.name" :value="s.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="间隔分钟">
+          <el-input-number v-model="scheduleForm.intervalMinutes" :min="1" :max="1440" size="small" controls-position="right" />
+          <span class="hint">填了间隔就忽略下面的 cron</span>
+        </el-form-item>
+        <el-form-item label="cron">
+          <el-input v-model="scheduleForm.cron" placeholder="如 0 0 2 * * ?（秒 分 时 日 月 周）" />
+        </el-form-item>
+        <el-form-item label="启用">
+          <el-switch v-model="scheduleForm.enabledBool" />
+        </el-form-item>
+      </el-form>
+      <span slot="footer">
+        <el-button size="small" @click="scheduleDialog = false">取消</el-button>
+        <el-button size="small" type="primary" :loading="savingSchedule" @click="submitSchedule">保存</el-button>
+      </span>
+    </el-dialog>
+
     <!-- 套件 / 环境 -->
     <el-dialog title="新建套件" :visible.sync="suiteDialog" width="420px">
       <el-form label-width="70px" size="small">
@@ -307,7 +390,11 @@ import {
   startRun,
   getRunPage,
   getRunDetail,
-  abortRun
+  abortRun,
+  getSchedulePage,
+  saveSchedule,
+  deleteSchedule,
+  setScheduleEnabled
 } from '@/api/test'
 
 const DEFAULT_ASSERTS = JSON.stringify(
@@ -340,17 +427,24 @@ export default {
       runDialog: false,
       suiteDialog: false,
       envDialog: false,
+      scheduleDialog: false,
       tryResult: null,
       runDetail: null,
       caseForm: this.emptyCase(),
       suiteForm: { name: '', moduleName: '' },
-      envForm: this.emptyEnv()
+      envForm: this.emptyEnv(),
+      // V9.18 定时任务
+      schedules: [],
+      loadingSchedules: false,
+      savingSchedule: false,
+      scheduleForm: this.emptySchedule()
     }
   },
   created() {
     this.loadEnvs()
     this.loadSuites()
     this.loadRuns()
+    this.loadSchedules()
   },
   methods: {
     emptyCase() {
@@ -370,6 +464,112 @@ export default {
     },
     emptyEnv() {
       return { id: null, name: '', baseUrl: '', headersJson: '', isProdBool: false, enabledBool: true }
+    },
+    emptySchedule() {
+      return {
+        id: null,
+        projectId: null,
+        name: '',
+        envId: null,
+        suiteIdList: [],
+        intervalMinutes: null,
+        cron: '',
+        enabledBool: true
+      }
+    },
+    async loadSchedules() {
+      this.loadingSchedules = true
+      try {
+        const res = await getSchedulePage({ page: 1, size: 100 })
+        this.schedules = res.data.list || []
+      } catch (e) {
+        this.schedules = []
+      } finally {
+        this.loadingSchedules = false
+      }
+    },
+    openScheduleDialog(row) {
+      if (row) {
+        this.scheduleForm = {
+          id: row.id,
+          projectId: row.projectId,
+          name: row.name,
+          envId: row.envId,
+          suiteIdList: String(row.suiteIds || '').split(',').filter(v => v).map(Number),
+          intervalMinutes: row.intervalMinutes || null,
+          cron: row.intervalMinutes ? '' : (row.cron || ''),
+          enabledBool: row.enabled === 1
+        }
+      } else {
+        this.scheduleForm = this.emptySchedule()
+      }
+      this.scheduleDialog = true
+    },
+    async submitSchedule() {
+      const f = this.scheduleForm
+      if (!f.name || !f.envId || !f.suiteIdList.length) {
+        this.$message.warning('任务名、执行环境、套件都必填')
+        return
+      }
+      if (!f.intervalMinutes && !f.cron) {
+        this.$message.warning('间隔分钟或 cron 至少填一个')
+        return
+      }
+      this.savingSchedule = true
+      try {
+        await saveSchedule({
+          id: f.id,
+          projectId: f.projectId,
+          name: f.name,
+          envId: f.envId,
+          suiteIds: f.suiteIdList.join(','),
+          cron: f.cron,
+          intervalMinutes: f.intervalMinutes || null,
+          enabled: f.enabledBool ? 1 : 0
+        })
+        this.$message.success('已保存')
+        this.scheduleDialog = false
+        await this.loadSchedules()
+      } catch (e) {
+        this.$message.error(e.message || '保存失败')
+      } finally {
+        this.savingSchedule = false
+      }
+    },
+    async toggleSchedule(row, value) {
+      const flag = value ? 1 : 0
+      try {
+        await setScheduleEnabled(row.id, flag)
+        row.enabled = flag
+        await this.loadSchedules()
+      } catch (e) {
+        this.$message.error(e.message || '启停失败')
+        await this.loadSchedules()
+      }
+    },
+    removeSchedule(row) {
+      this.$confirm(`删除定时任务「${row.name}」？`, '提示', { type: 'warning' })
+        .then(async () => {
+          await deleteSchedule(row.id)
+          await this.loadSchedules()
+        })
+        .catch(() => {})
+    },
+    envName(id) {
+      const hit = this.envs.find(e => String(e.id) === String(id))
+      return hit ? hit.name : (id == null ? '-' : id)
+    },
+    suiteNames(ids) {
+      const list = String(ids || '').split(',').filter(v => v)
+      if (!list.length) return '-'
+      return list.map(id => {
+        const hit = this.suites.find(s => String(s.id) === String(id))
+        return hit ? hit.name : id
+      }).join('、')
+    },
+    fmtTime(text) {
+      if (!text) return '-'
+      return String(text).replace('T', ' ').slice(0, 19)
     },
     async loadEnvs() {
       this.loadingEnvs = true
@@ -716,5 +916,11 @@ export default {
   color: #c0c4cc;
   font-size: 12px;
   padding: 8px;
+}
+.schedule-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 </style>

@@ -505,6 +505,16 @@
             <el-option label="不处理（仅删主表）" :value="2" />
           </el-select>
         </el-form-item>
+        <el-form-item label="子表保存模式">
+          <el-select
+            v-model="currentTable.childSaveMode"
+            style="width: 210px"
+            :disabled="!canConfigChildSave"
+          >
+            <el-option label="全量替换（默认，先删后插）" :value="0" />
+            <el-option label="增量合并（按主键三路合并）" :value="1" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="打印单据">
           <el-select
             v-model="currentTable.genPrint"
@@ -522,6 +532,7 @@
         目标模块命中 application.yml 的 gen.output.modules 时，后端路径/包名/网关前缀自动切成该模块；树形父字段填 parent_id 后生成 tree 接口与树表格；
         所属主表填了就是从表，保存走同事务的 save-with-children，主表页面会出现明细子表。
         删除级联只对主表生效：从表上不可配；未配置时跟随系统默认（sys_project.default_delete_cascade_mode，再默认级联）。
+        子表保存模式也只对主表生效：全量替换沿用「先删后插」，增量合并按主键三路合并（一对一按外键 upsert、多对多中间表按差集增删）。
         打印单据开启后产物多一张 A4 打印页（print.vue）与列表「打印」按钮，需开前端与详情接口。
       </div>
 
@@ -881,6 +892,9 @@ const defaultTableConfig = () => ({
   masterTableId: null,
   masterForeignKey: '',
   deleteCascadeMode: null,
+  // V9.18 子表保存模式：0=全量替换（默认）1=增量合并；relationType 仅用于判断下拉是否可编辑
+  childSaveMode: 0,
+  relationType: '',
   // V4.5 打印单据：null=跟随系统默认（默认关）
   genPrint: null,
   columns: []
@@ -1016,6 +1030,15 @@ export default {
     }
   },
   computed: {
+    // V9.18 子表保存模式：只有主表才有子行可保存。
+    // 判据 = 显式标了 ONE_TO_MANY，或列表里确有表把 masterTableId 指向本表（从表/单表不可配）。
+    canConfigChildSave() {
+      if (!this.currentTable.id) return false
+      const rt = String(this.currentTable.relationType || '').trim().toUpperCase().replace(/-/g, '_')
+      if (rt === 'ONE_TO_MANY') return true
+      const selfId = String(this.currentTable.id)
+      return this.masterCandidates.some(t => t.masterTableId != null && String(t.masterTableId) === selfId)
+    },
     filteredDbTables() {
       const kw = (this.dbFilter || '').trim().toLowerCase()
       if (!kw) return this.dbTables
@@ -1819,7 +1842,11 @@ export default {
         // 注意：后端分页参数是 pageNum/pageSize（PageQuery），不是 page/size
       const res = await getGenTablePage({ pageNum: 1, pageSize: 500 })
         this.masterCandidates = (res.data.list || []).map(t => ({
-          id: t.id, tableName: t.tableName, tableComment: t.tableComment
+          id: t.id,
+          tableName: t.tableName,
+          tableComment: t.tableComment,
+          // V9.18：用于判断当前表是否真的挂着子表（有子表才可配子表保存模式）
+          masterTableId: t.masterTableId
         }))
       } catch (e) {
         this.masterCandidates = []
