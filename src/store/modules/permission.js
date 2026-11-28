@@ -134,15 +134,13 @@ const MCP_MENU = {
  */
 const FUNCTION_GROUPS = [
   { id: 'fg_project', title: '项目与数据', icon: 'el-icon-folder-opened', path: '/gen-project',
-    order: ['/gen/project', '/gen/table', '/gen/i18n'] },
+    order: ['/gen/project', '/gen/table', '/gen/i18n', '/gen/api-catalog', '/gen/mcp'] },
   { id: 'fg_spec', title: '规格与质量', icon: 'el-icon-document-checked', path: '/gen-spec',
     order: ['/gen/clarify', '/gen/guardrail', '/gen/spec', '/gen/converge'] },
   { id: 'fg_template', title: '模板与范式', icon: 'el-icon-files', path: '/gen-template',
     order: ['/gen/template', '/gen/template-market', '/gen/template-impact', '@industry'] },
   { id: 'fg_build', title: '生成作业', icon: 'el-icon-set-up', path: '/gen-build',
-    order: ['/gen/pipeline', '/gen/aibuild', '/gen/wizard', '/gen/output'] },
-  { id: 'fg_integration', title: '集成服务', icon: 'el-icon-connection', path: '/gen-integration',
-    order: ['/gen/mcp'] }
+    order: ['/gen/pipeline', '/gen/aibuild', '/gen/wizard', '/gen/output'] }
 ]
 
 // 展示名覆盖：消除 /gen/project 与 /system 重名、去版本号前缀、统一中文
@@ -187,6 +185,21 @@ function regroupMenus(serverRouters) {
     }
     return { id: g.id, title: g.title, icon: g.icon, type: 1, path: g.path, children }
   })
+
+  // V9.27：把后端平铺的「系统监控 / 测试中心 / 验证中心」归入「系统管理」目录
+  const SUB_SYSTEM_PATHS = ['/monitor', '/test', '/tc/center']
+  const sysIndex = others.findIndex(n => n.path === '/system')
+  if (sysIndex >= 0) {
+    const subs = SUB_SYSTEM_PATHS.map(p => {
+      const idx = others.findIndex(n => n.path === p)
+      return idx >= 0 ? others.splice(idx, 1)[0] : null
+    }).filter(Boolean)
+    // splice 可能前移 sys 的下标，重新定位
+    const cur = others.findIndex(n => n.path === '/system')
+    if (cur >= 0) {
+      others[cur] = { ...others[cur], children: [...(others[cur].children || []), ...subs] }
+    }
+  }
 
   // 后端新增但未登记的 /gen 子项保底挂到第一组，避免菜单丢失
   const claimed = new Set()
@@ -256,9 +269,14 @@ function buildRoutes(menus) {
       const kids = []
       for (const child of children) {
         if (child.type === 1) {
-          // 目前只有两级；出现三级目录时把孙节点摊平，避免侧边栏错位
-          for (const grand of child.children || []) {
+          // 三级目录：孙节点摊平挂到父路由，目录本身补 redirect 兜底
+          // （侧边栏 flyout 会把目录渲染成不可点击的分组标题，但直接访问 URL/旧书签仍可达）
+          const grandkids = child.children || []
+          for (const grand of grandkids) {
             kids.push(leafRoute(grand))
+          }
+          if (grandkids.length > 0) {
+            routes.push({ path: child.path, redirect: grandkids[0].path, hidden: true })
           }
         } else {
           kids.push(leafRoute(child))

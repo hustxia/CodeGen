@@ -9,7 +9,7 @@
 
       <!-- 自定义导航：一级点击后二级菜单从右侧滑出 -->
       <nav class="side-nav">
-        <div v-for="item in navItems" :key="item.key" class="nav-item-wrap">
+        <div v-for="item in navItems" :key="item.key" class="nav-item-wrap" :class="{ 'system-group': item.key === '/system' }">
           <!-- 单级菜单 -->
           <router-link
             v-if="!item.children"
@@ -37,16 +37,32 @@
           <transition name="fly">
             <div v-if="item.children && openGroup === item.key" class="flyout" @click.stop>
               <div class="flyout-title">{{ item.title }}</div>
-              <router-link
-                v-for="child in item.children"
-                :key="child.path"
-                :to="child.path"
-                class="flyout-item"
-                :class="{ active: activeMenu === child.path }"
-                @click.native="closeFlyout"
-              >
-                {{ child.title }}
-              </router-link>
+              <template v-for="child in item.children">
+                <!-- 三级目录：渲染为分组标题（不可点击）+ 缩进子项 -->
+                <div v-if="child.children && child.children.length" :key="child.path" class="flyout-group">
+                  <div class="flyout-group-title">{{ child.title }}</div>
+                  <router-link
+                    v-for="grand in child.children"
+                    :key="grand.path"
+                    :to="grand.path"
+                    class="flyout-item flyout-item-grand"
+                    :class="{ active: activeMenu === grand.path }"
+                    @click.native="closeFlyout"
+                  >
+                    {{ grand.title }}
+                  </router-link>
+                </div>
+                <router-link
+                  v-else
+                  :key="child.path"
+                  :to="child.path"
+                  class="flyout-item"
+                  :class="{ active: activeMenu === child.path }"
+                  @click.native="closeFlyout"
+                >
+                  {{ child.title }}
+                </router-link>
+              </template>
             </div>
           </transition>
         </div>
@@ -61,6 +77,7 @@
           class="hamburger"
           @click="$store.dispatch('app/toggleSideBar')"
         ></i>
+        <span class="header-divider"></span>
         <el-breadcrumb separator="/">
           <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
           <el-breadcrumb-item v-if="$route.meta.title && $route.path !== '/dashboard'">
@@ -121,11 +138,22 @@ export default {
               path: children[0].path
             })
           } else {
+            const leafPaths = []
+            for (const c of children) {
+              if (c.children && c.children.length) leafPaths.push(...c.children.map(g => g.path))
+              else leafPaths.push(c.path)
+            }
             items.push({
               key: node.path,
               title: node.title,
               icon: node.icon,
-              children: children.map(c => ({ title: c.title, path: c.path }))
+              leafPaths,
+              children: children.map(c => ({
+                title: c.title,
+                path: c.path,
+                // 保留三级目录的孙节点，交给 flyout 渲染为分组；无孙节点则是普通叶子
+                children: (c.children || []).filter(g => g.type !== 3).map(g => ({ title: g.title, path: g.path }))
+              }))
             })
           }
         } else {
@@ -158,7 +186,10 @@ export default {
     },
     // 当前路由属于该分组时高亮一级菜单
     isGroupActive(item) {
-      return this.$route.path === item.key || this.$route.path.startsWith(item.key + '/')
+      const key = item.key || ''
+      if (this.$route.path === key || this.$route.path.startsWith(key + '/')) return true
+      // 三级目录的叶子路径与父 group key 不同源（如 /gen/industry-pack vs /gen-template）
+      return (item.leafPaths || []).some(p => this.$route.path === p || this.$route.path.startsWith(p + '/'))
     },
     async handleCommand(command) {
       if (command === 'logout') {
@@ -220,6 +251,22 @@ export default {
   letter-spacing: 0.5px;
 }
 
+/* logo 与菜单之间的品牌分隔线，让侧栏有上下层次 */
+.logo::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.logo {
+  position: relative;
+  margin-bottom: 6px;
+}
+
 /* ---------- 一级菜单 ---------- */
 .side-nav {
   padding: 6px 0;
@@ -229,11 +276,20 @@ export default {
   position: relative;
 }
 
+/* 系统管理组前加分组线：一级菜单按业务/系统两类分块 */
+.nav-item-wrap.system-group::before {
+  content: '';
+  display: block;
+  height: 1px;
+  margin: 6px 16px 2px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .nav-item {
   display: flex;
   align-items: center;
-  height: 46px;
-  margin: 4px 10px;
+  height: 44px;
+  margin: 3px 10px;
   padding: 0 14px;
   border-radius: var(--cg-radius-nav);
   color: var(--cg-aside-text);
@@ -312,6 +368,28 @@ export default {
   margin-bottom: 6px;
 }
 
+.flyout-group {
+  margin-bottom: 4px;
+}
+
+.flyout-group-title {
+  padding: 6px 12px 4px;
+  font-size: 11px;
+  color: var(--cg-aside-text);
+  opacity: 0.55;
+  letter-spacing: 0.5px;
+}
+
+.flyout-item-grand {
+  padding-left: 22px;
+}
+
+.flyout-item-grand::before {
+  content: '·';
+  margin-right: 6px;
+  opacity: 0.6;
+}
+
 .flyout-item {
   display: block;
   padding: 9px 12px;
@@ -366,6 +444,13 @@ export default {
 
 .hamburger:hover {
   background: var(--cg-bg-hover);
+}
+
+.header-divider {
+  width: 1px;
+  height: 18px;
+  margin-right: 16px;
+  background: var(--cg-border);
 }
 
 .right-menu {

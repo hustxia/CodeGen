@@ -27,18 +27,35 @@ a {
 
 /* 页面容器 */
 .app-container {
-  padding: 16px;
+  padding: 18px 20px;
 }
 
 /* ---------- 卡片间距 ---------- */
 .el-card + .el-card,
 .app-container > .el-card + * {
-  margin-top: 16px;
+  margin-top: 18px;
+}
+
+/* ---------- 卡片内边距：给内容更多呼吸感 ---------- */
+.el-card__body {
+  padding: 18px 20px;
 }
 
 /* ---------- 表格行高（宽度/配色由 theme.css 负责） ---------- */
 .el-table .cell {
-  line-height: 22px;
+  line-height: 24px;
+}
+
+/* 表头略高、字重清晰，与数据行区分更明显 */
+.el-table th.el-table__cell > .cell {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* 数据行增加垂直留白，长路径/中文列不再贴边 */
+.el-table td.el-table__cell > .cell {
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 /* ---------- 弹窗内边距 ---------- */
