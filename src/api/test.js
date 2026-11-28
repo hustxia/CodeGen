@@ -76,3 +76,20 @@ export function getRunDetail(id) {
 export function abortRun(id) {
   return request({ url: `/test/run/${id}/abort`, method: 'post' })
 }
+
+// ---------------- 定时回归（V9.18 补齐间隔模式 / 下次执行时间） ----------------
+export function getSchedulePage(params) {
+  return request({ url: '/test/schedule/page', method: 'post', data: toPageQuery(params) }).then(toPageData)
+}
+
+export function saveSchedule(data) {
+  return request({ url: '/test/schedule/save', method: 'post', data })
+}
+
+export function deleteSchedule(id) {
+  return request({ url: `/test/schedule/${id}/delete`, method: 'post' })
+}
+
+export function setScheduleEnabled(id, flag) {
+  return request({ url: `/test/schedule/${id}/enabled/${flag}`, method: 'post' })
+}

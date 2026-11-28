@@ -70,7 +70,7 @@
               <div v-if="s.dependsOn && s.dependsOn.length" class="suite-dep">依赖 {{ s.dependsOn.join(', ') }}</div>
             </div>
           </el-checkbox-group>
-          <div class="panel-foot muted">S8 / S9 为 P1 重项，默认不勾选（本机内存有限，套件严格串行执行）</div>
+          <div class="panel-foot muted">S8（截图）/ S9（产物等价性）已接入自动化：缺浏览器依赖或未配置基线时如实 SKIPPED，不会伪造通过</div>
         </el-card>
       </el-col>
 
@@ -143,6 +143,41 @@
 
         <h4>用例结果</h4>
         <el-table :data="detail.cases" size="mini" border>
+          <!-- V9.18：S8 截图缩略图 / S9 差异文件树 -->
+          <el-table-column type="expand">
+            <template slot-scope="{ row }">
+              <div class="case-expand">
+                <div v-if="shotsOf(row).length" class="expand-block">
+                  <div class="expand-title">截图（{{ shotsOf(row).length }} 张，点击可放大）</div>
+                  <div class="shot-grid">
+                    <img
+                      v-for="a in shotsOf(row)"
+                      :key="a.id"
+                      :src="shotUrls[a.id]"
+                      :alt="a.fileName"
+                      class="shot-thumb"
+                      @click="openPreview(a)"
+                    >
+                  </div>
+                </div>
+                <div v-if="row.suiteId === 'S9'" class="expand-block">
+                  <div class="expand-title">
+                    产物差异
+                    <span class="muted" v-if="diffOf(row)">新增 {{ diffOf(row).added.length }} / 删除 {{ diffOf(row).removed.length }} / 修改 {{ diffOf(row).modified.length }}</span>
+                  </div>
+                  <div v-if="diffOf(row)" class="diff-tree">
+                    <div v-for="g in diffGroups(row)" :key="g.key" class="diff-group">
+                      <el-tag size="mini" :type="g.type">{{ g.label }} {{ g.files.length }}</el-tag>
+                      <div v-for="f in g.files" :key="f" class="diff-file mono">{{ f }}</div>
+                      <div v-if="g.truncated" class="muted">仅展示前 {{ g.files.length }} 条，完整清单见 diff.json 产物</div>
+                    </div>
+                  </div>
+                  <div v-else class="muted">本次运行未产出差异清单（可能未配置基线目录，S9 已 SKIPPED）</div>
+                </div>
+                <div v-if="!shotsOf(row).length && row.suiteId !== 'S9'" class="muted">该套件无额外可视化产物</div>
+              </div>
+            </template>
+          </el-table-column>
           <el-table-column prop="suiteId" label="套件" width="80" />
           <el-table-column label="状态" width="100">
             <template slot-scope="{ row }"><el-tag size="mini" :type="tagType(row.status)">{{ row.status }}</el-tag></template>
@@ -167,13 +202,25 @@
 
         <h4>产物</h4>
         <div v-if="!detail.artifacts.length" class="muted">暂无产物</div>
-        <el-button v-for="a in detail.artifacts" :key="a.id" size="mini" class="artifact-btn" icon="el-icon-document" @click="downloadOne(a)">
+        <el-button
+          v-for="a in detail.artifacts"
+          :key="a.id"
+          size="mini"
+          class="artifact-btn"
+          :icon="isImage(a) ? 'el-icon-picture-outline' : 'el-icon-document'"
+          @click="openArtifact(a)"
+        >
           {{ a.artifactType }} · {{ a.fileName }}
         </el-button>
 
         <h4>JSON 摘要（codegen.testcenter/v1）</h4>
         <pre class="summary-box">{{ detail.run.summaryJson || '(运行中，尚未生成)' }}</pre>
       </div>
+
+      <el-dialog :visible.sync="previewVisible" width="80%" append-to-body title="截图预览" @closed="previewUrl = ''">
+        <img v-if="previewUrl" :src="previewUrl" class="preview-img" alt="截图预览">
+        <div v-else class="muted">截图加载失败</div>
+      </el-dialog>
     </el-drawer>
   </div>
 </template>
@@ -208,7 +255,13 @@ export default {
       detail: { run: null, cases: [], artifacts: [] },
       logText: '',
       logCaseId: null,
-      timer: null
+      timer: null,
+      // V9.18：S8 截图 / S9 差异。artifactId → blob URL；suiteId → 差异清单
+      shotUrls: {},
+      diffData: {},
+      extrasRunId: null,
+      previewVisible: false,
+      previewUrl: ''
     }
   },
   computed: {
@@ -249,6 +302,7 @@ export default {
           const fresh = await getRun(this.detail.run.id)
           this.detail = fresh
           this.loadLog({ id: this.logCaseId })
+          if (this.extrasRunId !== fresh.run.id) this.loadExtras()
         }
       } catch (e) {
         if (!silent) this.$message.error(e.message || '加载失败')
@@ -332,12 +386,121 @@ export default {
       this.logCaseId = null
       this.drawerVisible = true
       this.loadLog({ id: null })
+      await this.loadExtras()
     },
     closeDetail(done) {
       this.drawerVisible = false
       this.logCaseId = null
       this.logText = ''
+      this.clearExtras()
       if (done) done()
+    },
+    // ---------------- V9.18：S8 截图 / S9 差异展示 ----------------
+    isImage(a) {
+      return a && (a.artifactType === 'SCREENSHOT' || String(a.mimeType || '').indexOf('image/') === 0)
+    },
+    shotsOf(row) {
+      const list = (this.detail && this.detail.artifacts) || []
+      return list.filter(a => a.suiteId === row.suiteId && this.isImage(a))
+    },
+    diffOf(row) {
+      return this.diffData[row.suiteId] || null
+    },
+    diffGroups(row) {
+      const d = this.diffOf(row)
+      if (!d) return []
+      const cap = 15
+      return [
+        { key: 'added', label: '新增', type: 'success', files: d.added, truncated: d.added.length >= cap },
+        { key: 'removed', label: '删除', type: 'danger', files: d.removed, truncated: d.removed.length >= cap },
+        { key: 'modified', label: '修改', type: 'warning', files: d.modified, truncated: d.modified.length >= cap }
+      ]
+    },
+    async loadExtras() {
+      this.clearExtras()
+      const run = this.detail && this.detail.run
+      if (!run) return
+      this.extrasRunId = run.id
+      const cases = this.detail.cases || []
+      for (const row of cases) {
+        // S9：优先读 diff.json 产物（完整清单），退回 metrics_json 的 diffList（截断清单）
+        if (row.suiteId === 'S9') {
+          const diffArtifact = (this.detail.artifacts || [])
+            .find(a => a.suiteId === 'S9' && a.artifactType === 'DIFF')
+          const fromArtifact = diffArtifact ? await this.readDiffArtifact(diffArtifact) : null
+          if (fromArtifact) {
+            this.$set(this.diffData, 'S9', fromArtifact)
+          } else {
+            const fromMetrics = this.parseMetricsDiff(row.metricsJson)
+            if (fromMetrics) this.$set(this.diffData, 'S9', fromMetrics)
+          }
+        }
+        // S8：截图缩略图（最多 12 张，避免一次拉太多 blob）
+        const shots = this.shotsOf(row).slice(0, 12)
+        for (const a of shots) {
+          try {
+            const resp = await downloadArtifact(a.id)
+            const blob = new Blob([resp.data], { type: a.mimeType || 'image/png' })
+            this.$set(this.shotUrls, a.id, URL.createObjectURL(blob))
+          } catch (e) {
+            // 单张截图加载失败不影响其他产物展示
+          }
+        }
+      }
+    },
+    async readDiffArtifact(a) {
+      try {
+        const resp = await downloadArtifact(a.id)
+        const data = resp && resp.data !== undefined ? resp.data : resp
+        let text
+        if (typeof data === 'string') text = data
+        else if (data && typeof data.text === 'function') text = await data.text()
+        else text = await new Response(data).text()
+        const parsed = JSON.parse(text)
+        return {
+          added: parsed.added || [],
+          removed: parsed.removed || [],
+          modified: parsed.modified || []
+        }
+      } catch (e) {
+        return null
+      }
+    },
+    parseMetricsDiff(metricsJson) {
+      try {
+        const m = JSON.parse(metricsJson || '{}')
+        if (!m || !m.diffList) return null
+        return {
+          added: m.diffList.added || [],
+          removed: m.diffList.removed || [],
+          modified: m.diffList.modified || []
+        }
+      } catch (e) {
+        return null
+      }
+    },
+    clearExtras() {
+      Object.keys(this.shotUrls).forEach(k => URL.revokeObjectURL(this.shotUrls[k]))
+      this.shotUrls = {}
+      this.diffData = {}
+      this.extrasRunId = null
+    },
+    async openArtifact(a) {
+      if (!this.isImage(a)) {
+        this.downloadOne(a)
+        return
+      }
+      if (!this.shotUrls[a.id]) {
+        try {
+          const resp = await downloadArtifact(a.id)
+          this.$set(this.shotUrls, a.id, URL.createObjectURL(new Blob([resp.data], { type: a.mimeType || 'image/png' })))
+        } catch (e) {
+          Message.error('截图加载失败')
+          return
+        }
+      }
+      this.previewUrl = this.shotUrls[a.id]
+      this.previewVisible = true
     },
     async loadLog(row) {
       if (!this.detail.run) return
@@ -427,4 +590,12 @@ export default {
 .err { color: #f56c6c; font-size: 12px; }
 .artifact-btn { margin: 0 6px 6px 0; }
 code { font-size: 11px; }
+.case-expand { padding: 6px 12px 10px; }
+.expand-block { margin-bottom: 10px; }
+.expand-title { font-size: 12px; color: #606266; margin-bottom: 6px; }
+.shot-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.shot-thumb { width: 128px; height: 80px; object-fit: cover; border: 1px solid #ebeef5; border-radius: 4px; cursor: zoom-in; background: #fafafa; }
+.diff-group { margin-bottom: 8px; }
+.diff-file { font-size: 12px; color: #303133; padding: 1px 0 1px 6px; word-break: break-all; }
+.preview-img { display: block; width: 100%; }
 </style>
